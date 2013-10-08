@@ -1,0 +1,383 @@
+<html>
+<body>
+<pre id="console">
+</pre>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+					
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+//		log(s);
+	}
+}
+var outer_diam = 36;
+var inner_diam = 8.7; // mm
+var tool_diam = 3; // 3mm
+var depth = -3.0; // 1mm do hlbky
+var zsafe = 1.0;
+var approach = 0.5;
+var zlevels = [-1.0, -2.0, -3.0, -3.5, -4.0 ];
+
+var drill_feedrate = 10;
+var route_feedrate = 50;
+
+/*
+log({ g:0, z:zsafe }); // vylez hore
+log({ x:0, y:0 });
+
+var r1 = (outer_diam + tool_diam)/2;
+var r2 = (inner_diam - tool_diam)/2;
+for ( zi=0; zi<=zlevels.length; zi++)
+{
+	var z = zlevels[zi];
+
+	log("(inner: pass " + zi + "/" + zlevels.length + " z = "+z.toFixed(2)+")");
+	log({ g:0, x:0, y:-r2});
+	log({ g:1, z:z, f:drill_feedrate });
+	circle(r2);
+	log({ g:0, z:zsafe });
+
+	log("(outer: pass " + zi + "/" + zlevels.length + " z = "+z.toFixed(2)+")");
+	log({ g:0, x:0, y:-r1 });
+	log({ g:1, z:z, f:drill_feedrate });
+	circle(r1);
+	log({ g:0, z:zsafe });
+
+}
+
+log({ g:0, z:zsafe }); // vylez hore
+log({ g:0, x:0, y:0 });
+
+
+function circle(radius)
+{
+  	log({ g:2, x:-radius, y:0, i:0, j:radius, f:route_feedrate }); 
+  	log({ g:2, x:0, y:radius, i:+radius, j:0 }); 
+  	log({ g:2, x:+radius, y:0, i:0, j:-radius }); 
+  	log({ g:2, x:0, y:-radius, i:-radius, j:0 }); 
+}
+*/
+
+function solve_quadratic(a, b, c)
+{
+	var D2 = b*b - 4*a*c;
+///	console.log("sq:" + a +","+ b +","+ c +","+ D2);
+
+	if ( D2 < 0 )
+		return [];
+	if ( D2 == 0 )
+		return [-b/(2*a)];
+	var D = Math.sqrt(D2);
+	return [(-b-D)/(2*a), (-b+D)/(2*a)];
+}
+
+function circle_intersect(c)
+{
+//	if ( (c[0].x - c[1].x)*(c[0].x - c[1].x) + (c[0].y - c[1].y)*(c[0].y - c[1].y) > c[0].r*c[0].r + c[1].r*c[1].r )
+//		return [];
+	// priamka na ktorej lezia prieniky
+	var k = c[1].x / c[1].y;
+	var q = (c[1].x*c[1].x + c[1].r*c[1].r - c[0].r*c[0].r) / c[1].y;
+///	console.log(c, k, q);
+	// y = k*x + q
+  // x*x + y*y = r
+	var xx = solve_quadratic( k*k + 1, 2*k*q, q*q-c[0].r*c[0].r );
+	// mali by byt dva
+	return [{x:xx[0], y:k*xx[0]+q}, {x:xx[1], y:k*xx[1]+q}];
+}
+
+function topolar( ort, origin )
+{
+	if ( typeof(origin) != "undefined" )
+	{
+		ort.x -= origin.x;
+		ort.y -= origin.y;
+	}
+	var a = Math.atan2(ort.y, ort.x)*180/Math.PI;
+	if ( a < 0 )
+		a += 360;
+	return {a:a, r:Math.sqrt(ort.x*ort.x + ort.y*ort.y)};
+}
+
+function adist(a1, a2)
+{
+	//forward distance
+	while (a2 < a1)
+		a2 += 360;
+	return a2-a1;
+}
+
+function program()
+{
+  var outer = 35.6;
+	var inner = outer - 4.0;
+	var holebase = outer - 3.0;
+	var holeguard = 4;
+	
+	var circles = [];
+
+	goto(0, 0);
+	circle( outer, 1 );
+	circles[0] = gotopolar( 360/3*0+90, holebase );
+	drill(1);
+	circles[1] = gotopolar( 360/3*1+90, holebase );
+	drill(1);
+	circles[2] = gotopolar( 360/3*2+90, holebase );
+	drill(1);
+
+	circles[0].r = holeguard;
+	circles[1].r = holeguard;
+	circles[2].r = holeguard;
+
+	var isect = [
+    circle_intersect( [{x:0, y:0, r:inner}, circles[0]] ),
+    circle_intersect( [{x:0, y:0, r:inner}, circles[1]] ),
+    circle_intersect( [{x:0, y:0, r:inner}, circles[2]] )];
+
+	var isect2 = [
+		[topolar(isect[0][0]).a, topolar(isect[0][1]).a],
+		[topolar(isect[1][0]).a, topolar(isect[1][1]).a],
+		[topolar(isect[2][0]).a, topolar(isect[2][1]).a]];
+
+	var base = 0;
+	if ( adist( base, isect2[0][0] ) > adist( base, isect2[0][1] ) )
+	{
+		var t = isect2[0][0];
+		isect2[0][0] = isect2[0][1];
+		isect2[0][1] = t;
+	}
+	base = isect2[0][1];
+	if ( adist( base, isect2[1][0] ) > adist( base, isect2[1][1] ) )
+	{
+		var t = isect2[1][0];
+		isect2[1][0] = isect2[1][1];
+		isect2[1][1] = t;
+	}
+	if ( adist( base, isect2[2][0] ) > adist( base, isect2[2][1] ) )
+	{
+		var t = isect2[2][0];
+		isect2[2][0] = isect2[2][1];
+		isect2[2][1] = t;
+	}
+
+	// sortuj
+  arc({cx:0, cy:0, r:inner, begin:isect2[0][1], end:isect2[1][0]});
+  arc({cx:0, cy:0, r:inner, begin:isect2[1][1], end:isect2[2][0]});
+  arc({cx:0, cy:0, r:inner, begin:isect2[2][1], end:isect2[0][0]});
+/*
+  arc({cx:circles[0].x, cy:circles[0].y, r:inner, begin:topolar(isect[0][0], circles[0]).a, end:topolar(isect[0][1], circles[0]).a});
+  arc({cx:circles[1].x, cy:circles[1].y, r:inner, begin:topolar(isect[1][0], circles[1]).a, end:topolar(isect[1][1], circles[1]).a});
+  arc({cx:circles[2].x, cy:circles[2].y, r:inner, begin:topolar(isect[2][0], circles[2]).a, end:topolar(isect[2][1], circles[2]).a});
+*/
+//	console.log(isect);
+ 	log("M02");
+
+
+	    /*
+	hole(10, -1);
+	hole(10, -2);
+	hole(10, -3);
+	hole(10, -4);
+	      */
+/*
+	var width = 80;
+	var height = 280;
+
+  log({ g:0, f:50 }); 		
+	// horne
+	log("(center points)");
+  safez();
+	goto(0, 0);
+	drill(-0.5);
+
+	goto(-width/2, 0);
+	drill(-0.5);
+
+	goto(+width/2, 0);
+	drill(-0.5);
+
+	// stredne
+	goto(0, 0);
+	goto(0, height/2);
+	goto(-width/2, height/2);
+	drill(-0.5);
+
+	goto(+width/2, height/2);
+	drill(-0.5);
+
+	// spodne
+	goto(0, height/2);
+	goto(0, height);
+
+	drill(-0.5);
+
+	goto(-width/2, height);
+	drill(-0.5);
+
+	goto(+width/2, height);
+	drill(-0.5);
+
+	// domov
+	log("(home)");
+	goto(0, height);
+	goto(0, 0);
+
+	log("(mount holes 1/3)");
+	// istiace diery
+	goto(-width/2, 0);
+	hole(10, -0.5);
+
+	goto(width/2, 0);
+	hole(10, -0.5);
+	
+	var maindiam = 40;
+	var stepy = height-20; // na tomto intervale 4 diery 40mm a tri diery
+	stepy -= 4*maindiam;
+	stepy /= 3; // sirka medzery
+  stepy += maindiam; // posun na dalsi stred
+	var basey = 10+maindiam/2;
+
+	// styri velke diery
+	log("(main hole 1: [0, "+basey.toFixed(2)+"])");
+	goto(0, 0);
+	goto(0, basey);
+	hole(maindiam, -0.5);
+
+	log("(main hole 2: [0, "+(basey+stepy).toFixed(2)+"])");
+	goto(0, basey+stepy);
+	hole(maindiam, -0.5);
+
+	log("(mount holes 2/3)");
+	// istiace diery
+	goto(0, height/2);
+	goto(-width/2, height/2);
+	hole(10, -0.5);
+
+	goto(width/2, height/2);
+	hole(10, -0.5);
+	goto(0, height/2);
+	
+	log("(main hole 3: [0, "+(basey+stepy*2).toFixed(2)+"])");
+	goto(0, basey+stepy*2);
+	hole(maindiam, -0.5);
+
+	log("(main hole 4: [0, "+(basey+stepy*3).toFixed(2)+"])");
+	goto(0, basey+stepy*3);
+	hole(maindiam, -0.5);
+
+	log("(mount holes 3/3)");
+	// istiace diery
+	goto(0, height);
+	goto(-width/2, height);
+	hole(10, -0.5);
+
+	goto(width/2, height);
+	hole(10, -0.5);
+	goto(0, height);
+
+	// finish
+	log("(finish)");
+	goto(0, 0);
+*/
+}
+
+var cursor = {x:0, y:0, valid:true};
+function gotopolar(ang, r)
+{
+	var coord = {x:Math.cos(ang/180*Math.PI)*r, y:Math.sin(ang/180*Math.PI)*r};
+	goto( coord.x, coord.y );
+	return coord;
+}
+
+function goto(x, y)
+{
+//	if (!cursor.valid)
+	{
+  	log({ g:0, x:cursor.x, y:cursor.y }); 		
+	}
+	cursor.valid = false;
+	cursor.x = x;
+	cursor.y = y;
+}
+
+function safez()
+{
+  log({ g:0, z:zsafe }); 		
+}
+
+function drill(depth)
+{
+  log({ g:0, x:cursor.x, y:cursor.y, z:approach }); 		
+  log({ g:1, z:depth }); 		
+  log({ g:0, z:zsafe });
+  cursor.valid = true;	
+}
+
+function circle(diam, depth)
+{
+	var radius = (diam - tool_diam)/2;
+  log({ g:0, x:cursor.x + 0, y:cursor.y });
+  log({ g:0, x:cursor.x + 0, y:cursor.y - radius });
+  log({ g:0, z:approach }); 		
+  log({ g:1, z:depth }); 		
+
+ 	log({ g:2, x:cursor.x-radius, y:cursor.y, i:0, j:radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y+radius, i:+radius, j:0 }); 
+ 	log({ g:2, x:cursor.x+radius, y:cursor.y, i:0, j:-radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y-radius, i:-radius, j:0 }); 
+
+  log({ g:0, z:zsafe });
+  log({ g:0, x:cursor.x, y:cursor.y});
+	cursor.valid = false;
+}
+
+function arc(data)
+{
+	var depth = 1;
+
+	var dir = data.r > 0 ? 1 : -1;
+	data.r = Math.abs(data.r);
+
+//console.log(data);
+	var begin = {
+		x:data.cx + Math.cos(data.begin*Math.PI/180)*data.r, 
+		y:data.cy + Math.sin(data.begin*Math.PI/180)*data.r };
+
+	var end = {
+		x:data.cx + Math.cos(data.end*Math.PI/180)*data.r, 
+		y:data.cy + Math.sin(data.end*Math.PI/180)*data.r };
+
+  log({ g:0, x:begin.x, y:begin.y });
+  log({ g:0, z:approach }); 		
+  log({ g:1, z:depth }); 		
+
+	if ( dir > 0 )
+	 	log({ g:3, x:end.x, y:end.y, i:-begin.x+data.cx, j:-begin.y+data.cy});
+	else                                                 
+	 	log({ g:2, x:end.x, y:end.y, i:-begin.x+data.cx, j:-begin.y+data.cy});
+	 	                                                     
+  log({ g:0, z:zsafe });
+}
+
+program();
+
+</script>
+
+</body>
+</html>

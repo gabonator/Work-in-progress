@@ -1,0 +1,264 @@
+<html>
+<body>
+<canvas id="canvas" style="border:1px #808080 dashed"></canvas>
+
+<textarea id="console" cols="35" style="height:480px">
+</textarea>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+			if ( code == "x" )
+				value = -value.toFixed(3);			
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+	}
+}
+
+var ball_diam = 31.67;
+var air_gap = 0.75;
+
+var tool_diam = 3; // 3mm
+var depth = -1.5; // 2mm do hlbky
+var drill_feedrate = 30; // rychlost vrtania do hlbky
+var route_feedrate0 = 100; // rychlost vrtania do hlbky
+var route_feedrate1 = 200; // rychlost vrtania do hlbky
+var route_feedrate2 = 300; // rychlost vrtania do hlbky
+var circle_radius = (ball_diam)/2 + air_gap;
+var depth_step = 1/4;
+
+var tool_overlap = 0.2; // 20%
+var safez = 1;
+var lastz = safez;
+
+var curve = [];
+
+function uniform()
+{
+  for ( z=0; z<=circle_radius; z+=depth_step)
+  {
+    var r;
+  	var r2 = Math.floor(Math.sqrt(circle_radius*circle_radius-z*z)*100)/100;
+
+  	if ( r2*2 < tool_diam )
+  		continue;
+  	curve[curve.length] = {r:r2, z:z};
+  } 
+}
+
+function proportional()
+{
+	var steps = circle_radius/depth_step;
+  for ( i=0; i<steps; i++ )
+  {
+		var z = Math.sin(i/steps*Math.PI/2)*circle_radius;
+    var r;
+  	var r2 = Math.floor(Math.sqrt(circle_radius*circle_radius-z*z)*100)/100;
+
+  	if ( r2*2 < tool_diam )
+  		continue;
+  	curve[curve.length] = {r:r2, z:z};
+  } 
+}
+
+function markerhole( x, y, z )
+{
+ 	log("(marker at " + x.toFixed(3) + " y " + y.toFixed(3) + ")");
+  log({ g:0, z:1 });
+  log({ g:0, x:x, y:y });
+	log({ g:1, z:-2, f:30 });
+  log({ g:0, z:1 });
+
+	for (var _z = -4; _z >= z; _z -= 2 )
+	{ 
+//  	log({ g:4, p:2000 });
+		log({ g:0, z:_z+3 });
+		log({ g:1, z:_z, f:30 });
+  	log({ g:0, z:1 });
+	}
+}
+
+function program()
+{
+//  log("G00 Z2.0"); // vylez hore
+	var dim = circle_radius - tool_diam/2;
+
+	markerhole( 0, 0, -4 );
+	markerhole( -dim, -dim, -14 );
+	markerhole( +dim, -dim, -14 );
+	markerhole( +dim, +dim, -14 );
+	markerhole( -dim, +dim, -14 );
+
+  log({ x:0, y:0 });
+  for ( var i in curve )
+  {
+    var r2 = curve[i].r;
+    var z = curve[i].z;
+  	log("(kruh hlbka " + z.toFixed(3) + " polomer " + r2.toFixed(3) + ")");
+
+  	var target_radius = r2-tool_diam/2;
+  	var lastr = 0;
+		var tool_rstep = tool_diam*(1-tool_overlap);
+    for ( r=0; r<target_radius; r+= tool_rstep )
+    {
+  		lastr = r;
+    	if ( r==0 )
+    	{
+    		log({ z:depth-z+0.5 });	// priblizime sa ku materialu
+    		log({ g:1, z:depth-z, f:drill_feedrate });
+  			lastz = depth-z;
+    	} else
+    	{
+    		log("G01"); // rezeme linearne
+    		log({ x:0, y:-r, f: i==0 ? route_feedrate0 : route_feedrate2 });	// ideme do hora na zaciatok kruznice
+    		// [0, -r] => [r, 0] 
+    		log({ g:2, x:-r, y:0, i:0, j:r }); 
+    		// [r, 0] => [0, r]
+    		log({ g:2, x:0, y:r, i:+r, j:0 }); 
+    		// [0, r] => [-r, 0]
+    		log({ g:2, x:+r, y:0, i:0, j:-r }); 
+    		// [-r, 0] => [0, -r]
+    		log({ g:2, x:0, y:-r, i:-r, j:0 }); 
+    	}
+    }
+    // finish
+  	//log("(dosiahnuty polomer "+lastr.toFixed(3)+" ciel "+target_radius.toFixed(3)+")");
+    //if ( lastr < target_radius )
+    {
+  		log("(finisujem kruh)");
+    	r = target_radius;
+   		log("G01"); // rezeme linearne
+   		log({ x:0, y:-r, f: i==0 ? route_feedrate0 : route_feedrate1 });	// ideme do hora na zaciatok kruznice
+    	log({ g:2, x:-r, y:0, i:0, j:r }); 
+    	log({ g:2, x:0, y:r, i:+r, j:0 }); 
+    	log({ g:2, x:+r, y:0, i:0, j:-r }); 
+    	log({ g:2, x:0, y:-r, i:-r, j:0 }); 
+    }
+
+  	log({g:0, z:lastz+1}); // vylez hore
+  	log({g:0, x:0, y:0}); // vycentruj a priprav na dalsi rez
+  }
+  log({g:0, x:0, y:0, z:0.5}); // vrat vrtak uplne hore
+ 	log("M02");
+}
+
+function visualize()
+{
+	var can = document.getElementById("canvas");
+	var ctx = can.getContext('2d');	
+	ctx.width = can.width = 640;
+	ctx.height = can.height = 480;
+
+	var range = {x1:-circle_radius, x2:circle_radius, y1:safez, y2:depth-circle_radius};
+	range = expand(range, 0.1);
+
+	line(ctx, range, "#000", 2, range.x1, safez, range.x2, safez);
+	bar(ctx, range, "#bbb", -circle_radius, 0, circle_radius, depth-circle_radius);
+	bar(ctx, range, "#ddd", range.x1, 0, -circle_radius, depth-circle_radius);
+	bar(ctx, range, "#ddd", circle_radius, 0, range.x2, depth-circle_radius);
+
+	var n = 100;	
+  for ( var i=0; i<n; i++ )
+	{
+		line(ctx, range, "#00f", 2, 
+			circle_radius*Math.cos(i*Math.PI/n), 
+			depth-circle_radius*Math.sin(i*Math.PI/n),
+			circle_radius*Math.cos((i+1)*Math.PI/n), 
+			depth-circle_radius*Math.sin((i+1)*Math.PI/n)
+		);
+	}
+
+	var lastz = depth;
+	var lastr = curve[0].r;
+  for ( var i=1; i<curve.length; i++ )
+  {
+    var r = curve[i].r;
+    var z = curve[i].z;
+
+		bar(ctx, range, "rgba(255,0,0,0.5)", -r, depth-lastz, r, depth-z);
+		line(ctx, range, "#f00", 2, -r, depth-lastz, -r, depth-z);
+		line(ctx, range, "#f00", 2, r, depth-lastz, r, depth-z);
+
+		line(ctx, range, "#f00", 2, -lastr, depth-lastz, -r, depth-lastz);
+		line(ctx, range, "#f00", 2, lastr, depth-lastz, r, depth-lastz);
+
+		lastz = z;
+		lastr = r;
+	}
+	line(ctx, range, "#f00", 2, -lastr, depth-lastz, lastr, depth-lastz);
+	line(ctx, range, "rgba(0,0,0,0.2)", 2, -circle_radius, depth, circle_radius, depth);
+
+}
+
+function line(ctx, range, clr, width, x1, y1, x2, y2)
+{
+  ctx.strokeStyle = clr;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+	
+	var pos = trans(ctx, range, x1, y1);
+  ctx.moveTo( pos.x, pos.y );
+	pos = trans(ctx, range, x2, y2);
+  ctx.lineTo( pos.x, pos.y );
+  ctx.stroke();
+}
+
+function bar(ctx, range, clr, x1, y1, x2, y2)
+{
+  ctx.fillStyle = clr;
+  ctx.beginPath();
+	
+	var pos = trans(ctx, range, x1, y1);
+  ctx.moveTo( pos.x, pos.y );
+
+	pos = trans(ctx, range, x2, y1);
+  ctx.lineTo( pos.x, pos.y );
+
+	pos = trans(ctx, range, x2, y2);
+  ctx.lineTo( pos.x, pos.y );
+
+	pos = trans(ctx, range, x1, y2);
+  ctx.lineTo( pos.x, pos.y );
+
+  ctx.closePath();
+  ctx.fill();
+}
+
+function trans(ctx, range, x, y)
+{
+	return {
+    x:(x-range.x1)/(range.x2-range.x1)*ctx.width,
+    y:(y-range.y1)/(range.y2-range.y1)*ctx.height };
+}
+
+function expand(range, sc)
+{
+	var w = range.x2 - range.x1;
+	var h = range.y2 - range.y1;
+	range.x1 -= w*sc;
+	range.x2 += w*sc;
+	range.y1 -= h*sc;
+	range.y2 += h*sc;
+	return range;
+}
+
+proportional();  // or uniform()
+visualize();
+program();
+</script>
+</body>
+</html>

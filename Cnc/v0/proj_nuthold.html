@@ -1,0 +1,192 @@
+<html>
+<body>
+<pre id="console">
+</pre>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+					
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+//		log(s);
+	}
+}
+var outer_diam = 36;
+var inner_diam = 8.7; // mm
+var tool_diam = 3; // 3mm
+var depth = -3.0; // 1mm do hlbky
+var zsafe = 1.0;
+var approach = 0.5;
+var zlevels = [-1.0, -2.0, -3.0, -3.5, -4.0 ];
+
+var drill_feedrate = 10;
+var route_feedrate = 50;
+
+function program()
+{
+  // outer diam 36mm
+	// diery diam 6mm @ 13mm
+	// diery diam 3mm @ 7.5
+
+	// velke diery
+  log({ g:0, x:0, y:0, z:2, f:50 }); 
+
+	var nut_diameter = 14;
+	var drill_diam = 3;
+	var depth = -5;
+  for ( var d = 4; d<nut_diameter-1; d+=drill_diam*0.8)
+		hole( d, depth );
+	hole( nut_diameter, depth );
+
+  log({ g:0, z:2 });
+
+	var N=6;
+	for ( var i=0; i<N; i++ )
+	{
+		var dist = nut_diameter/2-drill_diam/2;
+		var x0 = Math.cos(i/N*Math.PI*2)*dist;
+		var y0 = Math.sin(i/N*Math.PI*2)*dist;
+		var x1 = Math.cos((i+1)/N*Math.PI*2)*dist;
+		var y1 = Math.sin((i+1)/N*Math.PI*2)*dist;
+	//	var d = Math.sqrt((x0-x1)*(x0-x1)+(y0-y1)*(y0-y1));
+//		var nx = (y1-y0)/d;
+//		var ny = (x0-x1)/d;
+		var x2 = Math.cos((i+1)/N*Math.PI*2)*(dist+drill_diam/2);
+		var y2 = Math.sin((i+1)/N*Math.PI*2)*(dist+drill_diam/2);
+
+//		var x2 = x1+nx*(drill_diam/2);
+//		var y2 = y1+ny*(drill_diam/2);
+
+		if (i==0)
+		  log({ g:0, x:x0, y:y0 });
+	  log({ g:1, z:depth });
+	  log({ g:1, x:x1, y:y1 });
+	  log({ g:1, x:x1, y:y1 });
+	  log({ g:1, x:x2, y:y2 });
+	  log({ g:1, x:x1, y:y1 });
+	}
+/*
+  var zlevels = [-2.0, -4.0, -6.4 ];
+	for (var j=0; j<zlevels.length; j++)
+	{
+
+	var z = zlevels[j];
+
+	{
+		var holeRadius = 13;
+		var holeDiam = 6;
+		var holeSpacing = 2;
+		var nCount = Math.floor(2*Math.PI*holeRadius / (holeDiam+holeSpacing));
+		for (var i=0; i<nCount; i++)
+		{
+			var x = Math.cos(i/nCount*Math.PI*2)*holeRadius;
+			var y = Math.sin(i/nCount*Math.PI*2)*holeRadius;
+			goto( x, y );
+			hole( holeDiam, z );
+		}
+	}
+
+	// male diery	
+	{
+		var holeRadius = 7.5;
+		var holeDiam = 3;
+		var holeSpacing = 1;
+		var nCount = Math.floor(2*Math.PI*holeRadius / (holeDiam+holeSpacing));
+		for (var i=0; i<nCount; i++)
+		{
+			var x = Math.cos(i/nCount*Math.PI*2)*holeRadius;
+			var y = Math.sin(i/nCount*Math.PI*2)*holeRadius;
+			goto( x, y );
+			drill( z );
+		}
+	}
+	goto(0, 0);
+	holeouter( 36, z );	
+
+  }
+	*/
+  log("M02");
+}
+
+var cursor = {x:0, y:0, valid:true};
+function goto(x, y)
+{
+//	if (!cursor.valid)
+	{
+  	log({ g:0, x:cursor.x, y:cursor.y }); 		
+	}
+	cursor.valid = false;
+	cursor.x = x;
+	cursor.y = y;
+}
+
+function safez()
+{
+  log({ g:0, z:zsafe }); 		
+}
+
+function drill(depth)
+{
+  log({ g:0, x:cursor.x, y:cursor.y, z:approach }); 		
+  log({ g:1, z:depth }); 		
+  log({ g:0, z:zsafe });
+  cursor.valid = true;	
+}
+
+function hole(diam, depth)
+{
+	var radius = (diam - tool_diam)/2;
+  log({ g:0, x:cursor.x + 0, y:cursor.y });
+  log({ g:0, x:cursor.x + 0, y:cursor.y - radius });
+  log({ g:0, z:approach }); 		
+  log({ g:1, z:depth }); 		
+
+ 	log({ g:2, x:cursor.x-radius, y:cursor.y, i:0, j:radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y+radius, i:+radius, j:0 }); 
+ 	log({ g:2, x:cursor.x+radius, y:cursor.y, i:0, j:-radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y-radius, i:-radius, j:0 }); 
+
+  log({ g:0, z:zsafe });
+  log({ g:0, x:cursor.x, y:cursor.y});
+	cursor.valid = false;
+}
+
+function holeouter(diam, depth)
+{
+	var radius = (diam + tool_diam)/2;
+  log({ g:0, x:cursor.x + 0, y:cursor.y });
+  log({ g:0, x:cursor.x + 0, y:cursor.y - radius });
+  log({ g:0, z:approach }); 		
+  log({ g:1, z:depth }); 		
+
+ 	log({ g:2, x:cursor.x-radius, y:cursor.y, i:0, j:radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y+radius, i:+radius, j:0 }); 
+ 	log({ g:2, x:cursor.x+radius, y:cursor.y, i:0, j:-radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y-radius, i:-radius, j:0 }); 
+
+  log({ g:0, z:zsafe });
+  log({ g:0, x:cursor.x, y:cursor.y});
+	cursor.valid = false;
+}
+
+program();
+
+</script>
+
+</body>
+</html>

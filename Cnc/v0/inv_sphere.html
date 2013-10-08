@@ -1,0 +1,162 @@
+<html>
+<body>
+<pre id="console">
+</pre>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+					
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+//		log(s);
+	}
+}
+function m100(f)
+{
+	return Math.floor(f*100)*0.01;
+}
+
+var tool_diam = 3; // 3mm
+var depth = -1.0; // 1mm do hlbky
+var drill_feedrate = 10; // rychlost vrtania do hlbky
+var route_feedrate = 50; // rychlost vrtania do hlbky
+var circle_radius = 24/2;
+var depth_step = 1/2; // mm
+var outer_radius = circle_radius + 4;
+
+log({ g:0, z:1.0 }); // vylez hore
+//log({ g:0, x:0, y:-outer_radius });   // horna cast vyrezu
+var lastz = 2;
+
+for ( z=0; z<=circle_radius; z+=depth_step)
+{
+	var r = m100( Math.sqrt(circle_radius*circle_radius-(circle_radius-z)*(circle_radius-z)) );
+	log("(kruh hlbka " + z.toFixed(2) + " polomer " + r.toFixed(2) + ")");
+
+	midcircle( r + tool_diam/2, outer_radius - tool_diam/2, depth-z );
+}
+log({g:0, z:1.0}); // vrat vrtak uplne hore
+log({g:0, x:0, y:0}); // a pome do stredu
+
+function midcircle( r1, r2, z )
+{
+	log({ g:0, x:0, y:-r2 });	// priblizime sa ku materialu
+	log({ g:0, z:z+0.5 });	// priblizime sa ku materialu
+	log({ g:1, z:z, f:drill_feedrate }); // prvy zarez
+
+	var r, lastr = r2;
+  for ( r=r2; r>=r1; r-=tool_diam/2)
+	{
+		lastr = r;
+		log({ g:1, x:0, y:-r, f:drill_feedrate });
+
+		// circle
+		log({ g:2, x:-r, y:0, i:0, j:r, f:route_feedrate }); 
+ 		// [r, 0] => [0, r]
+ 		log({ g:2, x:0, y:r, i:+r, j:0 }); 
+ 		// [0, r] => [-r, 0]
+ 		log({ g:2, x:+r, y:0, i:0, j:-r }); 
+ 		// [-r, 0] => [0, -r]
+ 		log({ g:2, x:0, y:-r, i:-r, j:0 }); 
+	}
+	if ( lastr > r1 )
+	{
+		r = r1;
+		log({ g:1, x:0, y:-r, f:drill_feedrate });
+
+		// circle
+		log({ g:2, x:-r, y:0, i:0, j:r, f:route_feedrate }); 
+ 		// [r, 0] => [0, r]
+ 		log({ g:2, x:0, y:r, i:+r, j:0 }); 
+ 		// [0, r] => [-r, 0]
+ 		log({ g:2, x:+r, y:0, i:0, j:-r }); 
+ 		// [-r, 0] => [0, -r]
+ 		log({ g:2, x:0, y:-r, i:-r, j:0 }); 
+	}
+	log({ g:0, z:z+0.5 }); // pod hore
+}
+
+/*
+	if ( r2*2 < tool_diam )
+		continue;
+ 
+	var target_radius = r2-tool_diam/2;
+	var lastr = 0;
+  for ( r=0; r<=target_radius; r+= tool_diam/2 )
+  {
+		lastr = r;
+  	if ( r==0 )
+  	{
+  		log({ z:depth-z+0.5 });	// priblizime sa ku materialu
+  		log({ g:1, z:depth-z, f:drill_feedrate });
+			lastz = depth-z;
+  	} else
+  	{
+  		log("G01"); // rezeme linearne
+  		log({ x:0, y:-r, f:route_feedrate });	// ideme do hora na zaciatok kruznice
+  //		log("G02"); // zaciname kruhovu trajektoriu
+
+  		// [0, -r] => [r, 0] 
+  		log({ g:2, x:-r, y:0, i:0, j:r }); 
+  		// [r, 0] => [0, r]
+  		log({ g:2, x:0, y:r, i:+r, j:0 }); 
+  		// [0, r] => [-r, 0]
+  		log({ g:2, x:+r, y:0, i:0, j:-r }); 
+  		// [-r, 0] => [0, -r]
+  		if ( r+tool_diam/2 > target_radius )
+  		{
+				var r2 = target_radius;
+  			log({ g:2, x:0, y:-r2, i:-r, j:0 }); 
+  		} else
+  		{
+  			// todo: prilis drasticke
+  			var r2 = r + tool_diam/2;
+  			log({ g:2, x:0, y:-r2, i:-r, j:0 }); 
+  		}
+  	}
+  }
+  // finish
+	log("(dosiahnuty polomer "+lastr+" ciel "+target_radius+")");
+  if ( lastr < target_radius )
+  {
+		log("(finisujem kruh)");
+  	r = target_radius;
+ 		log("G01"); // rezeme linearne
+ 		log({ x:0, y:-r, f:route_feedrate });	// ideme do hora na zaciatok kruznice
+  	log({ g:2, x:-r, y:0, i:0, j:r }); 
+  	log({ g:2, x:0, y:r, i:+r, j:0 }); 
+  	log({ g:2, x:+r, y:0, i:0, j:-r }); 
+  	log({ g:2, x:0, y:-r, i:-r, j:0 }); 
+  }
+
+	log({g:0, z:lastz+1}); // vylez hore
+	log({g:0, x:0, y:0}); // vycentruj a priprav na dalsi rez
+}
+log({g:0, x:0, y:0, z:2.0}); // vrat vrtak uplne hore
+*/
+</script>
+
+<!--
+G00Z2.0
+X85.0002Y-20.7667
+Z0.5
+G01Z-2.0F10.0
+X84.9676Y-21.5861F25.0
+-->
+</body>
+</html>

@@ -1,0 +1,227 @@
+<html>
+<body>
+<pre id="console">
+</pre>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+					
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+//		log(s);
+	}
+}
+var outer_diam = 36;
+var inner_diam = 8.7; // mm
+var tool_diam = 3; // 3mm
+var depth = -3.0; // 1mm do hlbky
+var zsafe = 1.0;
+var approach = 0.5;
+var zlevels = [-1.0, -2.0, -3.0, -3.5, -4.0 ];
+
+var drill_feedrate = 10;
+var route_feedrate = 50;
+
+/*
+log({ g:0, z:zsafe }); // vylez hore
+log({ x:0, y:0 });
+
+var r1 = (outer_diam + tool_diam)/2;
+var r2 = (inner_diam - tool_diam)/2;
+for ( zi=0; zi<=zlevels.length; zi++)
+{
+	var z = zlevels[zi];
+
+	log("(inner: pass " + zi + "/" + zlevels.length + " z = "+z.toFixed(2)+")");
+	log({ g:0, x:0, y:-r2});
+	log({ g:1, z:z, f:drill_feedrate });
+	circle(r2);
+	log({ g:0, z:zsafe });
+
+	log("(outer: pass " + zi + "/" + zlevels.length + " z = "+z.toFixed(2)+")");
+	log({ g:0, x:0, y:-r1 });
+	log({ g:1, z:z, f:drill_feedrate });
+	circle(r1);
+	log({ g:0, z:zsafe });
+
+}
+
+log({ g:0, z:zsafe }); // vylez hore
+log({ g:0, x:0, y:0 });
+
+
+function circle(radius)
+{
+  	log({ g:2, x:-radius, y:0, i:0, j:radius, f:route_feedrate }); 
+  	log({ g:2, x:0, y:radius, i:+radius, j:0 }); 
+  	log({ g:2, x:+radius, y:0, i:0, j:-radius }); 
+  	log({ g:2, x:0, y:-radius, i:-radius, j:0 }); 
+}
+*/
+
+function program()
+{
+	var width = 80;
+	var height = 280;
+
+  log({ g:0, f:50 }); 		
+	// horne
+	log("(center points)");
+  safez();
+	goto(0, 0);
+	drill(-0.5);
+
+	goto(-width/2, 0);
+	drill(-0.5);
+
+	goto(+width/2, 0);
+	drill(-0.5);
+
+	// stredne
+	goto(0, 0);
+	goto(0, height/2);
+	goto(-width/2, height/2);
+	drill(-0.5);
+
+	goto(+width/2, height/2);
+	drill(-0.5);
+
+	// spodne
+	goto(0, height/2);
+	goto(0, height);
+
+	drill(-0.5);
+
+	goto(-width/2, height);
+	drill(-0.5);
+
+	goto(+width/2, height);
+	drill(-0.5);
+
+	// domov
+	log("(home)");
+	goto(0, height);
+	goto(0, 0);
+
+	log("(mount holes 1/3)");
+	// istiace diery
+	goto(-width/2, 0);
+	hole(10, -0.5);
+
+	goto(width/2, 0);
+	hole(10, -0,5);
+	
+	var maindiam = 40;
+	var stepy = height-20; // na tomto intervale 4 diery 40mm a tri diery
+	stepy -= 4*maindiam;
+	stepy /= 3; // sirka medzery
+  stepy += maindiam; // posun na dalsi stred
+	var basey = 10+maindiam/2;
+
+	// styri velke diery
+	log("(main hole 1: [0, "+basey.toFixed(2)+"])");
+	goto(0, 0);
+	goto(0, basey);
+	hole(maindiam, -0.5);
+
+	log("(main hole 2: [0, "+(basey+stepy).toFixed(2)+"])");
+	goto(0, basey+stepy);
+	hole(maindiam, -0.5);
+
+	log("(mount holes 2/3)");
+	// istiace diery
+	goto(0, height/2);
+	goto(-width/2, height/2);
+	hole(10, -0.5);
+
+	goto(width/2, height/2);
+	hole(10, -0,5);
+	goto(0, height/2);
+	
+	log("(main hole 3: [0, "+(basey+stepy*2).toFixed(2)+"])");
+	goto(0, basey+stepy*2);
+	hole(maindiam, -0.5);
+
+	log("(main hole 4: [0, "+(basey+stepy*3).toFixed(2)+"])");
+	goto(0, basey+stepy*3);
+	hole(maindiam, -0.5);
+
+	log("(mount holes 3/3)");
+	// istiace diery
+	goto(0, height);
+	goto(-width/2, height);
+	hole(10, -0.5);
+
+	goto(width/2, height);
+	hole(10, -0,5);
+	goto(0, height);
+
+	// finish
+	log("(finish)");
+	goto(0, 0);
+}
+
+var cursor = {x:0, y:0, valid:true};
+function goto(x, y)
+{
+//	if (!cursor.valid)
+	{
+  	log({ g:0, x:cursor.x, y:cursor.y }); 		
+	}
+	cursor.valid = false;
+	cursor.x = x;
+	cursor.y = y;
+}
+
+function safez()
+{
+  log({ g:0, z:zsafe }); 		
+}
+
+function drill(depth)
+{
+  log({ g:0, x:cursor.x, y:cursor.y, z:approach }); 		
+  log({ g:1, z:depth }); 		
+  log({ g:0, z:zsafe });
+  cursor.valid = true;	
+}
+
+function hole(diam, depth)
+{
+	var radius = (diam - tool_diam)/2;
+  log({ g:0, x:cursor.x + 0, y:cursor.y });
+  log({ g:0, x:cursor.x + 0, y:cursor.y - radius });
+  log({ g:0, z:approach }); 		
+  log({ g:1, z:depth }); 		
+
+ 	log({ g:2, x:cursor.x-radius, y:cursor.y, i:0, j:radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y+radius, i:+radius, j:0 }); 
+ 	log({ g:2, x:cursor.x+radius, y:cursor.y, i:0, j:-radius }); 
+ 	log({ g:2, x:cursor.x, y:cursor.y-radius, i:-radius, j:0 }); 
+
+  log({ g:0, z:zsafe });
+  log({ g:0, x:cursor.x, y:cursor.y});
+	cursor.valid = false;
+}
+
+program();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+<html>
+<body>
+<pre id="console">
+</pre>
+
+<script language="javascript">
+function log(s) 
+{ 
+  if ( typeof(s) == "string" )
+		document.getElementById("console").innerHTML += s + "\n"; 
+	else
+	{
+		var tmp = "";
+		for ( var i in s )
+		{
+			var code = String.toUpperCase(i);
+			var value = s[i].toString();
+			if ( value.length > 5 )
+				value = s[i].toFixed(3);
+			if ( code == "G" && value.length < 2 )
+				value = "0" + value;
+					
+			tmp += code + value + " ";
+		}
+		document.getElementById("console").innerHTML += tmp + "\n"; 
+//		log(s);
+	}
+}
+
+function _goto(set, attr)
+{
+	log({ g:0, z:set.depthSafe });
+  log({ g:0, x:attr.x, y:attr.y });
+}
+
+function _innerCircle(set, attr)
+{
+	var radius = 0;
+	if ( typeof(attr["r"]) != "undefined" )
+		radius = (2*attr["r"] - set.toolDiam)/2;
+	if ( typeof(attr["d"]) != "undefined" )
+		radius = (attr["d"] - set.toolDiam)/2;
+
+  // goto
+	log({ g:0, z:set.depthSafe });
+  log({ g:0, x:attr.x, y:attr.y-radius });
+  log({ g:0, z:set.depthApproach });
+
+	// drill
+  log({ g:1, z:set.depthDrill, f:set.feedDrill }); 		
+
+ 	log({ g:2, x:attr.x-radius, y:attr.y, i:0, j:radius, f:set.feedRoute }); 
+ 	log({ g:2, x:attr.x, y:attr.y+radius, i:+radius, j:0 }); 
+ 	log({ g:2, x:attr.x+radius, y:attr.y, i:0, j:-radius }); 
+ 	log({ g:2, x:attr.x, y:attr.y-radius, i:-radius, j:0 }); 
+
+	// up
+  log({ g:0, z:set.depthSafe});
+}
+
+function _rectangleHoles(set, attr)
+{
+	var ofs = set.toolDiam/2;
+
+	_hole(set, {x:attr.x1-ofs, y:attr.y1-ofs});
+	_hole(set, {x:attr.x2+ofs, y:attr.y1-ofs});
+	_hole(set, {x:attr.x2+ofs, y:attr.y2+ofs});
+	_hole(set, {x:attr.x1-ofs, y:attr.y2+ofs});
+}
+
+function _hole(set, attr)
+{
+  // goto
+	log({ g:0, z:set.depthSafe });
+  log({ g:0, x:attr.x, y:attr.y});
+  log({ g:0, z:set.depthApproach });
+	// drill
+  log({ g:1, z:set.depthDrill, f:set.feedDrill });
+	// up
+  log({ g:0, z:set.depthSafe });
+}
+
+function _rectangle(set, attr)
+{
+	var ofs = set.toolDiam/2;
+	var x1 = attr.x1 - ofs;
+	var y1 = attr.y1 - ofs;
+	var x2 = attr.x2 + ofs;
+	var y2 = attr.y2 + ofs;
+
+	// todo: round corners!	
+  // goto
+	log({ g:0, z:set.depthSafe });
+  log({ g:0, x:x1, y:y1});
+  log({ g:0, z:set.depthApproach });
+	// drill
+  log({ g:1, z:set.depthDrill, f:set.feedDrill });
+	// route
+  log({ g:1, x:x2, y:y1, f:set.feedRoute });
+  log({ g:1, x:x2, y:y2 });
+  log({ g:1, x:x1, y:y2 });
+  log({ g:1, x:x1, y:y1 });
+	// up
+  log({ g:0, z:set.depthSafe });
+}
+
+function _roundRectangle(set, attr)
+{
+	var ofs = set.toolDiam/2;
+	var x1 = attr.x1 - ofs;
+	var y1 = attr.y1 - ofs;
+	var x2 = attr.x2 + ofs;
+	var y2 = attr.y2 + ofs;
+	var r = attr.r + set.toolDiam/2;
+
+	// todo: round corners!	
+  // goto
+	log({ g:0, z:set.depthSafe });
+  log({ g:0, x:x1+r, y:y1});
+  log({ g:0, z:set.depthApproach });
+	// drill
+  log({ g:1, z:set.depthDrill, f:set.feedDrill });
+	// route
+  log({ g:1, x:x2-r, y:y1, f:set.feedRoute });
+	_corner(set, {x1: x2-r, y1:y1, x2:x2, y2:y1+r, xc:x2-r, yc:y1+r});
+  log({ g:1, x:x2, y:y2-r });
+	_corner(set, {x1: x2, y1:y2-r, x2:x2-r, y2:y2, xc:x2-r, yc:y2-r});
+  log({ g:1, x:x1+r, y:y2 });
+	_corner(set, {x1: x1+r, y1:y2, x2:x1, y2:y2-r, xc:x1+r, yc:y2-r});
+  log({ g:1, x:x1, y:y1+r });
+	_corner(set, {x1: x1, y1:y1+r, x2:x1+r, y2:y1, xc:x1+r, yc:y1+r});
+	// up
+  log({ g:0, z:set.depthSafe });
+}
+
+function _corner(set, attr)
+{
+ 	log({ g:3, x:attr.x2, y:attr.y2, i:attr.xc-attr.x1, j:attr.yc-attr.y1}); 
+}
+
+function program()
+{
+	var settings = {
+		toolDiam: 3,
+
+		depthSafe: 2,
+		depthApproach: 0.5,
+		depthDrill: -4, //-2-2-0.5,
+
+		feedRoute: 50*3,
+		feedDrill: 25*3
+	};
+
+	var objWidth = 70;
+	var objHeight = 130;
+	var objCenterX = objWidth/2;
+
+	var prog = 
+	[
+		// control holes
+		{type:"goto",							priority:9,		x:0, y:0},
+		{type:"rectangleHoles",		priority:8,		x1:0, y1:0, x2:objWidth, y2:objHeight},
+		{type:"roundRectangle",		priority:0,		x1:0, y1:0, x2:objWidth, y2:objHeight, r:10},
+		{type:"innerCircle", 			priority:2,		x:objCenterX, y:9.5, r:5},//
+		{type:"innerCircle", 			priority:2,		x:objCenterX-21, y:9.5, r:5},
+		{type:"innerCircle", 			priority:2,		x:objCenterX+21, y:9.5, r:5},
+		{type:"innerCircle", 			priority:1,		x:objCenterX, y:9.5+37.5, d:52},
+		{type:"goto",							priority:-1,	x:0, y:0}
+	];
+
+	prog.sort(function(a,b){return b.priority - a.priority});
+
+	for (var i in prog)
+	{
+		var cmd = prog[i];
+//		console.log(cmd);
+		var dbg = cmd.type;
+		for (var j in cmd)
+		{
+			var attr = cmd[j]; 
+			if ( j == "priority" || j == "type" )
+				continue;
+			dbg = dbg + " " + j + ":"+ attr;
+		}
+		log( "(" + dbg + ")" );
+		this["_"+cmd.type](settings, cmd);
+	}
+  log("M02");
+	return;
+}
+program();
+
+</script>
+
+</body>
+</html>

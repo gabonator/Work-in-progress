@@ -1,0 +1,132 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"><style>
+body { background:url("back.jpg"); color: #ffffff; margin: 0; padding: 0; }
+div { padding: 10px 10px 10px 10px; text-shadow: black 0px 0px 10px; font-family:arial; font-size:20px; }
+.dragme {position:relative;}
+</style>
+
+</head><body>
+<div>
+Demonstration of getting transparent pictures from camera. The picture is taken two times. First time
+on white background and the second on the black background. Both pictures need to be taken from the
+same camera position, with same camera settings (ISO/exposition time/focus). Simple javascript algorithm
+using HTML5/Canvas feature then compares every pixel of the pictures. The transparency/alpha value is determined
+by comparing the intensity levels of corresponding pixels between that two pictures.<br>
+You can see 3 images - the first one on black background, second on white and third is dynamically generated
+with alpha channel. All three images are draggable.<br>
+These pictures were taken with mobile phone camera so the result is not as perfect as it could be.
+<hr>
+Demonstracia metody ziskania transparentnych obrazkov z fotoaparatu. Priesvitny objekt
+odfotime na dvoch pozadiach - na bielom a ciernom. Je nutne aby tieto obrazky boli 
+fotene z rovnakej polohy a pri zachovani vsetkych parametrov - iso/expozicia/ohnisko.
+Algoritmus porovnava obrazok pixel po pixeli a podla rozdielu intenzity urci ci bol dany
+bod priesvitny alebo nie.<br>Obrazky sa daju chytit mysou a posuvat. Prve dva obrazky su odfoteny
+original na roznych pozadiach a treti je vygenerovany s alfa kanalom.
+</div>
+
+<br>
+<img id="imgB" class="dragme" src="sprite1.png">
+<img id="imgW" class="dragme" src="sprite2.png">
+<img src="" id="imgT" class="dragme">
+
+
+<script language="javascript">
+var imgBlack = new Image();
+var imgWhite = new Image();
+imgBlack.src = document.getElementById("imgB").src;
+imgWhite.src = document.getElementById("imgW").src;
+imgBlack.onload = decrement;
+imgWhite.onload = decrement;
+var toLoad = 2;
+function decrement()
+{
+  if (--toLoad==0)
+    loaded();
+}
+
+function loaded()
+{
+  can = document.createElement("canvas");
+  var ctx = can.getContext('2d');
+  w = imgBlack.width;
+  h = imgBlack.height;
+  can.width = w;
+  can.height = h;
+
+  dataT = ctx.getImageData(0, 0, w, h);
+  ctx.drawImage(imgWhite, 0, 0, w, h);
+  dataW = ctx.getImageData(0, 0, w, h);
+  ctx.drawImage(imgBlack, 0, 0, w, h);
+  dataB = ctx.getImageData(0, 0, w, h);
+
+  for (i=0; i<dataW.data.length; i+=4)
+  {
+    rW = dataW.data[i];
+    gW = dataW.data[i+1];
+    bW = dataW.data[i+2];
+    yW = (rW+gW+bW)/3;
+
+    rB = dataB.data[i];
+    gB = dataB.data[i+1];
+    bB = dataB.data[i+2];
+    yB = (rB+gB+bB)/3;
+
+    r = (rW+rB)/2;
+    g = (gW+gB)/2;
+    b = (bW+bB)/2;
+    a = 255-(yW-yB);
+
+    dataT.data[i+0] = r;
+    dataT.data[i+1] = g;
+    dataT.data[i+2] = b;
+    dataT.data[i+3] = a;
+  }
+
+  ctx.putImageData(dataT, 0, 0);
+  document.all["imgT"].src = can.toDataURL();
+//  document.getElementById("imgB").src = can.toDataURL("image/png");
+}
+
+
+// Drag&Drop {{{
+var ie=document.all;
+var nn6=document.getElementById&&!document.all;
+var isdrag=false;
+var x,y;
+var dobj;
+function movemouse(e)
+{
+  if (isdrag)
+  {
+    dobj.style.left = nn6 ? tx + e.clientX - x : tx + event.clientX - x;
+    dobj.style.top  = nn6 ? ty + e.clientY - y : ty + event.clientY - y;
+    return false;
+  }
+}
+function selectmouse(e) 
+{
+  var fobj       = nn6 ? e.target : event.srcElement;
+  var topelement = nn6 ? "HTML" : "BODY";
+  while (fobj.tagName != topelement && fobj.className != "dragme")
+  {
+    fobj = nn6 ? fobj.parentNode : fobj.parentElement;
+  }
+  if (fobj.className=="dragme")
+  {
+    isdrag = true;
+    dobj = fobj;
+    tx = parseInt(dobj.style.left+0);
+    ty = parseInt(dobj.style.top+0);
+    x = nn6 ? e.clientX : event.clientX;
+    y = nn6 ? e.clientY : event.clientY;
+    document.onmousemove=movemouse;
+    return false;
+  }
+}
+document.onmousedown=selectmouse;
+document.onmouseup=new Function("isdrag=false");
+// }}}
+
+</script>
+
+</body></html>

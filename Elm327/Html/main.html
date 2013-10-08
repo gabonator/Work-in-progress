@@ -1,0 +1,528 @@
+<div id="gear" style="font-size:120px; position:absolute; left:800px; top:220px; color:#ff0000">X</div>
+<div id="gearrat" style="font-size:20px; position:absolute; left:800px; top:340px; color:#ff0000">???</div>
+<div id="table"></div>
+<textarea id="dbg"></textarea>
+
+<script language="javascript" src="proxy.js"></script>
+
+<script language="javascript">
+arrCode = [];
+arrCode[0x00] = "PID 0x00 - 0x20 Supported";
+arrCode[0x01] = "Status since DTC Cleared";
+arrCode[0x02] = "Freeze Diagnostic Trouble Code";
+arrCode[0x03] = "Fuel System Status";
+arrCode[0x04] = "Calculated Engine Load";
+arrCode[0x05] = "Engine Coolant Temperature";
+arrCode[0x06] = "Short Term Fuel % Trim - Bank 1";
+arrCode[0x07] = "Long Term Fuel % Trim - Bank 1";
+arrCode[0x08] = "Short Term Fuel % Trim - Bank 2";
+arrCode[0x09] = "Long Term Fuel % Trim - Bank 2";
+arrCode[0x0A] = "Fuel Pressure";
+arrCode[0x0B] = "Intake Manifold Absolute Pressure";
+arrCode[0x0C] = "Engine RPM";
+arrCode[0x0D] = "Vehicle Speed";
+arrCode[0x0E] = "Timing Advance";
+arrCode[0x0F] = "Intake Air Temperature";
+arrCode[0x10] = "MAF Sensor Air Flow Rate";
+arrCode[0x11] = "Throttle Position";
+arrCode[0x12] = "Commanded Secondary Air Status";
+arrCode[0x13] = "Detected O2 Sensors";
+arrCode[0x14] = "O2 Sensor Voltage - Bank 1 Sensor 1";
+arrCode[0x15] = "O2 Sensor Voltage - Bank 1 Sensor 2";
+arrCode[0x16] = "O2 Sensor Voltage - Bank 1 Sensor 3";
+arrCode[0x17] = "O2 Sensor Voltage - Bank 1 Sensor 4";
+arrCode[0x18] = "O2 Sensor Voltage - Bank 2 Sensor 1";
+arrCode[0x19] = "O2 Sensor Voltage - Bank 2 Sensor 2";
+arrCode[0x1A] = "O2 Sensor Voltage - Bank 2 Sensor 3";
+arrCode[0x1B] = "O2 Sensor Voltage - Bank 2 Sensor 4";
+arrCode[0x1C] = "Supported OBDII Standards";
+arrCode[0x1D] = "Detected O2 Sensors - Alternate Grouping";
+arrCode[0x1E] = "Auxiliary Input Status";
+arrCode[0x1F] = "Run Time Since Engine Started";
+arrCode[0x20] = "PID 0x21 - 0x40 Supported";
+arrCode[0x21] = "Distance Traveled with MIL On";
+arrCode[0x22] = "Fuel Rail Pressure Relative to Manifold";
+arrCode[0x23] = "MPIDiesel Fuel Rail Pressure";
+arrCode[0x24] = "O2 Sensor 1 Equivalence Ratio Voltage";
+arrCode[0x25] = "O2 Sensor 2 Equivalence Ratio Voltage";
+arrCode[0x26] = "O2 Sensor 3 Equivalence Ratio Voltage";
+arrCode[0x27] = "O2 Sensor 4 Equivalence Ratio Voltage";
+arrCode[0x28] = "O2 Sensor 5 Equivalence Ratio Voltage";
+arrCode[0x29] = "O2 Sensor 6 Equivalence Ratio Voltage";
+arrCode[0x2A] = "O2 Sensor 7 Equivalence Ratio Voltage";
+arrCode[0x2B] = "O2 Sensor 8 Equivalence Ratio Voltage";
+arrCode[0x2C] = "Commanded EGR";
+arrCode[0x2D] = "EGR Error";
+arrCode[0x2E] = "Commanded Evaporactive Purge";
+arrCode[0x2F] = "Fuel Level Input";
+arrCode[0x30] = "Number of Warmups since DTC Cleared";
+arrCode[0x31] = "Distance Traveled since DTC Cleared";
+arrCode[0x32] = "Evap. System Vapor Pressure";
+arrCode[0x33] = "Barometric Pressure";
+arrCode[0x34] = "O2 Sensor 1 Equivalence Ratio Current";
+arrCode[0x35] = "O2 Sensor 2 Equivalence Ratio Current";
+arrCode[0x36] = "O2 Sensor 3 Equivalence Ratio Current";
+arrCode[0x37] = "O2 Sensor 4 Equivalence Ratio Current";
+arrCode[0x38] = "O2 Sensor 5 Equivalence Ratio Current";
+arrCode[0x39] = "O2 Sensor 6 Equivalence Ratio Current";
+arrCode[0x3A] = "O2 Sensor 7 Equivalence Ratio Current";
+arrCode[0x3B] = "O2 Sensor 8 Equivalence Ratio Current";
+arrCode[0x3C] = "Catalyst Temperature Bank 1 Sensor 1";
+arrCode[0x3D] = "Catalyst Temperature Bank 1 Sensor 2";
+arrCode[0x3E] = "Catalyst Temperature Bank 2 Sensor 1";
+arrCode[0x3F] = "Catalyst Temperature Bank 2 Sensor 2";
+arrCode[0x40] = "PID 0x41 - 0x60 Supported";
+arrCode[0x41] = "Monitor Status This Drive Cycle";
+arrCode[0x42] = "Control Module Voltage";
+arrCode[0x43] = "Absolute Load Value";
+arrCode[0x44] = "Commanded Equivalence Ratio";
+arrCode[0x45] = "Relative Throttle Position";
+arrCode[0x46] = "Ambient Air Temperature";
+arrCode[0x47] = "Absolute Throttle Position B";
+arrCode[0x48] = "Absolute Throttle Position C";
+arrCode[0x49] = "Absolute Throttle Position D";
+arrCode[0x4A] = "Absolute Throttle Position E";
+arrCode[0x4B] = "Absolute Throttle Position F";
+arrCode[0x4C] = "Commanded Throttle Acutator";
+arrCode[0x4D] = "Time Run with MIL on";
+arrCode[0x4E] = "Time Since DTC Cleared";
+arrCode[0x4F] = "Maximum Value - Equivalence ratio, O2 Voltage, O2 Current, Intake Manifold Pressure";
+arrCode[0x50] = "Maximum MAF Airflow Value";
+arrCode[0x51] = "Fuel Type";
+arrCode[0x52] = "Ethanol fuel %";
+arrCode[0x53] = "Absolute Evap. System Vapor Pressure";
+arrCode[0x54] = "Evap. System Vapor Pressure";
+arrCode[0x55] = "Short Term Secondary O2 Sensor Trim - Bank 1 and 3";
+arrCode[0x56] = "Long Term Secondary O2 Sensor Trim - Bank 1 and 3";
+arrCode[0x57] = "Short Term Secondary O2 Sensor Trim - Bank 2 and 4";
+arrCode[0x58] = "Long Term Secondary O2 Sensor Trim - Bank 2 and 4";
+arrCode[0x59] = "Absolute Fuel Rail Pressure";
+arrCode[0x5A] = "Relative Accelerator Pedal Position";
+arrCode[0x5B] = "Hybrid Battery Pack Charge Percent";
+arrCode[0x5C] = "Engine Oil Temperature";
+arrCode[0x5D] = "Fuel Injection Timing";
+arrCode[0x5E] = "Engine Fuel Rate";
+arrCode[0x5F] = "Emissions Requirements";
+arrCode[0x60] = "PID 0x41 - 0x60 Supported";
+arrCode[0x61] = "Driver's Demanded Torque";
+arrCode[0x62] = "Actual Engine Torque";
+arrCode[0x63] = "Engine Reference Torque";
+arrCode[0x64] = "Engine Percent Torque";
+arrCode[0x65] = "Auxiliary Input / Output Supported";
+
+arrCode[0xf0] = "ELM327: Battery voltage";
+
+var arrController = [];
+var arrSupported = [];
+var msg41Last = [];
+var msgLast = "";
+var tmrTimeout = null;
+var emulation = true; // <--- set this to false to use physical interface over websocket
+
+function timeoutHandler()
+{
+	console.log("timeout");
+	if (globalHandler) globalHandler(0);
+}
+
+function elmRequest(msg)
+{
+	msg41Last = [];
+	msgLast = "";
+	if ( tmrTimeout )
+	{
+		clearTimeout(tmrTimeout);
+		tmrTimeout = null;
+	}
+	tmrTimeout = setTimeout( "timeoutHandler()", 2000);
+
+	var resp = "";
+	console.log( "< '" + msg + "'" );
+
+	if ( emulation )
+	{
+    if ( msg == "0100" )
+  	  resp = "4100 98 3B 80 19";
+    if ( msg == "0120" )
+  	  resp = "4120 00 00 00 00";
+    if ( msg == "0140" )
+  	  resp = "4140 00 00 00 00";
+  	if ( msg == "ATI" )
+  		resp = "ELM327 v1.5";
+  	if ( msg == "ATSP0" || msg == "ATE0" )
+    	resp = "OK";
+    if ( msg == "ATDP" )
+    	resp = "AUTO";
+
+    if ( msg == "AT RV" )
+    	resp = "13.4V";
+
+	  if ( msg == "0101" )resp = "41010006E000";
+	  if ( msg == "0104" )resp = "410400";
+	  if ( msg == "0105" )resp = "410548";
+	  if ( msg == "010C" )resp = "410C0000";
+	  if ( msg == "010B" )resp = "410B63";
+
+	  if ( resp != "" )
+  	  setTimeout( "elmRecv('" +  resp + "')", 200 );
+	} else
+	{
+		wssend ( msg + "\x0d");
+	}
+}
+
+function trim1 (str) 
+{
+	while (str.charAt(0) == " " || str.charAt(0) == ">")
+		str = str.substr(1);
+	while (str.charAt(str.length-1) == " ")
+		str = str.substr(0, str.length-1);
+	return str;	
+//    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function wsrecv(txt)
+{
+	elmRecv(trim1(txt));
+}
+
+function addSupported( i )
+{
+	arrSupported[i] = 1;
+  console.log(i.toString(16) + ":" + arrCode[i]);
+	if ( i != 0x20 && i != 0x40 && i != 0x60 )
+		arrController[arrController.length] = {code:i};
+}
+
+function onRecv41(msg)
+{
+	msg41Last = msg;
+  switch ( msg[0] )
+	{
+		case 0x00:
+		  var dwSupported = (msg[1] << 24) | (msg[2] << 16) | (msg[3] << 8) | msg[4];
+		  for (var i = 1; i<=32; i++ )
+        if ( dwSupported & (1<<(32-i)) )
+					addSupported( i );
+		break;
+		case 0x20:
+		  var dwSupported = (msg[1] << 24) | (msg[2] << 16) | (msg[3] << 8) | msg[4];
+		  for (var i = 1; i<=32; i++ )
+        if ( dwSupported & (1<<(32-i)) )
+					addSupported( i + 0x20 );
+		break;
+		case 0x40:
+		  var dwSupported = (msg[1] << 24) | (msg[2] << 16) | (msg[3] << 8) | msg[4];
+		  for (var i = 1; i<=32; i++ )
+        if ( dwSupported & (1<<(32-i)) )
+					addSupported( i + 0x40 );
+		break;
+		case 0x60:
+		  var dwSupported = (msg[1] << 24) | (msg[2] << 16) | (msg[3] << 8) | msg[4];
+		  for (var i = 1; i<=32; i++ )
+        if ( dwSupported & (1<<(32-i)) )
+					addSupported( i + 0x60 );
+		break;
+	}
+}
+
+function parseHex(msg)
+{
+  var arrCodes = msg.split(" ");
+	var arrResult = [];
+	if ( arrCodes.length == 1 && arrCodes[0].length > 2 )
+	{
+		for ( var i = 0; i < arrCodes[0].length; i+=2 )
+  	  arrResult[i/2] = parseInt(arrCodes[0].substr(i, 2), 16);
+		
+		return arrResult;
+	}
+
+	for ( var i = 0; i < arrCodes.length; i++ )
+    arrResult[i] = parseInt(arrCodes[i], 16);
+  return arrResult;
+}
+
+function elmRecv(msg)
+{
+	if ( msg.length == 0 )
+		return;
+
+	var bInvalid = msg == "STOPPED" || msg == "SEARCHING...";
+//if (bInvalid) console.log("--invalid--");
+	if ( !bInvalid && tmrTimeout )
+	{
+		clearTimeout(tmrTimeout)
+		tmrTimeout = null;
+	}
+
+	console.log( "> '" + msg + "'" );
+  if ( msg.substr(0, 2) == "41" )
+		onRecv41( parseHex(trim1(msg.substr(2))) );
+	else
+		msgLast = msg;
+
+	if ( globalHandler && !bInvalid )
+		globalHandler(1);
+}
+
+//http://www.obdsol.com/articles/obd-software-development/reading-real-time-data/
+
+
+var globalHandler = null;
+var globalState = 0;
+
+function setHandler(h)
+{
+  globalHandler = h;
+}
+
+function procInit(success)
+{
+	setHandler(procInit);
+	if ( !connected )
+	{
+		console.log("wait...");
+		setTimeout("globalHandler();", 1000);
+		return;
+	}
+	if ( typeof(success) != "undefined" && success == 1 )
+		globalState++;
+
+	if ( success == 0 )
+	{
+	  console.log("Error, success = " + success + ", state = " + globalState);
+	}
+
+//console.log(globalState);
+
+	switch (globalState)
+	{
+	  case 0: elmRequest("ATE0"); break; // disable echo
+	  case 1: elmRequest("ATI"); break; //ELM327 v1.5
+		case 2: elmRequest("ATSP0"); break;
+
+		case 3: elmRequest("0100"); break;
+		case 4: if (arrSupported[0x20]) elmRequest("0120"); else setTimeout("globalHandler(1)", 0); break;
+		case 5: if (arrSupported[0x40]) elmRequest("0140"); else setTimeout("globalHandler(1)", 0); break;
+		case 6: if (arrSupported[0x40]) elmRequest("0160"); else setTimeout("globalHandler(1)", 0); break;
+		case 7: procBuildTable(); break;
+	}
+}
+
+function procBuildTable()
+{
+/*
+	if (msg41Last[0] != 0x41)
+	{
+		console.log("Waiting...");
+		setTimeout("procBuildTable()", 500);
+		return;
+	}
+*/
+	arrController[arrController.length] = {code:0xf0};
+
+	console.log("scan finished, build table");
+	setHandler(null);
+	var html = "<table border=1>";
+	for (var i in arrController)
+	{
+		var code = ("0" + arrController[i].code.toString(16)).substr(-2);
+		html += "<tr><td><input type='checkbox' id='chk_"+code+"' checked>" + code + "</td><td id='row_"+code+"'>"+arrCode[arrController[i].code]+"</td><td id='raw_" + code + "'>raw?</td><td id='info_" + code + "'>info?</td></tr>";
+	}
+	html += "</table>";
+  document.getElementById("table").innerHTML = html;
+
+  globalState = 0;
+	procScan();
+}
+
+function procScan()
+{
+  if ( globalState >= arrController.length )
+	{
+		var ratio = -1;
+		if ( gRpm != 0 && gKmh != 0 )
+		{
+			ratio = gRpm / gKmh;
+			var el = document.getElementById("dbg");
+			dbg.value = dbg.value + "add("+gRpm+", "+gKmh+");\n";
+		}		
+		document.getElementById("gearrat").innerHTML = "gear ratio = " + ratio.toFixed(3);
+		document.getElementById("gear").innerHTML = gearByRatio(ratio);
+		globalState = 0;            	
+		setTimeout("procScan()", 0);
+		return;
+	}
+
+	setHandler(onScan);
+	var code = ("0" + arrController[globalState].code.toString(16)).substr(-2);
+
+	if ( !document.getElementById("chk_" + code).checked )
+	{
+		document.getElementById("row_"+code).style.background = "#f0f0f0";
+		setTimeout("onScan(-1)", 0);
+		return;
+	}
+	if ( arrController[globalState].code >= 0xf0 )
+	{
+		switch (arrController[globalState].code)
+		{
+			case 0xf0: elmRequest("AT RV"); break;
+		}
+	} else
+	{
+	  elmRequest("01" + code);
+	}
+	document.getElementById("row_"+code).style.background = "#d0d0ff";
+}
+
+function _assert( cond, err )
+{
+  if ( !cond ) 
+    console.log("Assertion failed: "+err);
+}
+
+var gRpm = 0;
+var gKmh = 0;
+var gMaf = 0;
+
+function onScan(success)
+{
+	var code = ("0" + arrController[globalState].code.toString(16)).substr(-2);
+	if ( success == -1 )
+	{
+		globalState++;
+		procScan();
+		return;
+	}
+
+	if ( success != 1 )
+	{
+		console.log("timeout!");
+		document.getElementById("row_"+code).style.background = "#f0d0d0";
+		document.getElementById("raw_"+code).innerHTML = "?";
+		globalState++;
+		procScan();
+		return;
+	}
+	document.getElementById("row_"+code).style.background = "#ffffff";
+
+	if ( arrController[globalState].code >= 0xf0 )
+	{
+		document.getElementById("raw_"+code).innerHTML = msgLast;
+		document.getElementById("info_"+code).innerHTML = msgLast;
+
+		globalState++;
+		procScan();
+		return;
+	}
+
+	_assert(msg41Last[0] == arrController[globalState].code, "onScan no match");
+
+	if ( msg41Last.length <= 1 )
+	{
+		document.getElementById("row_"+code).style.background = "#f0d0d0";
+//		document.getElementById("raw_"+code).innerHTML = "?";
+		globalState++;
+		procScan();
+		return;
+	}
+
+	var raw = "";
+//	var code = arrController[globalState].code.toString(16);
+	for ( var i = 1; i < msg41Last.length; i++ )
+	{
+		if (i > 1)
+			raw += " ";
+		raw += ("0" + msg41Last[i].toString(16)).substr(-2);
+	}
+	var value = "";
+	switch (arrController[globalState].code)
+	{
+		case 0x05: value = (msg41Last[1] - 40) + "&#176;C"; break;
+		case 0x0f: value = (msg41Last[1] - 40) + "&#176;C"; break;
+		case 0x0b: value = msg41Last[1] + " kPa"; break;
+		case 0x04: value = (msg41Last[1]/256*100).toFixed(2) + "%"; break;
+		case 0x11: value = (msg41Last[1]/256*100).toFixed(2) + "%"; break;
+		case 0x0c: gRpm = (msg41Last[1]*256 + msg41Last[2])/4; value = (gRpm).toFixed(1) + " rpm"; break;
+		case 0x10: gMaf = (msg41Last[1]*256 + msg41Last[2])/10; value = (gMaf).toFixed(2) + " g/s"; break;
+		case 0x0d: gKmh = msg41Last[1]; value = msg41Last[1] + " kmh"; break;
+		case 0x1c:
+			switch ( msg41Last[1] )
+			{
+				case 0x01: value = "OBD 2 defined by CARB"; break;
+				case 0x02: value = "OBD 2 defined by EPA"; break;
+				case 0x03: value = "OBD and OBD 2"; break;
+        case 0x04: value = "OBD-I"; break;
+				case 0x05: value = "Not meant to comply with OBD Standard"; break;
+				case 0x06: value = "EOBD"; break;
+				case 0x07: value = "EOBD and OBD 2"; break;
+				case 0x08: value = "EOBD and OBD"; break;
+				case 0x09: value = "EOBD, OBD, and OBD 2"; break;
+				case 0x0A: value = "JOBD"; break;
+				case 0x0b: value = "JOBD and OBD 2"; break;
+				case 0x0c: value = "JOBD and EOBD"; break;
+				case 0x0d: value = "JOBD, EOBD, and OBD 2"; break;
+			}
+		break;
+		case 0x24:
+			var eqRatio = (msg41Last[1]*256 + msg41Last[2]) * 2 / 65535;
+			var volt = (msg41Last[3]*256 + msg41Last[4]) * 2 / 32768;
+			value = "eqr=" + eqRatio.toFixed(2) + " u=" + volt.toFixed(2) + " V";
+		break;
+		case 0x4f:
+			value = "eqr=" + msg41Last[1] + " u=" + msg41Last[2] + "V i=" + msg41Last[3] + "mA p="+msg41Last[4]+"kPa";
+		break;
+	}
+	document.getElementById("raw_"+code).innerHTML = raw;
+	document.getElementById("info_"+code).innerHTML = value;
+	globalState++;
+	procScan();
+}
+
+
+function gearByRatio(r)
+{
+  if ( r >= 109 && r <= 130 ) return 1; 
+  if ( r >= 60 && r <= 65 ) return 2;
+  if ( r >= 38 && r <= 40 ) return 3;
+  if ( r >= 28 && r <= 30 ) return 4;
+  if ( r >= 22 && r <= 24 ) return 5;
+  if ( r >= 18 && r <= 20 ) return 6;
+	return 0;
+}
+
+/*
+ // 110-115  , 117(rev)
+
+1: 109-130 (110)  \\\
+2: 60-65
+3: 38-40
+4: 28-30
+5: 22-24
+6: 18-20
+
+
+AT RV   - AT CV 1247
+
+
+err codes 03:
+43 01 02 11 20 12 20
+43 15 14 15 15 00 00
+
+00A
+0:430401020113
+1:01230222000000
+
+u>14.3-14.4 chargning
+turn off drop 12.9V
+
+
+
+*/
+var el = document.getElementById("dbg");
+dbg.value = "";
+
+procInit();
+</script>

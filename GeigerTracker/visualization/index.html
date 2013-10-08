@@ -1,0 +1,531 @@
+<html>
+<head>
+  <title>Geiger tracker monitor</title>
+  <style>
+		body { margin: 0; padding: 0; }
+		#panel { 
+      position:absolute; 
+      right:20px; bottom:20px; width:300px; height:240px; 
+      border-radius:10px; 
+      background:#ffffff;
+      box-shadow: 2px 2px 12px #000000;
+			padding:10px;
+			font-family:arial;
+			font-size:12px;
+	  }
+		#graph { 
+      position:absolute; 
+      left:20px; bottom:20px; width:700px; height:300px; 
+      border-radius:10px; 
+      background:rgba(255, 255, 255, 0.8);
+      box-shadow: 2px 2px 12px #000000;
+	  }
+		td { font-size:10px; text-shadow:1px 1px 1px #fff, -1px -1px 1px #fff, -1px 1px 1px #fff, 1px -1px 1px #fff; }
+	</style>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="http://code.highcharts.com/highcharts.js"></script>
+</head>
+<body onload="Init();" onunload="">
+<form>
+  <div id="mapCanvas" style="width: 100%; height: 100%"></div>
+  <div id="graph"></div>
+	<div id="panel">
+	  Recording:<br>
+    <select id="file" onChange="reload();" onKeyUp="reload()" size="8" style="width:240px">
+      <option>20130209-141027.txt</option>
+      <option>20130209-142023.txt</option>
+      <option>20130211-094347.txt</option>
+      <option>20130211-194044.txt</option>
+      <option>20130212-175103.txt</option>
+      <option>20130213-082801.txt</option>
+      <option>20130214-171200.txt</option>
+      <option>20130218-085155.txt</option>
+      <option>20130221-143939.txt</option>
+      <option selected>20130225-094929.txt</option> 
+    </select>
+    <br>
+    Block size:
+    <select id="size" onChange="reload();" onKeyUp="reload()">
+      <option>500</option>
+      <option>50</option>
+      <option>100</option>
+      <option>150</option>
+      <option>200</option>
+      <option selected>500</option>
+      <option>1000</option>
+      <option>1500</option>
+    </select>
+		<input type="checkbox" id="holdon">Hold on
+		<input type="checkbox" id="grayscale">Grayscale
+		<br>
+		Detector:
+		<input type="radio" name="detector" id="detmin" onClick="reload()"> Minimum
+		<input type="radio" name="detector" id="detavg" onClick="reload()"> Average
+		<input type="radio" name="detector" id="detmax" onClick="reload()" checked> Maximum 
+    <br>
+		<div id="scale"></div>
+</form>
+  </div>
+
+  <script src="http://maps.google.com/maps?file=api&v=2&key=AIzaSyA5YCStfqf6-KLMm3UJbwRK3Kx6zRxffl8" type="text/javascript"></script>
+
+  <script language="javascript">  
+      var Main;
+			var Aura;
+			var Window;
+
+			var map;
+			var ovlvisiblearea;
+			var ovlvisiblerect;
+			var vehicle;
+
+			var route = [
+  {x:17.748928, y:48.280565},
+  {x:17.630481, y:48.338451},
+  {x:17.180213, y:48.150970}];
+
+      function Init() 
+      {
+        if ( typeof(GBrowserIsCompatible) != "undefined" && GBrowserIsCompatible() ) 
+        {
+          map = new GMap2(document.getElementById("mapCanvas"));
+          map.setUIToDefault();
+        }
+          GEvent.addListener(map, "click", 
+            function(overlay, latlng, ovllatlng) 
+            {
+              if ( latlng ) 
+								console.log( latlng.x + ", " + latlng.y );
+              if ( ovllatlng ) 
+								console.log( ovllatlng.x + ", " + ovllatlng.y );
+            }
+          );
+        reload();
+//				genScale();
+      }                        
+
+
+
+	var segmulx = 714+20;
+	var segmuly = segmulx/Math.cos(48/180*Math.PI);
+
+	var meters = 500; //150
+
+	segmulx /= meters/100;
+	segmuly /= meters/100;
+
+	var segments = [];
+	var arrPoints = [];
+	var first = true;
+	var detector = "max";
+
+	function segid(x, y)
+	{
+		var newpoint = new GLatLng( y, x );
+		if ( arrPoints.length > 0 )
+		{
+			var last = arrPoints[arrPoints.length-1];
+			var dist = last.distanceFrom( newpoint );
+			if ( dist > 8 )
+				arrPoints[arrPoints.length] = newpoint;				
+		} else
+			arrPoints[arrPoints.length] = newpoint;
+		x -= 16;
+		y -= 47;
+		x *= segmulx;
+		y *= segmuly;
+		x = Math.floor(x);
+		y = Math.floor(y);
+		return x + "," + y;
+//		return x + y*10000;
+	}
+	function segrect( id )
+	{
+		var lst = id.split(",");
+//		var x = id%10000;
+//		var y = id/10000;
+		var x = parseInt(lst[0]);
+		var y = parseInt(lst[1]);
+
+		x /= segmulx;
+		y /= segmuly;
+		x += 16;
+		y += 47;
+		return {left:x, bottom:y, right:x+1/segmulx, top:y+1/segmuly};
+	}
+
+	function project( x, y, x1, y1, x2, y2 )
+	{
+		var ux = x2 - x1;
+		var uy = y2 - y1;
+		var vx = uy;
+		var vy = -ux;
+		var t;
+		if ( vx == 0 && vy == 0 )
+			return -1;
+		if ( Math.abs(vx) > Math.abs(vy) ) 
+		{
+			t = (x1 - x) * (-ux) / vx - y1 + y;
+			t /= (uy - ux * vy / vx);
+		} else
+		{
+			t = (y1 - y) * (-uy) / vy - x1 + x;
+			t /= (ux - uy * vx / vy);
+		}
+		return t;
+	}
+
+
+	function routeDistance(x, y)
+	{
+		var dist = 0;
+    for ( var i=0; i<route.length-1; i++ )
+		{
+			var f = project(x, y, route[i].x, route[i].y, route[i+1].x, route[i+1].y);
+			if ( f >= 0 && f <= 1 )
+			{
+				dist += (new GLatLng( route[i].y, route[i].x )).distanceFrom(new GLatLng(y, x));
+				return dist;
+			}
+			dist += (new GLatLng( route[i].y, route[i].x )).distanceFrom(new GLatLng( route[i+1].y, route[i+1].x ));
+		}
+		return -1;
+	}
+
+	function add(json)
+	{
+//		console.log("add " + json);
+		var id = segid( json.lon, json.lat );
+		if ( id in segments )
+		{
+			segments[id].count++;
+			segments[id].sum += json.rate;
+			if ( json.rate > segments[id].maximum )
+				segments[id].maximum = json.rate;
+			if ( json.rate < segments[id].minimum )
+				segments[id].minimum = json.rate;
+		} else
+			segments[id] = {maximum: json.rate, count:1, sum:json.rate, minimum:json.rate};
+	}
+	function gencolor(rate)
+	{
+		var maxalpha = 0.8;
+		var minalpha = 0.1;
+
+		minalpha = 0.5;
+		maxalpha = 1;
+
+		var al = (rate - 0.05)/(0.20-0.05);	
+		if ( al < 0 )
+			al = 0;
+		if ( al > 1 )
+			al = 1;
+		al = minalpha + al*(maxalpha-minalpha);
+
+		if ( document.getElementById("grayscale").checked )
+		{
+			minalpha = 0;
+			maxalpha = 1;
+			al = (rate-0.05)/0.2;
+			al = minalpha + al*(maxalpha-minalpha);
+			if ( al < 0 )
+				al = 0;
+			if ( al > 1 )
+				al = 1;
+		
+			return "rgba(0,0,0,"+al.toFixed(2)+")";
+		}
+
+
+		if (rate <= 0.05)
+		{
+			return "rgba(0,0,0,"+al.toFixed(2)+")";
+//			var l = (rate/0.05) * (maxalpha-minalpha) + minalpha;
+//			return "rgba(0,0,0,"+l.toFixed(2)+")";
+		}
+		if (rate <= 0.10)
+		{
+			var l = (rate-0.05)/0.05*255;
+//			var la = l/255 * (maxalpha-minalpha) + minalpha;
+			return "rgba(0,"+Math.floor(l)+",0,"+al.toFixed(2)+")";
+		}
+		if (rate <= 0.15)
+		{
+			var l = (rate-0.10)/0.05*255;
+			return "rgba("+Math.floor(l)+",255,0,"+al.toFixed(2)+")";
+		}
+
+		if (rate <= 0.20)
+		{
+			var l = (rate-0.15)/0.05*255;
+			return "rgba(255,"+Math.floor(255-l)+",0,"+al.toFixed(2)+")";
+		}
+
+		return "rgba(255,0,0,"+maxalpha+")";
+	}
+
+	function vis()
+	{
+		map.clearOverlays();
+
+		if ( !document.getElementById("grayscale").checked )
+		{
+	    var polyline = new GPolyline( arrPoints, "#0000ff", 5, 0.5 );
+	    map.addOverlay(polyline);
+		}
+
+		for ( id in segments )
+		{
+			var segment = segments[id];
+			var rect = segrect( id );
+			var value = 0;
+			if ( detector == "max" )
+				value = segment.maximum;
+			if ( detector == "min" )
+				value = segment.minimum;
+			if ( detector == "avg" )
+				value = segment.sum / segment.count;
+			segment.value = value;
+      gRect(rect.left, rect.top, rect.right, rect.bottom, gencolor(value));
+		}
+
+		if ( document.getElementById("grayscale").checked )
+		{
+	    var polyline = new GPolyline( arrPoints, "#0000ff", 5, 0.8 );
+	    map.addOverlay(polyline);
+		}
+
+		if ( first )
+		{
+			first = false;
+	    map.setCenter(arrPoints[0], 13);
+		}
+		doGraph();
+	}
+
+
+			// gabove funkcie {{{
+
+	var gcolor = "#0000ff";
+	var gwidth = 5;
+	var galpha = 1;
+
+	function aGoto(lx, ly)
+	{
+	  Aura.Send("C3DMapWnd.SetWantedPosition("+lx+","+ly+");");
+	}
+	function gColor(clr, alpha)
+	{
+          gcolor = clr;
+	}
+	function gWidth(wid)
+	{
+          gwidth = wid;
+	}
+	function gAlpha(alp)
+	{
+          galpha = alp;
+	}
+        function gClear()
+        {
+          map.clearOverlays();
+        }
+        function gPolygon(arrBoundary, clr)
+        {
+          var arrBoundaryG = [];
+          for ( var i = 0; i < arrBoundary.length; i+=2)
+          	arrBoundaryG[i/2] = new GLatLng( arrBoundary[i+1], arrBoundary[i] );
+          var polygon = new GPolygon( arrBoundaryG, "#000000", 0.5, 0.3, clr, 1);
+          map.addOverlay( polygon );
+        }
+        function gLine(x1, y1, x2, y2)
+        {
+          var arrLine = [];
+          arrLine[0] = new GLatLng( y1 / 100000, x1 / 100000 );
+          arrLine[1] = new GLatLng( y2 / 100000, x2 / 100000 );
+          var polyline = new GPolyline( arrLine, gcolor, gwidth, galpha );
+          map.addOverlay( polyline );
+        }
+
+        function gPoint(x, y)
+        {
+          var epo = new GMarker( new GLatLng(y, x) );
+          map.addOverlay( epo );
+					return epo;
+        }
+				function gDelete(e)
+				{
+					map.removeOverlay(e);
+				}
+        function gCenter(x, y)
+        {
+          map.setCenter(new GLatLng(y / 100000, x / 100000 ), 18);       
+			  }
+        function gRect(l, t, r, b, clr)
+        {
+        	gPolygon([l, t,  l, b,  r, b,  r, t,  l, t], clr);
+        }
+			// }}}
+
+var prevScript = false;
+function loadScript(fname, handler)
+{
+	var script = document.createElement('script');
+  script.type= 'text/javascript';
+  script.onreadystatechange= function () {
+    if (this.readyState == 'complete') this.onload();
+  }
+  script.onload = handler;
+  script.src = /*"http://agro.valky.eu/sklenik/"+*/fname;
+
+	var head = document.getElementsByTagName('head')[0];
+	if ( prevScript )
+		head.removeChild( prevScript );
+	head.appendChild(script);
+	prevScript = script;
+}
+
+
+function reload()
+{
+	var meters = 1000;
+
+	var listFile = document.getElementById("file");
+	var fileName = listFile.options[listFile.selectedIndex].text;
+
+	var listRect = document.getElementById("size");
+	var rectSize = listRect.options[listRect.selectedIndex].text;
+
+	meters = rectSize;
+
+	segmulx = 714+20;
+	segmuly = segmulx/Math.cos(48/180*Math.PI);
+	segmulx /= meters/100;
+	segmuly /= meters/100;
+
+	segments = [];
+	arrPoints = [];
+
+	if ( document.getElementById("detavg").checked )
+		detector = "avg";
+	if ( document.getElementById("detmax").checked )
+		detector = "max";
+	if ( document.getElementById("detmin").checked )
+		detector = "min";
+
+	loadScript(fileName, vis);
+	genScale();
+}
+
+function genScale()
+{
+  var html = "Scale: &mu;Sv/h <table><tr>";
+  for (var i=0.05; i<=0.25; i+=0.05/2)
+  {
+    html += "<td style='background:"+gencolor(i)+"'>"+i.toFixed(3)+"</td>";
+  }
+  html += "</tr></html>"
+  document.getElementById("scale").innerHTML = html;
+//	reload();
+}
+
+var chartTest;
+function hidechart()
+{
+	document.getElementById("graph").style.display = "none";
+}
+
+var ppoint = false;
+function Highlight(id)
+{
+//	var segment = segments[id];
+  var rect = segrect( id );
+	var center = {x:(rect.left+rect.right)/2, y:(rect.top+rect.bottom)/2};
+	if ( ppoint )
+		gDelete(ppoint);
+  ppoint = gPoint( center.x, center.y );
+}
+
+var series = [];
+
+function doGraph()
+{
+	var gpoints = [];
+	for ( id in segments )
+	{
+		var segment = segments[id];
+		var rect = segrect( id );
+		var center = {x:(rect.left+rect.right)/2, y:(rect.top+rect.bottom)/2};
+		var dist = routeDistance(center.x, center.y).toFixed(2);
+		if ( dist < 0 )
+			continue;
+		var rate = segment.value;
+		gpoints[gpoints.length] = {x:dist/1000, y:rate, myData:id};
+	}
+	gpoints.sort(function(a,b){return a.x - b.x;});
+
+	if ( Math.abs(gpoints[0].x - gpoints[gpoints.length-1].x) < 30.000 )
+	{
+		document.getElementById("graph").style.display = "none";
+		return;
+	}
+	document.getElementById("graph").style.display = "";
+
+
+	var curseries = {name:"Test", data:gpoints, marker:{enabled:true, radius:3}};
+
+	if ( document.getElementById("holdon").checked )
+	{
+		//curseries.name = series.length + ". Record";
+		if ( series.length < 3 )
+		{
+			var remap = [0, 3, 2];
+			curseries.color = Highcharts.getOptions().colors[remap[series.length]];
+		}
+		series[series.length] = curseries;
+	}
+	else
+		series = [curseries];
+
+  chartTest = new Highcharts.Chart({
+    chart: {
+        renderTo: 'graph',
+        defaultSeriesType: 'spline',
+        marginRight: 10,
+				backgroundColor:'transparent'
+    },
+    title: {
+        text: '<a href="javascript:hidechart();">Hide window</a>',
+        style: {
+            margin: '10px 100px 0 0' // center it
+        }
+    },
+    xAxis: {
+			title: {enabled:true, text:"Distance [km]"}
+    },
+    yAxis: {
+        title: {
+            text: 'Dose rate [uSv/h]'
+        },
+				min:0,
+				max:0.2
+    },
+            tooltip: {
+                formatter: function() {
+												Highlight(this.point.myData);
+                        return this.x.toFixed(3) +' km, '+ this.y.toFixed(3) +' uSv/h';
+                }
+            },
+    legend: {
+        enabled: false
+    },
+    exporting: {
+        enabled: false
+    },
+    series: series
+});
+}
+	</script>
+
+</body>
+</html>

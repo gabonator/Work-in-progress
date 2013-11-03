@@ -1,0 +1,100 @@
+<body>
+<pre id="q"></pre>
+<script language="javascript" src="log.js"></script>
+<script language="javascript">
+function put(f) { document.getElementById("q").innerHTML += f; }
+
+q = q; //q9;
+qd = 1/13.02;
+qs = 6;
+
+q = q9;
+qd = 1/5.207;//2/12.98;
+qs = 125-5;
+
+q = q8;
+qs = 125-7;
+
+q = q7;
+qs = 125-6; 
+
+q = q10;
+qs = 125-6; 
+qd = 1/5.22; // 5.218
+
+buf = "";
+pos = 0;
+i = 0;
+d = 0;
+s = 0;
+put("<h1>bitstream</h1>\n");
+
+while ( pos != -1 && pos < q.length )
+{
+  pos = q.indexOf( ",", pos );
+  if (pos==-1)
+    break;
+  pos2 = q.indexOf(" ", pos+1);
+  val = q.substr(pos+1, pos2-pos-1);
+  val = val *1;
+  val = (val < 120) ? 1 : 0;
+
+  i++;
+//put("<"+i+">");
+  pos = pos2;
+  if ( i < qs ) 
+    continue;
+
+  // 4 => 0.25
+  // 5 => 0.20
+  d += qd; //1/13.02;
+  put(val);
+  if ( d >= 1.0 )
+  {
+    put("\n");
+    d -= 1.0;
+    s = 0;
+  }
+  s ++;
+  if ( s==Math.floor(0.5/qd)) 
+    buf += val.toString(10);
+  
+  
+}
+put("<h1>UART bits</h1>\n");
+
+put(buf);
+
+put("<h1>UART frames</h1>\n");
+
+var out = "";
+for (var i=1; i<buf.length-10; i+=10)
+{
+  var frame = buf.substr(i, 10);
+  var bits = frame.substr(1,8);
+  var code = 0;
+  for ( var j=0; j<8; j++)
+  {
+    if (bits.charAt(j) == "1")
+     code |= 1<<(j);
+  }
+  if (frame.charAt(0) == "0" && frame.charAt(9) == "1" )
+    out += "\\"+ ("0"+code.toString(16)).substr(-2);
+  else
+    out += "?";
+  put(frame+"  " +code.toString(16)+"\n");
+}
+
+put("<h1>Code</h1>\n");
+
+put(out);
+
+/*
+\10\7b\10\10\0a\00\00\00\55\15\06\00\05\0a\ff\00\05\0a\00\ff\df\10\03   50/50
+\10\7b\10\10\0a\00\00\00\55\15\06\00\05\0a\ff\00\0d\0a\00\ff\df\10\03
+\10\7b\0d\07\00\00\00\55\15\03\00\00\01\ff\0a\03\f7\10\03               1.0km
+\10\7b\0c\07\00\00\00\55\15\03\00\00\00\00\0a\01\f9\10\03
+*/
+</script>
+</body>
+

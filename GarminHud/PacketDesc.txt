@@ -1,0 +1,26 @@
+
+
+packet structure: { 0x10 0x47 (packet_len: 1 byte) (data_len: 4 bytes) data: { 55 15 ... } (crc: 1 byte) 0x10 0x03 }
+packet_len = data_len+6
+
+set arrival time "Hh:Mm": 05 00 (HH) (hh) ff (MM) (mm) 00 ff
+set distance "X0 m": 03 00 00 (XX) 00 0a 01
+set distance "XYZ m": 03 00 (XX) (YY) 00 (ZZ) 01
+set distance "XY.Z km": 03 00 (XX) (YY) ff (ZZ) 03
+set distance "XY.Z mi": 03 00 (XX) (YY) ff (ZZ) 05
+set direction XY: 01 01 (XX) (YY)
+left 41 40
+right 05 04
+sharp right 05 80
+straight 11 10
+
+set lanes: XY: 02 (XX) (YY)
+bits of XX: "dots/outline/outline/outline/outline/outline/outline/dots"
+bits of YY: "none/arrow/arrow/arrow/arrow/arrow/arrow/none"
+
+set speed warning XYZ/PQR kmh: 06 (XX) (YY) (ZZ) ff (PP) (QQ) (RR) 00 ff
+set speed warning with alert: 06 (XX) (YY) (ZZ) ff (PP) (QQ) (RR) 01 ff
+
+two consecutive 10 10 are caused by stuffing, do not include both in CRC calculation
+for displaying zero digit use 0x0A instead of 0x00 which shows an empty digit
+

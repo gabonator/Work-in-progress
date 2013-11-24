@@ -1,0 +1,8 @@
+window.logic82=function()
+{while(1){switch(B)
+{case 0:if(E(DT)){BY(169);if(AGI.C)return;BY(170);if(AGI.C)return;BF(169);if(AGI.C)return;BF(170);if(AGI.C)return}
+if(E(DR)&&!E(f94)){F(f94);L(v63,1);AL(Ego,v67,v68);Y(v67,20);if(P(v68,162)){W(v68,6);A(1);break}
+L(v68,167)}
+case 1:if(!E(DT)){BF(169);if(AGI.C)return;BF(170);if(AGI.C)return}
+return}}}
+CONTROLS[82]="?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4><47<.,>.,7>4>.{7>94>.-7>E4>.~C>K4>.qC>U4>.YH>g4>.OC>x4>.T7>x4>.T7>x4>.Y7>r4>.Y7>r4>.d7<.E.V4>.k7<,Ag5KQK5E4>.k7<+Ar5K5K5K5E4>.q7<xA!5K5K5K5E4>.dC<rA+5K5K5K5E4>.TC<x5,5K5K5K5E4>.O7<^5,5K5K5K5E4>.J7<+5,5K5K5K5E4>.D7<{.QK5K5E4>.87>9*4>.37>,4>;7>.44>]7>.94>-7>.E4>-7>.E4>%7>.K4>%7<lL<g4>~7<gAPF<P4>~7<UArA<E4>~7<KA^5<E4>w7<P5!A<K4>w7<P5gL<U4>w7<Ph<r4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>w7>.U4>~7>.P4>%7>.K4>%7>.K4>-7>.E4>]7>.94>]7>.94>;7>.44>;7>.44>.37>,4>.37>,4>.87>{4>.87>{4>.D7>xF4>.D7>ZLK4>.J7<.PQgQK5K4>.D7<.P5P*K5K4>.D7<.K5U5K5K5K5K5K4>.87<.P5U5K5K5K5K5K4>.37<.U5U5K5K5K5K5K4>.37<.U5U5K5K5K5K5K4>;7<.Z5U5K5K5K5K5K4>]7<.g5U5K5K5K5K5K4>-7<.l5U5K5K5K5K5K4>~C<.xAK5K5K5KQK4>w7<.{5E5K5K59FPF4>q7>4FKVx4>k7>Kh^4>d7>.l4>Y7>.r4>T7>.x4>O7>.!4>J7>.^4>J7>.^4>D7>.+4>D7>.+4>87>.{4>87>.{4>87>.{4>87>.{4>87>.{4>87>.{4>87>.{4>D7>.+4>J7>.^4>O7>.!4>O7>.!4>T7>.x4>Y7>.r4>d7>.l4>k7>.g4>q7>.Z4>q7>.Z4>w7>.U4>~7>.P4>%C>.E4>]C>.44>.3C>{4>.D7>+4>.D7>+4>.J7>^4>.O7>!4>.O7>!4>.T7>x4>.Y7>r4>.d7>l4>.d7>l4>.k7>g4>.d7>l4>.d7>l4>.Y7>r4>.Y7>r4>.OC>x4>.8H>^4>.37>,4>.37>,4>;7>.44>;7>.44>]7>.94>]7>.94>-7>.E4>-7>.E4>%7>.K4>~7>.P4>~7>.P4>w7>.U4>w7>.U4>q7>.Z4>q7>.Z4>k7>.g4>k7>.g4>d7>.l4>d7>.l4>d7<.Z.0.E4>Y7<+s9.sg4>Y7<!A9<aP";

@@ -1,0 +1,250 @@
+html, body
+{
+  height: 100%;
+  margin: 0;
+  background: #000;
+}
+#edge
+{
+  visibility: hidden;
+  width: 100%; height: 50%;
+  margin-top: -200px;
+  position: relative;
+  float: left;
+}
+#center
+{
+  clear: both;
+  top: -200px;
+  position: static;
+  margin: 0 auto;
+  width:640px; height:400px;
+}
+#sarien
+{
+  position: relative;
+  width:640px; height:400px;
+  background: #000;
+}
+#canvas
+{
+  position: absolute;
+  top: 16px; left: 0px;
+  width:640px; height:400px;
+  overflow-x: hidden;
+  z-index: 42;
+}
+.priority
+{
+  position:absolute;
+}
+.view
+{
+  position:absolute;
+  overflow:hidden;
+  z-index:100;
+}
+.view img
+{
+  position:absolute;
+}
+.text-screen .view,
+.text-screen .priority,
+.view-hidden
+{
+  display: none !important;
+}
+#actions
+{
+  position: absolute;
+  background: #fff;
+  z-index: 99999;
+  display: none;
+  border: solid #000 1px;
+  padding: 1px;
+  font-weight: bold;
+  font-size: 13px;
+}
+.char
+{
+  position: absolute;
+  z-index: 999;
+  font-family: Courier New;
+  font-weight: bold;
+  font-size: 17px;
+  line-height: 100%;
+}
+.ie .char 
+{
+  line-height: 19px;
+  height: 20px;
+}
+.char_fg_0 { color: #000; }
+.char_fg_1 { color: #0000A0; }
+.char_fg_2 { color: #00A000; }
+.char_fg_3 { color: #00A0A0; }
+.char_fg_4 { color: #A00000; }
+.char_fg_5 { color: #8000A0; }
+.char_fg_6 { color: #A05000; }
+.char_fg_7 { color: #A0A0A0; }
+.char_fg_8 { color: #505050; }
+.char_fg_9 { color: #5050FF; }
+.char_fg_10 { color: #00FF50; }
+.char_fg_11 { color: #50FFFF; }
+.char_fg_12 { color: #FF5050; }
+.char_fg_13 { color: #FF50FF; }
+.char_fg_14 { color: #FFFF50; }
+.char_fg_15 { color: #FFFFFF; }
+.char_bg_0 { background-color: #000; }
+.char_bg_1 { background-color: #0000A0; }
+.char_bg_2 { background-color: #00A000; }
+.char_bg_3 { background-color: #00A0A0; }
+.char_bg_4 { background-color: #A00000; }
+.char_bg_5 { background-color: #8000A0; }
+.char_bg_6 { background-color: #A05000; }
+.char_bg_7 { background-color: #A0A0A0; }
+.char_bg_8 { background-color: #505050; }
+.char_bg_9 { background-color: #5050FF; }
+.char_bg_10 { background-color: #00FF50; }
+.char_bg_11 { background-color: #50FFFF; }
+.char_bg_12 { background-color: #FF5050; }
+.char_bg_13 { background-color: #FF50FF; }
+.char_bg_14 { background-color: #FFFF50; }
+.char_bg_15 { background-color: #FFFFFF; }
+
+#menu
+{
+  position: absolute;
+  left: 0; top:0;
+  width: 640px; height: 16px;
+  background: #fff; color: #000;
+  z-index: 999;
+  font-family: Courier New;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 18px;
+  text-decoration: none;
+}
+#dialog
+{
+  display: none;
+  position: absolute;
+  background: #fff;
+  z-index: 998;
+}
+#border
+{
+  position: absolute;
+  left: 4px; top: 2px; right: 4px; bottom: 2px;
+  border-left: solid #AA0000 4px;
+  border-right: solid #AA0000 4px;
+  border-top: solid #AA0000 2px;
+  border-bottom: solid #AA0000 2px;
+}
+.ie #border
+{
+  width: expression(document.getElementById('dialog').offsetWidth - 16); 
+  height: expression(document.getElementById('dialog').offsetHeight - 8); 
+}
+
+html.ie,
+{
+  overflow: hidden;
+}
+.iphone #edge
+{
+  display: none;
+}
+.iphone #sarien
+{
+}
+.iphone #canvas
+{
+  overflow-x: visible;
+  overflow: visible;
+}
+.iphone #actions
+{
+  margin: 0;
+  width: 638px; min-height: 399px;
+  border: 0;
+}
+.iphone #actions a
+{
+  display: block; height: 30px;
+  font-family: Helvetica;
+  color: #000;
+  text-decoration: none;
+  font-weight: normal;
+  font-size: 30px;
+  line-height: 30px;
+  padding: 0 10px;
+}
+.iphone #actions a:focus
+{
+  background: navy;
+  color: #fff;
+}
+#messageContainer
+{
+  position: absolute;
+  top: 0; left: 0;
+  width: 2000px; height: 100%;
+  z-index: 500;
+  overflow: hidden;
+}
+.message
+{
+  position: absolute;
+  -moz-user-select: none;
+}
+.message td,
+.message div
+{
+  line-height: 1px;
+  font-size: 1px;
+}
+.message .tl
+{
+  width: 5px; height: 3px;
+  background: url(/img/tl.gif);
+}
+.message .tr
+{
+  width: 5px; height: 3px;
+  background: url(/img/tr.gif);
+}
+.message .bl
+{
+  width: 5px; height: 3px;
+  background: url(/img/bl.gif);
+}
+.message .br
+{
+  width: 5px; height: 3px;
+  background: url(/img/br.gif);
+}
+.message .t,
+.message .r,
+.message .b,
+.message .l,
+.message .c
+{
+  background: #fff;
+}
+.message .c
+{
+  color: #000;
+  font-family: Courier New;
+  font-size: 18px;
+  line-height: normal;
+  font-weight: bold;
+}
+.message .teut
+{
+  position: absolute;
+  width: 16px; height: 8px;
+  left: 50%;
+  margin-left: -15px;
+  background: url(/img/teut.gif);
+}

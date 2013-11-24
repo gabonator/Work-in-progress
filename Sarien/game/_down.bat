@@ -1,0 +1,1 @@
+for /L %i in (117,1,200) do wget http://sarien.net/games/kingsquest2/logic%i.js

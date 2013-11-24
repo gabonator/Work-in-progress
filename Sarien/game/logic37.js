@@ -1,0 +1,20 @@
+window.logic37=function()
+{while(1){switch(B)
+{case 0:if(E(DT)){if((BT("Oil Lamp")||BT("Carpet"))){CY(65);CY(98)}
+CY(97);CY(104);BY(151);if(AGI.C)return;BY(158);if(AGI.C)return;BY(161);if(AGI.C)return;BY(101);if(AGI.C)return;CW(Ck);BF(161);if(AGI.C)return;BF(101);if(AGI.C)return;BJ(Ck);AY(Ego);AJ(Ego);BM()}
+if(!E(DO)){if((BO(Ego,54,55,81,65)||BO(Ego,77,51,115,68)||BO(Ego,93,69,115,76)||BO(Ego,102,74,136,104)||BO(Ego,125,47,151,103)||BO(Ego,116,104,151,147))){F(DO);F(f116)}}
+if(!N(v95,0)&&E(DO)){AL(Ego,v67,v68);if(BO(Ego,54,55,81,57)){L(v67,0);L(v68,2);F(f116)}
+if(BO(Ego,56,51,70,64)){L(v67,61);L(v68,64);F(f116)}
+if(BO(Ego,71,46,96,56)){L(v67,79);L(v68,59);F(f116)}
+if(BO(Ego,107,43,126,51)){L(v67,104);L(v68,55);F(f116)}
+if(BO(Ego,127,40,159,51)){L(v67,130);L(v68,55);F(f116)}
+if(BO(Ego,104,141,128,152)){L(v67,105);L(v68,142);F(f116)}
+if(BO(Ego,142,149,159,152)){L(v67,139);L(v68,144);F(f116)}
+if(BO(Ego,72,70,94,87)){L(v67,86);L(v68,83);F(f116)}
+if(BO(Ego,68,88,77,104)){L(v67,76);L(v68,95);F(f116)}}
+if(J(Cm,1)){H(30);if(AGI.C)return}
+if(J(Cm,2)){H(38);if(AGI.C)return}
+if(J(Cm,4)){H(36);if(AGI.C)return}
+if(J(Cm,3)){H(44);if(AGI.C)return}
+BF(151);if(AGI.C)return;BF(158);if(AGI.C)return;BF(161);if(AGI.C)return;BF(101);if(AGI.C)return;return}}}
+CONTROLS[37]="?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4?4><.x5<U><.x5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.45r5<U><.95gA<U><.9h<g?4?4?4?4?4/l.GU><.l<i><.PM9#.ZR><KaZn^dxTU><4Fg5ERl.Dxw>.^M5rABU.qxw>.P(APFDK.-xw>,#ZDL<Txw>^b!<]xw>lbZ.JK<8xw>Pig.Dg<3xw>4ix;E8r.;xw<.^i^;,.]xw<.xW.4].4.]xw<.rGPJ+-.9.]xw<.r6Ed+-.E.-xw<.r69k+%.K.-xw<.r69k+%.P.%xw<.l6Kd+~.Z.~xw<.l6PT{~.Z.~xw<.l6PT{w.l.wxw<.lBPO{w.l.wxw<.xBPD,q.l.wxw<.^B.Kq.r.qxw<.{B.Ed.x.qxw>4BKV<l.qxw>9LE5KQx.QP.k!w<.,AE5K5U5ELU5U5P5U5PAE.k!w<.+AP5K5U5K5EAKQ95P5U5P5959.k!w<.^hK5U5KFxAP5U5P5E5.k!w>K5K5PV^FK5U5PF.q!w>P5E5K5.4JELU5KA.~!w>U595K5,k9APL.-!w>ZAK5+-L<8!w>ZAE56^<D9.3!w>g5E56x<Drwx~<.Em^5E56l<J!qx~<^V95gQlA96Z<T!qx~<xAK5K5Z5PFZA6Z<T+kx~<gLP5K5Z5P5E5ZBP<Y,dx~<UAK5P5K5Z5P5E5ZBE<k.4Yx~<U5P5P5K5Z5P5E5ZB9<k.ETx~<ZAE5P5K5Z5P595Z696<q.ETx~<l595P5K5Z5PAg696<q.ETx~<rAP5K5Z5P5lB9<q.EO!~<!5E59A95Z5K5rB<w.EO!~<^APAZ5E5xB<q.KO!~<.PAP595!B<q.UD!~<.ZV!B9<q.UD!~>gB9<qKhxD!~>gB9<kK5lLZD!~>gB<q9A+LED!~>gB<q5.KAD!~>g69<qA.K5D!~>ZB9<~A.45J!~>ZB<]A^AO!~>ZB<.3AlAY!~>Z696<.8hk!~>gB>8!~>gB>8x%>lB>3x%>lB>3x%>lB>3x%>rB<.]!%>rB<.]!%>x6<.]!%>xB<.-!%>xB<.-!%>!6<.-!%>!B<.%!%>^6<.%!%>^69<.~!%>^B<.~!%>+6<.~!%>+B<.w!%>{6<.w!%>{B<.k^%>,6<.k^%>,B<.d!->.46<.d!->.4B<.Y!->.9B<.T!->.9B<.O^->.EB<.J^->.EB<.J^->.KB<.D^->.K696<.8^->.PB<.3^]>.P696<;^]>.UB<;^]>.U696<]^]>.ZB9<-!;>.gB<-!;>.lB<~^;>.rG<q^;>.x696<k!.3>.!G<d!.3>.+B<T^.3>.{B<O^.3>.,G<8+.3><4G<3+.3><EM.%{.3><PW.k{.3><ZBEM.O{.3><lMEM;,.3><^(g8{.8><.EW9.BP.8><.li9n9t~/xnDiJ/EmZDiDG><.,FEV9A{R><.^LP5P5KA9L^><.xAK5P5P5K595K5^><.rAP5P5P5K595K5^><.!AEVPy^><.+FPAEA.Z/ZA.l?4?4?4?4?4?4?4?4";

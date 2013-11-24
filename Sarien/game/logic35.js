@@ -1,0 +1,15 @@
+window.logic35=function()
+{while(1){switch(B)
+{case 0:if(E(DT)){CX(27);F(f62);CY(104);CY(97);CY(8);if((BT("Oil Lamp")||BT("Carpet"))){CY(65);CY(98)}
+BY(158);if(AGI.C)return;BY(101);if(AGI.C)return;BY(163);if(AGI.C)return;BY(155);if(AGI.C)return;CW(Ck);BJ(Ck);BF(101);if(AGI.C)return;AY(Ego);if(J(Cl,34)){AL(Ego,v105,v106);if(N(v106,76)&&P(v106,97)){L(v106,90);AH(Ego,v105,v106)}}
+if(J(Cl,28)){AL(Ego,v105,v106);if(N(v105,117)){L(v105,117);L(v106,37);AH(Ego,v105,v106)}}
+AJ(Ego);BM()}
+if(!N(v95,0)&&E(DO)){AL(Ego,v67,v68);if(BO(Ego,27,86,45,99)){L(v67,24);L(v68,99);F(f116)}
+if(BO(Ego,7,75,20,90)){L(v67,5);L(v68,90);F(f116)}}
+if(D("check out","tree")){Bg("There are many lovely pine and spruce trees near these mountains.")}
+if((D("climb","cliff")||D("check out","cliff")||D("enter","cliff")||D("cross","cliff"))){Bg("The mountain range is wild and rugged. It would be impossible to cross, unless you could fly like a bird.")}
+if(J(Cm,1)){H(28);if(AGI.C)return}
+if(J(Cm,4)){H(34);if(AGI.C)return}
+if(J(Cm,3)){H(42);if(AGI.C)return}
+BF(158);if(AGI.C)return;BF(101);if(AGI.C)return;BF(163);if(AGI.C)return;BF(155);if(AGI.C)return;return}}}
+MESSAGES[35]=["","There are many lovely pine and spruce trees near these mountains.","The mountain range is wild and rugged. It would be impossible to cross, unless you could fly like a bird."];CONTROLS[35]="?4?4?4?4?4?4?4?4?4?4?4?4?4?4/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/45.,/95.{4.m><l5.{E5K5K5K5K5K5EF><U5.{E5K5K5K5K5K5P5><U5.{E5K5K5K5K5K5P5><U5.{E5K5K5K5K5K5U5>Ks.l5.+E5K5K5K59LE5EL>9AxF.U5.+EF9QKQ9Q>P5{5.U5.+4AKFE5K5U5>l5^F.U5.+!F>.4AZL.r5.^><4V.+5.^/K5.^/K5.^/E5.+/E5.+/95.{/95.{/95.{/95.{/45.,/45.,/45.,/45.,/45.,><.,5<4><.,5<4><.,5<4><.,5<4><.,5<4><.{5<9><.{5<9><.{5<9><.{5<9><.+5<E><.+5<E><.+5<E4FUF><.K5<9959V95><.P5<495K5E595><.P5<495K5E5E5><.P5.,95K5E5E5.4L><95.{95K5E5E5xm9A><45.+95K5E5E5ZQK5K5KA>.{5.+95K5E58AGK5K5K5K5P5>.,5.^95K5EATG5K5K5K5KA>.,5.^9awAE5K5K59A><E5.!EF;FK5KA><P5.!4A.OQ9A9B><P5.x4.qFUM><45.x4<3UB>.,5.r4<TEB>.+5.r4<k9B>.!5PQ.44<qE6>.!5K5K5.44<w96>.!5K5K5KQl4<~96>.!5E5K5K5K5l4<~96>.!5E5K5K5K5l4<%96>.x5E5K5K5K5l4<%96>.!595K5K5K5l4<%6>.^595K5K5K5l4<%6>.+AK5K5K5l4<~96>.{5K5K5K5l4<~6>.,5K5K5K5l4<kEB><45E5K5K5l4<d9B><E5E5K5K5l4<Y96><U595K5K5l4<Y6><gAK5K5l4<T6><lAK5K5l4<J96><x5K5K5l4<D96><!5K5K5l4<39B><^5K5K5l4.]9B><{5K5K5l4.-B><.95E5K5l4.~B><.K5E5K5l4.k9B><UL^5E5K5l4~POPB><KLPLg5K5K5l4qE#><KAx59LK5K5K5l4YKB><{5^5PQK5K5l4OEG><{A+5P5K5K5K5l4DEB><.45,5P5K5K5K5lEB><.95.45P5K5K5K5l4B><.K5.45P5K5K5K5l><.Z5,5P5K5K5K5l><.Z5,5P5K5K5K5l><.g5{5P5K5K5K5l><.g5{5P5K5K5K5l><.l5+5P5K5K5K5l><.l5+VKQK5l>^.F.x5<Z>9y.KA.r5<U<.,A<45.rA<K<.+A<KA.ZB95<E<.!A<g5.EGP5<9<.^A<KF,Ml5<4<.{A.+L,G^5<4>4A.gL{R+C5<4>E.axi.4CE6<4>.{R+`P6<4>.!Gg`,6<4>.gMPX.!6.,>.UBZC<96.,>.KBZC<K6.,>.9BUH<U6.,>,BUC<l6.,>+BUC<x6.,>!BUC<^6.,>x6UC<{6.,>r6U7<.46.,>l6U7<.96.,>ZBPC<.E6.,>U6U7<.P6.,>P6U7<.Z6.{>K6U7<.g6.{>E6U7<.l6.{>E6U7<.l6.{>96U7<.r6.{<.,BU7<.x6.{<.!MUC<.!6.{<.gMUN<.+6.{<.PGUN>96.{<.EBPN>U6.{<.4BKH>r6.{<{BKC>^6.{<^BKC>,6.+<!6P7>.96.+<x6P7>.E6.+<lBP7>.K6.+<g6U7>.P6.+<Z6U7>.U6.+";

@@ -1,0 +1,48 @@
+<script type="text/javascript" src="js/range.js"></script>
+<script type="text/javascript" src="js/timer.js"></script>
+<script type="text/javascript" src="js/slider.js"></script>
+<link type="text/css" rel="StyleSheet" href="css/bluecurve/bluecurve.css" />
+
+<style>
+</style>
+<body>
+<TABLE width=100%><tr><td>
+<div class="slider" id="slider-1" tabIndex="1" style="width: auto; margin: 10px;">
+	<input class="slider-input" id="slider-input-1"/>
+</div></td><td>
+<div class="slider" id="slider-2" tabIndex="2" style="width: auto; margin: 10px;">
+	<input class="slider-input" id="slider-input-2"/>
+</div></td><td>
+<div class="slider" id="slider-3" tabIndex="3" style="width: auto; margin: 10px;">
+	<input class="slider-input" id="slider-input-3"/>
+</div>
+</td></tr></table>
+
+<img id="persp" src="nyan.png">
+
+<script language="javascript">
+  var sliderA = document.getElementById("slider-1");
+  var inputA = document.getElementById("slider-input-1");
+  var sA = new Slider(sliderA, inputA);
+  sA.onchange = update;  
+  var sliderB = document.getElementById("slider-2");
+  var inputB = document.getElementById("slider-input-2");
+  var sB = new Slider(sliderB, inputB);
+  sB.onchange = update; 
+  var sliderC = document.getElementById("slider-3");
+  var inputC = document.getElementById("slider-input-3");
+  var sC = new Slider(sliderC, inputC);
+  sC.onchange = update; 
+	
+	sA.setValue(50);
+  sB.setValue(50);
+	sC.setValue(50);
+  function update()
+  {
+		document.getElementById("persp").style = "transform: perspective(600px) "+
+      "scale(0.6) rotateZ("+(sA.getValue()-50)+"deg) rotateY("+(sB.getValue()-50)+"deg) translateX(-300px) translateY(-100px) rotateX("+
+      ((sC.getValue()-50)*2)+"deg);";
+  }
+	
+</script>
+</body>

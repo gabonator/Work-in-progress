@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arweb2", "arweb2.vcxproj", "{053B5D53-53DB-47A0-9971-01CBD3BEC39D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{053B5D53-53DB-47A0-9971-01CBD3BEC39D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{053B5D53-53DB-47A0-9971-01CBD3BEC39D}.Debug|Win32.Build.0 = Debug|Win32
+		{053B5D53-53DB-47A0-9971-01CBD3BEC39D}.Release|Win32.ActiveCfg = Release|Win32
+		{053B5D53-53DB-47A0-9971-01CBD3BEC39D}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

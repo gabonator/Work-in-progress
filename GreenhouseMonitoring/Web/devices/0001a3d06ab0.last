@@ -1,0 +1,1 @@
+add({timestamp:1391249820, time:"2014-02-01 11:17:00", ip:"192.168.1.50", args:{ow_purple:"-0.81",ow_green:"40.56",ow_yellow:"38.62",ow_black:"10.43",ow_red:"20.18",dht11_temp:"16",dht11_hum:"87",light:"38",valve:"135",bmp085_baro:"100.632",bmp085_temp:"13.33",uptime:"1474321"}});

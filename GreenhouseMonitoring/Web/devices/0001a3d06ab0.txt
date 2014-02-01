@@ -1,0 +1,1 @@
+addDevice({ip:"192.168.1.50", mac:"0001a3d06ab0", type:"Collector2014b", platform:"Arduino R3", last:1391249820, sensors:"ow_purple,ow_green,ow_yellow,ow_black,ow_red,dht11_temp,dht11_hum,light,valve,bmp085_baro,bmp085_temp,uptime"});

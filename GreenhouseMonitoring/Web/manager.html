@@ -1,0 +1,765 @@
+<style>
+.statmin { display:none; }
+.statmax { display:none; }
+.statavg { display:block; }
+.statcheck { display:none; }
+.tableHeading td { font-weight:bold; }
+#deviceConfig { background:#f0f0f0; }
+</style>
+<script type="text/javascript" src="js/flexigrid/jquery-1.7.js"></script>
+<link rel="StyleSheet" href="js/flexigrid/css/flexigrid.css" type="text/css"/>
+<script language="javascript" src="js/flexigrid/js/flexigrid.js"></script>
+<script language="javascript" src="js/highcharts.js"></script>
+
+<body>
+<h3>Grafy</h3>
+<a href="view2.html">Novy vykreslovac</a><br>
+<a href="view.html">Stary vykreslovac (nepouzivat)</a><br>
+<a href="rangeview.html">Zobrazenie teploty pre aktualny mesiac</a><br>
+<h3>Nastavenie systemu</h3>
+<div id="gridDevices"></div>
+<div id="deviceConfig"></div>
+<h3>Recordings</h3>
+<form>
+Show statistics:
+<input type="radio" name="showstat" id="radiostatmin" onClick="updateStatFilter()">Min
+<input type="radio" name="showstat" id="radiostatavg" onClick="updateStatFilter()">Avg
+<input type="radio" name="showstat" id="radiostatmax" onClick="updateStatFilter()">Max
+<input type="radio" name="showstat" id="radiostatall" onClick="updateStatFilter()">All
+<input type="radio" name="showstat" id="radiostatgraphtime" onClick="updateStatFilter()">Graph-Time
+<input type="radio" name="showstat" id="radiostatgraphday" onClick="updateStatFilter()">Graph-Day
+</form>
+<div id="gridDays"></div>
+</body>
+
+<script language="javascript">
+  var NAN = Number.NaN;
+  var devices = [];
+  var days = [];
+  var mapping = [];
+
+  var curTime = new Date();
+  var curDay = formatJsTime(curTime).substr(0, 10);
+  var toLoad = 0;
+  var utc = 1000*60*60;
+
+  var currentDeviceIp;
+  var currentDeviceType;
+  var deviceTimer = null;
+  var requestDayIndex = -1;
+  var mapToLoad = 0;
+  var bLoadMapping = false;
+
+  var oneDayGraph = false;
+
+  var chart = null;
+
+  function Load(name, handler)
+  {
+//    StartLoad();
+    var client = new XMLHttpRequest();
+//    client.dead = setTimeout(function(){ handler(); }, 2000);
+    client.url = name;
+    client.open('GET', name);
+    client.onreadystatechange = function() {
+//alert(this.readyState + "," + this.status );
+      if (this.status == 404)
+      {
+        console.log("Failed to load " + client.url);
+        handler();
+//        FinishLoad();
+      }
+      if (this.readyState == 4 && this.status == 200 )
+      {
+//        clearTimeout(client.dead);
+        handler(client.responseText);
+//        FinishLoad();
+      }
+    }
+    client.send();
+  }
+
+  function LoadDevices(handler)
+  {
+    devices = [];
+    window["addDevice"] = 
+      function(json) 
+      { 
+        devices[devices.length] = json;
+      } 
+    Load("get.php?q=devices", 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+					window["addDevice"] = null;
+        }
+        handler();
+      }
+    );
+  }
+
+  function LoadDays(y, m, handler)
+  { 
+    days = [];
+    window["addReports"] = 
+      function(arr) 
+      { 
+        days = arr;
+        days.sort();
+      } 
+    var prefix = y + "-" + ("0"+m).substr(-2);
+    Load("get.php?q=days&prefix="+prefix, 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+					window["addReports"] = null;
+        }
+        handler()
+      }
+    );
+  }
+
+  function formatTime(t)
+  {
+    var tm = new Date( t*1000 + utc );
+    return formatJsTime(tm);
+  }
+
+  function formatJsTime(tm)
+  {
+   	return tm.getFullYear() + "-" + ("0"+(tm.getMonth()+1)).substr(-2) + "-" + ("0"+tm.getDate()).substr(-2) + " " + 
+   	  ("0"+tm.getHours()).substr(-2) + ":" + ("0"+tm.getMinutes()).substr(-2) + ":" + ("0"+tm.getSeconds()).substr(-2);
+  }
+
+  function CreateGridDevices()
+  {
+    window["test"] = function(com, grid) 
+		{
+	  	if (com=='Configure')
+			{
+				var items = $('.trSelected',grid);
+				for(i=0;i<items.length;i++)
+				{
+					var id = items[i].sectionRowIndex;
+					OpenDevice( devices[id].ip, devices[id].type );
+				}
+			}
+	  	if (com=='Reading')
+			{
+				var items = $('.trSelected',grid);
+				for(i=0;i<items.length;i++)
+				{
+					var id = items[i].sectionRowIndex;
+					OpenReading( devices[id].ip, devices[id].type );
+				}
+			}
+	  	if (com=='Mapping')
+			{
+				var items = $('.trSelected',grid);
+				for(i=0;i<items.length;i++)
+				{
+					var id = items[i].sectionRowIndex;
+					OpenMapping( devices[id].mac );
+				}
+      }
+    }
+
+    $("#gridDevices").flexigrid({
+//    			url : 'index.php?json',
+    			dataType : 'json',
+
+    			colModel : [
+            { display : 'Online', name:'url', width:'32'},
+    				{ display : 'Name', name : 'name', width : 100, sortable : true, align : 'left' }, 
+    				{ display : 'IP', name : 'ip', width : 100, sortable : false, align : 'left' }, 
+    				{	display : 'Last update',	name : 'update', width : 140, sortable : true, align : 'left' }, 
+    				{ display : 'Type', name : 'type', width : 100, sortable : true, align : 'left'},
+    				{ display : 'Platform', name : 'platform', width : 80, sortable : true, align : 'left' }, 
+    				{ display : 'Sensors', name : 'sensors', width : 200, sortable : true, align : 'left'}
+    			],
+
+//          colModel:cols,
+
+    			buttons : [ 
+    				{ name : 'Configure', class : 'add', onpress : test}, 
+    				{ name : 'Reading', class : 'add', onpress : test}, 
+    				{ name : 'Mapping', class : 'add', onpress : test}, 
+    				{ separator : true } 
+    			],
+/*
+    			searchitems : [ 
+    				{ display : 'Name', name : 'name', isdefault : true }, 
+    				{ display : 'Comment', name : 'comment' } ],
+*/
+    			sortname : "iso",
+    			sortorder : "asc",
+//    			usepager : true,
+    			title : 'Devices',
+    			useRp : true,
+    			rp : 15,
+    			showTableToggleBtn : true,
+    			singleSelect: true,
+    			width : 800,
+    			height : 200
+    		});
+
+    bLoadMapping = true;
+    UpdateGridDevices();
+    setInterval("UpdateGridDevices()", 10*1000);
+  }
+
+  function UpdateGridDevices()
+  {
+    LoadDevices( UpdateGridDevices_Finish );
+//    OnFinish(  );
+  }
+
+  function UpdateGridDevices_Finish()
+  {
+    if ( bLoadMapping )
+	    InitMapping();
+    var data = {total:devices.length, page:1, rows:[]};
+    var cols = [];
+    for ( var i = 0; i < devices.length; i ++ )
+    {
+      var device = devices[i];
+      var last = ( (curTime.getTime())/1000  - device["last"] );
+      var online = last < 120 ? "<img src='images/online.png'>" : "<img src='images/offline.png'>";
+
+      data.rows[i] = { cell:[online, device["mac"], device["ip"], formatTime(device["last"]), device["type"], device["platform"], device["sensors"]] };
+	    if ( bLoadMapping )
+  	    LoadMapping( device["mac"] );
+    }
+    $("#gridDevices").flexAddData(data).flexReload();
+    if ( bLoadMapping )
+    {
+	    onLoadMappingFinished = onAllDevicesLoaded;
+	    bLoadMapping = false;
+    }
+  }
+
+  // Configuration
+  function OpenDevice(ip, type)
+  {
+    currentDeviceIp = ip;
+    currentDeviceType = type;
+    document.getElementById("deviceConfig").innerHTML = "Loading " + ip;
+    if ( deviceTimer != null )
+      clearInterval(deviceTimer);
+    UpdateDevice();
+    deviceTimer = setInterval("UpdateDevice()", 5000);
+  }
+
+  function CloseDevice()
+  {
+    if ( deviceTimer != null )
+      clearInterval(deviceTimer);
+
+    document.getElementById("deviceConfig").innerHTML = "";
+  }
+
+  function UpdateDevice()
+  {
+    var ip = currentDeviceIp;
+    Load("get.php?q=remote&link=http://"+ip+"/%3Fconfig", 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+
+          var out = "";
+          out += "<input type=\"button\" value=\"Close device\" onClick=\"CloseDevice()\">";
+          out += "<table>";
+          var lines = v.split("\n");
+          for ( var i = 0; i < lines.length; i++ )
+          {
+            var line = lines[i];
+            var eq = line.indexOf("=");
+            var attr = line.substr(0, eq);
+            var value = line.substr(eq+1);
+            if ( attr == "QUERY_STRING" )
+              continue;
+
+            var modify = "";
+            if ( attr == "limitMin" )
+              modify = "SetDeviceAttr('" + ip + "', 'setmin', '" + value + "');";
+            if ( attr == "limitMax" )
+              modify = "SetDeviceAttr('" + ip + "', 'setmax', '" + value + "');";
+            if ( attr == "limitStep" )
+              modify = "SetDeviceAttr('" + ip + "', 'setstep', '" + value + "');";
+            if ( attr == "limitOn" )
+              modify = "SetDeviceAttr('" + ip + "', 'limit', '" + value + "');";
+            if ( attr == "counter" )
+              modify = "SetDeviceAttr('" + ip + "', 'rel', '0');";
+
+            if ( modify != "" )
+              modify = "<input type=\"button\" value=\"set\" onClick=\""+modify+"\">";
+            out += "<tr><td>" + attr + "</td><td>" + value + "</td><td>" + modify + "</td></tr>";
+          }
+
+          out += "</table>";
+
+          modify = "SetDeviceCommand('" + ip + "', 'plus')";
+          modify = "<input type=\"button\" value=\"Plus\" onClick=\""+modify+"\">";
+          out += modify;
+
+          modify = "SetDeviceCommand('" + ip + "', 'minus')";
+          modify = "<input type=\"button\" value=\"Minus\" onClick=\""+modify+"\">";
+          out += modify;
+
+          modify = "SetDeviceCommand('" + ip + "', 'stop')";
+          modify = "<input type=\"button\" value=\"Stop\" onClick=\""+modify+"\">";
+          out += modify;
+
+          document.getElementById("deviceConfig").innerHTML = out;
+        }
+      }
+    );
+  }
+
+  function SetDeviceAttr( ip, attr, old )
+  {
+    var reply = prompt("Enter new comment for '"+attr+"'", old);
+	  if (reply)
+		  Load("get.php?q=remote&link=http://"+ip+"/?"+attr+"="+reply, UpdateDevice );
+  }
+
+  function SetDeviceCommand( ip, cmd )
+  {
+	  Load("get.php?q=remote&link=http://"+ip+"/?"+cmd, UpdateDevice );
+  }
+
+  // Reading
+  function OpenReading(ip, type)
+  {
+    currentDeviceIp = ip;
+    currentDeviceType = type;
+    document.getElementById("deviceConfig").innerHTML = "Loading " + ip;
+    if ( deviceTimer != null )
+      clearInterval(deviceTimer);
+    UpdateReading();
+    deviceTimer = setInterval("UpdateReading()", 20000);
+  }
+
+  function CloseReading()
+  {
+    if ( deviceTimer != null )
+      clearInterval(deviceTimer);
+
+    document.getElementById("deviceConfig").innerHTML = "";
+  }
+
+  function UpdateReading()
+  {
+    var ip = currentDeviceIp;
+    Load("get.php?q=remote&link=http://"+ip+"/%3Fsimple", 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+
+          var out = "";
+          out += "<input type=\"button\" value=\"Close device\" onClick=\"CloseReading()\">";
+          out += "<table>";
+          var lines = v.split("\n");
+          lines = lines[1].split("&");
+          for ( var i = 0; i < lines.length; i++ )
+          {
+            var line = lines[i];
+            var eq = line.indexOf("=");
+            var attr = line.substr(0, eq);
+            var value = line.substr(eq+1);
+            out += "<tr><td>" + attr + "</td><td>" + value + "</td></tr>";
+          }
+          out += "</table>";
+          document.getElementById("deviceConfig").innerHTML = out;
+        }
+      }
+    );
+  }
+
+  // Mapping
+  function OpenMapping(mac)
+  {
+    if ( deviceTimer != null )
+      clearInterval(deviceTimer);
+
+    document.getElementById("deviceConfig").innerHTML = "Loading mapping for " + mac + "...";
+    UpdateMapping(mac);
+  }
+
+  function CloseMapping()
+  {
+    document.getElementById("deviceConfig").innerHTML = "";
+  }
+
+  function UpdateMapping(mac)
+  {
+    window["setMapping"] = 
+      function(json)
+      {
+          var out = "";
+          out += "<input type=\"button\" value=\"Close mapping\" onClick=\"CloseMapping()\">";
+          out += "<table border=1>";
+          out += "<tr class=\"tableHeading\"><td>Id</td><td>Full name</td><td>Short name</td><td>Units</td><td>Device</td></tr>";
+          for ( var i in json )
+          {
+            var row = json[i];
+            out += "<tr><td>" + i + "</td><td>" + row.name + "</td><td>" + row.short + "</td><td>" + row.units + "</td><td>" + row.device + "</td></tr>";
+          }
+          out += "</table>";
+          document.getElementById("deviceConfig").innerHTML = out;
+      }
+
+    Load("get.php?q=mapping&id=" + mac, 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+        }
+      }
+    );
+  }
+
+  // Days
+  function CreateGridDays()
+  {
+    LoadDays( curTime.getFullYear(), curTime.getMonth()+1, UpdateGridDays_Finish );
+//    OnFinish( UpdateGridDays_Finish );
+  }
+
+  function UpdateGridDays_Finish()
+  {
+    var out = "<table border=1>";
+     out += "<tr id=\"statHeading\" class=\"statHeading\"><td>Day</td></tr>\n";
+    for ( var i = days.length-1; i>=0; i--)
+    { 
+      out += "<tr id=\"stat"+days[i]+"\"><td><a href=\"view2.html?"+days[i]+"\">"+days[i]+"</a></td></tr>\n";
+    }
+    out += "</table>";
+    document.getElementById("gridDays").innerHTML = out;
+
+//    var requestDay = days[days.length-1];
+    requestDayIndex = 0;//days.length-1;
+    UpdateGridDays_Load();
+  }
+
+  function UpdateGridDays_Load()
+  {
+    if ( curDay == days[requestDayIndex] )
+    {
+      window["add"] = 
+        function(json)
+        {
+          for ( var attr in json.args )
+          {
+            AddGridValue( days[requestDayIndex], attr, json.args[attr] );
+          }
+        }
+      Load("get.php?q=reading&id="+devices[0].mac, // todo: mali by sa preiterovat vsetky
+        function(v) 
+        { 
+          if (typeof(v)=="string") 
+          {
+            eval(v);
+          }
+ 				  window["add"] = null;
+        });
+
+    } else
+		{
+      window["addmulti"] = 
+        function(stat)
+        {
+          var values = "";
+          for ( var attr in stat )
+          {
+            if ( attr == "ts" || attr == "id" )
+              continue;
+
+            AddGridValue( days[requestDayIndex], attr, stat[attr].stat );
+          }
+        }
+
+      Load("get.php?q=stat&day="+days[requestDayIndex],
+        function(v) 
+        { 
+          if (typeof(v)=="string") 
+          {
+            eval(v);
+            if ( requestDayIndex < days.length )
+            {
+              requestDayIndex++;
+              UpdateGridDays_Load();
+            } else
+  					  window["addmulti"] = null;
+          }
+        });
+    }
+  }
+
+  function AddGridValue(day, sensor, value)
+  {
+    var insertAt = -1;
+
+    if ( typeof(mapping[sensor]) == "undefined" )
+    {
+      console.log("No mapping for " + sensor);
+      return;
+    }
+    if ( typeof(mapping[sensor].ignore) != "undefined" && mapping[sensor].ignore)
+      return;
+
+    sensorname = mapping[sensor].short;
+    sensorunits = mapping[sensor].units;
+
+    var desc = sensorname + " [" + sensorunits + "]";
+
+    var rowHeading = document.getElementById("statHeading");
+    for (var i =0; i<rowHeading.cells.length; i++)
+      if ( rowHeading.cells[i].id == "heading_" + sensor )
+        insertAt = i;
+
+    if ( insertAt == -1 )
+    {
+      insertAt = rowHeading.cells.length;
+      var cellHeading = rowHeading.insertCell(-1);
+      cellHeading.id = "heading_" + sensor;
+      cellHeading.innerHTML = desc;
+    }
+
+    var rowDay = document.getElementById("stat"+day);
+    while ( rowDay.cells.length < insertAt+1 )
+      rowDay.insertCell(-1);
+
+    rowDay.cells[insertAt].align = "right";
+
+    if ( typeof(value) != "object" )
+    {
+      rowDay.cells[insertAt].innerHTML = value;
+    } else {
+      rowDay.cells[insertAt].innerHTML = 
+        "<div class='statcheck'><input type='checkbox' id='statcheck|"+day+"|"+sensor+"' onChange='updateDayGridCheck(this)'></div>" +
+        "<div class='statmin'>" + value.min.toFixed(2) + "</div>" +
+        "<div class='statavg'>" + value.avg.toFixed(2) + "</div>" +  
+        "<div class='statmax'>" + value.max.toFixed(2) + "</div>";
+    }
+  }
+
+  function InitMapping()
+  {
+    mapping = [];
+    mapToLoad = 0;
+  }
+
+  function LoadMapping(id)
+  {
+    mapToLoad++;
+
+    window["setMapping"] = 
+      function(json) 
+      { 
+        for ( var i in json )
+          mapping[i] = json[i];
+      } 
+
+    Load("get.php?q=mapping&id="+id, 
+      function(v) 
+      { 
+        if (typeof(v)=="string" && v.length > 0 ) 
+        {
+          eval(v);
+					if (--mapToLoad==0)
+          {
+  					window["setMapping"] = null;
+					  onLoadMappingFinished();
+          }
+        }
+      }
+    );
+  }
+
+  function onLoadMappingFinished() 
+  {
+    console.log("map load finished");
+  }
+
+  function updateStatFilter()
+  {
+    if ( document.getElementById("radiostatmin").checked )
+    {
+      $('.statmin').css("display", "block");
+      $('.statavg').css("display", "none");
+      $('.statmax').css("display", "none");
+      $('.statcheck').css("display", "none");
+    }
+    if ( document.getElementById("radiostatmax").checked )
+    {
+      $('.statmin').css("display", "none");
+      $('.statavg').css("display", "none");
+      $('.statmax').css("display", "block");
+      $('.statcheck').css("display", "none");
+    }
+    if ( document.getElementById("radiostatavg").checked )
+    {
+      $('.statmin').css("display", "none");
+      $('.statavg').css("display", "block");
+      $('.statmax').css("display", "none");
+      $('.statcheck').css("display", "none");
+    }
+    if ( document.getElementById("radiostatall").checked )
+    {
+      $('.statmin').css("display", "block");
+      $('.statavg').css("display", "block");
+      $('.statmax').css("display", "block");
+      $('.statcheck').css("display", "none");
+    }
+    if ( document.getElementById("radiostatgraphtime").checked )
+    {
+      $('.statcheck').css("display", "block");
+      oneDayGraph = false;
+    }
+    if ( document.getElementById("radiostatgraphday").checked )
+    {
+      $('.statcheck').css("display", "block");
+      oneDayGraph = true;
+    }
+  }
+	function updateDayGridCheck(obj)
+  {
+    var arr = obj.id.split("|");
+    var day = arr[1];
+    var sensor = arr[2];
+    var enable = obj.checked;
+
+    var createChart = chart == null;
+
+    if ( createChart )
+    {
+    	var chartSet = {
+        chart: {
+            renderTo: 'container1',
+            defaultSeriesType: 'spline',
+            marginRight: 10 
+        },
+        title: {
+            text: null,
+            style: {
+                margin: '10px 100px 0 0' // center it
+            }
+        },
+        xAxis: {
+            type: 'datetime',
+    				gridLineColor:'#404040',
+    				lineColor:'#404040',
+    				tickColor:'#404040',
+            tickPixelInterval: 150
+        },
+        yAxis: { 	
+            title: {
+                text: null
+            },
+    				gridLineColor:'#404040',
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'}]
+        },
+        tooltip: {
+            formatter: function() {
+                return '<b>' + this.series.name + '</b><br/>' + Highcharts.dateFormat('%H:%M:%S', this.x) + '<br/>' + Highcharts.numberFormat(this.y, 2);
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        exporting: {
+            enabled: false
+        }
+      };
+
+      chartSet.chart.renderTo = "deviceConfig";
+      chartSet.title.text = "Graf";
+      chart = new Highcharts.Chart(chartSet);
+    }
+
+    if (enable)
+    {
+      RequestGraphData(day, sensor);
+    } else
+    {
+      RemoveGraphData(day, sensor);
+    }
+
+  }
+
+  function RequestGraphData(day, sensor)
+  {
+    window["addmulti"] = 
+      function(stat)
+      {
+        AddGraphRawData( day, sensor, stat["ts"].data, stat[sensor].data );
+      }
+
+    Load("get.php?q=cached&day="+day,
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+				  window["addmulti"] = null;
+        }
+      });
+  }
+
+  function AddGraphRawData( day, sensor, x, y )
+  {
+   	var data = [];
+   	var shift = 0;
+
+   	if ( oneDayGraph )
+    {
+     	var tmfirst = new Date(x[0]*1000+utc);
+      var tmbase = new Date(2000, 0, 1, tmfirst.getHours(), tmfirst.getMinutes(), tmfirst.getSeconds());
+      shift = tmbase.getTime() - tmfirst.getTime();
+    }
+
+    var j = 0;
+  	for (var i=0; i<x.length; i++)
+    {
+      if (y[i] != NAN)
+    		data[j++] = {x:x[i]*1000+utc+shift, y:y[i]};
+    }
+
+    chart.addSeries({
+        name: day + " " + mapping[sensor].name,
+        data: data
+    }, true); 
+  }
+
+  function RemoveGraphData( day, sensor )
+  {
+    for ( var i = 0; i < chart.series.length; i++ )
+      if ( chart.series[i].name == day + " " + mapping[sensor].name )
+      {
+        chart.series[i].remove();
+      }
+    if ( chart.series.length == 0 )
+    {
+      document.getElementById("deviceConfig").innerHTML = "";
+      chart = null;
+    }
+  }
+
+  CreateGridDevices();
+  function onAllDevicesLoaded()
+  {
+    CreateGridDays();
+  }
+</script>
+

@@ -1,0 +1,16 @@
+addmulti({
+  id:"2014-01-29",
+  ts:{stat:{min:1390950016, max:1391036375, avg:1390993195.05}},
+  ow_purple:{stat:{min:-1.5, max:2.43, avg:-0.53}},
+  ow_green:{stat:{min:30.68, max:48.93, avg:40.53}},
+  ow_yellow:{stat:{min:29.12, max:44.5, avg:38.24}},
+  ow_black:{stat:{min:9.25, max:13.56, avg:10.42}},
+  ow_red:{stat:{min:18, max:22.75, avg:19.92}},
+  dht11_temp:{stat:{min:12, max:20, avg:14.67}},
+  dht11_hum:{stat:{min:78, max:95, avg:86.63}},
+  light:{stat:{min:29, max:920, avg:123.64}},
+  valve:{stat:{min:135, max:135, avg:135}},
+  bmp085_baro:{stat:{min:98.889, max:99.885, avg:99.32}},
+  bmp085_temp:{stat:{min:11.03, max:16.08, avg:12.24}},
+  uptime:{stat:{min:1175041, max:1261321, avg:1218184.05}},
+});

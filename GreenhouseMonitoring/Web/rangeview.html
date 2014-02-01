@@ -1,0 +1,179 @@
+<!--
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script language="javascript" src="js/highcharts.js"></script>
+-->
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+
+<div id="container1" style="min-width: 400px; height: 400px; margin: 0 auto">Collecting data...</div>
+</body>
+<div id="container2" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+</body>
+
+<script language="javascript">
+  var days = [];
+  var index = 0;
+  var ranges = [];
+  var averages = [];
+  var series = [];
+  var utc = -(new Date()).getTimezoneOffset()*1000*60;
+
+
+  function Load(name, handler)
+  {
+    console.log(name);
+    var client = new XMLHttpRequest();
+    client.url = name;
+    client.open('GET', name);
+    client.onreadystatechange = function() {
+      if (this.status == 404)
+      {
+        console.log("Failed to load " + client.url);
+        handler();
+      }
+      if (this.readyState == 4 && this.status == 200 )
+      {
+        handler(client.responseText);
+      }
+    }
+    client.send();
+  }
+
+  function LoadDays(y, m, handler)
+  { 
+    days = [];
+    window["addReports"] = 
+      function(arr) 
+      { 
+        days = arr;
+        days.sort();
+      } 
+    var prefix = y + "-" + ("0"+m).substr(-2);
+    Load("get.php?q=days&prefix="+prefix, 
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+					window["addReports"] = null;
+        }
+        handler();
+      }
+    );
+  }
+
+  function LoadDay(procFinish)
+  {
+    window["addmulti"] = 
+      function(stat)
+      {
+        var values = "";
+        for ( var attr in stat )
+        {
+          if ( attr == "ts" || attr == "id" )
+            continue;
+
+          ProcessValue( stat["ts"].stat.min*1000, attr, stat[attr].stat );
+        }
+      }
+
+    Load("get.php?q=stat&day="+days[index],
+      function(v) 
+      { 
+        if (typeof(v)=="string") 
+        {
+          eval(v);
+				  window["addmulti"] = null;
+
+          index++;
+          if ( index < days.length )
+          {
+            LoadDay(procFinish);
+          } else
+          {
+					  procFinish();
+          }
+        }
+
+      });
+  }
+
+  function ProcessValue(t, attr, val)
+  {
+		if ( typeof( ranges[attr] ) == "undefined" )
+			ranges[attr] = [];
+		if ( typeof( averages[attr] ) == "undefined" )
+			averages[attr] = [];
+
+		ranges[attr][ranges[attr].length] = [t+utc, val.min, val.max];
+		averages[attr][averages[attr].length] = [t+utc, val.avg];
+  }
+
+function addSeries( label, id, clr )
+{
+  series = [];
+
+	series[series.length] = {
+		    	name: label,
+		    	data: averages[id],
+		    	zIndex: 1,
+		    	color: Highcharts.getOptions().colors[clr],
+		    	marker: {
+		    		fillColor: 'white',
+		    		lineWidth: 2,
+		    		lineColor: Highcharts.getOptions().colors[clr]
+		    	}
+	};
+
+	series[series.length] = {
+		        name: 'Range',
+		        data: ranges[id],
+		        type: 'arearange',
+		        lineWidth: 0,
+		    	linkedTo: ':previous',
+		    	color: Highcharts.getOptions().colors[clr],
+		    	fillOpacity: 0.3,
+		    	zIndex: 0
+		    };
+}
+
+  function Finish()
+  {
+    addSeries( "Outside temperature", "ow_purple", 2);
+    drawChart("container1");
+    addSeries( "Atmospheric pressure", "bmp085_baro", 1);
+    drawChart("container2");
+  }
+
+  function drawChart(target)
+  {
+    var chartSet = chartSettings();
+    chartSet.chart.renderTo = target;
+    chartSet.series = series;
+    new Highcharts.Chart(chartSet);
+  }
+
+  function chartSettings()
+  {
+  	return {
+ 				chart: { },
+		    title: { text: null },
+		    xAxis: { type: 'datetime' },
+		    yAxis: { title: { text: null } },
+		    tooltip: {
+		        crosshairs: true,
+		        shared: true,
+		        valueSuffix: String.fromCharCode(176)+"C"
+		    },
+		    legend: {}
+		};
+  }
+
+  LoadDays(2014, 1, function(){ index = 0; LoadDay(Finish); });
+ 
+
+</script>

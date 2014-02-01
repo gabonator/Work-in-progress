@@ -1,0 +1,509 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script language="javascript" src="js/highcharts.js"></script>
+<script language="javascript" src="js/smooth.js"></script>
+
+<style>
+body { background:#ffffff; }
+td {text-align:center; font-family:Arial; font-size:20px; color:rgba(0, 200, 0, 0.9); text-shadow: 0px 0px 6px #00b000}
+td div {font-family:Arial; font-size:116px; color:rgba(0, 255, 0, 0.9); text-shadow: 0px 0px 6px #00b000; background: transparent; border: none;}
+.low { color:rgba(0,200,0,0.5); }
+#control { position:absolute; text-align: center; left:50%; top:0px; height:32px; width:240px; margin-top:3px; margin-left:-120px; margin-right:120px; background:#202020; border-radius:8px}
+#control input { background:#808080; color:#000000; font-weight:bold; border:0px;}
+#raw { visibility:hidden; position:absolute; left:50%; top:50%; height:320px; width:400px; padding:8px; font-family:arial; margin-top:-160px; margin-bottom:160px; margin-left:-200px; margin-right:200px; background:rgba(180, 180, 180, 0.7); border-radius:8px; color:#000000; }
+</style>
+</head>
+<body>
+
+<div id="container1" style="position:absolute; left:0px; top:0px; height:320px; width:300px;"></div>
+<div id="container2" style="position:absolute; left:300px; top:0px; height:320px; width:300px;"></div>
+<div id="container3" style="position:absolute; left:0px; top:320px; height:320px; width:300px;"></div>
+<div id="container4" style="position:absolute; left:300px; top:320px; height:320px; width:300px;"></div>
+
+<div id="info" style="display:none; position:absolute; top:0px; left:0px; width:100%; height:100%">
+<table width="100%">
+<tr><td height="40" width="33%"></td><td width="33%"></td><td width="33%"></td></tr>
+<tr>	
+	<td>Foliovnik zem1 [&#176;C] <br/><div id="tFoliovnikZem1"></div></td>
+	<td>Foliovnik zem2 [&#176;C]<br/><div id="tFoliovnikZem2"></div></td>
+	<td>Foliovnik vzduch [&#176;C]<br/><div id="tFoliovnikVzduchA"></div></td>
+</tr>
+<tr>	
+	<td>Sklenik vzduch [&#176;C]<br/><div id="tSklenikVzduch"></div></td>
+	<td>Vonku [&#176;C]<br/><div id="tVonku"></div></td>
+	<td>Foliovnik vzduch [%]<br/><div id="tFoliovnikVzduchB"></div></td>
+</tr>
+<tr>
+	<td>Kurenie ventil [%]<br/><div class="low" id="tVentil"></div></td>
+	<td>Kurenie vstup [&#176;C]<br/><div class="low" id="tKurenieVstup"></div></td>
+	<td>Kurenie vystup [&#176;C]<br/><div class="low"  id="tKurenieVystup"></div></td>
+</tr>
+<tr>
+	<td>Svetlo [%]<br/><div class="low" id="tSvetlo"></div></td>
+	<td>Vlhkost zeme [%]<br/><div class="low" id="tVlhkost"></div></td>
+	<td>Aktualizacia<br/><div id="tTime"></div></td>
+</tr>
+</table>
+</div>
+
+<div id="control">
+<input type="button" value="&lt;" onClick="jump(-1)"/>
+<input id="curRecording" type="button" value="" onClick="jump(0)"/>
+<input type="button" value="&gt;" onClick="jump(+1)"/>
+<input id="showinfo" type="checkbox" onChange="updinfo(this.checked)"/>
+<input id="showraw" type="checkbox" onChange="showraw(this.checked)"/>
+</div>
+
+<div id="raw">
+pokus!!
+</div>
+
+<script language="javascript">
+var dataTemp = [];
+var dataValve = [];
+var firstrun = true;
+var lastTime = 0;
+                   	
+var dvAll = [];
+
+var lastTemp = "", lastValve = "", lastOutTemp = "";
+var lastArgs = {};
+
+var curDay = true;
+var utc = 1000*60*60;
+
+var loadDay = 0;
+//loadDay = -((new Date()).getTime() - (new Date(2013, 3, 1)).getTime()) / (1000*60*60*24);
+
+function $(q)
+{
+	return document.getElementById(q);
+}
+
+function showraw(b)
+{
+	$("raw").style.visibility = b ? "visible" : "hidden";
+}
+
+function valid(n)
+{
+	return typeof(lastArgs[n]) != "undefined";
+}
+function updateInfo()
+{
+	if ( loadDay != 0 )
+	{
+		return;
+	}
+	var r = "<pre>";
+	for (var i in lastArgs)
+		r += i + " = " + lastArgs[i] + "\n";
+	r += "</pre>";
+	$("raw").innerHTML = r;
+	
+	$("tFoliovnikVzduchA").innerHTML = valid("dht11_temp") ? lastArgs["dht11_temp"] : "?";
+	$("tFoliovnikVzduchB").innerHTML = valid("dht11_humidity") ? lastArgs["dht11_humidity"]+"%" : "?";
+	$("tFoliovnikZem2").innerHTML = valid("zem_temp") ? parseFloat(lastArgs["zem_temp"]).toFixed(1) : "?";
+	$("tFoliovnikZem1").innerHTML	= valid("temp") ? parseFloat(lastArgs["temp"]).toFixed(1) : "?";
+	$("tSklenikVzduch").innerHTML	= valid("sklenik_temp") ? lastArgs["sklenik_temp"] : "?";
+	$("tVonku").innerHTML = valid("out") ? lastArgs["out"] : "?";
+	$("tVentil").innerHTML	= valid("valve") ? Math.floor(parseFloat(lastArgs["valve"])*100) : "?";
+	$("tKurenieVstup").innerHTML	= valid("fluidin_temp") ? parseFloat(lastArgs["fluidin_temp"]).toFixed(1) : "?";
+	$("tKurenieVystup").innerHTML	= valid("fluidout_temp") ? parseFloat(lastArgs["fluidout_temp"]).toFixed(1) : "?";
+	$("tSvetlo").innerHTML	= valid("light_value") ? (parseInt(lastArgs["light_value"])/1000*100).toFixed(1) : "?";
+
+	var wetraw = parseInt(lastArgs["wet_value"])/800*100;
+	$("tVlhkost").innerHTML	= valid("wet_value") ? ( (90-wetraw)*100/70 ).toFixed(1) : "?";
+
+// 90*100/70 -100/70/800*100
+	var tmTime = new Date( lastTime*1000 );
+	$("tTime").innerHTML	= valid("ts") ? pad(tmTime.getHours()) + ":" + pad(tmTime.getMinutes()) : "?";
+
+	if ( $("showinfo").checked )
+		$("info").style.display = "";
+	/*
+	args:{ts:"1363413961358",temp:"17.88",valve:"1.0000",out:"-4.13",
+  fluidin_temp:"48.06",device_temp:"11.5",fluidout_temp:"44.25",
+  sklenik_temp:"9",zem_temp:"18.12",
+  dht11_temp:"11",dht11_humidity:"95",
+  light_value:"766",wet_value:"521"}});
+	*/
+}                                               
+
+function copyjson(src)
+{
+	var out = [];
+	for (var i in src)
+	{
+		if ( i=="out")
+			out["out_temp"] = src[i];
+		else
+			out[i] = src[i];
+	}
+	return out;
+}
+
+function add(json)
+{
+	if ( !json["timestamp"] )
+		return;
+
+/*
+	if ( typeof(json["args"]["sklenik_temp"]) == "undefined" )
+		return; // neni su vsetky data!
+
+	if ( typeof(json["args"]["out_temp"]) == "undefined" )
+		return;
+*/
+	lastTime = parseInt(json["timestamp"]);
+	lastArgs = json["args"];
+  lastArgs["ts"] = lastTime;
+
+	if ( curDay )
+	{
+		dvAll[dvAll.length] = lastArgs;
+ /*{ts:lastTime, out_temp:lastArgs.out,
+			zem_temp:lastArgs.zem_temp, temp:lastArgs.temp, dht11_temp:lastArgs.dht11_temp,
+			dht11_humidity:lastArgs.dht11_humidity, wet_value:lastArgs.wet_value, light_value:lastArgs.light_value}*/;
+	}
+}
+
+
+var prevScript = false;
+function load(fname, handler)
+{
+	var script = document.createElement('script');
+  script.type= 'text/javascript';
+  script.onreadystatechange= function () {
+    if (this.readyState == 'complete') this.onload();
+  }
+  script.onload = handler;
+	var rnd = Math.random().toString().substr(-6);
+  script.src = (fname.indexOf("?") != -1) ? fname+"&rnd="+rnd : fname+"?rnd="+rnd;
+	console.log("load: "+script.src);
+
+	var head = document.getElementsByTagName('head')[0];
+	if ( prevScript )
+		head.removeChild( prevScript );
+	head.appendChild(script);
+	prevScript = script;
+}
+
+function updinfo(d)
+{
+	if ( $("showinfo").checked && loadDay == 0 )
+		$("info").style.display = "";
+	else
+		$("info").style.display = "none";
+
+}
+function jump(d)
+{   	
+	$("info").style.display = "none";
+
+	loadDay += d;
+	if ( loadDay > 0 )
+		loadDay = 0
+  curDay = true;
+	mainLoad();
+}
+
+function mainLoad()
+{
+	var baseTime = getTimestamp(loadDay);
+	$("curRecording").value = baseTime;
+
+  load( "get.php?day="+baseTime, helper );
+}
+
+var tUpdate = 0;
+var tReload = 0;
+mainLoad();
+
+function log10(x)
+{
+  return Math.log(x)/Math.log(10);
+}
+
+function transLight(r)
+{
+	// GND---[Rx]-+--[10k]---VCC
+	//            |
+  //            +----------> Ain 10bit
+  /*
+
+     Ux = Un/(Rx+10e3)*Rx
+		 Ix = 1024/(Rx+10e3)*Rx
+		 Ix*(Rx+10e3) = 1024*Rx
+		 Ix*Rx + Ix*10e3 - 1024*Rx = 0
+		 Rx(Ix-1024) = -Ix*10e3
+
+     Rx = Ix*10e3/(1024-Ix)
+
+     Rx = (1024-Ix)/(Ix*10e3)
+  */
+
+  var Rx = r*10e3/(1024-r);
+  var logRx = log10(Rx); 
+  var logLux = -1.205*logRx + 5.89;
+  // 0.01 lux -> -2 -> 0%
+  // 10000 lux -> 4 -> 100%
+	var lmin = -1.8;
+	var lmax = 4;
+	var percent = (logLux-lmin)*100/(lmax-lmin)
+	if ( percent < 0 ) percent = 0;
+  return percent;
+}
+
+function fix05(x)
+{
+	return x + 0.5;
+}
+
+function transValve(x)
+{
+	return (x/135)*50;
+}
+
+function buildData(name, transform)
+{
+	var bTransform = false;
+	if ( typeof(transform) != "undefined" ) 
+		bTransform = true;
+	
+
+	var result = [];
+	for (var i=0; i<dvAll.length; i++)
+	{
+		var dvThis = dvAll[i];
+		if ( typeof(dvThis[name]) != "undefined" )
+		{
+			var v = parseFloat(dvThis[name]);
+			if ( bTransform )
+				v = transform( v );
+			result[result.length] = {x:parseInt(dvThis["ts"])*1000+utc, y:v};
+		}
+	}
+	result = filterdata(result);
+	return result;
+}
+
+function helper()
+{
+	var curName = getTimestamp(loadDay);
+	var blu1 = "rgb(49, 94, 187)";
+	var blu2 = "rgb(49, 40, 130)";
+	var grn1 = "rgb(147, 94, 49)";
+	var grn2 = "rgb(90, 40, 49)";
+//add({timestamp:1387656777, time:"2013-12-21 21:12:57", ip:"192.168.1.50", 
+//args:{ow_green:"20.43",ow_yellow:"20.56",ow_black:"20.00",ow_red:"20.56",dht11_temp:"21",dht11_hum:"21",light:"1018",bmp085_baro:"101.836",bmp085_temp:"18.92"}});
+
+
+	seriesA = [
+		{name: "Teplota zeme foliovnika 1", data:buildData("ow_red"), color:blu1, marker:{enabled:false}},
+		{name: "Teplota vzduchu foliovnika", data:buildData("dht11_temp"), color: grn1, marker:{enabled:false}},
+//		{name: "Teplota zeme foliovnika 2", data:buildData("ow_black", fix05), color:blu2, marker:{enabled:false}},
+		{name: "Teplota vzduchu sklenika", data:buildData("ow_black"), color: grn2, marker:{enabled:false}},
+		{name: "Vonkajsia teplota", data:buildData("ow_purple"), color:blu1, marker:{enabled:false}}
+
+	];
+	seriesB = [
+		{name: "Tlak", data:buildData("bmp085_baro"), color:blu1, marker:{enabled:false}}
+/*		{name: curName, data:buildData("device_temp"), color:grn1}*/];
+	seriesC = [
+//		{name: "Vlhkost zeme", data:buildData("wet_value", -100/70/800*100, 90*100/70), color:grn2, marker:{enabled:false}},
+		{name: "Slnecne ziarenie", data:buildData("light", transLight), color:grn1, marker:{enabled:false}},
+		{name: "Vlhkost vzduchu foliovnika", data:buildData("dht11_hum"), color:blu1, marker:{enabled:false}}/*,
+		{name: "Koncentracia vybusnych plynov", data:buildData("mq9_value", 1/10, 0, 0, 100), color:blu2, marker:{enabled:false}}*/
+	];
+	seriesD = [
+		{name: "Otvorenie ventilu", data:buildData("valve", transValve), color:grn1, marker:{enabled:false}},
+		{name: "Vstupna teplota kurenia", data:buildData("ow_green"), color:blu1, marker:{enabled:false}},
+		{name: "Vystupna teplota kurenia", data:buildData("ow_yellow"), color:blu2, marker:{enabled:false}}
+	];
+
+	dvAll = [];
+
+	updateInfo();
+	createChart();
+
+	if ( tUpdate )
+		clearInterval(tUpdate);
+ 	tUpdate = setInterval("reload()", 60*1000);
+
+	if ( tReload )
+		clearTimeout( tReload );
+	tReload = setTimeout("master()", (15*60-30)*1000);
+}
+
+function master()
+{
+	console.log("Master reload...");
+	curDay = true;
+	mainLoad();
+}
+
+function pad(x)
+{
+	return (x < 10) ? "0" + x : "" + x;
+}
+
+function getTimestamp(day)
+{
+	var tm = (new Date( (new Date()).getTime() + day*1000*60*60*24 ));
+	return tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
+}
+
+function reload()
+{
+	if ( loadDay == 0 )
+	{
+		console.log("Reload...");
+		curDay = false;
+	  var baseTime = getTimestamp(0);
+	  load( "get.php?day="+baseTime+"&from="+lastTime, updateInfo );
+	}
+}
+
+function filterdata(data)
+{
+	var maxlen = 100;
+	if ( data.length <= maxlen )
+		return data;
+
+	if ( 0 )
+	{
+	  var smoothConfig = {	
+	    method: 'cubic',
+	/*
+	    method: 'lanczos',
+	    clip: 'clamp',
+	    lanczosFilterSize: 2,
+	    cubicTension: 0,	
+	*/
+			scaleTo:[0, maxlen-1]
+	  };
+
+		var yvals = [], xvals = [];
+		for (var i=0; i<data.length; i++)	
+		{
+			xvals[i] = data[i].x;
+			yvals[i] = data[i].y;// + (i&1)?0.2:0;
+		}
+
+		var sx = Smooth(xvals, smoothConfig);
+		var sy = Smooth(yvals, smoothConfig);
+
+		newData = [];
+		for (var i=0; i<maxlen; i++)
+			newData[i] = {x:Math.floor(sx(i)), y:sy(i)}; //data[Math.floor(i*data.length/maxlen)];
+	} else {
+		newData = [];
+		for (var i=0; i<maxlen; i++)
+			newData[i] = data[Math.floor(i*data.length/maxlen)];
+
+		if ( newData[newData.length-1].x != data[data.length-1].x )
+			newData[newData.length] = data[data.length-1];
+	}
+	return newData;
+}
+
+function createChart()
+{
+	var chartSet = {
+    chart: {
+        renderTo: 'container1',
+        defaultSeriesType: 'spline',
+        marginRight: 10 /*,
+				backgroundColor:'#000000'*/
+    },
+    title: {
+        text: null,
+        style: {
+            margin: '10px 100px 0 0' // center it
+        }
+    },
+    xAxis: {
+        type: 'datetime',
+				gridLineColor:'#404040',
+				lineColor:'#404040',
+				tickColor:'#404040',
+        tickPixelInterval: 150
+    },
+    yAxis: { 	
+//				opposite:true,
+        title: {
+            text: null
+        },
+				gridLineColor:'#404040',
+        plotLines: [{
+            value: 0,
+            width: 1,
+            color: '#808080'}]
+    },
+    tooltip: {
+        formatter: function() {
+            return '<b>' + this.series.name + '</b><br/>' + Highcharts.dateFormat('%H:%M:%S', this.x) + '<br/>' + Highcharts.numberFormat(this.y, 2);
+        }
+    },
+    legend: {
+        enabled: false
+    },
+    exporting: {
+        enabled: false
+    },
+    series: []
+};
+
+var w = Math.floor(window.innerWidth / 2)-8;
+var h = Math.floor(window.innerHeight / 2)-8;
+
+container1.style.left = 0;
+container1.style.top = 0;
+container1.style.width = w + "px";
+container1.style.height = h + "px";
+
+container2.style.left = w + "px";
+container2.style.top = 0;
+container2.style.width = w + "px";
+container2.style.height = h + "px";
+
+container3.style.left = 0;
+container3.style.top = h + "px";
+container3.style.width = w + "px";
+container3.style.height = h + "px";
+
+container4.style.left = w + "px";
+container4.style.top = h + "px";
+container4.style.width = w + "px";
+container4.style.height = h + "px";
+
+//chartSet.yAxis.opposite = false;
+chartSet.chart.renderTo = "container1";
+chartSet.title.text = "Teplota zeme 1,2 / vzduchu foliovnika a sklenika";
+chartSet.series = seriesA;
+chartA = new Highcharts.Chart(chartSet);
+
+//chartSet.yAxis.opposite = true;
+chartSet.chart.renderTo = "container2";
+chartSet.title.text = "Vonkajsia teplota";
+chartSet.series = seriesB;
+chartB = new Highcharts.Chart(chartSet);
+
+//chartSet.yAxis.opposite = false;
+chartSet.chart.renderTo = "container3";
+chartSet.title.text = "Vlhkost vzduchu / zeme, osvetlenie";
+chartSet.series = seriesC;
+chartC = new Highcharts.Chart(chartSet);
+
+//chartSet.yAxis.opposite = true;
+chartSet.chart.renderTo = "container4";
+chartSet.title.text = "Kurenie teploty vstup, vystup / ventil x2";
+chartSet.series = seriesD;
+chartD = new Highcharts.Chart(chartSet);
+}
+</script>
+
+</html>

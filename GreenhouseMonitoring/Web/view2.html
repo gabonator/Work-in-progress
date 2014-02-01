@@ -1,0 +1,639 @@
+<style>
+body {font-family:arial;}
+.spacer {width:8px;}
+.valueView {text-align:center; vertical-align:center;}
+.valueView b {font-size:40px;}
+.valueView i {color:#b0b0b0; font-style:normal;}
+.overlay { border-radius:10px; background: linear-gradient(to top, rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); z-index:30;/* W3C */ }
+
+.chartS {position:absolute; left:0px; bottom:0px; width:100%; height:90%; z-index:-10; }
+
+.chartV1 {position:absolute; left:0px; top:80px; width:100%; height:45%; z-index:-10; }
+.chartV2 {position:absolute; left:0px; bottom:0px; width:100%; height:45%; z-index:-10; }
+
+.chartH1 {position:absolute; left:0px; bottom:0px; width:50%; height:90%; z-index:-10; }
+.chartH2 {position:absolute; left:50%; bottom:0px; width:50%; height:90%; z-index:-10; }
+
+.chartQ1 {position:absolute; left:0px; top:80px; width:50%; height:45%; z-index:-10; }
+.chartQ2 {position:absolute; left:0px; bottom:0px; width:50%; height:45%; z-index:-10; }
+.chartQ3 {position:absolute; left:50%; top:80px; width:50%; height:45%; z-index:-10; }
+.chartQ4 {position:absolute; left:50%; bottom:0px; width:50%; height:45%; z-index:-10; }
+
+#chartV1Ctl {position:relative; z-index:4}
+#chartV2Ctl {position:relative; z-index:4;}
+select {}
+</style>
+<table width=100%><tr><td align=center>
+
+<!-- control panel -->
+<table><tr>
+<td class="spacer"></td>
+<td align=center>
+  <input type="button" value="&#x25C4;" onClick="changeDate('prev');">
+  <input type="button" value="26. 1. 2014"  onClick="changeDate('refresh');" id="selectedDay">
+  <input type="button" value="&#x21BA;" onClick="changeDate('reset');">
+  <input type="button" value="&#x25B6;" onClick="changeDate('next');">
+</td>
+<td class="spacer"></td>
+<td align=center>
+<select>
+<option>White (desktop)
+<option>Black (tablet)
+</select>
+</td>
+<td class="spacer"></td>
+<td align=center>
+<input type="image" src="images/fod.png" onClick="setMode('single')">
+<input type="image" src="images/fhd.png" onClick="setMode('horizontal')">
+<input type="image" src="images/fve.png" onClick="setMode('vertical')">
+<input type="image" src="images/fqd.png" onClick="setMode('quad')">
+</td>
+<td class="spacer"></td>
+<td align=center><input type="button" value="Hide monitor" onClick="toggleMonitor(this)"></td>
+<!--
+<td class="spacer"></td>
+<td align=center><input type="button" value="Edit mode"></td>
+-->
+</tr></table>
+
+</td></tr><tr><td align="center" id="monitor"></td></tr>
+</table>
+
+<div class="chartS" id="chartSRef"></div>
+
+<div class="chartV1" id="chartV1Ref"></div>
+<div class="chartV2" id="chartV2Ref"></div>
+
+<div class="chartH1" id="chartH1Ref"></div>
+<div class="chartH2" id="chartH2Ref"></div>
+
+<div class="chartQ1" id="chartQ1Ref"></div>
+<div class="chartQ2" id="chartQ2Ref"></div>
+<div class="chartQ3" id="chartQ3Ref"></div>
+<div class="chartQ4" id="chartQ4Ref"></div>
+
+<div id="chart1"></div>
+<div id="chart2"></div>
+<div id="chart3"></div>
+<div id="chart4"></div>
+<div id="chart1Ctl"></div>
+<div id="chart2Ctl"></div>
+<div id="chart3Ctl"></div>
+<div id="chart4Ctl"></div>
+
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script language="javascript" src="js/highcharts.js"></script>
+
+<script language="javascript">
+
+/*
+todo: cez cookies ulozit nastavenie, kazdu hodinu refreshnut graf
+mapping cez get.php
+*/
+var selectedDay = 0;
+var lastTime = 0;
+var lastArgs = {};
+var mapping = {};
+var data = [];
+// todo: monitor, skin
+var curMode = "quad";
+var filterPreset = ["Teploty", "Kurenie", "Vonkajsia teplota", "Atmosfericky tlak"];
+
+
+function setMode(mode)
+{
+  curMode = mode;
+  switch(mode)
+  {
+    case 'single': 
+      document.getElementById("chart1").style.display = "";  
+      document.getElementById("chart2").style.display = "none";
+      document.getElementById("chart3").style.display = "none";
+      document.getElementById("chart4").style.display = "none";
+      document.getElementById("chart1Ctl").style.display = "";  
+      document.getElementById("chart2Ctl").style.display = "none";
+      document.getElementById("chart3Ctl").style.display = "none";
+      document.getElementById("chart4Ctl").style.display = "none";
+      copyPlacement("chart1", "chartSRef", "chart1Ctl");
+    break;
+    case 'horizontal': 
+      document.getElementById("chart1").style.display = "";  
+      document.getElementById("chart2").style.display = "";
+      document.getElementById("chart3").style.display = "none";
+      document.getElementById("chart4").style.display = "none";
+      document.getElementById("chart1Ctl").style.display = "";  
+      document.getElementById("chart2Ctl").style.display = "";
+      document.getElementById("chart3Ctl").style.display = "none";
+      document.getElementById("chart4Ctl").style.display = "none";
+      copyPlacement("chart1", "chartH1Ref", "chart1Ctl");
+      copyPlacement("chart2", "chartH2Ref", "chart2Ctl");
+    break;
+    case 'vertical': 
+      document.getElementById("chart1").style.display = "";  
+      document.getElementById("chart2").style.display = "";
+      document.getElementById("chart3").style.display = "none";
+      document.getElementById("chart4").style.display = "none";
+      document.getElementById("chart1Ctl").style.display = "";  
+      document.getElementById("chart2Ctl").style.display = "";
+      document.getElementById("chart3Ctl").style.display = "none";
+      document.getElementById("chart4Ctl").style.display = "none";
+      copyPlacement("chart1", "chartV1Ref", "chart1Ctl");
+      copyPlacement("chart2", "chartV2Ref", "chart2Ctl");
+    break;
+    case 'quad': 
+      document.getElementById("chart1").style.display = "";  
+      document.getElementById("chart2").style.display = "";
+      document.getElementById("chart3").style.display = "";
+      document.getElementById("chart4").style.display = "";
+      document.getElementById("chart1Ctl").style.display = "";  
+      document.getElementById("chart2Ctl").style.display = "";
+      document.getElementById("chart3Ctl").style.display = "";
+      document.getElementById("chart4Ctl").style.display = "";
+      copyPlacement("chart1", "chartQ1Ref", "chart1Ctl");
+      copyPlacement("chart2", "chartQ2Ref", "chart2Ctl");
+      copyPlacement("chart3", "chartQ3Ref", "chart3Ctl");
+      copyPlacement("chart4", "chartQ4Ref", "chart4Ctl");
+    break;
+  }
+  if (data.length > 0 )
+    drawGraphs();
+}
+
+function toggleMonitor(obj)
+{
+  var mon = document.getElementById("monitor");
+  if ( mon.style.display == "" )
+  {
+    mon.style.display = "none";
+    obj.value = "Show monitor";
+  } else {
+    mon.style.display = "";
+    obj.value = "Hide monitor";
+  }
+}
+function changeDate(cmd)
+{
+  switch (cmd)
+  {
+    case 'prev': selectedDay--; break;
+    case 'next': selectedDay++; break;
+    case 'reset': selectedDay = 0; break;
+    case 'refresh': ; break;
+  }
+  data = [];
+  lastTime = 0;
+  updateDate();
+  timer();
+}
+
+function formatLastTime()
+{
+  if (lastTime == 0)
+    return "";
+  var tm = new Date(lastTime*1000);
+  return pad(tm.getHours()) + ":" + pad(tm.getMinutes());
+}
+
+function getMonitor()
+{
+  var vars = ["Tvonku", "Tsklenik", "Tzem", "P", "Update"];
+  var aux = [];
+  for (var i in vars )
+  {
+    var map;
+    if ( vars[i] == "Update" )
+    {
+      aux[aux.length] = {id:vars[i], value:formatLastTime(), units:""};
+    }
+    else
+    {
+	    map = getMappingByShort(vars[i]);
+      aux[aux.length] = {id:map.short, value:lastArgs[map.id], units:map.units};
+    }
+  }
+  return aux;
+}
+
+function getMappingByShort(short)
+{
+  for (var i in mapping) 
+    if ( mapping[i].short == short )
+    {
+      var map = mapping[i];
+      map.id = i;
+      return map;
+    }
+  alert("cant find " + short);
+  // assert!
+  return null;
+}
+
+function updateMonitor()
+{
+  if ( selectedDay != 0 )
+  {
+    document.getElementById("monitor").innerHTML = "";
+    return;
+  }
+
+  var bEdit = false;
+
+  var html = "<table class=\"overlay\"><tr>";
+  var values = getMonitor();
+  if ( bEdit )
+    values[values.length] = {id:"Add...", value:"", units:"&#x2295;"};
+
+  for ( var i in values )
+  {
+    var value = values[i];
+    if ( i > 0 )
+	    html += "<td class=\"spacer\"></td>";
+
+    html += "<td class=\"valueView\">";
+    if ( bEdit )
+    {
+      html += "<select id=\"monitorSlot"+i+"\">";
+      for (var i in mapping )
+        if (!mapping[i].ignore)
+        {
+          if ( mapping[i].short == value.id)
+            html += "<option value=\""+mapping[i].short+"\" selected>" + mapping[i].name + "\n";
+          else
+            html += "<option value=\""+mapping[i].short+"\">" + mapping[i].name + "\n";
+        }
+      if ( value.id == "Add..." )
+        html += "<option value=\"delete\" selected>Select...\n";
+      else
+        html += "<option value=\"delete\">Delete\n";
+
+      html += "</select><br><b>" + value.value + "<i>" + value.units + "</i></b>";
+    }
+    else
+      html += value.id + "<br><b>" + value.value + "<i>" + value.units + "</i></b>";
+    html += "</td>";
+  }
+/*
+  html += "<td class=\"spacer\"></td>";
+  html += "<td class=\"valueView\">";
+  html += "<b><i>&#x2295;</i></b>";
+  html += "</td>";
+*/
+ 
+  html += "</tr></table>";
+  document.getElementById("monitor").innerHTML = html;
+}
+
+var shiftday = 0;
+function setTimestamp(day)
+{
+  var args = day.split("-");
+  if (args.length != 3)
+    return 0;
+
+  var set = new Date( parseInt(args[0]), parseInt(args[1])-1, parseInt(args[2]) );
+  var cur = new Date();
+  cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate());
+  return Math.floor(( set.getTime() - cur.getTime() ) / (1000*60*60*24));
+}
+
+function getTimestamp(day)
+{
+  var cur = new Date();
+  cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate());
+  var tm = new Date();
+  tm.setDate( cur.getDate() + day );
+	return tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
+}
+
+function timer()
+{
+  var counter = 0;
+  var collect = (lastTime == 0);
+	window["add"] = 
+    function(json) 
+    {
+      lastTime = parseInt(json["timestamp"]);
+      lastArgs = json["args"];
+      lastArgs["ts"] = lastTime;
+      if ( collect )
+        data[data.length] = lastArgs;
+      counter ++;
+    }
+
+  Load("get.php?day=" + getTimestamp(selectedDay) + "&from=" + lastTime, 
+    function (resp) 
+    {
+      if (resp) 
+        eval(resp);
+      window["add"] = null;
+      updateMonitor();
+      if ( collect )
+        drawGraphs();
+    });
+}
+
+  function Load(name, handler)
+  {
+    var client = new XMLHttpRequest();
+    client.url = name;
+    client.open('GET', name);
+    client.onreadystatechange = function() {
+      if (this.status == 404)
+      {
+        console.log("Failed to load " + client.url);
+        handler();
+      }
+      if (this.readyState == 4 && this.status == 200 )
+      {
+        handler(client.responseText);
+      }
+    }
+    client.send();
+  }
+
+  function setMapping(json)
+  {
+    mapping = json;
+  }
+
+function log10(x)
+{
+  return Math.log(x)/Math.log(10);
+}
+
+  function getProcessor(id)
+  {
+    switch (id)
+    {
+      case "valve": return function(x) {return (x/135)*50};
+      case "light":
+        return function (r)
+        {
+        	// GND---[Rx]-+--[10k]---VCC
+        	//            |
+          //            +----------> Ain 10bit
+          /*
+
+             Ux = Un/(Rx+10e3)*Rx
+        		 Ix = 1024/(Rx+10e3)*Rx
+        		 Ix*(Rx+10e3) = 1024*Rx
+        		 Ix*Rx + Ix*10e3 - 1024*Rx = 0
+        		 Rx(Ix-1024) = -Ix*10e3
+
+             Rx = Ix*10e3/(1024-Ix)
+
+             Rx = (1024-Ix)/(Ix*10e3)
+          */
+
+          var Rx = r*10e3/(1024-r);
+          var logRx = log10(Rx); 
+          var logLux = -1.205*logRx + 5.89;
+          // 0.01 lux -> -2 -> 0%
+          // 10000 lux -> 4 -> 100%
+        	var lmin = -1.8;
+        	var lmax = 4;
+        	var percent = (logLux-lmin)*100/(lmax-lmin)
+        	if ( percent < 0 ) percent = 0;
+          return percent;
+        }
+    }
+  }
+
+  function buildSeries(opt)
+  {
+    var filters = getFilters();
+    var filter = "";
+    for ( var i in filters )
+      if ( filters[i].name == opt )
+        filter = filters[i].ids;
+
+    var ids = filter.split(",")
+    var series = [];
+    for ( var i in ids )
+    {
+      var map = getMappingByShort(ids[i]);
+      series[series.length] = {name: map.name, data:buildData(map.id, getProcessor(map.id)), marker:{enabled:false}};
+    }
+    return series;
+  }
+
+  function drawGraphs()
+  {
+    if ( document.getElementById("chart1").style.display == "" )
+      drawGraph(1);
+    if ( document.getElementById("chart2").style.display == "" )
+      drawGraph(2);
+    if ( document.getElementById("chart3").style.display == "" )
+      drawGraph(3);
+    if ( document.getElementById("chart4").style.display == "" )
+      drawGraph(4);
+  }
+ 
+  function drawGraph(i)
+  {
+    var sel = document.getElementById("ctl" + i).value;
+//	 	copyPlacement("chartV"+i, "chartV"+i+"Ref", "chartV"+i+"Ctl");
+    var chartSet = chartSettings();
+    chartSet.chart.renderTo = "chart"+i;
+    chartSet.series = buildSeries(sel);
+    new Highcharts.Chart(chartSet);
+  }
+
+function copyPlacement(idTo, idFrom, idCtl)
+{
+    var objRef = document.getElementById(idFrom);
+    var objTarget = document.getElementById(idTo);
+    var objCtl = idCtl ? document.getElementById(idCtl) : null;
+    objTarget.style.position = "absolute";
+    objTarget.style.left = objRef.offsetLeft + "px";
+    objTarget.style.top = objRef.offsetTop + "px";
+    objTarget.style.width = objRef.offsetWidth + "px";
+    objTarget.style.height = objRef.offsetHeight + "px";
+    objTarget.style.zIndex = -2;
+    objTarget.style.overflow = "hidden";
+
+    if ( objCtl )
+    {
+      objCtl.style.position = "absolute";
+      objCtl.style.left = (objRef.offsetLeft + objRef.offsetWidth - 220) + "px";
+      objCtl.style.top= (objRef.offsetTop + objRef.offsetHeight - 40) + "px";
+    }
+}
+
+function chartSettings()
+{
+	return {
+    chart: {
+//        renderTo: 'container1',
+        defaultSeriesType: 'spline',
+        marginRight: 10 
+    },
+    title: {
+        text: null,
+        style: {
+            margin: '10px 100px 0 0' // center it
+        }
+    },
+    xAxis: {
+        type: 'datetime',
+				gridLineColor:'#404040',
+				lineColor:'#404040',
+				tickColor:'#404040',
+        tickPixelInterval: 150
+    },
+    yAxis: { 	
+//				opposite:true,
+        title: {
+            text: null
+        },
+				gridLineColor:'#404040',
+        plotLines: [{
+            value: 0,
+            width: 1,
+            color: '#808080'}]
+    },
+    tooltip: {
+        formatter: function() {
+            return '<b>' + this.series.name + '</b><br/>' + Highcharts.dateFormat('%H:%M:%S', this.x) + '<br/>' + Highcharts.numberFormat(this.y, 2);
+        }
+    },
+    legend: { enabled: true },
+    exporting: { enabled: false },
+    series: []
+  };
+}
+
+function buildData(name, transform)
+{
+  var utc = -(new Date()).getTimezoneOffset()*1000*60;
+
+	var bTransform = false;
+	if ( typeof(transform) != "undefined" ) 
+		bTransform = true;
+	
+	var result = [];
+	for (var i=0; i<data.length; i++)
+	{
+		var dvThis = data[i];
+		if ( typeof(dvThis[name]) != "undefined" )
+		{
+			var v = parseFloat(dvThis[name]);
+			if ( bTransform )
+				v = transform( v );
+			if ( v-0 != v )
+			  continue
+			result[result.length] = {x:parseInt(dvThis["ts"])*1000+utc, y:v};
+		}
+	}
+//console.log(name + "  " + result.length);
+//if (result.length == 0) alert("Cant load " + name);
+	result = filterdata(result);
+	return result;
+}
+
+function filterdata(data)
+{
+	var maxlen = 100;
+	while ( data.length > maxlen )
+	{
+    var newdata = [];
+    var j = 0;
+	  for (var i=0; i<data.length/2-1; i++)	
+	  {
+      newdata[i] = {
+        x:(data[j].x + data[j+1].x)/2,
+        y:(data[j].y + data[j+1].y)/2 };
+      j += 2;
+    }
+    data = newdata;
+  }
+  return data;
+}
+
+function getFilters()
+{
+  var macros = [
+    {name:"Teploty", ids:"Tvonku,Tsklenik,Tzem,Tfol"},
+//    {name:"Vonkajsia teplota", ids:"Tvonku"},
+//    {name:"Teplota foliovnika", ids:"Tzem,Tfol"},
+//    {name:"Tlak", ids:"P"},
+    {name:"Kurenie", ids:"T1,T2,mix"},
+    {name:"Vlhkost", ids:"hygro,light"},
+    {name:"------", ids:""}
+  ];                       
+
+  for (var i in mapping )
+    if (!mapping[i].ignore)
+      macros[macros.length] = {name:mapping[i].name, ids:mapping[i].short};
+  return macros;                 
+}
+
+function updateCtl()
+{
+  var filters = getFilters();
+  var html = "";
+  for (var i in filters)
+    html += "<option value=\""+filters[i].name+"\">" + filters[i].name;
+
+  document.getElementById("chart1Ctl").innerHTML = 
+    "<select id=\"ctl1\" onChange=\"changeCtl(this);\">" + html + "</option>";
+  document.getElementById("chart2Ctl").innerHTML = 
+    "<select id=\"ctl2\" onChange=\"changeCtl(this);\">" + html + "</option>";
+  document.getElementById("chart3Ctl").innerHTML = 
+    "<select id=\"ctl3\" onChange=\"changeCtl(this);\">" + html + "</option>";
+  document.getElementById("chart4Ctl").innerHTML = 
+    "<select id=\"ctl4\" onChange=\"changeCtl(this);\">" + html + "</option>";
+  // todo settings:
+  document.getElementById("ctl1").value = filterPreset[0];//"Teploty";
+  document.getElementById("ctl2").value = filterPreset[1];//"Kurenie";
+  document.getElementById("ctl3").value = filterPreset[2]; //"Vonkajsia teplota";
+  document.getElementById("ctl4").value = filterPreset[3]; //"Atmosfericky tlak";
+}
+
+function changeCtl(obj)
+{
+  drawGraph(obj.id.substr(-1));
+}
+
+setMapping({
+  "0001a3d06ab0":{name:"Sklenik", short:"Sklenik", ignore:true},
+  "ow_purple":{name:"Vonkajsia teplota", short:"Tvonku", units:"&#176;C", device:"DS1820" },
+  "ow_green":{name:"Kurenie vstup", short:"T1", units:"&#176;C", device:"DS1820" },
+  "ow_yellow":{name:"Kurenie vystup", short:"T2", units:"&#176;C", device:"DS1820" },
+  "ow_black":{name:"Vzduch sklenika", short:"Tsklenik", units:"&#176;C", device:"DS1820" },
+  "ow_red":{name:"Referencna teplota zeme", short:"Tzem", units:"&#176;C", device:"DS1820" },
+  "dht11_temp":{name:"Teplota vzduchu foliovnika", short:"Tfol", units:"&#176;C", device:"DHT11" },
+  "dht11_hum":{name:"Vlhkost foliovnika", short:"hygro", units:"%", device:"DHT11" },
+  "light":{name:"Svetelne ziarenie", short:"light", units:"1/1024", device:"Analog" },
+  "valve":{name:"Zmiesavaci ventil", short:"mix", units:"1/135", device:"Komextherm" },
+  "bmp085_baro":{name:"Atmosfericky tlak", short:"P", units:"kPa", device:"BMP085" },
+  "bmp085_temp":{name:"Teplota zariadenia", short:"Tdevice", units:"&#176;C", device:"DS1820" },
+  "ow_280cd781040000a4":{name:"nic", short:"nic", units:"&#176;C", device:"DS1820", ignore:true},
+});
+
+
+function updateDate()
+{
+  document.getElementById("selectedDay").value = getTimestamp(selectedDay);
+}
+
+pad = function(x) { return (x < 10) ? "0" + x : "" + x; }
+
+window.onload = function()
+{
+  var QueryString = window.location.search.substring(1);
+  if ( QueryString.length > 0 )
+    selectedDay = setTimestamp( QueryString );
+  updateCtl();
+  setMode(curMode);
+  timer();
+  updateDate();
+  //setInterval("timer()", 60*1000);
+}
+
+window.onresize = function()
+{
+  setMode(curMode);
+}
+</script>

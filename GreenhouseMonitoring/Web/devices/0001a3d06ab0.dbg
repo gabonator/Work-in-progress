@@ -1,0 +1,60 @@
+Array
+(
+    [MOD_X_SENDFILE_ENABLED] => yes
+    [HTTP_HOST] => 192.168.1.50User-Agent: Wiznet W5100 (Arduino Uno R3) SensorBoard Collector2014b
+    [HTTP_CONNECTION] => close
+    [HTTP_COOKIE] => _boardPlatform=Arduino R3; _boardType=Collector2014b; _boardId=0001a3d06ab0;
+    [CONTENT_TYPE] => application/x-www-form-urlencoded
+    [CONTENT_LENGTH] => 256
+    [PATH] => /bin:/sbin:/usr/bin:/usr/sbin:/usr/syno/bin:/usr/syno/sbin:/usr/local/bin:/usr/local/sbin
+    [SERVER_SIGNATURE] => <address>Apache/2.2.22 (Unix) PHP/5.3.15 Server at 192.168.1.50user-agent: wiznet w5100 (arduino uno r3) sensorboard collector2014b Port 80</address>
+
+    [SERVER_SOFTWARE] => Apache/2.2.22 (Unix) PHP/5.3.15
+    [SERVER_NAME] => 192.168.1.50user-agent: wiznet w5100 (arduino uno r3) sensorboard collector2014b
+    [SERVER_ADDR] => 192.168.1.2
+    [SERVER_PORT] => 80
+    [REMOTE_ADDR] => 192.168.1.50
+    [DOCUMENT_ROOT] => /var/services/web
+    [SERVER_ADMIN] => admin
+    [SCRIPT_FILENAME] => /var/services/web/tlog2/remote.php
+    [REMOTE_PORT] => 19064
+    [GATEWAY_INTERFACE] => CGI/1.1
+    [SERVER_PROTOCOL] => HTTP/1.1
+    [REQUEST_METHOD] => POST
+    [QUERY_STRING] => 
+    [REQUEST_URI] => /tlog2/remote.php
+    [SCRIPT_NAME] => /tlog2/remote.php
+    [PHP_SELF] => /tlog2/remote.php
+    [REQUEST_TIME] => 1390857142
+)
+
+Array
+(
+    [ow_purple] => -2.62
+    [ow_green] => 48.43
+    [ow_yellow] => 46.37
+    [ow_black] => 11.00
+    [ow_red] => 20.75
+    [dht11_temp] => 16
+    [dht11_hum] => 95
+    [light] => 128
+    [valve] => 135
+    [bmp085_baro] => 99.022
+    [bmp085_temp] => 12.51
+    [uptime] => 1082401
+    [dummy] => 
+
+
+
+)
+
+Array
+(
+)
+
+Array
+(
+    [_boardPlatform] => Arduino R3
+    [_boardType] => Collector2014b
+    [_boardId] => 0001a3d06ab0
+)

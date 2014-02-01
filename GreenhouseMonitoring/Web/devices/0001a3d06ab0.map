@@ -1,0 +1,15 @@
+setMapping({
+  "0001a3d06ab0":{name:"Sklenik", short:"Sklenik"},
+  "ow_purple":{name:"Vonkajsia teplota", short:"Tvonku", units:"&#176;C", device:"DS1820" },
+  "ow_green":{name:"Kurenie vstup", short:"T1", units:"&#176;C", device:"DS1820" },
+  "ow_yellow":{name:"Kurenie vystup", short:"T2", units:"&#176;C", device:"DS1820" },
+  "ow_black":{name:"Vzduch sklenika", short:"Tsklenik", units:"&#176;C", device:"DS1820" },
+  "ow_red":{name:"Referencna teplota zeme", short:"Tzem", units:"&#176;C", device:"DS1820" },
+  "dht11_temp":{name:"Teplota vzduchu foliovnika", short:"Tfol", units:"&#176;C", device:"DHT11" },
+  "dht11_hum":{name:"Vlhkost foliovnika", short:"hygro", units:"%", device:"DHT11" },
+  "light":{name:"Svetelne ziarenie", short:"light", units:"1/1024", device:"Analog" },
+  "valve":{name:"Zmiesavaci ventil", short:"mix", units:"1/135", device:"Komextherm" },
+  "bmp085_baro":{name:"Atmosfericky tlak", short:"P", units:"kPa", device:"BMP085" },
+  "bmp085_temp":{name:"Teplota zariadenia", short:"Tdevice", units:"&#176;C", device:"DS1820" },
+  "ow_280cd781040000a4":{name:"nic", short:"nic", units:"&#176;C", device:"DS1820", ignore:true},
+});

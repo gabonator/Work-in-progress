@@ -1,4 +1,6 @@
 #pragma once
+#include <stdio.h>
+
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 //typedef bool BOOL;
@@ -73,7 +75,7 @@ extern treg _reg;
 #define cf _reg.flags.bit.carry
 #define zf _reg.flags.bit.zero
 
-#define unknown_condition _unknown_condition()
+#define unknown_condition() _unknown_condition()
 #define unknown_command() _unknown_condition()
 
 int _unknown_condition();
@@ -103,12 +105,24 @@ void _rep_movsw();
 void _rep_movsb();
 void _repne_scasb();
 void _lodsb();
-BYTE _data[];
+extern BYTE _video[];
 //BYTE _data[]; [0x10000];
 
+class CData{
+public:
+	BYTE raw[0x10000];
+	BYTE& operator[] (int i);
+//	{
+//		_ASSERT( i >= 0 && i < 0xb000 );
+//		return *(raw+i);
+//	}
+};
+
+extern CData _data;
 //char asc_18784[12];
 
 void nullsub_1();
 void nullsub_2();
 
 int _wKey();
+void tick();

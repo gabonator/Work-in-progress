@@ -1,14 +1,20 @@
-
 #include <Windows.h>
 #include <stdio.h>
-//#include <conio.h>
 #include <crtdbg.h>
 
 #include "C:\Data\Work\alley\1\cat_code.h"
 
-BYTE& CData::operator[] (int i)
+BYTE& CData::operator[] (ULONGLONG i)
 {
-	_ASSERT( i >= 0 && i < 0xb000 );
+	/*
+	if ( i == 0x963 || i == 0x6150)
+	{
+		int f = 9;
+	}
+	if ( i >= 0xb800*16)
+		return _video[i-0xb800*16];
+		*/
+	_ASSERT( i >=0 && i < 0xb800 );
 	return *(raw+i);
 }
 
@@ -78,7 +84,7 @@ public:
 
 				_ASSERT(arg==0);  // nAccess = 0 -> Latch for reading
 				wLatch0 = -Read18Hz(); 
-				wLatch0 = -(WORD)(GetTickCount()/2);
+				wLatch0 = -(WORD)(GetTickCount()/5);
 				//wLatch0 = 0;
 				//nReset0 = 1; 
 				break;
@@ -95,10 +101,6 @@ public:
 		BYTE b = wLatch0 >> 8;
 		wLatch0 <<= 8;
 		return b;
-		/*
-		BYTE b = wLatch0 & 0xff;
-		wLatch0 >>= 8;
-		return b;*/
 	}
 	BYTE ReadCounter1() // 41h
 	{
@@ -132,7 +134,7 @@ public:
 				int nFreqDiv = nFreqHigh*256 + nFreqLow;
 				INT nSpkrFrequency = 1193180/nFreqDiv;
 				///printf("Tone %d Hz\n", nSpkrFrequency);
-				//Beep(nSpkrFrequency, 100);
+				//Beep(nSpkrFrequency*2, 100);
 			}
 			break;
 		default:
@@ -186,6 +188,7 @@ void _int(BYTE i)
 		}
 		if (ah == 0x02)
 		{
+			putchar('\n');
 			return;
 			// cursor, bh=page, dh=row, dl=col
 			_ASSERT( bh == 0 );
@@ -267,17 +270,23 @@ void _pop(WORD &i)
 {
 	i = stack[--stacki];
 }
-
+void _push(ULONGLONG i)
+{
+	stack[stacki++] = i;
+}
+void _pop(ULONGLONG &i)
+{
+	i = stack[--stacki];
+}
 void _lahf()
 {
-//	_ASSERT(0);
+	ah = cf;
 }
 
 void _sahf()
 {
-	//_ASSERT(0);
+	cf = ah;
 }
-
 void _pushf() 
 {
 	_push(_reg.flags.f16);
@@ -287,12 +296,8 @@ void _popf()
 	_pop(_reg.flags.f16);
 }
 
-#define _rcr1(x, c) x=((((unsigned)x)>>1)|((c&1)?(1<<((sizeof(x)*8)-1)):0)|((c=(x&1))&0))
-
 void _rcr(BYTE& arg, BYTE l)
 {
-//	_ASSERT( l == 1 );
-//	_rcr1(arg, cf);
 	_ASSERT(l == 1);
 	int ncf = arg & 1 ? 1 : 0;
 	arg >>= 1;
@@ -300,7 +305,6 @@ void _rcr(BYTE& arg, BYTE l)
 	if ( cf )
 		arg |= 128;
 	cf = ncf;
-
 }
 
 void _rcl(BYTE& arg, BYTE l)
@@ -316,9 +320,13 @@ void _rcl(BYTE& arg, BYTE l)
 }
 void _rcr(WORD& arg, BYTE l)
 {
-	_ASSERT( l == 1 );
-	int _cf = cf ? 1 : 0;
-	_rcr1(arg, _cf);
+	_ASSERT(l == 1);
+	int ncf = arg & 1 ? 1 : 0;
+	arg >>= 1;
+	_ASSERT(( arg & 0x8000) == 0 );
+	if ( cf )
+		arg |= 0x8000;
+	cf = ncf;
 }
 
 int _unknown_condition()
@@ -380,61 +388,12 @@ void _out(WORD port, BYTE r)
 	}
 	if ( !i8254.Out( port, r ) )
 		_ASSERT(0);
-	/*
-	if ( port == 0x43 )
-	{
-		if ( r == 0x00)
-		{
-			nTimerState = 1;
-			wTimerLatch = -(WORD)((FLOAT)GetTickCount()*10);
-		}
-		if( r == 0xb6 )
-		{
-			nSpkState = 1;
-			return;
-		}
-		//http://stackoverflow.com/questions/5987683/how-does-the-following-code-make-pc-beeps
-		// r == 0xb6
-	}
-	if ( port == 0x42 )
-	{
-		switch ( nSpkState++ )
-		{
-		case 1: nFreqLow = r; break;
-		case 2: 
-			nFreqHi = r; 
-			{
-				int nFreqDiv = nFreqHi*256 + nFreqLow;
-				INT nFreq = 1193180/nFreqDiv;
-				printf("Tone %d Hz\n", nFreq);
-				Beep(nFreq, 100);
-			}
-			break;
-		default:
-			_ASSERT(0);
-		}
-		return;
-		// div freq
-	}*/
-	//printf("out(%3x) = %2x\n", port, r);
 }
 
 void _in(BYTE& r, WORD port)
 {
 	if (port != 0x60 && port != 0x61 )
 		procVideo();
-	//if ( port != 0x3da)
-//		printf("in(%3x)\n", port);
-	/*
-	if ( port == 0x40 )
-	{
-		switch ( nTimerState++ )
-		{
-		case 2:  r = wTimerLatch >> 8; break;
-		case 1:  r = wTimerLatch & 0xff; break;
-		}
-		return;
-	}*/
 	if ( port == 0x61 )
 	{
 		static int nTick = 0;
@@ -457,8 +416,9 @@ void _in(BYTE& r, WORD port)
 
 	if ( port == 0x201 )
 	{
+		r = 0;
 		// joystick
-		r = rand();
+		//r = rand();
 		return;
 	}
 	if ( port == 0x60 )
@@ -480,23 +440,27 @@ void _in(BYTE& r, WORD port)
 
 	if ( !i8254.In( port, r ) )
 		_ASSERT(0);
-
 }
-
 
 void _lodsb() 
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	al = _data[ds*16+si]; 
 	si++;
 }
 
 void _lodsw() 
 {
-	ax = *(WORD*)&_data[ds*16+si]; 
+	_ASSERT(_reg.flags.bit.dir == 0);
+	if ( ds*16+si >= 0xb800 )
+		ax = *(WORD*)&_video[ds*16+si - 0xb800]; 
+	else
+		ax = *(WORD*)&_data[ds*16+si]; 
 	si+=2;
 }
 void _stosw() 
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	BYTE* pto = _data.raw;
 	if (es == 0xb800)
 	{
@@ -510,6 +474,7 @@ void _stosw()
 }
 void _stosb() 
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	BYTE* pto = _data.raw;
 	if (es == 0xb800)
 	{
@@ -524,6 +489,7 @@ void _stosb()
 
 void _repne_scasb()
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	zf = 0;
 	while ( cx-- && zf == 0 )
 	{
@@ -534,17 +500,20 @@ void _repne_scasb()
 
 void _rep_stosw()
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	while (cx--) 
 		_stosw();
 }
 void _rep_stosb()
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	while (cx--) 
 		_stosb();
 }
 
 void _rep_movsw()
 {
+	_ASSERT(_reg.flags.bit.dir == 0);
 	// [DS:SI] => [ES:DI]
 	BYTE* pfrom = _data.raw;
 	BYTE* pto = _data.raw;
@@ -577,6 +546,8 @@ void _rep_movsw()
 
 void _rep_movsb()
 {
+	int dir = _reg.flags.bit.dir == 0 ? 1 : -1;
+	//_ASSERT(_reg.flags.bit.dir == 0);
 	BYTE* pfrom = _data.raw;
 	BYTE* pto = _data.raw;
 	if (ds == 0xb800)
@@ -592,8 +563,8 @@ void _rep_movsb()
 
 	while (cx != 0) {
 			pto[es*16 + di] = pfrom[ds*16 + si];
-			si++;
-			di++;
+			si+=dir;
+			di+=dir;
 			cx--;
 	}
 	if ( pfrom == _video )
@@ -801,6 +772,17 @@ void tick()
 		//	_data[0x698], _data[0x699], _data[0x551], _data[0x584], _data[0x552]);
 
 		//printf("8:%02x e:%02x f:%02x\n", _data[0x698], _data[0x56e], _data[0x56f]);
+		/*
+		for ( int i=0x560-4; i<0x580; i++)
+		  printf("%02x ", _data[i]);
+
+		printf(" - %02x%02x ", _data[0x56e], _data[0x56f]);
+		*/
+
+		printf("8e5: %04x %02x %02x %02x\n", *(WORD*)&_data[0x579], _data[0x571], _data[0x5f1], _data[0x86f]);
+//571, 576, 55a,558, [8e5] 574 5f1 56f
+	//	printf("\n");
+
 	}
 }
 

@@ -1,5 +1,6 @@
 ﻿// asmemu.cpp : Defines the entry point for the console application.
 //
+#define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
 #include "trex.h"
 #include <string>
@@ -81,6 +82,16 @@ string toString(LONG l)
 	return string(str);
 }
 
+string format(const char* fmt, ...)
+{
+    char dest[1024];
+    va_list argptr;
+    va_start(argptr, fmt);
+    vsprintf(dest, fmt, argptr);
+    va_end(argptr);
+	return string(dest);
+}
+
 string value(string key)
 {
 	vector<string> matches;
@@ -98,7 +109,7 @@ string value(string key)
 	if ( match("^cs:(.*)$", key.c_str(), &matches) )
 		return matches[1];
 	else if ( match("^seg\\s(.*)$", key.c_str(), &matches) )
-		out = "0";
+		out = string("seg_")+matches[1];
 	else if ( match("^byte_data_(.*)\\+(.*)$", key.c_str(), &matches) )
 		out = string("_data[") + toString(toNumber(string("0x") + matches[1]) + toNumber(value(matches[2]))) + "]";
 		//out = string("_data[0x") + value(matches[1]) + string("]");
@@ -107,23 +118,39 @@ string value(string key)
 		//out = string("_data[0x") + value(matches[1]) + string("]");
 	else if ( match("^byte_data_(.*)$", key.c_str(), &matches) )
 		out = string("_data[0x") + value(matches[1]) + string("]");
-	else if ( match("^byte_(.*)$", key.c_str(), &matches) )
-		out = string("_data[0x") + value(matches[1]) + string("]");
+	//else if ( match("^byte_(.*)$", key.c_str(), &matches) )
+	//	out = string("_data[0x") + value(matches[1]) + string("]");
 	else if ( match("^word_data_(.*)$", key.c_str(), &matches) )
 		out = string("*(WORD*)&_data[0x") + value(matches[1]) + string("]");
-	else if ( match("^word_(.*)$", key.c_str(), &matches) )
-		out = string("*(WORD*)&_data[0x") + value(matches[1]) + string("]");
+	//else if ( match("^word_(.*)$", key.c_str(), &matches) )
+	///	out = string("/*code*/0x") + value(matches[1]) + string("]");
 	else if ( match("^es:\\[(.*)\\]", key.c_str(), &matches) ) // es:[di] ??
-		out = string("*(WORD*)&_data[es+") + value(matches[1]) + string("]");
+		out = string("*(WORD*)&_data[es*16+") + value(matches[1]) + string("]");
 	else if ( match("^ds:\\[(.*)\\]", key.c_str(), &matches) ) // es:[di] ??
-		out = string("*(WORD*)&_data[ds+") + value(matches[1]) + string("]");
+		out = string("*(WORD*)&_data[ds*16+") + value(matches[1]) + string("]");
 
-	else if ( match("^cs:(.*)$", key.c_str(), &matches) )
-		out = string("*(WORD*)&_data[cs+") + value(matches[1]) + string("]");
+	else if ( match("^(cs|ds|es):(.*)$", key.c_str(), &matches) )
+	{
+		out = value(matches[2]);
+		if (out.find('[') != string::npos )
+			replace(out, "[", format("[%s*16+", matches[1].c_str()));
+		else
+			out = format("*(WORD*)&_data[%s*16+%s]", matches[1].c_str(), out.c_str());
+	}/*
 	else if ( match("^ds:(.*)$", key.c_str(), &matches) )
-		out = string("*(WORD*)&_data[ds+") + value(matches[1]) + string("]");
+	{
+		out = value(matches[1]);
+		if (out.find('[') != string::npos )
+			replace(out, "[", "[ds*16+");
+		else
+			out = string("*(WORD*)&_data[ds*16+") + value(matches[1]) + string("]");
+	}
 	else if ( match("^es:(.*)$", key.c_str(), &matches) )
-		out = string("*(WORD*)&_data[es+") + value(matches[1]) + string("]");
+	{
+		out = value(matches[1]);
+		replace(out, "[", "[es*16+");
+		//out = string("*(WORD*)&_data[es*16+") + value(matches[1]) + string("]");
+	}*/
 
 	else if ( match("^\\[(.*)\\+(.*)\\+(.*)\\]$", key.c_str(), &matches) )
 		out = string("*(WORD*)&_data[") + matches[1] + string(" + ") + value(matches[2]) + string(" + ") + value(matches[3]) + ("]");
@@ -165,58 +192,252 @@ bool cmp16bit(string exp)
 	return false;
 }
 
+vector<string> src;
+vector<string> code;
+
+void insert(int i, string line)
+{
+	code.insert(code.begin()+i, line);
+}
+
+
+string safeop(string arg)
+{
+	if ( arg.find( '*' ) == -1 )
+		return arg;
+	return format("(%s)", arg.c_str());
+}
+
+string updateCarry( int nLine )
+{
+	vector<string> matches;
+	string line = src[nLine];
+	if ( match("^shl[\\s]+(.*), (.*)$", line, &matches) )
+		return format("  cf = %s & 128 ? 1 : 0;", matches[1].c_str());
+	if ( match("^shr[\\s]+(.*), (.*)$", line, &matches) )
+		return format("  cf = %s & 1 ? 1 : 0;", matches[1].c_str());
+	if ( line == "sahf" )
+		return "//";
+	return "";
+}
+
+string getCondition( string jump, int nLine )
+{
+	string strPrev = src[nLine];
+	string condition;
+	vector<string> args;
+	if ( match("^loope", strPrev) ) // loope does not change flags
+	{
+		code.push_back("// dummy"); // will be removed
+		strPrev = src[--nLine];
+	}
+
+	if ( match("^call[\\s]+(.*)$", strPrev, &args) )
+	{
+		string funcName = args[1];
+		replace(funcName, "_code_", "_");
+
+		if ( funcName == "sub_13D8" )
+		{
+			if ( jump == "jz" )
+			{
+				condition = format("!%s()", funcName.c_str());
+				code.pop_back();
+			}
+			if ( jump == "jnz" )
+			{
+				condition = format("%s()", funcName.c_str());
+				code.pop_back();
+			}
+		}
+		if ( funcName == "sub_13D8" || funcName == "sub_1B7A" || funcName == "sub_20F5" || 
+			 funcName == "sub_1608" || funcName == "sub_22F7" )
+		{
+			if ( jump == "jnb" )
+				condition = "!cf";
+			if ( jump == "jb" )
+				condition = "cf";
+		}
+		if ( funcName == "sub_658" )
+		{
+			if ( jump == "jz" )
+				condition = "zf";
+			if ( jump == "jnz" )
+				condition = "!zf";
+		}
+
+	}
+
+	if ( match("^cmp\\s+(.*),\\s*(.*)$", strPrev, &args) )
+	{
+		args[1] = value(args[1]);
+		args[2] = value(args[2]);
+		if ( match("^[abcd][hl]$", args[1]) )
+			replace(args[2], "*(WORD*)&", "");
+		if ( match("^[abcd][hl]$", args[2]) )
+			replace(args[1], "*(WORD*)&", "");
+
+		if ( jump == "jz" )
+			condition = format("%s == %s", args[1].c_str(), args[2].c_str());
+		if ( jump == "jnz" )
+			condition = format("%s != %s", args[1].c_str(), args[2].c_str());
+		if ( jump == "jb" )
+			condition = format("%s < %s", args[1].c_str(), args[2].c_str());
+		if ( jump == "ja" )
+			condition = format("%s > %s", args[1].c_str(), args[2].c_str());
+		if ( jump == "jnb" )
+			condition = format("%s >= %s", args[1].c_str(), args[2].c_str());
+		if ( jump == "jbe" )
+			condition = format("%s <= %s", args[1].c_str(), args[2].c_str());
+/*
+
+		bool b16 = cmp16bit(args[1]) || cmp16bit(args[2]);
+		string prefix = b16 ? "(short)" : "(char)";
+
+		string arg2 = args[2];
+		if ( arg2 != "0" )
+			arg2 = string(" - ") + arg2;
+		else
+			arg2 = "";
+		if ( jump == "jz" )
+			condition = format("(%s%s) == 0", args[1].c_str(), arg2.c_str());
+		if ( jump == "jnz" )
+			condition = format("(%s%s) != 0", args[1].c_str(), arg2.c_str());
+		if ( jump == "jb" )
+			condition = format("%s(%s%s) < 0", prefix.c_str(), args[1].c_str(), arg2.c_str());
+		if ( jump == "ja" )
+			condition = format("%s(%s%s) > 0", prefix.c_str(), args[1].c_str(), arg2.c_str());
+		if ( jump == "jnb" )
+			condition = format("%s(%s%s) >= 0", prefix.c_str(), args[1].c_str(), arg2.c_str());
+		if ( jump == "jbe" )
+			condition = format("%s(%s%s) <= 0", prefix.c_str(), args[1].c_str(), arg2.c_str());
+*/
+		if ( !condition.empty() )
+			code.pop_back();
+	} 
+	if ( match("^(or|and|sub|add|xor)[\\s]+(.*), (.*)$", strPrev, &args) )
+	{
+		if ( jump == "jz" )
+			condition = format("!%s", value(args[2]).c_str());
+		if ( jump == "jnz" )
+			condition = format("%s", value(args[2]).c_str());
+		//if ( !condition.empty() )
+		//	code.pop_back();
+	}
+	if ( match("^(inc|dec)[\\s]+(.*)$", strPrev, &args) )
+	{
+		if ( jump == "jz" )
+			condition = format("!%s", value(args[2]).c_str());
+		if ( jump == "jnz" )
+			condition = format("%s", value(args[2]).c_str());
+		//if ( !condition.empty() )
+		//	code.pop_back();
+	}
+	if ( match("^test[\\s]+(.*), (.*)$", strPrev, &args) )
+	{
+		args[1] = value(args[1]);
+		args[2] = value(args[2]);
+
+		if ( jump == "jz" )
+			condition = format("!(%s & %s)", args[1].c_str(), args[2].c_str());
+		if ( jump == "jnz" )
+			condition = format("%s & %s", args[1].c_str(), args[2].c_str());
+		if ( !condition.empty() )
+			code.pop_back();
+	}
+
+	if ( match("^sub[\\s]+(.*), (.*)$", strPrev, &args) )
+	{
+		args[1] = value(args[1]);
+		args[2] = value(args[2]);
+
+		string ins_cf = format("  cf = (%s < %s); // cf-insertion", args[1].c_str(), args[2].c_str());
+		string ins_zf = format("  zf = (%s == %s); // zf-insertion", args[1].c_str(), args[2].c_str());
+
+		if ( jump == "jz" || jump == "jnz" || jump == "ja" || jump == "jbe" )
+			code.insert(code.end() - 1, ins_zf);
+		if ( jump == "jb" || jump == "jnb" || jump == "ja" || jump == "jbe" )
+			code.insert(code.end() - 1, ins_cf);
+
+		if ( jump == "jz" )
+			condition = "zf";
+		if ( jump == "jnz" )
+			condition = "!zf";
+		if ( jump == "jnb" )
+			condition = "!cf";
+		if ( jump == "jb" )
+			condition = "cf";
+		if ( jump == "ja" )
+			condition = "!cf && !zf";
+		if ( jump == "jbe" )
+			condition = "cf && zf";
+	}
+	return condition;
+}
+
+string inverseCondition(string strCond)
+{
+	vector<string> matches;
+	if ( match( "^\\s*(.*)\\s==\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s != %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*(.*)\\s!=\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s == %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*(.*)\\s<\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s >= %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*(.*)\\s>=\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s < %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*(.*)\\s>\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s <= %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*(.*)\\s<=\\s(.*)\\s*$", strCond, &matches) )
+		strCond = format("%s > %s", matches[1].c_str(), matches[2].c_str());
+	else if ( match( "^\\s*([a-z][a-z])\\s*$", strCond, &matches ) )
+		strCond = format("!%s", matches[1].c_str());
+	else if ( match( "^\\s*\\!([a-z][a-z])\\s*$", strCond, &matches ) )
+		strCond = format("%s", matches[1].c_str());
+	else
+		strCond = format("!(%s)", strCond.c_str());
+
+	return strCond;
+}
+
 int main(int argc, char* argv[])
 {
+	src.reserve(20000);
+	code.reserve(20000);
+
 	FILE* f = fopen("C:\\Data\\Work\\alley\\1\\cat_code.asm", "r");
-	FILE* fo = fopen("C:\\Data\\Work\\alley\\1\\cat_code.cpp", "w");
-	FILE* fh = fopen("C:\\Data\\Work\\alley\\1\\cat_code.h", "w");
 	char line[1024] = {0};
-
-	fprintf(fh, "#include \"asm.h\"\n");
-	fprintf(fh, "\n");
-
-	fprintf(fo, "#include \"cat_code.h\"\n");
-	fprintf(fo, "\n");
-	vector<string> matches;
-
-	string lastcmp;
-	string strPrevLine;
-	string lastcmp2;
-	bool inproc = false;
-	bool outproc = false;
-	int nLine = 0;
+	printf("Reading file...\n");
 	while (!feof(f))
 	{
 		fgets(line, 1023, f);
-		nLine++;
 		if ( line[0] )
 			line[strlen(line)-1] = 0;
 		string strLine(line);
-
-		//int nComment = strLine.find(";");
-		//if ( nComment != -1 )
-//			strLine = strLine.substr(0, nComment );
 		strLine = trim(strLine);
 		if (strLine.length() == 0)
 			continue;
+		src.push_back(strLine);
+	}
+	fclose(f);
 
-		//printf("%s\n", strLine.c_str());
+	printf("Processing...\n");
+	bool outproc = false, inproc = false;
+	string curFunction;
+	for (int i=0; i<(int)src.size(); i++)
+	{
+		string& line = src[i];
+		vector<string> matches;
 
-		string _strPrevLine = strPrevLine;
-		strPrevLine = strLine;
-		string _lastcmp = lastcmp;
-		lastcmp2 = lastcmp;
-		lastcmp.clear();
-
-		//inproc = true; strLine = "mov	es:24h,	bx";
-
-		if ( match("^([\\w]*)[\\s]*proc near", strLine, &matches) )
+		// function begin end
+		if ( match("^([\\w]*)[\\s]*proc\\s(near|far)", line, &matches) )
 		{
+			string safelabel = matches[1];
 			replace(matches[1], "_code_", "_");
 			if ( outproc )
 			{
 				outproc = false;
-				fprintf(fo, "*/\n");
+				code.push_back("*/");
 			}
 			inproc = true;
 
@@ -224,73 +445,98 @@ int main(int argc, char* argv[])
 			if ( matches[1] == "sub_13D8" )
 				procType = "BYTE";
 
-			fprintf(fh, "%s %s();\n", procType.c_str(), matches[1].c_str());
-			fprintf(fo, "%s %s()\n", procType.c_str(), matches[1].c_str());
-			fprintf(fo, "{\n");
+			curFunction = matches[1];
+			
+			code.push_back(format("%s %s()", procType.c_str(), matches[1].c_str()));
+			code.push_back("{");
 
 			if ( matches[1] == "sub_1A569" || matches[1] == "sub_1A86D" || matches[1] == "sub_1CDEF" || matches[1] == "sub_1D05B")
-				fprintf(fo, "%s:\n", matches[1].c_str());
+			{
+				code.push_back(format("%s:", safelabel.c_str()));
+			}
 
 			if ( matches[1] == "sub_3E2" || matches[1] == "sub_394" || matches[1] == "sub_349" || matches[1] == "sub_2FE" || 
-				matches[1] == "sub_3339" || matches[1] == "sub_363D" || matches[1] == "sub_5BBF")
-				fprintf(fo, "%s:\n", matches[1].c_str());
+				matches[1] == "sub_3339" || matches[1] == "sub_363D" || matches[1] == "sub_5BBF" || matches[1] == "sub_5E2B")
+				code.push_back(format("%s:", safelabel.c_str()));
 			continue;
-		} else
-		if ( match("^([\\w]*)[\\s]*proc far", strLine, &matches) )
-		{
-			replace(matches[1], "_code_", "_");
-			if ( outproc )
-			{
-				outproc = false;
-				fprintf(fo, "*/\n");
-			}
-			inproc = true;
-			fprintf(fh, "void %s();\n", matches[1].c_str());
-			fprintf(fo, "void %s()\n", matches[1].c_str());
-			fprintf(fo, "{\n");
-			continue;
-		} else
-		if ( match("^([\\w]*)[\\s]*endp", strLine, &matches) )
+		} 
+
+		if ( match("^([\\w]*)[\\s]*endp$", line, &matches) )
 		{
 			inproc = false;
-			fprintf(fo, "} //%s\n", matches[1].c_str());
-			fprintf(fo, "\n");
+			if ( code.back() == "  return;" )
+				code.pop_back();
+			if ( curFunction == "sub_13D8" )
+				code.push_back("  return al;");
+			curFunction.clear();
+			code.push_back( "}" );
+			code.push_back( "" );
 			continue;
 		}
-
+		
+		// comment out unreferenced code
 		if ( !inproc )
 		{
 			if (!outproc)
-				fprintf(fo, "/*\n");
+				code.push_back("/*");
 			outproc = true;
 		}
-		if ( match("^(loc[\\w]*):", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			fprintf(fo, "%s:\n", matches[1].c_str());
 
-			/*
-			fprintf(fo, "  %s();\n", matches[1].c_str());
-			fprintf(fo, "}\n");
-			fprintf(fo, "\n");
-			fprintf(fo, "void %s()\n", matches[1].c_str());
-			fprintf(fo, "{\n");
-			*/
-		} else
-		if ( match("^[\\s]*push[\\s]+([\\w]+)", strLine, &matches) )
+		// jump label
+		if ( match("^(locret[\\w]*):$", line, &matches) )
 		{
-			fprintf(fo, "  _push(%s);\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*pop[\\s]+([\\w]+)", strLine, &matches) )
+			//skip
+			continue;
+		} 
+		if ( match("^(loc[\\w]*):$", line, &matches) )
 		{
-			//lastcmp = matches[1];
-			fprintf(fo, "  _pop(%s);\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*mul[\\s]+([\\w]+)", strLine, &matches) )
+			code.push_back( format("%s:", matches[1].c_str()) );
+			continue;
+		} 
+
+		if ( match("^retn$", line, &matches) )
 		{
-			fprintf(fo, "  ax = (WORD)%s * (WORD)al;\n", matches[1].c_str());
-		} else
-		if ( match("^mov[\\s]+(.*),[\\s]*(.*)$", strLine, &matches) )
+			code.push_back( "  return;" );
+			continue;
+		} 
+
+		// single arg instruction
+		if ( match("^(push|pop|int)[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( format("  _%s(%s);", matches[1].c_str(), value(matches[2]).c_str()) );
+			continue;
+		}
+
+		// zero arg instruction
+		if ( match("^(cli|sti|std|stc|ctc|cld|aaa|lodsw|lodsb|stosw|clc|sahf|lahf|popf|pushf)$", line, &matches) )
+		{
+			code.push_back( format("  _%s();", matches[1].c_str() ) );
+			continue;
+		}
+
+		if ( match("^(out|in|xchg|rcr|rcl)[\\s]+(.*),\\s*(.*)$", line, &matches) )
+		{
+			if ( matches[1] == "rcr" || matches[1] == "rcl" )
+			{
+				string strCarry = updateCarry(i-1);
+				if ( strCarry.empty() )
+					code.push_back("  fix_code(); // fix carry flag");
+				else
+					code.insert(code.end()-1, strCarry);
+			}
+
+			code.push_back( format("  _%s(%s, %s);", matches[1].c_str(), value(matches[2]).c_str(), value(matches[3]).c_str() ) );
+			continue;
+		}
+
+		if ( match("^(rep|repne)\\s+(stosb|lodsb|stosw|lodsw|movsw|movsb)$", line, &matches) )
+		{
+			code.push_back( format("  _%s_%s();", matches[1].c_str(), matches[2].c_str()));
+			continue;
+		}
+
+		// assignment
+		if ( match("^mov[\\s]+(.*),[\\s]*(.*)$", line, &matches) )
 		{
 			string target = value(matches[1]);
 			string source = value(matches[2]);
@@ -298,329 +544,366 @@ int main(int argc, char* argv[])
 				replace(source, "*(WORD*)&", "");
 			if ( match("^[abcd][hl]$", source) )
 				replace(target, "*(WORD*)&", "");
-			//lastcmp = _lastcmp;
-			fprintf(fo, "  %s = %s;\n", target.c_str(), source.c_str());
-
-			//printf("%s   ->   %s = %s;\n", strLine.c_str(), target.c_str(), source.c_str());
-		} else
-		if ( match("^call[\\s]+near[\\s]+ptr+(.*)$", strLine, &matches) )
-		{
-			replace(matches[1], "_code_", "_");
-			fprintf(fo, "  %s();\n", matches[1].c_str());
-		} else
-		if ( match("^call[\\s]+(.*)$", strLine, &matches) )
-		{
-			replace(matches[1], "_code_", "_");
-			if ( matches[1] == "sub_13D8" )
-				lastcmp =  matches[1] + "()";
-			fprintf(fo, "  %s();\n", matches[1].c_str());
-		} else
-		if ( match("^int[\\s]+([\\w]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _int(%s);\n", value(matches[1]).c_str());
-		} else
-		if ( match("^[\\s]*jmp[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			fprintf(fo, "  goto %s;\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jmp[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			fprintf(fo, "  goto %s;\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*loop[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			fprintf(fo, "  if ( --cx )\n    goto %s;\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*loope[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			_ASSERT( !_lastcmp.empty() );
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			fprintf(fo, "  if ( --cx && (%s) == 0 )\n    goto %s;\n", _lastcmp.c_str(), matches[1].c_str());
-		} else
-		if ( match("^[\\s]*loopne[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			_ASSERT( !_lastcmp.empty() );
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			fprintf(fo, "  if ( --cx && (%s) != 0 )\n    goto %s;\n", _lastcmp.c_str(), matches[1].c_str());
-		} else //		cmp	byte_data_6A8A,	0
-		if ( match("^cmp[\\s]+([^,]+), ([^,]+)$", strLine, &matches) )
-		{
-			string arg1 = value(matches[1]);
-			string arg2 = value(matches[2]);
-
-			if ( match("^[abcd][hl]$", arg1) )
-				replace(arg2, "*(WORD*)&", "");
-			if ( match("^[abcd][hl]$", arg2) )
-				replace(arg1, "*(WORD*)&", "");
-
-			if ( arg1 == arg2 )
-				fprintf(fo, "  zf = 1;\n");
-			else {
-
-				if ( arg2 == "0" )
-					lastcmp = arg1;
-				else
-					lastcmp = arg1.c_str() + string(" - ") + arg2.c_str();
-			}
-			//fprintf(fo, "  _cmpval = %s - %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^test[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = value(matches[1]) + " & " + value(matches[2]).c_str();
-//			fprintf(fo, "  _cmpval = %s & %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^dec[\\s]+(.*)$", strLine, &matches) )
-		{
-			string arg = value(matches[1]);
-			lastcmp = arg;
-			if ( arg.find( '*' ) == -1 )
-				fprintf(fo, "  %s--;\n", arg.c_str());
-			else
-				fprintf(fo, "  (%s)--;\n", arg.c_str());
-		} else
-		if ( match("^inc[\\s]+(.*)$", strLine, &matches) )
-		{
-			string arg = value(matches[1]);
-			lastcmp = arg;
-			if ( arg.find( '*' ) == -1 )
-				fprintf(fo, "  %s++;\n", arg.c_str());
-			else
-				fprintf(fo, "  (%s)++;\n", arg.c_str());
-		} else
-		if ( match("^sub[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = value(matches[1]);
-			if ( matches[1] == matches[2] )
-				fprintf(fo, "  %s = 0;\n", matches[1].c_str());
-			else
-				fprintf(fo, "  %s -= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^add[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  %s += %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^adc[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  %s += %s + cf;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*xor[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = matches[1];
-			fprintf(fo, "  %s ^= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*ja[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-//			_ASSERT( !_lastcmp.empty() );
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) 
-			{
-				// CF == 0 ZF == 0    x > y
-				fprintf(fo, "  unknown_condition(); // skontroluj ja");
-				fprintf(fo, "  if ( !cf )\n");
-			} else
-			{
-				if ( cmp16bit( _lastcmp ) )
-					fprintf(fo, "  if ( (short)(%s) > 0 )\n", _lastcmp.c_str());
-				else
-					fprintf(fo, "  if ( (char)(%s) > 0 )\n", _lastcmp.c_str());
-			}
-			fprintf(fo, "    goto %s; // ja\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jb[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) 
-			{
-				// CF == 1   x < y
-				fprintf(fo, "  unknown_condition(); // skontroluj jb");
-				fprintf(fo, "  if ( cf )\n");
-			} else
-			{
-				if ( cmp16bit( _lastcmp ) )
-					fprintf(fo, "  if ( (short)(%s) < 0 )\n", value(_lastcmp).c_str());
-				else
-					fprintf(fo, "  if ( (char)(%s) < 0 )\n", value(_lastcmp).c_str());
-			}
-			fprintf(fo, "    goto %s; // jb\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jnb[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			if ( cmp16bit( _lastcmp ) )
-				fprintf(fo, "  if ( (short)(%s) >= 0 )\n", value(_lastcmp).c_str());
-			else
-				fprintf(fo, "  if ( (char)(%s) >= 0 )\n", value(_lastcmp).c_str());
-			fprintf(fo, "    goto %s; // jnb\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jbe[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			if ( cmp16bit( _lastcmp ) )
-				fprintf(fo, "  if ( (short)(%s) <= 0 )\n", value(_lastcmp).c_str());
-			else
-				fprintf(fo, "  if ( (char)(%s) <= 0 )\n", value(_lastcmp).c_str());
-			fprintf(fo, "    goto %s; // jbe\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jz[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			fprintf(fo, "  if ( (%s) == 0 )\n", _lastcmp.c_str());
-			fprintf(fo, "    goto %s;\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*jnz[\\s]+short[\\s]+([\\w]*)$", strLine, &matches) )
-		{
-			lastcmp = _lastcmp;
-			if ( _lastcmp.empty() ) ReportUnknownCondition();
-			if ( _lastcmp.empty() ) _lastcmp = "unknown_condition()";
-			fprintf(fo, "  if ( (%s) != 0 )\n", _lastcmp.c_str());
-			fprintf(fo, "    goto %s;\n", matches[1].c_str());
-		} else
-		if ( match("^[\\s]*shr[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = ""; //value(matches[1]);
-			fprintf(fo, "  %s >>= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*shl[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = ""; //value(matches[1]);
-			fprintf(fo, "  %s <<= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*and[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = matches[1];
-			fprintf(fo, "  %s &= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*or[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			lastcmp = matches[1];
-			fprintf(fo, "  %s |= %s;\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^not[\\s]+(.*)$", strLine, &matches) )
-		{
-			fprintf(fo, "  %s = ~%s;\n", value(matches[1]).c_str(), value(matches[1]).c_str());
-		} else
-		if ( match("^[\\s]*out[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _out(%s, %s);\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*in[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _in(%s, %s);\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*xchg[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _xchg(%s, %s);\n", matches[1].c_str(), matches[2].c_str());
-		} else
-		if ( match("^[\\s]*retn", strLine, &matches) )
-		{/*
-			if ( !lastcmp2.empty() )
-			{
-				fprintf(fo, "  _cmp = %s\n", lastcmp2.c_str());
-				lastcmp = "_cmp";
-			}*/
-			fprintf(fo, "  return;\n");
-		} else
-		if ( match("^[\\s]*retf", strLine, &matches) )
-		{
-			fprintf(fo, "  return;\n");
-		} else
-		if ( match("^[\\s]*nop", strLine, &matches) )
-		{
-		} else
-		if ( match("^[\\s]*cli", strLine, &matches) )
-		{
-			fprintf(fo, "  _cli();\n");
-		} else
-		if ( match("^[\\s]*sti", strLine, &matches) )
-		{
-			fprintf(fo, "  _sti();\n");
-		} else
-		if ( match("^[\\s]*std", strLine, &matches) )
-		{
-			fprintf(fo, "  _std();\n");
-		} else
-		if ( match("^[\\s]*stc", strLine, &matches) )
-		{
-			fprintf(fo, "  _stc();\n");
-		} else
-		if ( match("^[\\s]*ctc", strLine, &matches) )
-		{
-			fprintf(fo, "  _ctc();\n");
-		} else
-		if ( match("^[\\s]*cld", strLine, &matches) )
-		{
-			fprintf(fo, "  _cld();\n");
-		} else
-		if ( match("^rep[\\s]+(\\w+)$", strLine, &matches) )
-		{
-			fprintf(fo, "  _rep_%s();\n", matches[1].c_str());
-		} else
-		if ( match("^repne[\\s]+(\\w+)$", strLine, &matches) )
-		{
-			fprintf(fo, "  _repne_%s();\n", matches[1].c_str());
-		} else
-		//if ( match("^pushf$", strLine, &matches) )
-		//{
-		//	fprintf(fo, "  _pushf();\n");
-		//} else
-		if ( strLine == "aaa" || strLine == "lodsw" || 
-			strLine == "lodsb" || 
-			strLine == "stosw" || strLine == "clc" ||
-			strLine == "sahf" || strLine == "lahf" ||
-			strLine == "popf" || strLine == "pushf" )
-		{
-			fprintf(fo, "  _%s();\n", strLine.c_str());
-		} else
-		if ( match("^[\\s]*rcr[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _rcr(%s, %s);\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^[\\s]*rcl[\\s]+([^,]+), ([^,]+)", strLine, &matches) )
-		{
-			fprintf(fo, "  _rcl(%s, %s);\n", value(matches[1]).c_str(), value(matches[2]).c_str());
-		} else
-		if ( match("^(word_code_.*)\\sdw(.*)$", strLine, &matches) )
-		{
-			fprintf(fo, "WORD %s = %s;\n", matches[1].c_str(), value(matches[2]).c_str());
-			fprintf(fh, "extern WORD %s;\n", matches[1].c_str());
-		} else
-		if ( match("^(byte_code_.*)\\sdb(.*)$", strLine, &matches) )
-		{
-			fprintf(fo, "BYTE %s = %s;\n", matches[1].c_str(), value(matches[2]).c_str());
-			fprintf(fh, "extern BYTE %s;\n", matches[1].c_str());
-		} else
-		{
-			bool bIgnore = false;
-			if ( match("^assume", strLine) )
-				bIgnore = true;
-			if ( bIgnore )
-				fprintf(fo, "//%s\n", line);
-			else
-				fprintf(fo, "unknown_command(); //%s\n", line);
-
+			code.push_back( format("  %s = %s;", target.c_str(), source.c_str()));
+			continue;
 		}
-		//7break;
-	}
 
+		// ALU
+		if ( match("^dec[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( format("  %s--;", safeop(value(matches[1])).c_str() ) );
+			continue;
+		}
+
+		if ( match("^inc[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( format("  %s++;", safeop(value(matches[1])).c_str() ) );
+			continue;
+		}
+
+		if ( match("^sub\\s+([^,]+),\\s*([^,]+)", line, &matches) )
+		{
+			if ( matches[1] == matches[2] )
+				code.push_back( format("  %s = 0;", matches[1].c_str()));
+			else
+				code.push_back( format("  %s -= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		} 
+
+		if ( match("^add\\s+([^,]+),\\s*([^,]+)", line, &matches) )
+		{
+			code.push_back( format("  %s += %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+
+		if ( match("^adc\\s+([^,]+),\\s*([^,]+)", line, &matches) )
+		{
+			code.push_back("  unknown_condition(); // verify cf");
+			code.push_back(format("  %s += %s + cf;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		} 
+		if ( match("^xor\\s+(.*),\\s*(.*)", line, &matches) )
+		{
+			code.push_back( format("  %s ^= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^and[\\s]+(.*), (.*)", line, &matches) )
+		{
+			code.push_back( format("  %s &= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^or[\\s]+(.*), (.*)", line, &matches) )
+		{
+			code.push_back( format("  %s |= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^shl[\\s]+(.*), (.*)$", line, &matches) )
+		{
+			code.push_back( format("  %s <<= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^shr[\\s]+(.*), (.*)$", line, &matches) )
+		{
+			code.push_back( format("  %s >>= %s;", value(matches[1]).c_str(), value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^not[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( format("  %s = ~%s;", value(matches[1]).c_str(), value(matches[1]).c_str()));
+			continue;
+		}
+		if ( match("^mul[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( format("  ax = (WORD)%s * (WORD)al;\n", matches[1].c_str()));
+			continue;
+		}
+
+		// unconditional jump/calls
+		if ( match("jmp(\\sshort)?\\s+(.*)$", line, &matches) )
+		{
+			if (line.find("locret_") != string::npos)
+				code.push_back( "  return;" );
+			if (line.find("off") != string::npos)
+				code.push_back( format("  unknown_command(); // %s;", line.c_str()) );
+			else
+				code.push_back( format("  goto %s;", value(matches[2]).c_str()));
+			continue;
+		}
+		if ( match("^call", line, &matches) )
+		{
+			// workaround for: ^call.*\s(\w+)$
+			string target;
+			if ( match("^call\\s+(\\w+)$", line, &matches) )
+				target = matches[1];
+			if ( match("^call\\s+near\\s+(\\w+)$", line, &matches) )
+				target = matches[1];
+			if ( match("^call\\s+near\\s+ptr\\s+(\\w+)$", line, &matches) )
+				target = matches[1];
+			_ASSERT( !target.empty() );
+			replace(target, "_code_", "_");
+			code.push_back( format("  %s();", target.c_str()));
+			continue;
+		}
+
+		// loops
+		if ( match("^loop[\\s]+(.*)$", line, &matches) )
+		{
+			code.push_back( "  if ( --cx )" );
+			code.push_back( format("    goto %s;", value(matches[1]).c_str()));
+			continue;
+		}
+		if ( match("^loope[\\s]+(.*)$", line, &matches) )
+		{
+			//string strPrev = src[i-1];
+			string condition = getCondition("jz", i-1);
+			if ( condition.empty() )
+				condition = "unknown_condition()";
+
+			code.push_back( format("  if ( --cx && (%s) )", condition.c_str()));
+			code.push_back( format("    goto %s;", value(matches[1]).c_str()));
+			continue;
+		} 
+		if ( match("^loopne[\\s]+(.*)$", line, &matches) )
+		{
+//			string strPrev = src[i-1];
+			string condition = getCondition("jnz", i-1);
+			if ( condition.empty() )
+				condition = "unknown_condition()";
+
+			code.push_back( format("  if ( --cx && (%s) )", condition.c_str()));
+			code.push_back( format("    goto %s;", value(matches[1]).c_str()));
+			continue;
+		} 
+
+		// conditional jump
+		if ( match("^(jbe|jz|jnz|ja|jb|jnb)\\s+(short\\s)?(.*)$", line, &matches) )
+		{
+			string jump = matches[1];
+			string condition = getCondition(jump, i-1);
+
+			string help;
+			if ( condition.empty() )
+			{
+				condition = "unknown_condition()";
+				if ( jump == "jnb" )
+					help = "cf=0";
+				if ( jump == "jb" )
+					help = "cf=1";
+				if ( jump == "ja" )
+					help = "cf=0 & zf=0";
+				if ( jump == "jbe" )
+					help = "cf=1 & zf=1";
+			}
+			code.push_back(format("  if ( %s ) // %s %s", condition.c_str(), matches[1].c_str(), help.c_str()));
+			if ( match("^locret", matches[3]) )
+				code.push_back("    return;");
+			else
+				code.push_back( format("    goto %s;", value(matches[3]).c_str()));
+			continue;
+		}
+		if ( match("^cmp\\s+(.*),\\s*(.*)$", line, &matches) )
+		{
+			if ( matches[1] == matches[2] )
+				code.push_back( "  fix_code(); // zf=1");
+			else
+				code.push_back( format("  fix_code(); // %s", line.c_str()));
+			continue;
+		}
+		if ( match("^(.*_code_.*)\\s(dw|db)(.*)$", line, &matches) )
+		{
+			if ( outproc )
+			{
+				outproc = false;
+				inproc = true; // todo!
+				code.push_back("*/");
+			}
+
+			string strType = "UNKNOWN";
+			if (matches[2] == "db")
+				strType = "BYTE";
+			if (matches[2] == "dw")
+				strType = "WORD";
+
+			code.push_back( format("%s %s = %s;", strType.c_str(), matches[1].c_str(), matches[3].c_str()) );
+			continue;
+		} 
+
+		// discard
+		if ( line == "nop" || match("^assume", line) )
+			continue;
+
+		// unidentified command
+		code.push_back( string("  unknown_command(); // ") + line );
+	}
 	if ( outproc )
 	{
 		outproc = false;
-		fprintf(fo, "*/\n");
+		code.push_back("*/");
 	}
 
-	fclose(f);
+	int nLines[] = {571, 4716, 4764, 0};
+	for (int i=0; nLines[i]; i++)
+	{
+		string& line = code[nLines[i]-3];
+		_ASSERT( line.find("_data") != string::npos );
+		replace( line, "_data[", "_video[0*");
+	}
+	printf("Optimizing...\n");
+	code.insert(code.begin(), "#include \"cat_code.h\"");
+	code.insert(code.begin()+1, "");
+	for (int i=0; i<(int)code.size()-4; i++)
+	{
+		vector<string> matches;
+		if ( match( "\\s*loc_", code[i+0] ) && 
+			 match( "\\s*if",   code[i+1] ) &&
+			 match( "\\s*goto",  code[i+2] ) )
+		{
+			string strLabel, strLoop;
+			if ( match( "^(.+):$", code[i+0], &matches) )
+				strLabel = matches[1];
+			if ( match( "goto\\s(.*);", code[i+2], &matches) )
+				strLoop = matches[1];
+			if ( code[i+1].find("()") != string::npos || 
+				 code[i+1].find("++") != string::npos ||
+				 code[i+1].find("--") != string::npos)
+				continue;
+			if ( strLabel != strLoop )
+				continue;
+			code.insert(code.begin()+i+1, "  tick();");
+			i++;
+		}
+
+		continue;
+		if ( match( "if",    code[i+0] ) && 
+			 match( "goto",  code[i+1] ) &&
+			 match( "goto",  code[i+2] ) &&
+			 match( "loc_",  code[i+3] ) )
+		{
+			string strCond, strComment, strJumpTrue, strJumpFalse, strLabel;
+			string strTemp = code[i+0];
+			replace(strTemp, "*(WORD*)", "__WORD");
+			if ( match( "if\\s\\((.*)\\)(.*)$", strTemp, &matches) )
+			{
+				strCond = matches[1];
+				replace(strCond, "__WORD", "*(WORD*)");
+				strComment = matches[2];
+			} else
+				continue;
+			if ( match( "goto\\s(.*);", code[i+1], &matches) )
+				strJumpTrue = matches[1];
+			else 
+				continue;
+			if ( match( "goto\\s(.*);", code[i+2], &matches) )
+				strJumpFalse = matches[1];
+			else 
+				continue;
+			if ( match( "^(.+):$", code[i+3], &matches) )
+				strLabel = matches[1];
+			else 
+				continue;
+			if ( strLabel != strJumpTrue )
+				continue;
+
+			// negate condition
+			strCond = inverseCondition(strCond);
+
+			code[i+0] = format("  if ( %s ) %s", strCond.c_str(), strComment.c_str());
+			code[i+1] = format("    goto %s;", strJumpFalse.c_str());
+			code[i+2] = "";
+		}
+
+		if ( match( "if",    code[i+0] ) && 
+			 match( "goto",  code[i+1] ) &&
+			 match( "loc_",  code[i+3] ) )
+		{
+			string strCond, strComment, strJumpTrue, strCode, strLabel;
+			string strTemp = code[i+0];
+			replace(strTemp, "*(WORD*)", "__WORD");
+			if ( match( "if\\s\\((.*)\\)(.*)$", strTemp, &matches) )
+			{
+				strCond = matches[1];
+				replace(strCond, "__WORD", "*(WORD*)");
+				strComment = matches[2];
+			} else
+				continue;
+			if ( match( "goto\\s(.*);", code[i+1], &matches) )
+				strJumpTrue = matches[1];
+			else 
+				continue;
+			strCode = code[i+2];
+			if ( match( "^(.+):$", code[i+3], &matches) )
+				strLabel = matches[1];
+			else 
+				continue;
+			if ( strLabel != strJumpTrue )
+				continue;
+
+			strCond = inverseCondition(strCond);
+
+			code[i+0] = format("  if ( %s ) %s", strCond.c_str(), strComment.c_str());
+			code[i+1] = format("  %s", strCode.c_str());
+			code[i+2] = "";
+
+		}
+
+		if ( match( "if",    code[i+0] ) && 
+			 match( "goto",  code[i+1] ) &&
+			 !match( "goto",  code[i+2] ) &&
+			 !match( "loc_",  code[i+2] ) &&
+			 !match( "goto",  code[i+3] ) &&
+			 !match( "loc_",  code[i+3] ) &&
+			 match( "loc_",  code[i+4] ) )
+		{
+			string strCond, strComment, strJumpTrue, strCode1, strCode2, strLabel;
+			string strTemp = code[i+0];
+			replace(strTemp, "*(WORD*)", "__WORD");
+			if ( match( "if\\s\\((.*)\\)(.*)$", strTemp, &matches) )
+			{
+				strCond = matches[1];
+				replace(strCond, "__WORD", "*(WORD*)");
+				strComment = matches[2];
+			} else
+				continue;
+			if ( match( "goto\\s(.*);", code[i+1], &matches) )
+				strJumpTrue = matches[1];
+			else 
+				continue;
+			strCode1 = code[i+2];
+			strCode2 = code[i+3];
+			if ( match( "^(.+):$", code[i+4], &matches) )
+				strLabel = matches[1];
+			else 
+				continue;
+			if ( strLabel != strJumpTrue )
+				continue;
+
+			strCond = inverseCondition(strCond);
+
+			code[i+0] = format("  if ( %s ) %s", strCond.c_str(), strComment.c_str());
+			code[i+1] = "  {";
+			code[i+2] = format("  %s", strCode1.c_str());
+			code[i+3] = format("  %s", strCode2.c_str());
+			string tmp = code[i+4];
+			code[i+4] = "  }";
+			code.insert(code.begin()+i+5, tmp);
+		}
+
+	}
+
+	printf("Writing...\n");
+	FILE* fo = fopen("C:\\Data\\Work\\alley\\2\\cat_code.cpp", "w");
+	FILE* fh = fopen("C:\\Data\\Work\\alley\\2\\cat_code.h", "w");
+	for (int i=0; i<(int)code.size(); i++)
+	{
+		vector<string> matches;
+		string& line = code[i];
+		if ( match("^(void|BYTE|WORD)\\s(.*)\\(\\)$", line, &matches) )
+			fprintf(fh, "%s %s();\n", matches[1].c_str(), matches[2].c_str());
+		fprintf(fo, "%s\n", line.c_str());
+	}
 	fclose(fo);
 	fclose(fh);
+
 	return 0;
 }
 

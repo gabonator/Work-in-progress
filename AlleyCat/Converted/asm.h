@@ -1,10 +1,15 @@
 #pragma once
 #include <stdio.h>
+#include <Windows.h>
+#include <crtdbg.h>
 
 typedef unsigned short WORD;
+typedef unsigned long DWORD;
+typedef unsigned long long ULONGLONG;
 typedef unsigned char BYTE;
 //typedef bool BOOL;
 #define FLAG int
+#define SEG 16
 
 struct treg {
   struct 
@@ -31,12 +36,12 @@ struct treg {
 	  };
   } flags;
 
-  WORD ds;
-  WORD es;
-  WORD si;
-  WORD di;
-  WORD bp;
-  WORD cs;
+  ULONGLONG ds;
+  ULONGLONG es;
+  ULONGLONG si;
+  ULONGLONG di;
+  ULONGLONG bp;
+  ULONGLONG cs;
 
 };
 
@@ -77,11 +82,14 @@ extern treg _reg;
 
 #define unknown_condition() _unknown_condition()
 #define unknown_command() _unknown_condition()
+#define fix_code() _unknown_condition()
 
 int _unknown_condition();
 void _int(BYTE);
 void _push(WORD);
 void _pop(WORD& i);
+void _push(ULONGLONG);
+void _pop(ULONGLONG& i);
 void _out(WORD, BYTE);
 void _in(BYTE&, WORD);
 void _xchg(WORD&, WORD&);
@@ -111,7 +119,7 @@ extern BYTE _video[];
 class CData{
 public:
 	BYTE raw[0x10000];
-	BYTE& operator[] (int i);
+	BYTE& operator[] (ULONGLONG i);
 //	{
 //		_ASSERT( i >= 0 && i < 0xb000 );
 //		return *(raw+i);
@@ -126,3 +134,5 @@ void nullsub_2();
 
 int _wKey();
 void tick();
+
+const int seg_data = 0;

@@ -7,3 +7,7 @@ For obtaining the assembler source code I used IDA disassembler. The utility "As
 ![Image 1](Screenshots/splash.png)
 
 ![Image 2](Screenshots/game.png)
+
+And here is the intro animation running in Mozilla browser. Only the routines necessary to run the animations were converted and it the browser hangs in a few moments after starting, probably because of some infinite loop. Unfortunately the browser is unable to break the code execution and debugging is thus too complicated. But for demonstration purposes this is sufficient. So any old 16 bit old DOS game can be converted into javascript and played without x86 emulator :)
+
+![Image 3](Javascript/browser.png)

@@ -1,0 +1,89 @@
+<html>
+<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas>
+
+<script language="javascript" src="data.js"></script>
+<script language="javascript" src="code.js"></script>
+<script language="javascript" src="cpu.js"></script>
+
+<script language="javascript">
+
+
+var globPos = 0;
+var can = document.getElementById("canvas");
+var ctx = can.getContext('2d');
+can.width = 320;
+can.height = 200;
+var data = ctx.createImageData(can.width, can.height);
+var cgaPal = [0x000000, 0x00ffff, 0xff00ff, 0xffffff];
+var tmp = 0;
+
+var timerCpu = 0;
+var timerDisp = 0;
+
+load();
+
+function load()
+{
+  var raw = window.atob(__ds);
+  var rawLength = raw.length;
+  var i;
+  for(i = 0; i < rawLength; i++)
+    _data[i] = raw.charCodeAt(i);
+
+  start();
+  timerCpu = setInterval("tick()", 10);
+  timerDisp = setInterval("display();debug();", 50);
+}
+
+function tick()
+{
+  globPos = sub_5CB0( globPos );
+  if ( globPos == -1 )
+  {
+    clearInterval(timerCpu);
+    clearInterval(timerDisp);
+  }
+}
+
+function debug()
+{
+//  console.log(globPos.toString(16));
+  console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
+//	printf("x=%04x vx=%02x(%02x) y=%02d g=%02x jump=%02x, ? = %02x\n", 
+//		*(WORD*)&_data[0x579], _data[0x56E], _data[0x698], _data[0x5E9], _data[0x576], _data[0x699], _data[0x571]);
+}
+function cgaGetPixel(x, y)
+{
+	if ((y&1) == 0)
+	{
+		y >>= 1;
+		var pix4 = _video[y*80+(x>>2)];
+		pix4 <<= (x&3)*2;
+		return (pix4 >> 6)&3;
+	} else
+	{
+		y >>= 1;
+		var pix4 = _video[0x2000+y*80+(x>>2)];
+		pix4 <<= (x&3)*2;
+		return (pix4 >> 6)&3;
+	}
+}
+
+function display()
+{
+  var p = 0;
+  var pixels = data.data;
+  for (var y=0; y<200; y++)
+    for (var x=0; x<320; x++)
+    {
+      var c = cgaPal[cgaGetPixel(x, y)];
+      pixels[p++] = c>>16;
+      pixels[p++] = (c>>8)&0xff;
+      pixels[p++] = c & 0xff;
+      pixels[p++] = 255;
+    }
+  ctx.putImageData(data, 0, 0);
+}
+
+</script>
+</html>

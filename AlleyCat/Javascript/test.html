@@ -1,8 +1,6 @@
 <html>
 <canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas>
-<br>
-Load data segment:
-<input type="file" id="ds" src="ds" onChange="load()">
+<script language="javascript" src="ds.js"></script>
 
 <script language="javascript">
 
@@ -12,7 +10,7 @@ var df = 0, zf = 0, cf = 0;
 
 var seg_data = 0;
 var _data = new Uint8Array(0x10000);
-var _video = new Uint8Array(0x10000);
+var _video = new Uint8Array(0x12000);
 stack = [];
 function _push(v) 
 {
@@ -71,9 +69,13 @@ function _int(i)
       if ( ah == 0 ) 
       {
         var t = (new Date()).getTime();
-        t = Math.floor(t*65543.0/(1000.0*60.0*60.0));
+//        t = Math.floor(t*65543.0/(1000.0*60.0*60.0));
+        t %= 1000*60*60;
+        t = Math.floor(t*18.2/1000.0);
         set_cx(0);
         set_dx(t&0xffff);
+//console.log("Set time: "+get_dx().toString(16) + " " +getCallStack());
+//printStackTrace();
         return;
       }
   }
@@ -176,8 +178,8 @@ function _in(port)
 
 function decrement_cx()
 {
-  var cx = get_cx();
-  set_cx(cx-1);
+  var cx = get_cx()-1;
+  set_cx(cx);
   return cx;
 }
 
@@ -195,7 +197,7 @@ function _rep_movsw()
 {
 	// [DS:SI] => [ES:DI]
 	var pfrom = _data;
-  var pto = _data
+  var pto = _data;
 	if (ds == 0xb800)
 	{
 		pfrom = _video;
@@ -250,40 +252,7 @@ function _rep_movsb()
 		es = 0xb800;
 }
 
-
-
-function readFileToArrayBuffer(file, successCallback) {
-    // Create a FileReader 
-    var reader = new FileReader();
-
-
-    // Register for 'load' and 'error' events
-    reader.onload = function () {
-        // The 'result' property returns an ArrayBuffer for readAsArrayBuffer 
-        var buffer = reader.result;
-        successCallback(buffer);
-    }
-
-
-    reader.onerror = function (evt) {
-        // The error code indicates the reason for failure
-        if (evt.target.error.name == "NotReadableError") {
-            alert("Failed to read file: " + file.name);
-        }
-    }
-
-
-    // Begin a read of the file contents into an ArrayBuffer
-    reader.readAsArrayBuffer(file);
-}
-
-
-function load()
-{
-  readFileToArrayBuffer(document.getElementById('ds').files[0], main);
-}
-
-var wPos = 0;
+var globPos = 0;
 var can = document.getElementById("canvas");
 var ctx = can.getContext('2d');
 can.width = 320;
@@ -292,25 +261,46 @@ var data = ctx.createImageData(can.width, can.height);
 var cgaPal = [0x000000, 0x00ffff, 0xff00ff, 0xffffff];
 var tmp = 0;
 
+var timerCpu = 0;
+var timerDisp = 0;
+
+load();
+main();
+
+function load()
+{
+  var raw = window.atob(__ds);
+  var rawLength = raw.length;
+  var i;
+  for(i = 0; i < rawLength; i++)
+    _data[i] = raw.charCodeAt(i);
+  main();
+}
+
 function main(ds)
 {
-  var tempraw = new Uint8Array(ds);
-  _data.set(tempraw);
   start();
-  setInterval("tick()", 100);
+  timerCpu = setInterval("tick()", 10);
+  timerDisp = setInterval("display();debug();", 50);
 }
 
 function tick()
 {
-  if (tmp >= 10)
+  globPos = sub_5CB0( globPos );
+  if ( globPos == -1 )
   {
-   var qqq = 3;
+    clearInterval(timerCpu);
+    clearInterval(timerDisp);
   }
-console.log(tmp++ + ":  wp="+wPos);
-  wPos = sub_5CB0( wPos );
-  display();
 }
 
+function debug()
+{
+//  console.log(globPos.toString(16));
+  console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
+//	printf("x=%04x vx=%02x(%02x) y=%02d g=%02x jump=%02x, ? = %02x\n", 
+//		*(WORD*)&_data[0x579], _data[0x56E], _data[0x698], _data[0x5E9], _data[0x576], _data[0x699], _data[0x571]);
+}
 function cgaGetPixel(x, y)
 {
 	if ((y&1) == 0)
@@ -345,7 +335,8 @@ function display()
 }
 
 
-// exported code
+
+
 function start()
 {
   var wPos = 0;
@@ -399,6 +390,7 @@ function start()
     _data16set(0x4, 0);
     sub_1D31();
     sub_5B21();
+//    sub_5CB0();
     wPos = -1;
   }
 }
@@ -441,6 +433,7 @@ function sub_70D()
     _data[0x55A] = 0;
     _data[0x583] = 0;
     _data[0x698] = 0;
+
     _data[0x699] = 0;
     _data[0x551] = 0;
     _data[0x584] = 0;
@@ -548,6 +541,7 @@ function sub_8E5()
     sub_2D35();
   case 0x9B9:
     _data[0x56E] = 0;
+
     _data[0x571] = 1;
     _data[0x5F3] = 1;
     _data[0x576] = 0x20;
@@ -577,6 +571,8 @@ function sub_8E5()
     al = _data[0x571];
     _data[0x570] = al;
     al = _data[0x698];
+		if ( _data[0x698] == 0 ) unknown_condition();
+
     if ( al != 0 ) // jnz 
       { wPos = 0xA1A; continue; }
     if ( _data16get(0x574) < 0x10 ) // jb 
@@ -594,7 +590,9 @@ function sub_8E5()
       continue;
   case 0xA2E:
     _data[0x56E] = al;
-    _data16set(0x574, 0x20);
+
+
+	_data16set(0x574, 0x20);
   case 0xA37:
     set_ax(_data16get(0x574));
     cl = 3;
@@ -826,6 +824,7 @@ function sub_8E5()
     if ( unknown_condition() ) // jnb cf=0
       { wPos = 0xC90; continue; }
     _data[0x56E] = 0;
+
     _data[0x576] = 2;
     _data[0x571] = 1;
     _data[0x55B] = 0;
@@ -1030,6 +1029,7 @@ function sub_8E5()
     if ( cf ) // jb 
       { wPos = 0xE43; continue; }
     _data[0x56E] = 0;
+
     _data[0x571] = 1;
     wPos = 0xEB1;
       continue;
@@ -1052,11 +1052,13 @@ function sub_8E5()
     if ( !dl ) // !jnz
       dl = 0x0FF;
     _data[0x698] = dl;
+	if ( _data[0x698] == 0 ) unknown_condition();
   case 0xE78:
     al = _data[0x56E];
     _data[0x56F] = al;
     al = _data[0x698];
     _data[0x56E] = al;
+
     al = _data[0x699];
     _data[0x571] = al;
     if ( al == 0 ) // !jnz
@@ -1986,7 +1988,7 @@ function sub_2D35()
   case 0x2D40:
     cl = _data[0x2AE0];
   case 0x2D44:
-    set_bx(_video16get(es*16+di));
+    set_bx(_video16get(0*es*16+di));
     _data16set(bp+0, get_bx());
     _lodsw();
     set_ax(get_ax() & get_bx());
@@ -2102,9 +2104,9 @@ function sub_2E10()
     case 0:
     al = 0;
     _out(0x43, al);
-    al = _in(0x40);
+    _in(al, 0x40);
     ah = al;
-    al = _in(0x40);
+    _in(al, 0x40);
     if ( get_ax() != 0 ) // jnz 
       { wPos = 0x2E25; continue; }
     set_ax(0x0FA59);
@@ -2162,7 +2164,6 @@ function sub_5C60()
 function sub_5CB0(wPos)
 {
   while (wPos != -1)
-{ 
   switch (wPos)
   {
     case 0:
@@ -2247,14 +2248,14 @@ function sub_5CB0(wPos)
   case 0x5DA0:
     set_ax(get_ax() + 6);
     if ( get_dx() > get_ax() ) // ja 
-      return -1; // finished
+      return -1;
   case 0x5DA7:
     sub_53B0();
     sub_5DD4();
     if ( _data[0x69B] == 0 ) // jz 
       { wPos = 0x5DCA; continue; }
     set_dx(0x201);
-    al = _in(get_dx());
+    _in(al, get_dx());
     al &= 0x10;
     if ( !al ) // jz 
       { wPos = 0x5DC3; continue; }
@@ -2265,13 +2266,14 @@ function sub_5CB0(wPos)
     if ( _data[0x6A8A] != 0 ) // jnz 
       return -1;
   case 0x5DCA:
+//    Sleep(5);
+//    tick();
     set_ax(_data16get(0x6150));
     if ( get_ax() == _data16get(0x693) ) // jz 
       { return 0x5D71; }
     wPos = -1;
-  }
-}
-  return -1;
+  }                    
+  return wPos;
 }
 function sub_5DD4()
 {
@@ -2294,8 +2296,6 @@ function sub_5DD4()
   case 0x5DF1:
     ah = 0;
     _int(0x1A);
-console.log("ax = "+get_dx().toString(16) + " - " + _data16get(0x6A88).toString(16));
-alert(1);
     set_ax(get_dx());
     set_ax(get_ax() - _data16get(0x6A88));
     if ( get_ax() < 0x12 ) // jb 
@@ -2440,8 +2440,10 @@ function sub_1D6E() {}
 function sub_5C9E() {}
 function sub_53B0() {}
 function sub_5B21() {}
+//function sub_2E10() {}
 function sub_3445() {}
 function sub_58F8() {}
 function sub_591F() {}
+
 </script>
 </html>

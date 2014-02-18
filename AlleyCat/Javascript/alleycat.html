@@ -4,9 +4,7 @@
 <script language="javascript" src="data.js"></script>
 <script language="javascript" src="code.js"></script>
 <script language="javascript" src="cpu.js"></script>
-
 <script language="javascript">
-
 
 var globPos = 0;
 var can = document.getElementById("canvas");
@@ -47,26 +45,16 @@ function tick()
 
 function debug()
 {
-//  console.log(globPos.toString(16));
-  console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
-//	printf("x=%04x vx=%02x(%02x) y=%02d g=%02x jump=%02x, ? = %02x\n", 
-//		*(WORD*)&_data[0x579], _data[0x56E], _data[0x698], _data[0x5E9], _data[0x576], _data[0x699], _data[0x571]);
+//  console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
 }
+
 function cgaGetPixel(x, y)
 {
-	if ((y&1) == 0)
-	{
-		y >>= 1;
-		var pix4 = _video[y*80+(x>>2)];
-		pix4 <<= (x&3)*2;
-		return (pix4 >> 6)&3;
-	} else
-	{
-		y >>= 1;
-		var pix4 = _video[0x2000+y*80+(x>>2)];
-		pix4 <<= (x&3)*2;
-		return (pix4 >> 6)&3;
-	}
+  var base = (y & 1) ? 0x2000 : 0;
+  y >>= 1;
+	var pix4 = _video[base+y*80+(x>>2)];
+  x = (3-(x&3))*2;
+	return (pix4 >> x)&3;
 }
 
 function display()

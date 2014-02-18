@@ -1,8 +1,18 @@
+
 var _data = new Uint8Array(0x10000);
 var _video = new Uint8Array(0x12000);
 
+var r0 = new ArrayBuffer(8);
+var r16 = new Uint16Array(r0, 0, 4);
+var r8 = new Uint8Array(r0, 0, 8);
+
 var ds = 0, es = 0, di = 0, cs = 0;
-var ah = 0, al = 0, bh = 0, bl = 0, ch = 0, cl = 0, dh = 0, dl = 0;
+
+// index -> r16
+var ax = 0, bx = 1, cx = 2, dx = 3;
+// index -> r8
+var al = 0, ah = 1, bl = 2, bh = 3, cl = 4, ch = 5, dl = 6, dh = 7;
+
 var df = 0, zf = 0, cf = 0;
 var seg_data = 0;
 stack = [];
@@ -17,39 +27,35 @@ function _pop()
 }
 function set_ax(v)
 {
-  ah = v >> 8;
-  al = v & 0xff;
+  r16[ax] = v;
 }
 function set_bx(v)
 {
-  bh = v >> 8;
-  bl = v & 0xff;
+  r16[bx] = v;
 }
 function set_cx(v)
 {
-  ch = v >> 8;
-  cl = v & 0xff;
+  r16[cx] = v;
 }
 function set_dx(v)
 {
-  dh = v >> 8;
-  dl = v & 0xff;
+  r16[dx] = v;
 }
 function get_ax() 
 {
-  return (ah<<8)|al;
+  return r16[ax];
 }
 function get_bx() 
 {
-  return (bh<<8)|bl;
+  return r16[bx];
 }
 function get_cx() 
 {
-  return (ch<<8)|cl;
+  return r16[cx];
 }
 function get_dx() 
 {
-  return (dh<<8)|dl;
+  return r16[dx];
 }
 function _int(i)
 {
@@ -57,11 +63,11 @@ function _int(i)
   {
     case 0x11: set_ax(0xb91e); return;
     case 0x10: 
-      if ( ah == 0x00 ) /* set video */ return;
-      if ( ah == 0x0b ) /* backgrond, palette */ return;
+      if ( r8[ah] == 0x00 ) /* set video */ return;
+      if ( r8[ah] == 0x0b ) /* backgrond, palette */ return;
       break;
     case 0x1a:
-      if ( ah == 0 ) 
+      if ( r8[ah] == 0 ) 
       {
         var t = (new Date()).getTime();
 //        t = Math.floor(t*65543.0/(1000.0*60.0*60.0));
@@ -74,7 +80,7 @@ function _int(i)
         return;
       }
   }
-  alert("Unhandled interrupt " + i.toString(16) + " ah=" + ah.toString(16));
+  alert("Unhandled interrupt " + i.toString(16) + " ah=" + r8[ah].toString(16));
 }
 function _data16set(i, v)
 {

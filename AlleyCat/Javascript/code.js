@@ -23,11 +23,11 @@ function start()
     _data16set(0x6E00, get_ax());
     set_ax(4);
     _int(0x10);
-    al = 4;
+    r8[al] = 4;
     if ( _data[0x697] != 0x0FD ) // !jz
-      al = 6;
-    _data[0x690] = al;
-    ah = 0x0B;
+      r8[al] = 6;
+    _data[0x690] = r8[al];
+    r8[ah] = 0x0B;
     set_bx(0x101);
     _int(0x10);
     _data16set(0x416, 0);
@@ -36,8 +36,8 @@ function start()
     if ( _data[0x697] == 0x0FD ) // jz 
       { wPos = 0x65; continue; }
     set_dx(0x3D9);
-    al = 0x20;
-    _out(get_dx(), al);
+    r8[al] = 0x20;
+    _out(get_dx(), r8[al]);
   case 0x65:
     sub_2E10();
     sub_26E1();
@@ -69,18 +69,18 @@ function sub_70D()
   {
     case 0:
     set_cx(0);
-    ah = 1;
+    r8[ah] = 1;
     if ( _data16get(0x579) < 0x0A0 ) // jb 
       { wPos = 0x71F; continue; }
     set_cx(0x128);
-    ah = 0x0FF;
+    r8[ah] = 0x0FF;
   case 0x71F:
-    _data[0x56E] = ah;
+    _data[0x56E] = r8[ah];
     _data[0x558] = 3;
     _data[0x559] = 0x0C;
-    dl = 0x0B4;
+    r8[dl] = 0x0B4;
     _data16set(0x579, get_cx());
-    _data[0x57B] = dl;
+    _data[0x57B] = r8[dl];
     _data[0x57C] = 0x0E6;
     sub_2CB0();
     _data16set(0x55F, get_ax());
@@ -114,7 +114,7 @@ function sub_8E5()
   switch (wPos)
   {
     case 0:
-    ah = 0;
+    r8[ah] = 0;
     _int(0x1A);
     if ( get_dx() != _data16get(0x57D) ) // jnz 
       { wPos = 0x8FD; continue; }
@@ -132,9 +132,9 @@ function sub_8E5()
   case 0x90C:
     if ( _data16get(4) == 2 ) // jz 
       { wPos = 0x91D; continue; }
-    cl = _data[0x571];
-    cl |= _data16get(0x56E);
-    if ( cl ) // jnz 
+    r8[cl] = _data[0x571];
+    r8[cl] |= _data16get(0x56E);
+    if ( r8[cl] ) // jnz 
       { wPos = 0x926; continue; }
   case 0x91D:
     _push(get_dx());
@@ -177,22 +177,22 @@ function sub_8E5()
       { wPos = 0x9B9; continue; }
     sub_597F();
     _data[0x5F5] = 6;
-    al = _data[0x5F4];
+    r8[al] = _data[0x5F4];
     if ( _data[0x57B] < 0x0B3 ) // jb 
       { wPos = 0x992; continue; }
-    if ( al < 0x0C8 ) // !jnb
+    if ( r8[al] < 0x0C8 ) // !jnb
     {
-      al += 0x1E;
-      _data[0x5F4] = al;
+      r8[al] += 0x1E;
+      _data[0x5F4] = r8[al];
     }
   case 0x992:
-    dl = _data[0x57B];
-    cf = (dl < al); // cf-insertion
-    dl -= al;
+    r8[dl] = _data[0x57B];
+    cf = (r8[dl] < r8[al]); // cf-insertion
+    r8[dl] -= r8[al];
     if ( cf ) // !jnb
-      dl = 0;
+      r8[dl] = 0;
     set_cx(_data16get(0x579));
-    dl &= 0x0F8;
+    r8[dl] &= 0x0F8;
     sub_2CB0();
     di = get_ax();
     si = 0x64E;
@@ -208,7 +208,7 @@ function sub_8E5()
     _data[0x5F3] = 1;
     _data[0x576] = 0x20;
     set_bx(0);
-    ah = 0x0B;
+    r8[ah] = 0x0B;
     _int(0x10);
     wPos = 0xA86;
       continue;
@@ -218,24 +218,24 @@ function sub_8E5()
     set_bx(0);
     if ( get_ax() < _data16get(si + 0x5A9) ) // jb 
       { wPos = 0x9F6; continue; }
-    bl = bl + 1;
+    r8[bl] = r8[bl] + 1;
     if ( get_ax() < _data16get(si + 0x5B9) ) // jb 
       { wPos = 0x9F6; continue; }
-    bl = 5;
+    r8[bl] = 5;
     if ( get_ax() < _data16get(si + 0x5C9) ) // jb 
       { wPos = 0x9F6; continue; }
-    bl--;
+    r8[bl]--;
   case 0x9F6:
-    ah = 0x0B;
+    r8[ah] = 0x0B;
     _int(0x10);
-    al = _data[0x56E];
-    _data[0x56F] = al;
-    al = _data[0x571];
-    _data[0x570] = al;
-    al = _data[0x698];
+    r8[al] = _data[0x56E];
+    _data[0x56F] = r8[al];
+    r8[al] = _data[0x571];
+    _data[0x570] = r8[al];
+    r8[al] = _data[0x698];
 		if ( _data[0x698] == 0 ) unknown_condition();
 
-    if ( al != 0 ) // jnz 
+    if ( r8[al] != 0 ) // jnz 
       { wPos = 0xA1A; continue; }
     if ( _data16get(0x574) < 0x10 ) // jb 
       { wPos = 0xA2E; continue; }
@@ -243,7 +243,7 @@ function sub_8E5()
     wPos = 0xA37;
       continue;
   case 0xA1A:
-    if ( al != _data16get(0x56E) ) // jnz 
+    if ( r8[al] != _data16get(0x56E) ) // jnz 
       { wPos = 0xA2E; continue; }
     if ( _data16get(0x574) >= 0x30 ) // jnb 
       { wPos = 0xA37; continue; }
@@ -251,33 +251,33 @@ function sub_8E5()
     wPos = 0xA37;
       continue;
   case 0xA2E:
-    _data[0x56E] = al;
+    _data[0x56E] = r8[al];
 
 
 	_data16set(0x574, 0x20);
   case 0xA37:
     set_ax(_data16get(0x574));
-    cl = 3;
-    set_ax(get_ax() >> cl);
+    r8[cl] = 3;
+    set_ax(get_ax() >> r8[cl]);
     set_bx(_data16get(8));
-    bl <<= 1;
+    r8[bl] <<= 1;
     if ( get_ax() <= _data16get(get_bx() + 0x66C) ) // jbe 
       { wPos = 0xA4E; continue; }
     set_ax(_data16get(get_bx() + 0x66C));
   case 0xA4E:
     _data16set(0x572, get_ax());
     sub_FC9();
-    al = _data[0x699];
-    if ( al != 0 ) // jnz 
+    r8[al] = _data[0x699];
+    if ( r8[al] != 0 ) // jnz 
       { wPos = 0xA6A; continue; }
-    al = ~ al;
+    r8[al] = ~ r8[al];
     if ( _data[0x576] < 0x10 ) // jb 
       { wPos = 0xA7E; continue; }
     _data[0x576]--;
     wPos = 0xA86;
       continue;
   case 0xA6A:
-    if ( al != _data16get(0x571) ) // jnz 
+    if ( r8[al] != _data16get(0x571) ) // jnz 
       { wPos = 0xA7E; continue; }
     if ( _data[0x576] >= 0x40 ) // jnb 
       { wPos = 0xA86; continue; }
@@ -285,35 +285,35 @@ function sub_8E5()
     wPos = 0xA86;
       continue;
   case 0xA7E:
-    _data[0x571] = al;
+    _data[0x571] = r8[al];
     _data[0x576] = 0x20;
   case 0xA86:
     si = _data16get(8);
-    dl = _data[0x57B];
-    cl = 4;
-    bl = _data[0x576];
-    bl >>= cl;
-    if ( bl <= _data16get(si + 0x67C) ) // jbe 
+    r8[dl] = _data[0x57B];
+    r8[cl] = 4;
+    r8[bl] = _data[0x576];
+    r8[bl] >>= r8[cl];
+    if ( r8[bl] <= _data16get(si + 0x67C) ) // jbe 
       { wPos = 0xAA0; continue; }
-    bl = _data[si + 0x67C];
+    r8[bl] = _data[si + 0x67C];
   case 0xAA0:
-    al = _data[0x571];
-    if ( al < 1 ) // jb 
+    r8[al] = _data[0x571];
+    if ( r8[al] < 1 ) // jb 
       { wPos = 0xACE; continue; }
-    if ( al != 1 ) // jnz 
+    if ( r8[al] != 1 ) // jnz 
       { wPos = 0xAB4; continue; }
-    dl += bl;
-    if ( dl < 0x0B4 ) // jb 
+    r8[dl] += r8[bl];
+    if ( r8[dl] < 0x0B4 ) // jb 
       { wPos = 0xACE; continue; }
-    dl = 0x0B3;
+    r8[dl] = 0x0B3;
     wPos = 0xACE;
       continue;
   case 0xAB4:
-    cf = (dl < bl); // cf-insertion
-    dl -= bl;
+    cf = (r8[dl] < r8[bl]); // cf-insertion
+    r8[dl] -= r8[bl];
     if ( cf ) // jb 
       { wPos = 0xABD; continue; }
-    if ( dl > 3 ) // ja 
+    if ( r8[dl] > 3 ) // ja 
       { wPos = 0xACE; continue; }
   case 0xABD:
     set_ax(_data16get(0x9B8));
@@ -322,9 +322,9 @@ function sub_8E5()
     set_ax(_data16get(0x57D));
     _data16set(0x5F1, get_ax());
   case 0xACC:
-    dl = 2;
+    r8[dl] = 2;
   case 0xACE:
-    _data[0x57B] = dl;
+    _data[0x57B] = r8[dl];
     set_cx(_data16get(0x579));
     sub_2CB0();
     _data16set(0x563, get_ax());
@@ -334,11 +334,11 @@ function sub_8E5()
     wPos = 0xB64;
       continue;
   case 0xAE9:
-    al = _data[0x56E];
-    if ( al != _data16get(0x56F) ) // jnz 
+    r8[al] = _data[0x56E];
+    if ( r8[al] != _data16get(0x56F) ) // jnz 
       { wPos = 0xAFB; continue; }
-    al = _data[0x571];
-    if ( al == _data16get(0x570) ) // jz 
+    r8[al] = _data[0x571];
+    if ( r8[al] == _data16get(0x570) ) // jz 
       { wPos = 0xB00; continue; }
   case 0xAFB:
     set_bx(0x18);
@@ -347,10 +347,10 @@ function sub_8E5()
   case 0xB00:
     _data16set(0x587, _data16get(0x587) + 1);
     set_bx(_data16get(0x587));
-    al = _data[0x698];
-    al |= _data16get(0x699);
-    if ( !al ) // !jnz
-      bl >>= 1;
+    r8[al] = _data[0x698];
+    r8[al] |= _data16get(0x699);
+    if ( !r8[al] ) // !jnz
+      r8[bl] >>= 1;
     if ( _data[0x57B] < 0x0B3 ) // jb 
       { wPos = 0xB21; continue; }
     if ( _data[0x571] == 1 ) // jz 
@@ -361,8 +361,8 @@ function sub_8E5()
     if ( _data[0x699] != 0 ) // jnz 
       { wPos = 0xB53; continue; }
   case 0xB2F:
-    al = _data[0x576];
-    ah = 0;
+    r8[al] = _data[0x576];
+    r8[ah] = 0;
     set_ax(get_ax() >> 1);
     if ( get_ax() >= _data16get(0x574) ) // jnb 
       { wPos = 0xB53; continue; }
@@ -372,29 +372,29 @@ function sub_8E5()
     set_bx(get_bx() & 6);
     if ( _data[0x56E] == 1 ) // jz 
       { wPos = 0xB64; continue; }
-    bl |= 8;
+    r8[bl] |= 8;
     wPos = 0xB64;
       continue;
   case 0xB53:
     set_bx(get_bx() & 2);
-    bl |= 0x10;
+    r8[bl] |= 0x10;
     if ( _data[0x571] == 1 ) // !jnz
-      bl += 4;
+      r8[bl] += 4;
   case 0xB64:
     set_ax(_data16get(get_bx() + 0x9A6));
     _data16set(0x55D, get_ax());
     set_ax(_data16get(get_bx() + 0x9C0));
     _data16set(0x565, get_ax());
-    al = 0x30;
+    r8[al] = 0x30;
     set_cx(0x2BC);
     if ( _data[0x697] < 0x0FD ) // jb 
       { wPos = 0xB97; continue; }
     if ( _data[0x697] != 0x0FD ) // !jz
     {
-      al = 8;
+      r8[al] = 8;
       set_cx(0x3E8);
     }
-    if ( _data16get(0x57B) > al ) // ja 
+    if ( _data16get(0x57B) > r8[al] ) // ja 
       { wPos = 0xB97; continue; }
   case 0xB95:
     if ( decrement_cx() )
@@ -434,8 +434,8 @@ function sub_8E5()
   case 0xBE5:
     sub_1020();
     _data16set(0x55D, get_bx());
-    al = _data[0x558];
-    ah = _data[0x56E];
+    r8[al] = _data[0x558];
+    r8[ah] = _data[0x56E];
     sub_F87();
     if ( _data[0x558] != 2 ) // !jz
       sub_11E3();
@@ -445,7 +445,7 @@ function sub_8E5()
     sub_20F5();
     if ( cf ) // jb 
       return -1;
-    dl = _data[0x57B];
+    r8[dl] = _data[0x57B];
     set_cx(_data16get(0x579));
     sub_2CB0();
     _data16set(0x55F, get_ax());
@@ -458,7 +458,7 @@ function sub_8E5()
       { wPos = 0xC5F; continue; }
     _data[0x55C] = _data[0x55C] + 1;
     _data16set(0x572, 6);
-    dl = _data[0x57B];
+    r8[dl] = _data[0x57B];
     set_cx(_data16get(0x579));
     sub_2CB0();
     _data16set(0x563, get_ax());
@@ -493,9 +493,9 @@ function sub_8E5()
     wPos = 0xCC1;
       continue;
   case 0xC90:
-    al = _data[0x578];
-    cf = (_data16get(0x577) < al); // cf-insertion
-    _data16set(0x577, _data16get(0x577) - al);
+    r8[al] = _data[0x578];
+    cf = (_data16get(0x577) < r8[al]); // cf-insertion
+    _data16set(0x577, _data16get(0x577) - r8[al]);
     if ( !cf ) // jnb 
       { wPos = 0xCC1; continue; }
     if ( _data[0x571] == 1 ) // jz 
@@ -526,36 +526,36 @@ function sub_8E5()
     sub_1608();
     if ( !cf ) // jnb 
       { wPos = 0xCE7; continue; }
-    al = _data[0x57C];
+    r8[al] = _data[0x57C];
     wPos = 0xD29;
       continue;
   case 0xCE7:
-    al = _data[0x57C];
+    r8[al] = _data[0x57C];
     if ( _data[0x571] == 1 ) // jz 
       { wPos = 0xD06; continue; }
-    cf = (al < _data16get(0x576)); // cf-insertion
-    al -= _data16get(0x576);
+    cf = (r8[al] < _data16get(0x576)); // cf-insertion
+    r8[al] -= _data16get(0x576);
     if ( !cf ) // jnb 
       { wPos = 0xD4F; continue; }
-    al = 0;
+    r8[al] = 0;
     _data[0x571] = 1;
     _data[0x576] = 1;
     wPos = 0xD4F;
       continue;
   case 0xD06:
-    al += _data16get(0x576);
-    if ( al <= 0x0E6 ) // jbe 
+    r8[al] += _data16get(0x576);
+    if ( r8[al] <= 0x0E6 ) // jbe 
       { wPos = 0xD4F; continue; }
     if ( _data16get(4) != 7 ) // jnz 
       { wPos = 0xD22; continue; }
-    if ( al < 0x0F8 ) // jb 
+    if ( r8[al] < 0x0F8 ) // jb 
       { wPos = 0xD4F; continue; }
-    al = 0x0F8;
+    r8[al] = 0x0F8;
     _data[0x551] = 1;
     wPos = 0xD4F;
       continue;
   case 0xD22:
-    al = 0x0E6;
+    r8[al] = 0x0E6;
     _data[0x550] = 0;
   case 0xD29:
     _data[0x571] = 0;
@@ -569,13 +569,13 @@ function sub_8E5()
     sub_5AC2();
     set_ax(_pop());
   case 0xD4F:
-    _data[0x57C] = al;
-    cf = (al < 0x32); // cf-insertion
-    al -= 0x32;
+    _data[0x57C] = r8[al];
+    cf = (r8[al] < 0x32); // cf-insertion
+    r8[al] -= 0x32;
     if ( cf ) // !jnb
-      al = 0;
-    _data[0x57B] = al;
-    dl = _data[0x57B];
+      r8[al] = 0;
+    _data[0x57B] = r8[al];
+    r8[dl] = _data[0x57B];
     set_cx(_data16get(0x579));
     sub_2CB0();
     _data16set(0x563, get_ax());
@@ -604,12 +604,12 @@ function sub_8E5()
   case 0xDA8:
     _data16set(0x55D, get_ax());
     _data16set(0x565, get_bx());
-    al = 0x32;
-    zf = (al == _data16get(0x57C)); // zf-insertion
-    al -= _data16get(0x57C);
+    r8[al] = 0x32;
+    zf = (r8[al] == _data16get(0x57C)); // zf-insertion
+    r8[al] -= _data16get(0x57C);
     if ( zf ) // jz 
       { wPos = 0xDDE; continue; }
-    cf = (al < _data16get(0x57C)); // cf-insertion
+    cf = (r8[al] < _data16get(0x57C)); // cf-insertion
   // dummy
     if ( cf ) // jb 
       { wPos = 0xDDE; continue; }
@@ -617,11 +617,11 @@ function sub_8E5()
   case 0xDBC:
     if ( decrement_cx() )
       { wPos = 0xDBC; continue; }
-    zf = (bh == al); // zf-insertion
-    bh -= al;
+    zf = (r8[bh] == r8[al]); // zf-insertion
+    r8[bh] -= r8[al];
     if ( zf ) // jz 
       { wPos = 0xDC4; continue; }
-    cf = (bh < al); // cf-insertion
+    cf = (r8[bh] < r8[al]); // cf-insertion
   // dummy
     if ( !cf ) // jnb 
       { wPos = 0xDCA; continue; }
@@ -630,9 +630,9 @@ function sub_8E5()
     return -1;
   case 0xDCA:
     _data16set(0x565, get_bx());
-    ah = bl;
-    ah <<= 1;
-    set_ax(ah * al);
+    r8[ah] = r8[bl];
+    r8[ah] <<= 1;
+    set_ax(r8[ah] * r8[al]);
     set_ax(get_ax() + _data16get(0x569));
     _data16set(0x55D, get_ax());
     wPos = 0xE1F;
@@ -640,29 +640,29 @@ function sub_8E5()
   case 0xDDE:
     if ( _data16get(4) != 7 ) // jnz 
       { wPos = 0xDEE; continue; }
-    al = _data[0x57B];
-    cf = (al < 0x0BB); // cf-insertion
-    al -= 0x0BB;
+    r8[al] = _data[0x57B];
+    cf = (r8[al] < 0x0BB); // cf-insertion
+    r8[al] -= 0x0BB;
     if ( cf ) // jb 
       { wPos = 0xE1F; continue; }
-    cf = (al < 0x0BB); // cf-insertion
+    cf = (r8[al] < 0x0BB); // cf-insertion
   // dummy
     if ( !cf ) // jnb 
       { wPos = 0xDFC; continue; }
   case 0xDEE:
     if ( _data[0x550] != 2 ) // jnz 
       { wPos = 0xE1F; continue; }
-    al = _data[0x57B];
-    cf = (al < 0x5E); // cf-insertion
-    al -= 0x5E;
+    r8[al] = _data[0x57B];
+    cf = (r8[al] < 0x5E); // cf-insertion
+    r8[al] -= 0x5E;
     if ( cf ) // jb 
       { wPos = 0xE1F; continue; }
   case 0xDFC:
-    zf = (bh == al); // zf-insertion
-    bh -= al;
+    zf = (r8[bh] == r8[al]); // zf-insertion
+    r8[bh] -= r8[al];
     if ( zf ) // jz 
       { wPos = 0xE02; continue; }
-    cf = (bh < al); // cf-insertion
+    cf = (r8[bh] < r8[al]); // cf-insertion
   // dummy
     if ( !cf ) // jnb 
       { wPos = 0xE16; continue; }
@@ -710,20 +710,20 @@ function sub_8E5()
     _data[0x699] = 1;
     _data[0x56C] = 1;
     sub_2DFD();
-    dl &= 1;
-    if ( !dl ) // !jnz
-      dl = 0x0FF;
-    _data[0x698] = dl;
+    r8[dl] &= 1;
+    if ( !r8[dl] ) // !jnz
+      r8[dl] = 0x0FF;
+    _data[0x698] = r8[dl];
 	if ( _data[0x698] == 0 ) unknown_condition();
   case 0xE78:
-    al = _data[0x56E];
-    _data[0x56F] = al;
-    al = _data[0x698];
-    _data[0x56E] = al;
+    r8[al] = _data[0x56E];
+    _data[0x56F] = r8[al];
+    r8[al] = _data[0x698];
+    _data[0x56E] = r8[al];
 
-    al = _data[0x699];
-    _data[0x571] = al;
-    if ( al == 0 ) // !jnz
+    r8[al] = _data[0x699];
+    _data[0x571] = r8[al];
+    if ( r8[al] == 0 ) // !jnz
       { wPos = 0xF34; continue; }
     if ( _data[0x571] != 1 ) // jnz 
       { wPos = 0xEC9; continue; }
@@ -735,8 +735,8 @@ function sub_8E5()
     wPos = 0xF34;
       continue;
   case 0xEB1:
-    ah = 1;
-    al = 0x20;
+    r8[ah] = 1;
+    r8[al] = 0x20;
     _data[0x55B] = 8;
     if ( _data[0x550] != 1 ) // jnz 
       { wPos = 0xEF1; continue; }
@@ -746,28 +746,28 @@ function sub_8E5()
   case 0xEC9:
     _data[0x55B] = 0;
     set_ax(_data16get(0x572));
-    bl = al;
-    if ( al > 2 ) // !jbe
-      al -= 2;
+    r8[bl] = r8[al];
+    if ( r8[al] > 2 ) // !jbe
+      r8[al] -= 2;
     _data16set(0x572, get_ax());
-    ah = 8;
-    al = bl;
-    al = al ^ 0x0F;
-    cl = 4;
-    al <<= cl;
+    r8[ah] = 8;
+    r8[al] = r8[bl];
+    r8[al] = r8[al] ^ 0x0F;
+    r8[cl] = 4;
+    r8[al] <<= r8[cl];
     if ( _data[0x550] == 1 ) // !jnz
       _data[0x550] = _data[0x550] + 1;
   case 0xEF1:
-    _data[0x578] = al;
-    _data[0x576] = ah;
+    _data[0x578] = r8[al];
+    _data[0x576] = r8[ah];
     _data[0x577] = 1;
     _data[0x55C] = 0;
-    bl = _data[0x56E];
-    bl = bl + 1;
-    bl <<= 1;
+    r8[bl] = _data[0x56E];
+    r8[bl] = r8[bl] + 1;
+    r8[bl] <<= 1;
     if ( _data[0x571] != 0x0FF ) // !jz
-      bl += 6;
-    bh = 0;
+      r8[bl] += 6;
+    r8[bh] = 0;
     set_ax(_data16get(get_bx() + 0x0FAA));
     _data16set(0x569, get_ax());
     set_ax(_data16get(get_bx() + 0x0FB6));
@@ -785,13 +785,13 @@ function sub_8E5()
     sub_3445();
   case 0xF45:
     sub_FC9();
-    dl = _data[0x57B];
+    r8[dl] = _data[0x57B];
     set_cx(_data16get(0x579));
     sub_2CB0();
     _data16set(0x563, get_ax());
-    al = _data[0x56E];
-    al |= _data16get(0x571);
-    if ( !al ) // !jnz
+    r8[al] = _data[0x56E];
+    r8[al] |= _data16get(0x571);
+    if ( !r8[al] ) // !jnz
     {
       sub_1069();
       return -1;
@@ -820,21 +820,21 @@ function sub_F87()
   {
     case 0:
     set_cx(0x0B03);
-    cl -= al;
+    r8[cl] -= r8[al];
     _data16set(0x565, get_cx());
-    if ( ah == 0x0FF ) // jz 
+    if ( r8[ah] == 0x0FF ) // jz 
       { wPos = 0xFA6; continue; }
-    ah = 0;
-    al <<= 1;
+    r8[ah] = 0;
+    r8[al] <<= 1;
     _data16set(0x55D, _data16get(0x55D) + get_ax());
     _data16set(0x579, 0);
     wPos = 0xFB4;
       continue;
   case 0xFA6:
-    ah = 0;
-    al <<= 1;
-    al <<= 1;
-    al <<= 1;
+    r8[ah] = 0;
+    r8[al] <<= 1;
+    r8[al] <<= 1;
+    r8[al] <<= 1;
     set_ax(get_ax() + 0x128);
     _data16set(0x579, get_ax());
   case 0xFB4:
@@ -842,7 +842,7 @@ function sub_F87()
     es = _pop();
     si = _data16get(0x55D);
     di = 0x0E;
-    al = 3;
+    r8[al] = 3;
     sub_2D70();
     _data16set(0x55D, 0x0E);
     wPos = -1;
@@ -901,28 +901,28 @@ function sub_1020()
   switch (wPos)
   {
     case 0:
-    al = _data[0x56E];
-    if ( al == _data16get(0x56F) ) // jz 
+    r8[al] = _data[0x56E];
+    if ( r8[al] == _data16get(0x56F) ) // jz 
       { wPos = 0x102F; continue; }
     _data16set(0x572, 2);
   case 0x102F:
     if ( _data16get(0x572) >= 8 ) // jnb 
       { wPos = 0x1045; continue; }
     _data[0x577]--;
-    al = _data[0x577];
-    al &= 3;
-    if ( !al ) // !jnz
+    r8[al] = _data[0x577];
+    r8[al] &= 3;
+    if ( !r8[al] ) // !jnz
       _data16set(0x572, _data16get(0x572) + 1);
   case 0x1045:
-    bl = _data[0x56B];
-    bl = bl + 1;
-    if ( bl >= 6 ) // !jb
-      bl = 0;
-    _data[0x56B] = bl;
+    r8[bl] = _data[0x56B];
+    r8[bl] = r8[bl] + 1;
+    if ( r8[bl] >= 6 ) // !jb
+      r8[bl] = 0;
+    _data[0x56B] = r8[bl];
     if ( _data[0x56E] == 0x0FF ) // !jnz
-      bl += 6;
-    bl <<= 1;
-    bh = 0;
+      r8[bl] += 6;
+    r8[bl] <<= 1;
+    r8[bh] = 0;
     set_bx(_data16get(get_bx() + 0x0F7A));
     wPos = -1;
   }
@@ -950,7 +950,7 @@ function sub_1069()
     if ( cf ) // jb 
       return -1;
     sub_2DFD();
-    bl = dl;
+    r8[bl] = r8[dl];
     set_bx(get_bx() & 0x0E);
     si = _data16get(get_bx() + 0x0F92);
     set_ax(0x0B800);
@@ -961,7 +961,7 @@ function sub_1069()
     set_cx(0x602);
     sub_2D35();
     sub_2DFD();
-    bl = dl;
+    r8[bl] = r8[dl];
     set_bx(get_bx() & 6);
     si = _data16get(get_bx() + 0x0FA2);
     di = _data16get(0x55F);
@@ -1012,8 +1012,8 @@ function sub_13AA()
 {
   set_ax(0x0F000);
   es = get_ax();
-  al = 0xff;
-  _data[0x697] = al;
+  r8[al] = 0xff;
+  _data[0x697] = r8[al];
 }
 function sub_13E8()
 {
@@ -1026,14 +1026,14 @@ function sub_13E8()
   _cld();
   di = 0x6B7;
   set_cx(0x16);
-  al = 0x80;
+  r8[al] = 0x80;
   _rep_stosb();
   set_ax(_data16get(es*16+0x693));
   set_ax(get_ax() - 0x70);
   _data16set(es*16+0x691, get_ax());
   set_ax(0x40);
   es = get_ax();
-  al = _data[es*16+0x12];
+  r8[al] = _data[es*16+0x12];
   set_cx(_pop());
   di = _pop();
   es = _pop();
@@ -1064,9 +1064,9 @@ function sub_1419()
     _data16set(es*16+0x122, cs);
     set_ax(0x40);
     es = get_ax();
-    al = _data[es*16+0x18];
-    al |= 1;
-    _data[es*16+0x18] = al;
+    r8[al] = _data[es*16+0x18];
+    r8[al] |= 1;
+    _data[es*16+0x18] = r8[al];
   case 0x147D:
     _sti();
     wPos = -1;
@@ -1089,9 +1089,9 @@ function sub_1608()
     sub_16C6();
     return -1;
   case 0x161E:
-    al = _data[0x57B];
-    al &= 0x0F8;
-    if ( al == 0x60 ) // jz 
+    r8[al] = _data[0x57B];
+    r8[al] &= 0x0F8;
+    if ( r8[al] == 0x60 ) // jz 
       { wPos = 0x1630; continue; }
     sub_1657();
     if ( unknown_condition() ) // jb cf=1
@@ -1101,13 +1101,13 @@ function sub_1608()
   case 0x1630:
     if ( _data[0x550] >= 2 ) // jnb 
       { wPos = 0x1655; continue; }
-    _data[0x57B] = al;
-    al += 0x32;
-    _data[0x57C] = al;
+    _data[0x57B] = r8[al];
+    r8[al] += 0x32;
+    _data[0x57C] = r8[al];
     if ( _data[0x550] == 1 ) // jz 
       { wPos = 0x1653; continue; }
     _data[0x550] = 1;
-    ah = 0;
+    r8[ah] = 0;
     _int(0x1A);
     _data16set(0x556, get_dx());
   case 0x1653:
@@ -1135,17 +1135,17 @@ function sub_1B7A()
     case 0:
     if ( _data16get(4) != 0 ) // jnz 
       { wPos = 0x1BE1; continue; }
-    dl = _data[0x1673];
-    if ( dl == 0 ) // jz 
+    r8[dl] = _data[0x1673];
+    if ( r8[dl] == 0 ) // jz 
       { wPos = 0x1BE1; continue; }
     set_cx(_data16get(0x17DF));
-    _xchg(cl, ch);
+    _xchg(r8[cl], r8[ch]);
     si = 0x10;
     set_ax(_data16get(0x1671));
     set_bx(_data16get(0x579));
-    dh = _data[0x57B];
+    r8[dh] = _data[0x57B];
     di = 0x18;
-    ch = 0x0E;
+    r8[ch] = 0x0E;
     sub_2E29();
     if ( unknown_condition() ) // jnb cf=0
       return -1;
@@ -1156,10 +1156,10 @@ function sub_1B7A()
       { wPos = 0x1BDF; continue; }
     _data[0x1675] = 1;
     sub_1166();
-    dl = 1;
+    r8[dl] = 1;
     if ( _data[0x1674] != 0x0FF ) // !jz
-      dl = 0x0FF;
-    _data[0x1674] = dl;
+      r8[dl] = 0x0FF;
+    _data[0x1674] = r8[dl];
     _data16set(0x17EA, 0x60);
     _data[0x17E9] = 1;
     _data[0x55C] = 0;
@@ -1180,26 +1180,26 @@ function sub_1D31()
     case 0:
     if ( _data[0x697] == 0x0FD ) // jz 
       { wPos = 0x1D48; continue; }
-    ah = 0x0B;
-    bh = 1;
+    r8[ah] = 0x0B;
+    r8[bh] = 1;
     si = _data16get(4);
-    bl = _data[si + 0x1853];
+    r8[bl] = _data[si + 0x1853];
     _int(0x10);
     wPos = 0x1D67;
       continue;
   case 0x1D48:
     si = _data16get(4);
-    bl = 1;
-    bh = _data[si + 0x183B];
+    r8[bl] = 1;
+    r8[bh] = _data[si + 0x183B];
     sub_1D6E();
-    bl = 2;
-    bh = _data[si + 0x1843];
+    r8[bl] = 2;
+    r8[bh] = _data[si + 0x1843];
     sub_1D6E();
-    bl = 3;
-    bh = _data[si + 0x184B];
+    r8[bl] = 3;
+    r8[bh] = _data[si + 0x184B];
     sub_1D6E();
   case 0x1D67:
-    ah = 0x0B;
+    r8[ah] = 0x0B;
     set_bx(0);
     _int(0x10);
     wPos = -1;
@@ -1224,10 +1224,10 @@ function sub_20F5()
     case 0:
     if ( _data[0x1CB8] != 0 ) // jnz 
       { wPos = 0x2134; continue; }
-    al = _data[0x1CBF];
-    al |= _data16get(0x1CC0);
-    al |= _data16get(0x1CC1);
-    if ( !al ) // jz 
+    r8[al] = _data[0x1CBF];
+    r8[al] |= _data16get(0x1CC0);
+    r8[al] |= _data16get(0x1CC1);
+    if ( !r8[al] ) // jz 
       { wPos = 0x2134; continue; }
     if ( _data[0x57B] < 0x0A3 ) // jb 
       { wPos = 0x2134; continue; }
@@ -1258,14 +1258,14 @@ function sub_22F7()
     return -1;
   }
   set_cx(_data16get(0x1D64));
-  _xchg(ch, cl);
+  _xchg(r8[ch], r8[cl]);
   set_ax(_data16get(0x1D5C));
-  dl = _data[0x1D5F];
+  r8[dl] = _data[0x1D5F];
   si = 0x10;
   set_bx(_data16get(0x579));
-  dh = _data[0x57B];
+  r8[dh] = _data[0x57B];
   di = 0x18;
-  ch = 0x0E;
+  r8[ch] = 0x0E;
   sub_2E29();
   if ( unknown_condition() ) // jnb cf=0
     return -1;
@@ -1280,18 +1280,18 @@ function sub_2330()
     case 0:
     _data16set(0x1F6C, 0);
     set_ax(0);
-    dl = 1;
+    r8[dl] = 1;
     if ( _data16get(0x579) > 0x0A0 ) // ja 
       { wPos = 0x2347; continue; }
     set_ax(0x12C);
-    dl = 0x0FF;
+    r8[dl] = 0x0FF;
   case 0x2347:
     _data16set(0x1F30, get_ax());
     _data16set(0x1F32, get_ax());
     _data16set(0x1F34, get_ax());
-    _data[0x1F3C] = dl;
-    _data[0x1F3D] = dl;
-    _data[0x1F3E] = dl;
+    _data[0x1F3C] = r8[dl];
+    _data[0x1F3D] = r8[dl];
+    _data[0x1F3E] = r8[dl];
     _data[0x1F48] = 1;
     _data[0x1F49] = 1;
     _data[0x1F4A] = 1;
@@ -1316,9 +1316,9 @@ function sub_2690()
     _lodsb();
     set_bx(7);
     set_bx(get_bx() - get_cx());
-    if ( decrement_cx() && (al == _data16get(get_bx() + 0x1F89)) )
+    if ( decrement_cx() && (r8[al] == _data16get(get_bx() + 0x1F89)) )
       { wPos = 0x2698; continue; }
-    if ( al > _data16get(get_bx() + 0x1F89) ) // ja 
+    if ( r8[al] > _data16get(get_bx() + 0x1F89) ) // ja 
       { wPos = 0x26A7; continue; }
     return -1;
   case 0x26A7:
@@ -1336,15 +1336,15 @@ function sub_26B3()
   switch (wPos)
   {
     case 0:
-    al = _data[0x1F80];
-    if ( al != _data16get(0x1F81) ) // jnz 
+    r8[al] = _data[0x1F80];
+    if ( r8[al] != _data16get(0x1F81) ) // jnz 
       { wPos = 0x26BD; continue; }
     return -1;
   case 0x26BD:
-    _data[0x1F81] = al;
-    ah = 0;
-    cl = 4;
-    set_ax(get_ax() << cl);
+    _data[0x1F81] = r8[al];
+    r8[ah] = 0;
+    r8[cl] = 4;
+    set_ax(get_ax() << r8[cl]);
     set_ax(get_ax() + 0x2720);
     si = get_ax();
     set_ax(0x0B800);
@@ -1370,7 +1370,7 @@ function sub_26E8()
   _push(ds);
   es = _pop();
   set_cx(7);
-  al = 0;
+  r8[al] = 0;
   _rep_stosb();
 }
 function sub_26F2()
@@ -1399,10 +1399,10 @@ function sub_2739()
     _data[0x1F92] = 0;
   case 0x274B:
     set_bx(_data16get(0x1F93));
-    al = _data[get_bx()];
-    ah = 0;
-    cl = 4;
-    set_ax(get_ax() << cl);
+    r8[al] = _data[get_bx()];
+    r8[ah] = 0;
+    r8[cl] = 4;
+    set_ax(get_ax() << r8[cl]);
     set_ax(get_ax() + 0x2720);
     si = get_ax();
     di = _data16get(0x1F90);
@@ -1449,7 +1449,7 @@ function sub_2A68()
 {
   set_bx(_data16get(0x6DF8));
   set_bx(get_bx() & 3);
-  bl <<= 1;
+  r8[bl] <<= 1;
   si = _data16get(get_bx() + 0x2AD1);
   di = 0x1902;
   set_cx(0x801);
@@ -1473,8 +1473,8 @@ function sub_2B24()
     di = _data16get(get_bx() + 2);
     di += _data16get(0x2ACC);
     _cld();
-    _data[0x2AD0] = ch;
-    ch = 0;
+    _data[0x2AD0] = r8[ch];
+    r8[ch] = 0;
     _data16set(0x2ACE, get_cx());
   case 0x2B4B:
     set_cx(_data16get(0x2ACE));
@@ -1509,9 +1509,9 @@ function sub_2B9E()
   case 0x2BB3:
     sub_2DFD();
     set_dx(get_dx() & 0x30);
-    if ( dl == _data16get(0x2AC4) ) // jz 
+    if ( r8[dl] == _data16get(0x2AC4) ) // jz 
       { wPos = 0x2BB3; continue; }
-    _data[0x2AC4] = dl;
+    _data[0x2AC4] = r8[dl];
     set_dx(get_dx() + 0x2904);
     si = get_dx();
     set_cx(0x801);
@@ -1567,10 +1567,10 @@ function sub_2C3D()
   {
     case 0:
     _data16set(0x2AC2, di);
-    al = 3;
+    r8[al] = 3;
     if ( di >= 0x1720 ) // !jb
-      al--;
-    _data[0x2AC4] = al;
+      r8[al]--;
+    _data[0x2AC4] = r8[al];
     _data16set(0x2AC2, _data16get(0x2AC2) + 0x1E0);
     si = 0x2976;
     set_cx(0x0C05);
@@ -1599,7 +1599,7 @@ function sub_2C84()
   {
     case 0:
     set_bx(_data16get(8));
-    bl = _data[get_bx() + 0x2AB2];
+    r8[bl] = _data[get_bx() + 0x2AB2];
   case 0x2C8C:
     _data16set(0x2AC5, get_bx());
     di = _data16get(get_bx() + 0x2A86);
@@ -1620,10 +1620,10 @@ function sub_2CB0()
   switch (wPos)
   {
     case 0:
-    al = dl;
-    ah = 0x28;
-    set_ax(ah * al);
-    if ( !(dl & 1) ) // jz 
+    r8[al] = r8[dl];
+    r8[ah] = 0x28;
+    set_ax(r8[ah] * r8[al]);
+    if ( !(r8[dl] & 1) ) // jz 
       { wPos = 0x2CBE; continue; }
     set_ax(get_ax() + 0x1FD8);
   case 0x2CBE:
@@ -1631,8 +1631,8 @@ function sub_2CB0()
     set_dx(get_dx() >> 1);
     set_dx(get_dx() >> 1);
     set_ax(get_ax() + get_dx());
-    cl &= 3;
-    cl <<= 1;
+    r8[cl] &= 3;
+    r8[cl] <<= 1;
     wPos = -1;
   }
 }
@@ -1644,11 +1644,11 @@ function sub_2D35()
   {
     case 0:
     _cld();
-    _data[0x2AE0] = cl;
-    _data[0x2AE2] = ch;
-    ch = 0;
+    _data[0x2AE0] = r8[cl];
+    _data[0x2AE2] = r8[ch];
+    r8[ch] = 0;
   case 0x2D40:
-    cl = _data[0x2AE0];
+    r8[cl] = _data[0x2AE0];
   case 0x2D44:
     set_bx(_video16get(0*es*16+di));
     _data16set(bp+0, get_bx());
@@ -1678,15 +1678,15 @@ function sub_2D70()
     case 0:
     _cld();
     _data16set(0x2AE9, si);
-    _data[0x2AE0] = cl;
-    _data[0x2AE2] = ch;
-    al <<= 1;
-    _data[0x2AEB] = al;
-    ch = 0;
+    _data[0x2AE0] = r8[cl];
+    _data[0x2AE2] = r8[ch];
+    r8[al] <<= 1;
+    _data[0x2AEB] = r8[al];
+    r8[ch] = 0;
   case 0x2D84:
-    cl = _data[0x2AE0];
+    r8[cl] = _data[0x2AE0];
     _rep_movsw();
-    cl = _data[0x2AEB];
+    r8[cl] = _data[0x2AEB];
     _data16set(0x2AE9, _data16get(0x2AE9) + get_cx());
     si = _data16get(0x2AE9);
     _data[0x2AE2]--;
@@ -1703,11 +1703,11 @@ function sub_2D9D()
   {
     case 0:
     _cld();
-    _data[0x2AE0] = cl;
-    _data[0x2AE2] = ch;
-    ch = 0;
+    _data[0x2AE0] = r8[cl];
+    _data[0x2AE2] = r8[ch];
+    r8[ch] = 0;
   case 0x2DA8:
-    cl = _data[0x2AE0];
+    r8[cl] = _data[0x2AE0];
     _rep_movsw();
     di -= _data16get(0x2AE0);
     di -= _data16get(0x2AE0);
@@ -1728,11 +1728,11 @@ function sub_2DCA()
   {
     case 0:
     _cld();
-    _data[es*16+0x2AE0] = cl;
-    _data[es*16+0x2AE2] = ch;
-    ch = 0;
+    _data[es*16+0x2AE0] = r8[cl];
+    _data[es*16+0x2AE2] = r8[ch];
+    r8[ch] = 0;
   case 0x2DD7:
-    cl = _data[es*16+0x2AE0];
+    r8[cl] = _data[es*16+0x2AE0];
     _rep_movsw();
     si -= _data16get(es*16+0x2AE0);
     si -= _data16get(es*16+0x2AE0);
@@ -1748,10 +1748,10 @@ function sub_2DCA()
 function sub_2DFD()
 {
   set_dx(_data16get(0x2AE5));
-  dl = dl ^ dh;
-  dl >>= 1;
-  cf = dl & 1 ? 1 : 0;
-  dl >>= 1;
+  r8[dl] = r8[dl] ^ r8[dh];
+  r8[dl] >>= 1;
+  cf = r8[dl] & 1 ? 1 : 0;
+  r8[dl] >>= 1;
   var w = _data16get(0x2AE5);
   w = _rcr(w, 1);
   _data16set(0x2AE5, w);
@@ -1764,11 +1764,11 @@ function sub_2E10()
   switch (wPos)
   {
     case 0:
-    al = 0;
-    _out(0x43, al);
-    _in(al, 0x40);
-    ah = al;
-    _in(al, 0x40);
+    r8[al] = 0;
+    _out(0x43, r8[al]);
+    _in(r8[al], 0x40);
+    r8[ah] = r8[al];
+    _in(r8[al], 0x40);
     if ( get_ax() != 0 ) // jnz 
       { wPos = 0x2E25; continue; }
     set_ax(0x0FA59);
@@ -1793,8 +1793,8 @@ function sub_5C60()
   {
     case 0:
     _int(0x11);
-    al &= 0x30;
-    if ( al != 0x30 ) // jnz 
+    r8[al] &= 0x30;
+    if ( r8[al] != 0x30 ) // jnz 
       return -1;
     set_ax(0x0B800);
     ds = get_ax();
@@ -1808,8 +1808,8 @@ function sub_5C60()
     set_ax(0x40);
     ds = get_ax();
     set_ax(_data16get(0x10));
-    al &= 0x0CF;
-    al |= 0x10;
+    r8[al] &= 0x0CF;
+    r8[al] |= 0x10;
     _data16set(0x10, get_ax());
     set_ax(4);
     _int(0x10);
@@ -1878,7 +1878,7 @@ function sub_5CB0(wPos)
     set_ax(_data16get(0x693));
     _data16set(0x6150, get_ax());
   case 0x5D54:
-    ah = 0;
+    r8[ah] = 0;
     _int(0x1A);
     _data16set(0x6A8B, get_dx());
     _data16set(0x5322, get_dx());
@@ -1887,7 +1887,7 @@ function sub_5CB0(wPos)
     _data16set(0x6A88, get_dx());
     _data16set(0x5320, 0);
   case 0x5D71:
-    ah = 0;
+    r8[ah] = 0;
     _int(0x1A);
     set_ax(get_dx());
     set_ax(get_ax() - _data16get(0x6A93));
@@ -1917,9 +1917,9 @@ function sub_5CB0(wPos)
     if ( _data[0x69B] == 0 ) // jz 
       { wPos = 0x5DCA; continue; }
     set_dx(0x201);
-    _in(al, get_dx());
-    al &= 0x10;
-    if ( !al ) // jz 
+    _in(r8[al], get_dx());
+    r8[al] &= 0x10;
+    if ( !r8[al] ) // jz 
       { wPos = 0x5DC3; continue; }
     _data[0x6A8A] = 1;
     wPos = 0x5DCA;
@@ -1956,7 +1956,7 @@ function sub_5DD4()
     wPos = 0x5E1C;
       continue;
   case 0x5DF1:
-    ah = 0;
+    r8[ah] = 0;
     _int(0x1A);
     set_ax(get_dx());
     set_ax(get_ax() - _data16get(0x6A88));
@@ -1965,12 +1965,12 @@ function sub_5DD4()
     _data16set(0x6A88, get_dx());
     sub_2DFD();
     _data[0x698] = 0;
-    if ( dl > 0x0A0 ) // ja 
+    if ( r8[dl] > 0x0A0 ) // ja 
       { wPos = 0x5E1C; continue; }
-    dl &= 1;
-    if ( !dl ) // !jnz
-      dl = 0x0FF;
-    _data[0x698] = dl;
+    r8[dl] &= 1;
+    if ( !r8[dl] ) // !jnz
+      r8[dl] = 0x0FF;
+    _data[0x698] = r8[dl];
   case 0x5E1C:
     _data16set(0x572, 4);
     sub_8E5();

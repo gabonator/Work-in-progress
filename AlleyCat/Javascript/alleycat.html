@@ -1,9 +1,9 @@
 <html>
 <canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas>
-
+<!--<input type="button" onClick="run()">-->
+<script language="javascript" src="cpu.js"></script>
 <script language="javascript" src="data.js"></script>
 <script language="javascript" src="code.js"></script>
-<script language="javascript" src="cpu.js"></script>
 <script language="javascript">
 
 var globPos = 0;
@@ -18,7 +18,10 @@ var tmp = 0;
 var timerCpu = 0;
 var timerDisp = 0;
 
-load();
+//function run()
+{
+  load();
+}
 
 function load()
 {

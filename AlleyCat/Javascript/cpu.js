@@ -11,7 +11,7 @@ var ax = 0, bx = 1, cx = 2, dx = 3;
 var al = 0, ah = 1, bl = 2, bh = 3, cl = 4, ch = 5, dl = 6, dh = 7;
 
 var ds = 0, es = 0, di = 0, cs = 0;
-var df = 0, zf = 0, cf = 0;
+var df = 0, zf = 0, cf = 0, af = 0;
 var seg_data = 0;
 stack = [];
 
@@ -73,6 +73,22 @@ function _cld() { df = 0; }
 function _std() { df = 1; }
 function _clc() { cf = 0; }
 function _stc() { cf = 1; }
+function _lahf() { r8[ah] = cf; }
+function _sahf() { cf = r8[ah]; }
+
+function _aaa()
+{
+	if ((r8[al] & 0x0F) > 9 || (r8[af] = 1))
+	{
+		r8[al] = (r8[al] + 6) & 0x0f;
+		r8[ah] ++;
+		af = 1;
+		cf = 1;
+	} else {
+		cf = 0;
+		af = 0;
+	}
+}
 
 function _rep_stosw()
 {
@@ -131,6 +147,11 @@ function _out(port, val)
 {
   if ( port >= 0x40 && port <= 0x43 )
     timer.out(port, val);
+  if ( port == 0x61 )
+  {
+    if ((val & 3) == 0)
+      GTone.Stop();
+  }
 //  console.log("todo out("+port.toString(16)+","+val.toString(16)+")");
 }
 
@@ -160,6 +181,16 @@ function _rcr8(arg, l)
 	arg >>= 1;
 	if ( cf )
 		arg |= 128;
+	cf = ncf;
+  return arg;
+}
+
+function _rcl16(arg, l)
+{
+	var ncf = arg & 0x8000 ? 1 : 0;
+	arg <<= 1;
+	if ( cf )
+		arg |= 1;
 	cf = ncf;
   return arg;
 }
@@ -253,8 +284,26 @@ timer = {
   {
     if ( port == 0x43 )
     {
-      this._buffer = (-this.tick()*6) &0xffff; //(-this.tick()*1000) & 0xffff;
-//console.log("tmr="+this._buffer.toString(16));
+      if ( val == 0xB6 ) // play tone
+      {
+        this._p42 = 0;
+        this._buffer42 = 0;
+      } else if (val == 0x00)
+      {
+        this._buffer = (-this.tick()*6) &0xffff; //(-this.tick()*1000) & 0xffff;
+      }
+    }
+    if ( port == 0x42 )
+    {
+      if ( this._p42 == 0 )
+      {
+        this._buffer42 = val;
+        this._p42++;
+      } else if ( this._p42 == 1 )
+      {
+        this._buffer42 = (val<<8) | this._buffer42;
+        _tone(this._buffer42, 1000);
+      }    
     }
   },
   inp : function(port)
@@ -281,5 +330,56 @@ timer = {
   },
   // private values
   _t0:0,
-  _buffer:0
+  _buffer:0,
+  _p42:-1,
+  _buffer42:0
 };
+
+var GTone = {
+  Play: function(freq, dur)
+  {
+		if ( typeof(this.ac) == "undefined" )
+		{
+			if ( window.AudioContext )
+				this.ac = new AudioContext();
+			else if ( window.webkitAudioContext )
+				this.ac = new webkitAudioContext();
+		 	var osc = this.ac.createOscillator();
+			this.hasNote = osc.noteOn ? true : false;
+  
+			if ( this.ac.createGainNode )
+      {
+			  this.endp = this.ac.createGainNode();
+        this.endp.gain.value = 0.3;
+        this.endp.connect(this.ac.destination);
+      } else {
+        this.endp = this.ac.destination;
+      }
+    }
+    this.Stop();
+
+	 	this.osc = this.ac.createOscillator();
+		this.osc.type = "square";
+		this.osc.frequency.value = freq;
+		this.osc.connect(this.endp);
+		this.hasNote ? this.osc.noteOn(0) : this.osc.start(0);
+
+    var _this = this;
+		this.timeout = setTimeout( function() { _this.Stop(); }, dur );
+  },
+  Stop: function()
+  {
+    if ( this.timeout )
+      clearTimeout( this.timeout );
+    if ( this.osc )
+    {
+      this.hasNote ? this.osc.noteOff(0) : this.osc.stop(0);
+      this.osc.disconnect();
+    }
+  }
+};
+
+function _tone(div, duration)
+{
+  GTone.Play(1193180 / div, duration);
+}

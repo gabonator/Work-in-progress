@@ -255,7 +255,19 @@ function start(wPos)
     r16[bx] = 0;
   case 0x249:
     r16[bx] <<= 1;
-alert("xxx");
+    ///// jump to room
+    //r16[bx] = 0; // override room number
+    switch ( r16[bx] >> 1 )
+    {
+      case 0: wPos = 0x3E2; break;
+      case 1: wPos = 0x459; break;
+      case 2: wPos = 0x394; break;
+      case 3: wPos = 0x349; break;
+      case 4: wPos = 0x2FE; break;
+      case 5: wPos = 0x2AA; break;
+      case 6: wPos = 0x260; break;
+    }
+    continue;
 /*
     unknown_command(); // jmp	cs:off_code_250[r16[bx]];
   WORD off_code_250 =  offset loc_code_3E2;
@@ -267,6 +279,7 @@ alert("xxx");
     unknown_command(); // dw offset loc_code_2AA
     unknown_command(); // dw offset loc_code_260
 */
+  case 0x260:
     _data16set(0x4, 7);
     sub_1BF0();
     sub_2790();
@@ -309,6 +322,7 @@ alert("xxx");
       { wPos = 0x27E; continue; }
     wPos = 0x427;
       continue;
+  case 0x2AA:
     _data16set(0x4, 6);
     sub_1BF0();
     sub_2790();
@@ -357,6 +371,7 @@ alert("xxx");
       { wPos = 0x2C5; continue; }
     wPos = 0x427;
       continue;
+  case 0x2FE:
     _data16set(0x4, 5);
     sub_1BF0();
     sub_2790();
@@ -399,6 +414,8 @@ alert("xxx");
       { wPos = 0x319; continue; }
     wPos = 0x427;
       continue;
+
+  case 0x349:
     _data16set(0x4, 4);
     sub_1BF0();
     sub_2790();
@@ -441,6 +458,7 @@ alert("xxx");
       { wPos = 0x364; continue; }
     wPos = 0x427;
       continue;
+  case 0x394:
     _data16set(0x4, 3);
     sub_1BF0();
     sub_2790();
@@ -484,6 +502,7 @@ alert("xxx");
       { wPos = 0x3B2; continue; }
     wPos = 0x427;
       continue;
+  case 0x3E2:
     _data16set(0x4, 1);
     sub_1BF0();
     sub_2790();
@@ -787,7 +806,7 @@ function sub_633()
   case 0x64E:
   //
     _sahf();
-    _rcl(_data[r16[bx] + 0x1016], 1);
+    _data[r16[bx] + 0x1016] = _rcl16(_data[r16[bx] + 0x1016], 1);
     _lahf();
     r16[bx]--;
     if ( --r16[cx] )
@@ -1368,7 +1387,7 @@ function sub_8E5()
     _data16set(0x55F, r16[ax]);
     sub_1145();
     sub_34A0();
-    if ( unknown_condition() ) // jnb cf=0
+    if ( !cf ) // jnb cf=0
       return;
     sub_1145();
     return;
@@ -2076,7 +2095,7 @@ function sub_11E3()
   sub_2D9D();
 }
 function sub_1200(wPos)
-{
+{           
   while (wPos != -1)
   switch (wPos)
   {
@@ -2096,10 +2115,12 @@ function sub_1200(wPos)
     sub_13B7();
     r16[dx] = r16[ax];
   case 0x1223:
+
     sub_13B7();
     r16[ax] -= r16[dx];
     if ( r16[ax] < 0x0F8ED ) // jb 
       { wPos = 0x1223; return wPos; }
+
     return -1;
   case 0x122E:
     r16[dx] = 0x201;
@@ -2131,10 +2152,12 @@ function sub_1200(wPos)
   case 0x1275:
     if ( !(_data[0x69E] & 3) ) // jz 
       return -1;
+	
     sub_13B7();
     r16[ax] -= _data16get(0x69C);
     if ( --r16[cx] && (r16[ax] != 0x1964) )
       { wPos = 0x1246; return wPos; }
+
     if ( !(_data[0x69E] & 1) ) // jz 
       { wPos = 0x1294; continue; }
     _data[0x698] = 0x0FF;
@@ -2928,7 +2951,7 @@ function sub_1936()
     _data16set(0x1666, r16[cx]);
     _data[0x1668] = r8[dl];
     sub_1B05();
-    if ( unknown_condition() ) // jb cf=1
+    if ( cf ) // jb cf=1
       { wPos = 0x198A; continue; }
     _data[0x1665] = 0x1D;
     r16[bx] = _data16get(8);
@@ -2938,11 +2961,11 @@ function sub_1936()
     _data[0x1670] = 1;
   case 0x19CD:
     sub_1B05();
-    if ( unknown_condition() ) // jb cf=1
+    if ( cf ) // jb cf=1
       return;
     _data[0x1664] = 0;
     sub_1B4C();
-    if ( unknown_condition() ) // jnb cf=0
+    if ( !cf ) // jnb cf=0
       { wPos = 0x19E1; continue; }
     _data[0x1664] = _data[0x1664] + 1;
     return;
@@ -3302,8 +3325,9 @@ function sub_1C67()
     _data[0x1838] |= 4;
   case 0x1D17:
     r8[al] = _data[0x1837];
+    cf = r8[al] + r8[dl] > 255;
     r8[al] += r8[dl];
-    if ( unknown_condition() ) // jb cf=1
+    if ( cf ) // jb cf=1
       { wPos = 0x1D22; continue; }
     if ( r8[al] < 0x0C8 ) // jb 
       { wPos = 0x1D2E; continue; }
@@ -5783,10 +5807,10 @@ function sub_3150()
   case 0x3169:
     _data16set(0x328C, r16[dx]);
     sub_33BA();
-    if ( unknown_condition() ) // jb cf=1
+    if ( cf ) // jb cf=1
       return;
     sub_21E0();
-    if ( unknown_condition() ) // jb cf=1
+    if ( cf ) // jb cf=1
       return;
     _data[0x32EA] = _data[0x32EA] + 1;
     sub_2DFD();
@@ -8198,7 +8222,7 @@ function sub_45AB()
     if ( _data[0x40AA] >= 0x0A4 ) // jnb 
       return;
     sub_4786();
-    if ( unknown_condition() ) // jnb cf=0
+    if ( !cf ) // jnb cf=0
       { wPos = 0x45D6; continue; }
     sub_44E7();
     if ( unknown_condition() ) // jnb cf=0
@@ -10773,6 +10797,10 @@ function sub_5B21()
 }
 function sub_5B28(wPos)
 {
+  // play tone _data16get(0x592A) = divider, _data16get(0x592E) = duration
+  _tone( _data16get(0x592A), _data16get(0x592E) );
+  return -1;
+
   while (wPos != -1)
   switch (wPos)
   {
@@ -11736,3 +11764,6 @@ function sub_62A6()
     wPos = -1;
   }
 }
+
+function nullsub_1() {}
+function nullsub_2() {}

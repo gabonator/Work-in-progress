@@ -31,24 +31,23 @@ function _int(i)
   {
     case 0x11: r16[ax] = 0xb91e; return;
     case 0x10: 
-      if ( r8[ah] == 0x00 ) /* set video */ return;
-      if ( r8[ah] == 0x0b ) /* backgrond, palette */ return;
+      switch ( r8[ah] )
+      {
+        case 0x00: cga.setmode(r8[al]); /* set video */ return;
+        case 0x0b: /* backgrond, palette */ return;
+        case 0x0e: cga.putchar(String.fromCharCode(r8[al])); return;
+        case 0x02: cga.gotoxy(r8[dl], r8[dh]); return;
+      }
       break;
     case 0x1a:
       if ( r8[ah] == 0 ) 
       {
-        var t = (new Date()).getTime();
-//        t = Math.floor(t*65543.0/(1000.0*60.0*60.0));
-        t %= 1000*60*60;
-        t = Math.floor(t*18.2/1000.0);
+        r16[dx] = timer.tick();
         r16[cx] = 0;
-        r16[dx] = t&0xffff;
-//console.log("Set time: "+get_dx().toString(16) + " " +getCallStack());
-//printStackTrace();
         return;
       }
   }
-  alert("Unhandled interrupt " + i.toString(16) + " ah=" + r8[ah].toString(16));
+  console.log("Unhandled interrupt " + i.toString(16) + " ah=" + r8[ah].toString(16));
 }
 function _data16set(i, v)
 {
@@ -130,12 +129,18 @@ function _lodsb()
 
 function _out(port, val)
 {
-  console.log("todo out("+port.toString(16)+","+val.toString(16)+")");
+  if ( port >= 0x40 && port <= 0x43 )
+    timer.out(port, val);
+//  console.log("todo out("+port.toString(16)+","+val.toString(16)+")");
 }
 
-function _in(port)
+function _in(port,x)
 {
-  console.log("todo in("+port.toString(16)+")");
+  if ( typeof(x) != "undefined" )
+    alert("wrong io");
+  if ( port >= 0x40 && port <= 0x43 )
+    return timer.inp(port);
+//  console.log("todo in("+port.toString(16)+")");
   return 0;
 }
 
@@ -217,3 +222,64 @@ function _rep_movsb()
 	if ( pto == _video )
 		es = 0xb800;
 }
+
+function unknown_condition()
+{
+  alert("fixme!");
+}
+function fix_code()
+{
+  alert("fixme!");
+}
+
+cga = {
+  setmode : function(mode)
+  {
+    document.getElementById("terminal").value = "";
+    console.log("Set mode = "+mode);
+  },
+  putchar : function(ch)
+  {
+    document.getElementById("terminal").value = document.getElementById("terminal").value + ch;
+  },
+  gotoxy : function(x, y)
+  {
+    this.putchar("\n");
+  }
+};
+
+timer = {
+  out : function(port, val)
+  {
+    if ( port == 0x43 )
+    {
+      this._buffer = (-this.tick()*6) &0xffff; //(-this.tick()*1000) & 0xffff;
+//console.log("tmr="+this._buffer.toString(16));
+    }
+  },
+  inp : function(port)
+  {
+/*
+		var b = this._buffer & 0xff;
+		this._buffer >>= 8;
+    return b;
+*/
+    // incorrect
+		var b = this._buffer >> 8;
+		this._buffer <<= 8;
+		return b & 0xff;
+
+  },
+  tick : function()
+  {
+    var t = (new Date()).getTime();
+    if ( this._t0 == 0 )
+      this._t0 = t;
+    t -= this._t0;
+    t = Math.floor(t*18.2/1000.0);
+    return t;
+  },
+  // private values
+  _t0:0,
+  _buffer:0
+};

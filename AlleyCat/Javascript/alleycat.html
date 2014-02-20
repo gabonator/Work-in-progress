@@ -1,5 +1,6 @@
 <html>
-<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas>
+<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas><br>
+<textarea cols=40 rows=12 id="terminal"></textarea>
 <!--<input type="button" onClick="run()">-->
 <script language="javascript" src="cpu.js"></script>
 <script language="javascript" src="data.js"></script>
@@ -31,14 +32,20 @@ function load()
   for(i = 0; i < rawLength; i++)
     _data[i] = raw.charCodeAt(i);
 
-  start();
   timerCpu = setInterval("tick()", 10);
   timerDisp = setInterval("display();debug();", 50);
 }
 
 function tick()
 {
-  globPos = sub_5CB0( globPos );
+  globPos = start(globPos);
+//  if ( sub_1200_pc == 0x1223 )
+//    sub_1200_pc = 0x122E;
+
+  if (!pcvalid())
+    alert("PC error");
+
+//  globPos = sub_5CB0( globPos );
   if ( globPos == -1 )
   {
     clearInterval(timerCpu);
@@ -76,5 +83,36 @@ function display()
   ctx.putImageData(data, 0, 0);
 }
 
+// keyboard
+document.onkeyup   = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 0 ); }
+document.onkeydown = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 1 ); }
+function onKey( k, on )
+{
+  var index = -1;
+//	int keys[] = {VK_UP, VK_RIGHT, VK_LEFT, '?', '?', 'Y', 'N', 'K', 'H', 'T', 'A', 'S', 'R', VK_CONTROL, VK_DELETE, 0};
+
+  switch (k) 
+  {
+    case 38: index = 0; break;
+    case 39: index = 1; break;
+    case 37: index = 2; break;
+  }
+
+  switch (String.fromCharCode(k))
+  {
+    case 'Y': index = 5; break;
+    case 'N': index = 6; break;
+    case 'K': index = 7; break;
+    case 'H': index = 8; break;
+    case 'T': index = 9; break;
+    case 'A': index = 10; break;
+    case 'S': index = 11; break;
+    case 'E': index = 12; break;
+  }
+  if ( index != -1 )
+    _data[0x6BC+index] = on ? 0x00 : 0x80;
+  if ( on == 1 )
+    _data16set( 0x693, _data16get(0x693)+1);
+}
 </script>
 </html>

@@ -1,0 +1,1 @@
+This program communicates with Din-Tec Din-Ode Ethernet to DMX convertor. File "log" shows response to the ESPP request sent over UDP port 3333, the response is received on port 3330.

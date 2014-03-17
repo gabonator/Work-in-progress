@@ -1,0 +1,91 @@
+<html>
+<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas><br>
+<script language="javascript" src="cpu.js"></script>
+<script language="javascript" src="ega.js"></script>
+<script language="javascript" src="res.js"></script>
+<script language="javascript" src="code.js"></script>
+<script language="javascript" src="keyb.js"></script>
+<script language="javascript" src="dos.js"></script>
+<script language="javascript">
+
+var _pc = 0;
+var can = document.getElementById("canvas");
+var ctx = can.getContext('2d');
+can.width = 320;
+can.height = 200;
+var data = ctx.createImageData(can.width, can.height);
+var tmp = 0;
+
+var timerCpu = 0;
+var timerDisp = 0;
+
+//function run()
+{
+  load();
+}
+
+function loadMemory(id, addr)
+{
+  var data = getResource(id);
+  if ( typeof(data) == "undefined")
+    return false;
+  var raw = window.atob(data);
+  var rawLength = raw.length;
+  var i;
+  for(i = 0; i < rawLength; i++)
+    _data[addr+i] = raw.charCodeAt(i);
+  return true;
+}
+
+function load()
+{
+  EGA.init();
+  loadMemory("_data", 0);
+  timerCpu = setInterval("update()", 40);
+  timerDisp = setInterval("display();debug();", 40);
+}
+
+function update()
+{
+  _pc = start(_pc);
+
+  if (!pcvalid())
+    alert("PC error");
+
+  if ( _pc == -1 )
+  {
+    clearInterval(timerCpu);
+    clearInterval(timerDisp);
+    console.log("Finished");
+  }
+}
+
+function tick()
+{
+  alert("tick");
+}
+
+function debug()
+{
+//  console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
+}
+
+
+function display()
+{
+  var p = 0;
+  var pixels = data.data;
+  for (var y=0; y<200; y++)
+    for (var x=0; x<320; x++)
+    {
+      var c = EGA.getPixel(x, y);
+      pixels[p++] = c>>16;
+      pixels[p++] = (c>>8)&0xff;
+      pixels[p++] = c & 0xff;
+      pixels[p++] = 255;
+    }
+  ctx.putImageData(data, 0, 0);
+}
+
+</script>
+</html>

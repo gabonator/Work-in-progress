@@ -1,5 +1,8 @@
 <html>
-<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas><br>
+<body bgcolor="black">
+<!-- made by gabriel valky 2014 -->
+
+<canvas id="canvas" style="border:1px #808080 dashed; width:960px; height:600px;"></canvas><br>
 <!--<input type="text" id="dbg"></input>-->
 
 <script language="javascript" src="cpu.js"></script>
@@ -8,6 +11,8 @@
 <script language="javascript" src="code.js"></script>
 <script language="javascript" src="keyb.js"></script>
 <script language="javascript" src="dos.js"></script>
+<script language="javascript" src="touch.js"></script>
+
 <script language="javascript">
 
 var _pc = 0;
@@ -20,55 +25,6 @@ var tmp = 0;
 
 var timerCpu = 0;
 var timerDisp = 0;
-
-function mousepos(evt)
-{
-  var rect = can.getBoundingClientRect();
-  var x = evt.clientX - rect.left;
-  var y = evt.clientY - rect.top;
-  return {x:x, y:y};
-}
-
-canvas.addEventListener('mousemove', function(evt) 
-{
-  //document.getElementById("dbg").value = "x=" + mousepos(evt).x + " y="+mousepos(evt).y;
-  var pos = mousepos(evt);
-  if ( pos.y < 40 )
-  {
-    _data[0x8e8a+72] = 1;
-    _data[0x8e8a+80] = 0;
-  } else {
-    _data[0x8e8a+72] = 0;
-    if ( _data16get(0x952A) > 16 )
-      _data[0x8e8a+80] = 1;
-  }
-  _data16set(0x1B8F, pos.x-160+128);
-}, false);
-
-canvas.addEventListener('mousedown', function(evt) 
-{
-  var pos = mousepos(evt);
-  if ( pos.y > 168 )
-    return;
-
-  if ( pos.y > 128 && pos.y < 168 && pos.x < 80 )
-    _data[0x8e8a+49] = 1;
-  else
-  if ( pos.y > 128 && pos.y < 168 && pos.x > 320-80 )
-    _data[0x8e8a+50] = 1;
-  else    
-    _data[0x8e8a+57] = 1;
-}, false);
-
-canvas.addEventListener('mouseup', function(evt) 
-{
-  _data[0x8e8a+49] = 0;
-  _data[0x8e8a+50] = 0;
-  _data[0x8e8a+57] = 0;
-  _data[0x8e8a+72] = 0;
-  _data[0x8e8a+80] = 0;
-}, false);
-
 
 //function run()
 {
@@ -122,7 +78,6 @@ function debug()
 //console.log( "x="+_data16get(0x579) +  " dx=" + _data[0x56E]);
 }
 
-
 function display()
 {
   var p = 0;
@@ -140,4 +95,5 @@ function display()
 }
 
 </script>
+</body>
 </html>

@@ -16,8 +16,8 @@ function onKey( k, on )
   switch (String.fromCharCode(k))
   {
     case ' ': index = 57; break;
-    case 'M': index = 49; break;
-    case 'N': index = 50; break;
+    case 'M': index = 50; break;
+    case 'N': index = 49; break;
     case 'Q': index = 16; break;
     case 'Y': index = 21; break;
   }

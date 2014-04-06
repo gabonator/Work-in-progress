@@ -1,0 +1,98 @@
+<html>
+<script language="javascript">
+	var socket;
+	var host = "ws://localhost:5331/index.html";
+	var buffer = "";
+	var readyStates = ["Connecting", "Open", "Closing", "Closed"];
+
+  window.onload = function() 
+  {
+    var tbox = document.getElementById("dbg");
+    tbox.value = "";
+		connect();
+  };
+
+	function connect()
+  {
+    try
+    {
+			console.log("Attempt to open socket");
+      socket = new WebSocket(host);
+			console.log( "new socket, state = " + readyStates[socket.readyState] );
+
+			socket.onopen = function(){
+				console.log( "socket.onopen, state = " + readyStates[socket.readyState] );
+				Push("Connected " + readyStates[socket.readyState] );
+			}
+				
+			socket.onmessage = function(msg)
+			{
+        var rxstring = new String(msg.data);
+				console.log("onmessage: " + rxstring);
+				
+        buffer += rxstring;
+        while (1)
+        {
+          var eol_pos = buffer.indexOf("\n",0);
+          if (eol_pos == -1)
+            eol_pos = buffer.indexOf("\n",0);
+					
+          if (eol_pos != -1)
+          {
+            var line = buffer.substr(0, eol_pos);
+            buffer = buffer.substr(eol_pos+1);
+            Receive(line);
+					} else 
+            break;
+        }
+      }
+
+      socket.onclose = function()
+      {
+				console.log( "socket.onclose, state = " + readyStates[socket.readyState] );
+				Push("Disconnected, state=" + readyStates[socket.readyState] );
+				socket.close();	
+			} 
+    }
+    catch(exception)
+    {
+			Push("Error " + exception );
+			console.log( "Failed, state = " + readyStates[socket.readyState] );
+		}
+  }
+
+	function Receive(msg)
+	{
+		// line received
+		Push("> " + msg);
+	}
+
+	function Send(msg)
+	{
+		Push("< " + msg);
+		try {
+			socket.send(msg + "\n");
+		}
+		catch(exception)
+		{
+			Push("Error: "+exception);
+		}
+	}
+
+  function Push(msg)
+  {
+		var tbox = document.getElementById("dbg");
+		var lines = (msg + "\n" + tbox.value).split("\n");
+		if ( lines.length > 15 )
+			lines = lines.splice(0, 15);
+		lines = lines.join("\n");
+		tbox.value = lines;
+	}
+</script>
+
+<body>
+<input type="text" id="send"><input type="button" value="Send" onClick="Send(document.getElementById('send').value)"><br>
+<textarea id="dbg" cols=80 rows=15>
+</textarea>
+</body>
+</html>

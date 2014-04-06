@@ -1,0 +1,224 @@
+<html>
+<body>
+</body>
+<script language="javascript">
+var canvas, ctx;
+
+// init canvas, its position and drawing context
+document.body.appendChild( canvas = document.createElement("canvas") );
+ctx = canvas.getContext("2d");
+canvas.width = 160*3;
+canvas.height = 100*3;
+canvas.style.border="1px solid #808080";
+canvas.style.position="absolute";
+canvas.style.left="50%";
+canvas.style.top="50%";
+canvas.style.width=canvas.width;
+canvas.style.height=canvas.height;
+canvas.style.marginLeft=-canvas.width/2;
+canvas.style.marginTop=-canvas.height/2;
+canvas.style.overflow="hidden";
+
+var paddleA = {x:canvas.width/2, y:20, width:70, height:10};
+var paddleB = {x:canvas.width/2, y:canvas.height-20, width:70, height:10};
+var ball = {x:canvas.width/2, y:canvas.height/2, width:10, height:10, speedx:2, speedy:-2};
+var score = {a:0, b:0};
+var showscore = 0;
+
+function clear()
+{
+//  ctx.clearRect ( 0, 0, 300, 300);//width, height );
+  canvas.width = canvas.width;
+}
+function draw(object)
+{
+  ctx.rect(object.x - object.width/2, object.y - object.height/2, object.width, object.height);
+  ctx.stroke();
+  ctx.fill();
+}
+
+function collision(obj1, obj2)
+{
+  var r1 = {
+    x1:obj1.x - obj1.width/2, y1:obj1.y - obj1.height/2, 
+    x2:obj1.x + obj1.width/2, y2:obj1.y + obj1.height/2 };
+  var r2 = {
+    x1:obj2.x - obj2.width/2, y1:obj2.y - obj2.height/2, 
+    x2:obj2.x + obj2.width/2, y2:obj2.y + obj2.height/2 };
+
+  // test if two rectangles collide
+  if ( r1.x1 > r2.x2 || 
+       r1.x2 < r2.x1 || 
+       r1.y1 > r2.y2 || 
+       r1.y2 < r2.y1 )
+  {
+    return false;
+  }
+  return true;
+}
+
+function ai(paddle)
+{
+  // estimate the position of ball in 15 steps
+  if (paddle.x + paddle.width/4 > ball.x + ball.speedx*15 )
+    paddle.x -= 4;
+  if (paddle.x - paddle.width/4 < ball.x + ball.speedx*15 )
+    paddle.x += 4;
+
+  // check range
+  if ( paddle.x - paddle.width/2 < 0 )
+    paddle.x = paddle.width/2;
+  if ( paddle.x + paddle.width/2 > canvas.width )
+    paddle.x = canvas.width-paddle.width/2;
+}
+
+function user(paddle)
+{
+  if ( isKeyDown('Z') || isKeyDown(37) )
+    paddle.x -= 4;
+  if ( isKeyDown('X') || isKeyDown(39) )
+    paddle.x += 4;
+
+  // check range
+  if ( paddle.x - paddle.width/2 < 0 )
+    paddle.x = paddle.width/2;
+  if ( paddle.x + paddle.width/2 > canvas.width )
+    paddle.x = canvas.width-paddle.width/2;
+}
+
+function follow(paddle)
+{
+  paddle.x = ball.x;
+
+  // check range
+  if ( paddle.x - paddle.width/2 < 0 )
+    paddle.x = paddle.width/2;
+  if ( paddle.x + paddle.width/2 > canvas.width )
+    paddle.x = canvas.width-paddle.width/2;
+}
+
+function updateScore(a, b)
+{
+  score.a += a;
+  score.b += b;
+  ball.x = canvas.width / 2;
+  ball.y = canvas.height / 2;
+  ball.speedx = ( ball.speedx > 0 ) ? 2 : -2;
+  ball.speedy = ( ball.speedy > 0 ) ? 2 : -2;
+  showscore = millis() + 5000;
+}
+
+function timer()
+{
+  clear();
+  draw(paddleA);
+  draw(paddleB);
+  draw(ball);
+
+  // move ball
+  ball.x += ball.speedx;
+  ball.y += ball.speedy;
+
+  // collisions with walls
+  if ( ball.y + ball.height/2 >= canvas.height )
+  {
+    ball.speedy *= -1;
+    updateScore(1, 0);
+  }
+  if ( ball.y - ball.height/2 <= 0 )
+  {
+    ball.speedy *= -1;
+    updateScore(0, 1);
+  }
+  if ( ball.x + ball.width/2 >= canvas.width )
+    ball.speedx *= -1;
+  if ( ball.x - ball.width/2 <= 0 )
+    ball.speedx *= -1;
+
+  // collision with paddles
+  if ( collision(paddleA, ball ) || collision(paddleB, ball) ) 
+  {
+    ball.speedy *= -1;
+
+    // slowly increase speed of ball
+    ball.speedx += ( ball.speedx > 0 ) ? 0.03 : -0.03;
+    ball.speedy += ( ball.speedy > 0 ) ? 0.03 : -0.03;
+  }
+
+  // movement
+  ai(paddleA);
+//  user(paddleB);
+//  follow(paddleB);
+  joystick(paddleB);
+
+  // show score?
+  if ( millis() < showscore )
+  {
+    ctx.font="30px Arial";
+    ctx.fillText("SCORE " + score.a + ":" + score.b, canvas.width*0.35, canvas.height*0.5);
+  }
+
+}
+
+// keyboard
+var keys = [];
+document.addEventListener('keydown', function (evt) {
+  if ( evt.keyCode < 200 )
+	  keys[evt.keyCode] = 1;
+});
+
+document.addEventListener('keyup', function (evt) {
+  if ( evt.keyCode < 200 )
+    keys[evt.keyCode] = 0;
+});
+function isKeyDown(key)
+{
+  return typeof(key) == "string" ? keys[key.charCodeAt(0)] : keys[key];
+}
+
+// return time in milliseconds
+function millis()
+{
+  return (new Date()).getTime();
+}    
+
+// start game timer
+setInterval(timer, 20);
+
+
+// websockets
+var buffer = "";
+var socket = new WebSocket("ws://localhost:5331/index.html");
+
+socket.onmessage = function(msg)
+{
+  buffer += new String(msg.data);
+  var lines = buffer.split("\n");
+  while ( lines.length > 1 )
+    Receive( lines.shift() );
+  buffer = lines.join("\n");
+}
+
+function Receive(line)
+{
+  eval(line); // adc=530;
+}
+
+function joystick(paddle)
+{
+  if ( typeof(adc) != "undefined" )
+  {
+    var middle = 530;
+    if ( adc > middle+5 || adc < middle-5 )
+      paddle.x += (adc - middle)/100;
+  }
+
+  // check range
+  if ( paddle.x - paddle.width/2 < 0 )
+    paddle.x = paddle.width/2;
+  if ( paddle.x + paddle.width/2 > canvas.width )
+    paddle.x = canvas.width-paddle.width/2;
+}
+
+</script>
+</html>

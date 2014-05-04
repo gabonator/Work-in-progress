@@ -168,7 +168,7 @@ function drawScene()
     tunnelTexture = gl.createTexture();
     tunnelTexture.image = new Image();
     tunnelTexture.image.onload = function() { handleTextureLoad(tunnelTexture.image, tunnelTexture); }
-    tunnelTexture.image.src = "texture.jpg";
+    tunnelTexture.image.src = textureUrl; //"texture.jpg"; shitty firefox disallows using textures from rawgit
 
     gl.uniform1f(shaderProgram.enableFog, 1.0);
   }

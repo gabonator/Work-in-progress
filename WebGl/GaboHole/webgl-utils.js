@@ -20,7 +20,6 @@ function start() {
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
   
   initShaders();
-  initBuffers();
 
   setInterval(drawScene, 20);
 }
@@ -44,6 +43,11 @@ function initShaders()
   
   vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
   gl.enableVertexAttribArray(vertexColorAttribute);
+
+  textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+  gl.enableVertexAttribArray(textureCoordAttribute);
+
+  shaderProgram.enableFog = gl.getUniformLocation(shaderProgram, "uEnableFog");
 }
 
 function getShader(gl, id) 
@@ -52,10 +56,38 @@ function getShader(gl, id)
   if (id=="fragment")
   {
     shaderScript = {type:"x-shader/x-fragment"};
+/*
     theSource = "varying lowp vec4 vColor;\n"
     theSource+= "void main(void) {\n";
 		theSource+= "gl_FragColor = vColor;\n";
 		theSource+= "}";
+*/
+    theSource = 
+  	"#ifdef GL_ES\n"+
+  	"precision highp float;\n"+
+    "#endif\n"+
+
+  	"uniform sampler2D uSampler;\n"+
+
+  	"varying vec4 vColor;\n"+
+  	"varying vec2 vTextureCoord;\n"+
+    "varying vec3 vLighting;\n"+
+    "varying float vEnableFog;\n"+
+
+    "float uAlpha;\n"+
+    "float density = 0.2;\n"+
+
+  	"void main(void) {\n"+
+    "  uAlpha = 1.0;\n"+
+    "  float z = gl_FragCoord.z / gl_FragCoord.w;\n"+
+    "  float fogFactor = exp2( -density * density * z * z * 1.442695);\n"+
+    "  fogFactor += 1.0 - vEnableFog;\n"+
+    "  fogFactor = clamp(fogFactor, 0.0, 1.0);\n"+
+
+    "  mediump vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));\n"+
+  	"  gl_FragColor = vec4(texelColor.rgb * vLighting * fogFactor, texelColor.a * fogFactor) * vColor;\n"+
+  	"}\n";
+
     shader = gl.createShader(gl.FRAGMENT_SHADER);
   }
   if (id=="vertex")
@@ -63,12 +95,22 @@ function getShader(gl, id)
     shaderScript = {type:"x-shader/x-vertex"};
     theSource = "attribute vec3 aVertexPosition;\n";
     theSource+= "attribute vec4 aVertexColor;\n";
+    theSource+= "attribute vec2 aTextureCoord;\n";
+    theSource+= "uniform float uEnableFog;\n";
+
     theSource+= "uniform mat4 uMVMatrix;\n";
     theSource+= "uniform mat4 uPMatrix;\n";
 		theSource+= "varying lowp vec4 vColor;\n";
+		theSource+= "varying vec2 vTextureCoord;\n";
+    theSource+= "varying vec3 vLighting;\n";
+    theSource+= "varying float vEnableFog;\n";
+
     theSource+= "void main(void) {\n";
     theSource+= "  gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);\n";
     theSource+= "  vColor = aVertexColor;\n";
+    theSource+="   vTextureCoord = aTextureCoord;\n";
+    theSource+="   vLighting = vec3(0.5, 0.5, 0.5);\n";
+    theSource+="   vEnableFog = uEnableFog;\n";
     theSource+= "}\n";
     shader = gl.createShader(gl.VERTEX_SHADER);
   }  

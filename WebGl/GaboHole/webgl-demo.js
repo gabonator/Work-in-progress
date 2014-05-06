@@ -12,7 +12,9 @@ var _totalIndices;
 var baseTime = false;
 var mode = 0;
 
-var bufferCurrent, bufferNext;
+var nBuffers = 4;
+var buffers = [];
+var bufLength = 2;
 var tunnelTexture;
 var tfrom = -1, tto = -1;
 
@@ -326,9 +328,10 @@ function drawScene()
     tunnelTexture.image.onload = function() { handleTextureLoad(tunnelTexture.image, tunnelTexture); }
     tunnelTexture.image.src = textureUrl; //"texture.jpg"; shitty firefox disallows using textures from rawgit
 
-    gl.uniform1f(shaderProgram.enableFog, 1.0);
+    gl.uniform1f(shaderProgram.enableFog, 0*1.0);
 
     vboBall = createBall(0.05);
+    vboBigBall = createBall(1);
     vboPlane = createPlane();
   }
   currentTime -= baseTime;
@@ -340,26 +343,32 @@ function drawScene()
   // generate VBOs
   var speed = 1/150;
   var t = currentTime*speed;
-  if ( !isInRange(bufferNext, t+30) )
+  var len = bufLength * 8;
+
+  while ( buffers.length < nBuffers )
   {
-    console.log("Updating buffer, was " +(bufferNext ?bufferNext.range.to : 0) + " need "+(t+30).toFixed(1));
-    bufferCurrent = bufferNext;
-
-    tfrom = bufferCurrent ? bufferCurrent.range.to-1 : 0;
-    tto = tfrom + 8*5;
-
-    bufferNext = createBuffer(tfrom, tto+1);
+    var last = (buffers.length == 0) ? Math.floor(t) : buffers[buffers.length-1].range.to-1;
+    buffers[buffers.length] = createBuffer(last, last+len+1);
   }
+
+  while ( buffers.length > 0 && buffers[0].range.to < t )
+    buffers.shift();
 
   if ( mode == 2 )
   {
     mvPushMatrix();
-    mvTranslate([0.0, 0.0, -50.0]);
-    mvRotate(currentTime/10, [1, 0, 0]);
-    mvRotate(currentTime/30, [0, 1, 0]);
-    mvRotate(currentTime/70, [0, 0, 1]);
-    drawBuffer(bufferCurrent);
-    drawBuffer(bufferNext);
+    mvTranslate([0.0, 0.0, -30.0]);
+    mvRotate(currentTime/70, [1, 0, 0]);
+    mvRotate(currentTime/90, [0, 1, 0]);
+    mvRotate(currentTime/130, [0, 0, 1]);
+		for ( buf in buffers )
+	    drawBuffer(buffers[buf]);
+
+    var pt1 = trajectory(t);
+
+    mvTranslate([pt1.v.e(1), pt1.v.e(2), pt1.v.e(3)]);
+    drawBuffer(vboBigBall);
+
     mvPopMatrix();
   } else
   {
@@ -376,8 +385,9 @@ function drawScene()
       pt0.v.e(1), pt0.v.e(2), pt0.v.e(3), 
       pt1.v.e(1), pt1.v.e(2), pt1.v.e(3),
       up.e(1), up.e(2), up.e(3)));
-    drawBuffer(bufferCurrent);
-    drawBuffer(bufferNext);
+
+		for ( buf in buffers )
+	    drawBuffer(buffers[buf]);
 
     if ( mode == 1 )
     {

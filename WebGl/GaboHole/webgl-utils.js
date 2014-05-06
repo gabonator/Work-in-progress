@@ -18,6 +18,8 @@ function start() {
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
   
   initShaders();
 
@@ -75,7 +77,7 @@ function getShader(gl, id)
     "varying float vEnableFog;\n"+
 
     "float uAlpha;\n"+
-    "float density = 0.2;\n"+
+    "float density = 0.15;\n"+
 
   	"void main(void) {\n"+
     "  uAlpha = 1.0;\n"+

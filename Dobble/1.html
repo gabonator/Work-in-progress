@@ -1,0 +1,312 @@
+<style>
+body {background:#e0e0e0;}
+.ic {position:relative; width:492px; height:492px;}
+img {position:absolute; width:492px; height:492px;}
+</style>
+
+<div id="cards">
+</div>
+
+<canvas id="canvas" style="width:492px; height:492px; position:absolute; left:20px; top:20px; border:1px #808080 dashed"></canvas>
+
+<textarea id="result" cols="80" rows="10">
+[{id:1, item:'klaun', x:270, y: 95},
+{id:1, item:'noznice', x:119, y: 149},
+{id:1, item:'zamok', x:387, y: 176},
+{id:1, item:'smrt', x:229, y: 264},
+{id:1, item:'delfin', x:94, y: 288},
+{id:1, item:'hodiny', x:381, y: 323},
+{id:1, item:'yinyang', x:292, y: 404},
+{id:1, item:'kocka', x:179, y: 392},
+{id:2, item:'kotva', x:278, y: 98},
+{id:2, item:'mesiac', x:367, y: 177},
+{id:2, item:'kocka', x:144, y: 159},
+{id:2, item:'flasa', x:82, y: 316},
+{id:2, item:'bomba', x:208, y: 302},
+{id:2, item:'srdce', x:415, y: 266},
+{id:2, item:'pes', x:338, y: 346},
+{id:2, item:'zebra', x:217, y: 420},
+{id:3, item:'nota', x:241, y: 430},
+{id:3, item:'korytnacka', x:253, y: 67},
+{id:3, item:'oko', x:391, y: 151},
+{id:3, item:'klaun', x:416, y: 295},
+{id:3, item:'kaktus', x:340, y: 375},
+{id:3, item:'vlocka', x:145, y: 307},
+{id:3, item:'siet', x:280, y: 231},
+{id:3, item:'flasa', x:123, y: 122},
+{id:4, item:'ceruzka', x:283, y: 82},
+{id:4, item:'machule', x:153, y: 86},
+{id:4, item:'noznice', x:109, y: 214},
+{id:4, item:'pes', x:270, y: 216},
+{id:4, item:'zakaz', x:398, y: 158},
+{id:4, item:'kluc', x:370, y: 302},
+{id:4, item:'siet', x:220, y: 383},
+{id:4, item:'dinosaurus', x:100, y: 332},
+{id:5, item:'ceruzka', x:166, y: 93},
+{id:5, item:'kvet', x:69, y: 217},
+{id:5, item:'mesiac', x:131, y: 319},
+{id:5, item:'kon', x:366, y: 260},
+{id:5, item:'ruka', x:374, y: 142},
+{id:5, item:'lineka', x:337, y: 397},
+{id:5, item:'ohen', x:227, y: 409},
+{id:5, item:'klaun', x:226, y: 185},
+{id:6, item:'mesiac', x:241, y: 82},
+{id:6, item:'smrt', x:361, y: 135},
+{id:6, item:'macka', x:255, y: 253},
+{id:6, item:'dinosaurus', x:84, y: 270},
+{id:6, item:'okuliare', x:239, y: 387},
+{id:6, item:'nota', x:116, y: 352},
+{id:6, item:'syr', x:396, y: 325},
+{id:6, item:'drak', x:128, y: 138},
+{id:7, item:'auto', x:224, y: 41},
+{id:7, item:'ruka', x:86, y: 160},
+{id:7, item:'okuliare', x:214, y: 206},
+{id:7, item:'zebra', x:349, y: 199},
+{id:7, item:'korytnacka', x:445, y: 193},
+{id:7, item:'kladivo', x:373, y: 348},
+{id:7, item:'noznice', x:222, y: 370},
+{id:7, item:'otaznik', x:72, y: 325},
+{id:8, item:'okuliare', x:268, y: 56},
+{id:8, item:'zakaz', x:361, y: 140},
+{id:8, item:'klaun', x:177, y: 237},
+{id:8, item:'terc', x:155, y: 91},
+{id:8, item:'kotva', x:387, y: 299},
+{id:8, item:'snehuliak', x:58, y: 325},
+{id:8, item:'pavuk', x:190, y: 397},
+{id:8, item:'blesk', x:306, y: 383},
+{id:9, item:'kura', x:209, y: 89},
+{id:9, item:'strom', x:323, y: 162},
+{id:9, item:'kon', x:404, y: 261},
+{id:9, item:'smrt', x:208, y: 262},
+{id:9, item:'otaznik', x:105, y: 153},
+{id:9, item:'pavuk', x:108, y: 364},
+{id:9, item:'flasa', x:229, y: 415},
+{id:9, item:'kluc', x:352, y: 391},
+{id:10, item:'panak', x:330, y: 71},
+{id:10, item:'mesiac', x:263, y: 151},
+{id:10, item:'oko', x:404, y: 181},
+{id:10, item:'hodiny', x:112, y: 169},
+{id:10, item:'zakaz', x:113, y: 313},
+{id:10, item:'auto', x:267, y: 300},
+{id:10, item:'duch', x:378, y: 303},
+{id:10, item:'strom', x:225, y: 404},
+{id:11, item:'yinyang', x:228, y: 97},
+{id:11, item:'auto', x:366, y: 148},
+{id:11, item:'kon', x:352, y: 256},
+{id:11, item:'ziarovka', x:239, y: 301},
+{id:11, item:'bomba', x:77, y: 239},
+{id:11, item:'dinosaurus', x:135, y: 387},
+{id:11, item:'vlocka', x:246, y: 422},
+{id:11, item:'terc', x:363, y: 376},
+{id:12, item:'pavuk', x:318, y: 163},
+{id:12, item:'korytnacka', x:196, y: 77},
+{id:12, item:'ziarovka', x:138, y: 156},
+{id:12, item:'hodiny', x:105, y: 284},
+{id:12, item:'kvet', x:243, y: 283},
+{id:12, item:'machule', x:338, y: 379},
+{id:12, item:'macka', x:411, y: 260},
+{id:12, item:'srdce', x:190, y: 396},
+{id:13, item:'hodiny', x:234, y: 117},
+{id:13, item:'iglu', x:361, y: 143},
+{id:13, item:'lineka', x:376, y: 296},
+{id:13, item:'bomba', x:239, y: 224},
+{id:13, item:'kluc', x:116, y: 130},
+{id:13, item:'kaktus', x:94, y: 270},
+]
+</textarea>
+
+<script language="javascript">
+var mem = [];
+
+window.onload = function()
+{
+  var q = "";
+  for (var i =0; i<51; i++)
+		q += '<div class="ic"><img src="cards/exp'+('0'+i).substr(-2)+'.png"></div><br>\n';
+  document.getElementById("cards").innerHTML = q;
+
+  var json = document.getElementById("result").value;
+//alert(json);
+//  json = "[{id:1, item:'klaun', x:270, y: 95},\n{id:1, item:'noznice', x:119, y: 149},\n]";
+  var q = eval(json);
+//  eval("q=[{id:1, item:'klaun', x:270, y: 95},\n{id:1, item:'noznice', x:119, y: 149},\n]");
+  for ( var i in q )
+  {
+    var obj = findImage(q[i].id);
+    var sel = createDyn(obj, q[i].x, q[i].y);
+    sel.value = q[i].item;
+    addStorage(q[i].id, sel );
+  }
+
+  var tstid = 1;
+  var tst = findImage(tstid).parentElement;
+  canvas.style.left = tst.offsetLeft;
+  canvas.style.top = tst.offsetTop;
+  TestCanvas(tstid);
+}
+
+function TestCanvas(ref)
+{
+	var can = document.getElementById("canvas");	
+	var ctx = can.getContext('2d');
+	can.width = 492;
+  can.height = 492;
+	var w = can.offsetWidth;
+	var h = can.offsetHeight;
+  var data = ctx.createImageData(w, h);
+  var i = 0;
+
+  var colors = [
+    [0, 0, 0], [0, 0, 128], [0, 128, 0], [0, 128, 128], [128, 0, 0],
+    [128, 0, 0], [128, 0, 128], [128, 128, 0], 
+    [128, 128, 128], [0, 0, 255], [0, 255, 0], [0, 255, 255], [255, 0, 0],
+    [255, 0, 255], [255, 255, 0], [255, 255, 255]];
+
+  var c = 492/2;
+  for (y=0; y<h; y++)
+    for (x=0; x<w; x++, i+=4)
+  	{
+  	  if ( (x-c)*(x-c) + (y-c)*(y-c) > c*c )  
+      {  
+        data.data[i+3] = 0;
+        continue;
+      }
+  	  var bname = nearest(ref, x, y);
+  	  var color1 = bname.charCodeAt(0) % 16;
+  	  var color2 = bname.charCodeAt(2) % 16;
+      data.data[i+0] = colors[color1][0] + (colors[color2][0]-128)/3;
+      data.data[i+1] = colors[color1][1] + (colors[color2][1]-128)/3;
+      data.data[i+2] = colors[color1][2] + (colors[color2][2]-128)/3;
+      data.data[i+3] = 128;
+  		
+  	}
+  ctx.putImageData(data, 0, 0);
+}
+
+function nearest(id, x, y)
+{
+  var bestlen = 999999, bestname;
+  var curmem = mem[id];
+  for ( var i = 0; i < curmem.length; i++ )
+  {
+    var itm = curmem[i];
+    var itmx = itm.style.left.slice(0, -2);
+    var itmy = itm.style.top.slice(0, -2);
+//    var itmname = itm.value;
+
+    var len = (itmx - x)*(itmx - x) + (itmy - y)*(itmy - y);
+    if ( len < bestlen )
+    {
+    //  besti = i;
+      bestlen = len;
+      bestname = itm.value;
+    }
+  }
+  return bestname;
+}
+
+function findImage(x)
+{
+  x = "exp" + ("0"+x).substr(-2) + ".png";
+
+  var images = document.getElementsByTagName('img'); 
+  for(var i = 0; i < images.length; i++)
+   if ( images[i].src.substr(-9) == x )
+      return images[i];
+  alert("no img: "+x+" !"); 
+}
+
+document.addEventListener('click', function(e) {
+  if ( e.target.tagName == "IMG" )
+  {
+    out = e.target.src.substr(-9);
+    var p = getClickPosition(e);
+    out += " x:" + p.x + " y:" + p.y;
+    addStorage(out.substr(3,2), createDyn(e.target, p.x, p.y) );
+  }
+
+}, false);
+
+
+function getClickPosition(e) {
+	var parentPosition = getPosition(e.target);
+	var xPosition = e.clientX - parentPosition.x;
+	var yPosition = e.clientY - parentPosition.y;
+  return {x:xPosition, y:yPosition};
+}
+
+function getPosition(element) {
+	var xPosition = 0;
+	var yPosition = 0;
+	 
+	while (element) {
+		xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
+		yPosition += (element.offsetTop - element.scrollTop + element.clientTop);
+		element = element.offsetParent;
+	}
+	return { x: xPosition, y: yPosition };
+}
+
+function createDyn(e, x, y)
+{
+//  console.log("attach to " + e + " at " + x + ", " + y);
+
+  var selector = document.createElement('select');
+	selector.onchange = function() { update(); }
+	selector.style = "position:absolute; left:"+x+"px; top:"+y+"px;";
+  e.parentElement.appendChild(selector);
+
+  for ( var i in objs )
+  {
+    var option = document.createElement('option');
+    option.value = objs[i];
+    option.appendChild(document.createTextNode(objs[i]));
+    selector.appendChild(option);
+  }
+  return selector;
+}
+
+function update()
+{
+  var out = "";
+  for (var i in mem)
+  {
+	  for (var j in mem[i])
+		{
+			if ( mem[i][j].value == "-zrusit-" )
+        continue;
+			out += "{id:"+i+", item:'"+mem[i][j].value+"', x:"+
+        mem[i][j].style.left.slice(0, -2)+ ", y: "+mem[i][j].style.top.slice(0,-2)+"},\n";
+		}
+  }
+  document.getElementById("result").value = "["+out+"]";
+}
+
+function addStorage(id, obj)
+{
+  id = id*1;
+	if ( typeof(mem[id]) == "undefined" )
+  {
+    mem[id] = [obj];
+  } else
+    mem[id].push(obj);
+}
+
+objs = [
+  "klaun", "noznice", "smrt", "zamok", "delfin", "kocka", "yinyang", "hodiny",
+  "kotva", "mesiac", "flasa", "bomba", "srdce", "zebra", "pes",
+	"korytnacka", "oko", "siet", "vlocka", "nota", "kaktus",
+	"machule", "ceruzka", "zakaz", "kluc", "dinosaurus",
+	"kvet", "ruka", "kon", "lineka", "ohen",
+	"drak", "mesiac", "macka", "okuliare",
+	"otaznik", "auto", "kladivo",
+	"terc", "blesk", "pavuk", "snehuliak",
+	"kura", "strom",
+	"duch", "panak",
+	"ziarovka",
+	"iglu", "jablko",
+	"mrkva", "pery", "slnko",
+  "syr",
+  "stvorlistok",	
+	"-zrusit-"];
+</script>

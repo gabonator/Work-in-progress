@@ -55,6 +55,28 @@ color:#000000;
 100% {opacity:0;}
 }
 
+@-webkit-keyframes numberfade {
+0% {-webkit-transform:scale(1.0);}
+90% {-webkit-transform:scale(1.8);}
+100% {-webkit-transform:scale(2.0); color:rgba(0, 0, 0, 0)}
+}
+
+@-webkit-keyframes cardfade {
+0%   {-webkit-transform:scale(1.0); opacity:1;}
+50%  {-webkit-transform:rotate(180deg) scale(2.0); opacity:1;}
+100% {-webkit-transform:rotate(360deg) scale(3.0); opacity:0;}
+}
+
+@-webkit-keyframes notifyShow {
+0%   {opacity:0;}
+100% {opacity:1;}
+}
+
+@-webkit-keyframes notifyHide {
+0%   {opacity:1;}
+100% {opacity:0;}
+}
+
 </style>
 
 <div id="playground" class="playground">
@@ -134,15 +156,21 @@ function Anim(_objectId, _animId)
     var _this = this;
     var obj = this.Object();
     obj.style.animation = animId + " " + interval + " linear";
-    obj.addEventListener("animationend", function(e)
+    obj.style.webkitAnimation = animId + " " + interval + " linear";
+
+    obj.onEnd = function(e)
     {
+      obj.style.animation = "";
+      obj.style.webkitAnimation = "";
       var newOne = obj.cloneNode(true);
-      newOne.style.animation = "";
-      if ( obj.parentNode ) // wtf?
+	      if ( obj.parentNode ) // wtf?
         obj.parentNode.replaceChild(newOne, obj);
+
       if (handler)
         handler(_this);
-    });   
+    }
+    obj.addEventListener("webkitAnimationEnd", obj.onEnd);
+    obj.addEventListener("animationend", obj.onEnd);
   }
   this.SetInterval = function(_interval)
   {
@@ -274,6 +302,8 @@ function dragMove(obj, dx, dy)
     if ( cardDistance("stack", "user") > playSize.r*0.35 )
       notifyHide();
   }
+  e.preventDefault();
+  return false;
 }
 
 function dragFinish(obj)
@@ -325,8 +355,8 @@ document.onmousedown = function(e)
       dragFinish(fobj);
       document.onmousemove = null;
     }
-    return false;
   }
+  e.preventDefault();
   return false;
 }
 

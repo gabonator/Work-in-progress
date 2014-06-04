@@ -1,0 +1,677 @@
+<style>
+
+body { overflow:hidden; }
+.playground
+{
+  position:relative;
+	width:100%;
+  height:100%;
+  border-radius:20px;
+  background:#e0e0e0;
+}
+
+.card
+{
+  position: absolute;
+  left:100%;
+  top:100%;
+  max-width:20%;
+}
+.inside
+{
+  position:relative;
+  width:83%;
+  height:75%;
+/*  border:2px solid #000000;*/
+}
+
+.countdown {
+position:absolute;
+left:100px;
+top:140px;
+font-size:100px;
+z-index:5;
+color:#000000;
+}
+@keyframes numberfade {
+0% {transform:scale(1.0);}
+90% {transform:scale(1.8);}
+100% {transform:scale(2.0); color:rgba(0, 0, 0, 0)}
+}
+
+@keyframes cardfade {
+0%   {transform:scale(1.0); opacity:1;}
+50%  {transform:rotate(180deg) scale(2.0); opacity:1;}
+100% {transform:rotate(360deg) scale(3.0); opacity:0;}
+}
+
+@keyframes notifyShow {
+0%   {opacity:0;}
+100% {opacity:1;}
+}
+
+@keyframes notifyHide {
+0%   {opacity:1;}
+100% {opacity:0;}
+}
+
+@-webkit-keyframes numberfade {
+0% {-webkit-transform:scale(1.0);}
+90% {-webkit-transform:scale(1.8);}
+100% {-webkit-transform:scale(2.0); color:rgba(0, 0, 0, 0)}
+}
+
+@-webkit-keyframes cardfade {
+0%   {-webkit-transform:scale(1.0); opacity:1;}
+25%  {-webkit-transform:rotate(90deg) scale(1.5); opacity:1;}
+50%  {-webkit-transform:rotate(180deg) scale(2.0); opacity:1;}
+75%  {-webkit-transform:rotate(270deg) scale(2.5); opacity:0.5;}
+100% {-webkit-transform:rotate(360deg) scale(3.0); opacity:0;}
+}
+
+@-webkit-keyframes notifyShow {
+0%   {opacity:0;}
+100% {opacity:1;}
+}
+
+@-webkit-keyframes notifyHide {
+0%   {opacity:1;}
+100% {opacity:0;}
+}
+
+</style>
+
+<div id="playground" class="playground">
+<div id="countdown" class="countdown"></div>
+</div>
+
+<script language="javascript">
+var playground = document.getElementById("playground");
+
+var playSize = {w:playground.offsetWidth, h:playground.offsetHeight, 
+  r:Math.min(playground.offsetWidth, playground.offsetHeight)/2};
+var cardSize = playSize.r*0.65;
+
+var NET_ServiceEnabled = true;
+var netUserId = netGetUserId();
+var players = [netUserId];
+var cache;
+
+var cardStack = [];
+setNotify(posCircle(0, players.length));
+
+for ( var i=0; i<players.length; i++)
+  addCard(posCircle(i, players.length), 0, "user"+i);
+
+addCard({x:0, y:0}, 0, "stack");
+addCard({x:0, y:0}, 0, "active");
+addCard({x:0, y:0}, 0, "cover");
+
+// add - remove players
+var playerUpdateAnimation;
+
+function hasPlayer(name)
+{
+  return players.indexOf(name) != -1;
+}
+
+function addPlayer(name)
+{
+  var i = players.length;
+  console.log("Adding player " + name + " at index = " + i);
+  players.push(name);
+  addCard(posCircle(i, players.length), 0, "user"+i);
+  fixPlayers();
+}
+
+function removePlayer(name)
+{
+  var index = players.indexOf(name);
+  console.log("Removing player " + name + " at index = " + index);
+  players.splice(index, 1);
+  removeCard("user"+index);
+  for (var i=index; i<players.length; i++)
+    renameCard("user"+i, "user"+(i-1));
+  fixPlayers();
+}
+
+function fixPlayers()
+{
+  console.log("Anim start");
+  if ( playerUpdateAnimation )
+    clearInterval( playerUpdateAnimation );
+
+  playerUpdateAnimation = setInterval(function()
+  {
+    var animating = false;
+    var factor = 0.6;
+    for ( var i=0; i<players.length; i++ )
+    {
+      var src = getPlacement("user"+i);
+      var dst = posCircle(i, players.length);
+
+      var pos = {x:src.x * factor + dst.x * (1-factor), y:src.y * factor + dst.y * (1-factor)};
+/*
+//if ( i == players.length / 2 )
+{
+  getCard("user"+i).style.border = ( i == players.length / 2 ) && (Math.random() < 0.5) ? "5px #ff0000 solid" : "";
+  placeCard("user"+i, pos);
+  var rd = getPlacement("user" + i );
+  console.log("set = "+pos.x.toFixed(2) + ","+pos.y.toFixed(2)+ " read = "+rd.x.toFixed(2)+","+rd.y.toFixed(2) +
+  "err = " + (pos.x-rd.x).toFixed(2) + "," + (pos.y-rd.y).toFixed(2));
+}
+*/
+      if ( Math.abs(src.x - dst.x) < 3 && 
+           Math.abs(src.y - dst.y) < 3 )
+      {
+        placeCard("user"+i, dst);
+      } else 
+      {
+        placeCard("user"+i, pos);
+        animating = true;
+      }
+    }
+    if ( !animating )
+    {
+      console.log("Anim done");
+      clearInterval(playerUpdateAnimation);
+    }
+  }, 50);
+}
+
+//setInterval("addPlayer()", 5000);
+
+// card stack
+
+
+function setNotify(pos)
+{
+  var size = cardSize*1.5;
+  var card = document.createElement("div");
+  card.id = "notify";
+  card.style.position = 'absolute';
+  card.style.height = size + "px";
+  card.style.width = size + "px";
+  card.style.left = playSize.w/2 + pos.x - size/2;
+  card.style.top = playSize.h/2 + pos.y - size/2;
+  card.style.borderRadius = "300px";
+  card.style.background = "rgba(128, 128, 128, 0.4)";
+  playground.appendChild(card);
+}
+
+// card operations
+function addCard(pos, id, objid)
+{
+  var card = document.createElement("IMG");
+//  card.innerHTML = id;
+  card.src = 'cards/exp' + ("0"+id).substr(-2) + '.png';
+  card.style.position = 'absolute';
+  card.style.height = cardSize + "px";
+  card.style.width = cardSize + "px";
+  card.style.left = playSize.w/2 + pos.x - cardSize/2;
+  card.style.top = playSize.h/2 + pos.y - cardSize/2;
+  card.style.borderRadius = "300px";
+  card.style.boxShadow = "1px -1px 4px #000000"; 
+  var zLevel = 0;
+  if ( objid == "stack" ) zLevel = 1;
+  if ( objid == "active" ) zLevel = 2;
+  if ( objid == "cover" ) zLevel = 3;
+
+  if ( zLevel != 0 )
+    card.style.zIndex = zLevel;
+
+  card.alt = id;
+  if ( objid )
+    card.id = objid;
+  playground.appendChild(card);
+  return card;
+}
+
+function removeCard(id)
+{
+  var thisCard = getCard(id);
+  thisCard.parentElement.removeChild(thisCard);
+}
+
+function renameCard(oldid, newid)
+{
+  getCard(oldid).id = newid;
+}
+
+function getCard(id)
+{
+  return document.getElementById(id);
+}
+
+function doStacking(targetCard)
+{
+  if ( targetCard == "user0" )
+    netRequestStacking();
+
+  getCard(targetCard).src = getCard("active").src;
+  getCard("active").src = getCard("stack").src;
+  placeCard("active", {x:0, y:0});
+//  setCard("stack", takeCard());
+//  preCache();
+}
+
+function setCard(id, imageid)
+{
+  getCard(id).src = 'cards/exp' + ("0"+imageid).substr(-2) + '.png';
+//  getCard(id).innerHTML = imageid;
+}
+
+function getPlacement(id)
+{              
+  var card = getCard(id);
+if ( card == null )
+  console.log("Cannot get card " + id + " !");
+  return {x: parseInt(card.style.left)-playSize.w/2+cardSize/2, y:parseInt(card.style.top)-playSize.h/2+cardSize/2};
+}
+
+function placeCard(id, pos)
+{
+  var card = getCard(id);
+  card.style.position = 'absolute';
+  card.style.height = cardSize + "px";
+  card.style.width = cardSize + "px";
+  card.style.left = playSize.w/2 + pos.x - cardSize/2;
+  card.style.top = playSize.h/2 + pos.y - cardSize/2;
+}
+
+function getCardImg(id)
+{
+  return parseInt(getCard(id).src.substr(-6, 2), 10);
+}
+
+function setCardImg(id, n)
+{
+  setCard(id, n);
+}
+
+function posCircle(i, n)
+{
+  var angle = Math.PI*2*i/n;
+  return {
+    x: ((playSize.r + playSize.w/2)/2-cardSize/2) * Math.sin(angle) *1.0,
+    y: (playSize.r-cardSize/2) * Math.cos(angle) *1.0
+  };
+}
+
+function Anim(_objectId, _animId)
+{
+  var objectId = _objectId;
+  var animId = _animId;
+  var interval = "1s";
+  var handler;
+  var played = false;
+
+  this.Play = function(handler)
+  {
+    var _this = this;
+    var obj = this.Object();
+    obj.style.animation = animId + " " + interval + " linear";
+    obj.style.webkitAnimation = animId + " " + interval + " linear";
+
+    obj.onEnd = function(e)
+    {
+      obj.style.animation = "";
+      obj.style.webkitAnimation = "";
+      var newOne = obj.cloneNode(true);
+      if ( obj.parentNode ) // wtf?
+        obj.parentNode.replaceChild(newOne, obj);
+
+      if (handler)
+        handler(_this);
+    }
+    obj.addEventListener("webkitAnimationEnd", obj.onEnd);
+    obj.addEventListener("animationend", obj.onEnd);
+  }
+  this.SetInterval = function(_interval)
+  {
+    interval = _interval;
+  }
+  this.SetAnim = function(_animId)
+  {
+    animId = _animId;
+  }
+  this.Object = function()
+  { 
+    return document.getElementById(objectId);
+  }
+  this.SetText = function(text)
+  {
+    this.Object().innerHTML = text;
+  }
+  this.Hide = function()
+  {
+    this.Object().style.display = "none";
+  }
+  this.Show = function()
+  {
+    this.Object().style.display = "";
+  }
+  this.Move = function(x, y)
+  {
+    var obj = this.Object();
+    obj.style.left = x;
+    obj.style.top = y;
+  }
+  this.test = function() { alert("Test!"); }
+}
+
+
+function playCountdown(handler)
+{
+  var cd = new Anim("countdown", "numberfade"); 
+  cd.SetText("3");
+  // center object
+  var obj = cd.Object();
+  cd.Move( (playSize.w - obj.offsetWidth)/2, (playSize.h - obj.offsetWidth)/2 );
+  cd.Show();
+  cd.Play( function()
+  {
+    cd.SetText("2");
+    cd.Play( function()
+    {
+      cd.SetText("1");
+      cd.Play( function()
+      {
+        cd.Hide();
+        handler();
+      });
+    });
+  });
+}
+
+function hidecover()
+{
+  var cd = new Anim("cover", "cardfade");
+  cd.Play(function (obj) {obj.Hide()});
+}
+
+
+playCountdown(hidecover);
+
+var notify = new Anim("notify");
+notify.Hide();
+notify.visible = false;
+notify.SetInterval("0.3s");
+
+function notifyHide()
+{
+  if ( !notify.visible )
+    return;
+  notify.SetAnim("notifyHide");
+  notify.Play( function() 
+  { 
+    notify.visible = false;
+    notify.Hide(); 
+  } );
+}
+function notifyShow()
+{
+  if ( notify.visible )
+    return;
+  notify.SetAnim("notifyShow");
+  notify.Show();
+  notify.Play( function() 
+  {
+    notify.visible = true;
+  } );
+}
+
+function cardDistance(c1, c2)
+{
+  var card1 = document.getElementById(c1);
+  var card2 = document.getElementById(c2);
+  var c1x = parseInt(card1.style.left);
+  var c1y = parseInt(card1.style.top);
+  var c2x = parseInt(card2.style.left);
+  var c2y = parseInt(card2.style.top);
+  var dist = (c1x-c2x)*(c1x-c2x) + (c1y-c2y)*(c1y-c2y);
+  return Math.sqrt(dist);
+}
+
+
+var baseX, baseY, dragdone = true, flyBack;
+function dragStart(obj)
+{
+  if ( dragdone && obj.tagName == "IMG" && obj.id == "active")
+  {
+    baseX = parseFloat(obj.style.left);
+    baseY = parseFloat(obj.style.top);
+    return true;
+  }
+  return false;
+}
+
+function dragMove(obj, dx, dy)
+{
+  obj.style.left = baseX + dx + "px";
+  obj.style.top = baseY + dy + "px";
+  if ( obj.id == "active" )
+  {
+    if ( cardDistance("active", "user0") < playSize.r*0.3 )
+      notifyShow();
+    if ( cardDistance("active", "user0") > playSize.r*0.35 )
+      notifyHide();
+  }
+  return false;
+}
+
+function dragFinish(obj)
+{
+  notifyHide();
+  
+  var targetCardId = (cardDistance("active", "user0") < playSize.r*0.325) ? "user0" : "stack";
+
+  giveTopCard(targetCardId);
+}
+
+function giveTopCard(targetCardId)
+{
+  var factor = 0.3;
+  var obj = getCard("active");
+  var targetCard = document.getElementById(targetCardId);
+  var targetX = parseInt(targetCard.style.left);
+  var targetY = parseInt(targetCard.style.top);
+  dragdone = false;
+  NET_ServiceEnabled = false;
+
+  if (flyBack)
+    clearInterval(flyBack);
+  flyBack = setInterval(function()
+  { 
+    var newx = parseInt(obj.style.left)*factor + targetX*(1-factor);
+    var newy = parseInt(obj.style.top)*factor + targetY*(1-factor);
+
+    obj.style.left = newx + "px";
+    obj.style.top = newy + "px";
+
+    if ( Math.abs(newx - targetX) < 1 && 
+         Math.abs(newy - targetY) < 1 )
+    {
+      obj.style.left = targetX + "px";
+      obj.style.top = targetY + "px";
+      dragdone = true;
+      clearInterval(flyBack);
+      flyBack = false;
+      notifyHide(); // animacia mohla byt akurat v priebehu a prvy hide nemal efekt
+      if ( targetCardId != "stack" )
+        doStacking(targetCardId);
+      NET_ServiceEnabled = true;
+    }    
+  }, 50);
+}
+
+var tx, ty;
+document.onmousedown = function(e) 
+{
+  var fobj = e.target;
+
+  if ( dragStart(fobj) )
+  {
+    tx = e.clientX;
+    ty = e.clientY;
+    document.onmousemove = function (e)
+    {
+      dragMove(fobj, e.clientX - tx, e.clientY - ty);
+    }
+    document.onmouseup = function()
+    {
+      dragFinish(fobj);
+      document.onmousemove = null;
+    }
+  }
+  e.preventDefault();
+  return false;
+}
+
+// network
+/*
+setInterval(function(){
+  if ( netOnline )
+    netSend("ping");
+}, 5000);
+*/
+
+function netGetUserId()
+{
+  return Math.random().toFixed(8).substr(2);
+}
+
+function netSend(msg)
+{
+  netConnection.send(msg);
+}
+
+var netConnection = null;
+var netOnline = false;
+
+window.addEventListener("load", function () {
+
+		netConnection = new WebSocket("ws://127.0.0.1:8081")
+
+		netConnection.onopen = function () {
+			console.log("Connection opened")
+			// todo: Server assigns user id!
+			netConnection.send(netUserId);
+      netOnline = true;
+		}
+
+		netConnection.onclose = function () {
+			console.log("Connection closed")
+      netOnline = false;
+		}
+
+		netConnection.onerror = function () {
+			console.error("Connection error")
+      netOnline = false;
+		}
+
+		netConnection.onmessage = function (event) {
+		  var msg = event.data;
+			if ( msg == "ping" )
+				netConnection.send("pong");
+
+
+			if ( msg.substr(0, 1) == "_" )
+      {
+        if ( NET_ServiceEnabled )
+					eval("NET"+msg);
+				else
+					NET_PushQuery("NET"+msg);
+      }
+
+//		  if ( msg != "server-ping" )
+//  		  console.log("got: " + event.data);
+			//textContent = event.data
+		}
+
+});
+
+// blocking queries
+var NET_Query = [];
+var NET_QueryTimer = false;
+
+function NET_PushQuery(msg)
+{
+  NET_Query.push(msg);
+//  console.log("Pushing query, len=" + NET_Query.length);
+  if ( !NET_QueryTimer )
+    NET_QueryTimer = setTimeout("NET_TestQuery()", 100);
+}
+
+function NET_TestQuery()
+{
+//  console.log("TestQuery...");
+  while ( NET_ServiceEnabled && NET_Query.length > 0 )
+  {
+//    console.log("Popping query, len=" + NET_Query.length);
+    var cmd = NET_Query.splice(0, 1)[0];
+    eval(cmd);
+  }
+  if ( NET_Query.length > 0 )
+    NET_QueryTimer = setTimeout("NET_TestQuery()", 100);
+  else
+    NET_QueryTimer = false;
+}
+
+// network handlers
+
+function NET_setUsers(arrUsers)
+{
+  // remove old
+	for (var i in players)
+    if (arrUsers.indexOf(players[i]) == -1)
+			removePlayer(players[i]);
+
+  // add new
+  for (var i in arrUsers)
+		if ( !hasPlayer(arrUsers[i]) )
+			addPlayer(arrUsers[i]);
+
+}
+
+function NET_setData(jsonData)
+{
+  for ( var i in jsonData )
+  {
+    var playernr = players.indexOf(jsonData[i].id);
+    if ( playernr == -1 )
+      continue;
+//console.log(jsonData[i].id  + " -> " + playernr);	
+    if ( getCardImg("user"+playernr) != jsonData[i].topCard )
+      setCardImg("user"+playernr, jsonData[i].topCard);
+  }
+}
+
+function NET_setStack(jsonData)
+{
+  cardStack = jsonData;
+
+  var top1 = cardStack[cardStack.length-1];
+  var top2 = cardStack[cardStack.length-2];
+
+//  console.log("Top card ="+top1+" was = "+getCardImg("active"));
+  if ( getCardImg("active") != top1 )
+    setCardImg("active", top1);
+
+  if ( getCardImg("stack") != top2 )
+    setCardImg("stack", top2);
+}
+
+function NET_giveCard(playerId)
+{
+  var toId = players.indexOf(playerId);
+  giveTopCard("user"+toId);
+}
+
+// network requests
+function netRequestStacking()
+{
+  netConnection.send("request-stacking");
+}
+
+</script>

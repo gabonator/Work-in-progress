@@ -1,5 +1,6 @@
 <canvas id="canvas" style="border:1px #808080 dashed"></canvas>
-
+<br>
+<textarea id="text" cols="50" rows="10"></textarea>
 <script language="javascript">
 canvasInit();
 
@@ -10,19 +11,197 @@ d1="M25.647,185.4146c-17.3618,0-31.4868-13.9883-31.4868-31.1816V26.6743c0-17.193
 d2="M25.647,178.3276c-13.4546,0-24.4004-10.8086-24.4004-24.0947V26.6743c0-13.2856,10.9458-24.0942,24.4004-24.0942h244.7065c13.4541,0,24.4004,10.8086,24.4004,24.0942v127.5586c0,13.2861-10.9463,24.0947-24.4004,24.0947H25.647z";
 d3="M122.377,178.4185l-5.7534-2.9258H25.71c-11.8916,0-21.5659-9.5371-21.5659-21.2598v-4.4443l3-4.834v-48.793l-1.5-2.167V59.2778l1.5-2.834V35.313l-3-6.166v-2.4727c0-11.7227,9.6743-21.2598,21.5659-21.2598h244.707c11.8906,0,21.5645,9.5371,21.5645,21.2598v2.4043l-3.166,5.834v109.25l3.166,6.334v3.7363c0,11.7227-9.6738,21.2598-21.5645,21.2598h-13.7344l-5.166,2.9258H122.377z";
 
-paths = [d0, d1, d2, d3];
-colors = [[0, 0, 0, 0.3], [255, 0, 0, 0.3], [0, 255, 0, 0.3], [0, 0, 255, 0.3]];
-
+var paths = [d0, d1, d2, d3];
+var colors = [[0, 0, 0, 0.3], [255, 0, 0, 0.3], [0, 255, 0, 0.3], [0, 0, 255, 0.3]];
+var expcode = "";
 for ( var i in paths )
 {
-  var pos = 0;
-  var path = paths[i];
+  var code = toGCode(flipY(parsePath(paths[i])));
   canvasColor(colors[i]);
-  while ( pos < path.length && (token = getToken(path, pos)) && token.length > 0 )
+  drawPath(code);
+
+  code.pop(); // M02
+  var outcode = buildCode(code);
+  outcode.splice(1, 0, "G01 Z0");
+  outcode.push("G00 Z5");
+
+  expcode += "(path "+i+")\n";
+  expcode += outcode.join("\n") + "\n";
+}
+expcode += "M02";
+document.getElementById("text").value = expcode;
+
+function flipY(data)
+{
+  var aux = [];
+  for ( var i in data )
   {
-    processToken(token);
+    var token = data[i];
+    switch ( token.type )
+    {
+      case "M": 
+      case "l": 
+      case "L": token.attributes[1] *= -1; break;
+      case "v":
+      case "V": token.attributes[0] *= -1; break;
+
+      case "c": token.attributes[1] *= -1; 
+                token.attributes[3] *= -1; 
+                token.attributes[5] *= -1; break;
+
+    }
+    aux.push(token);
+  }
+  return aux;
+}
+
+function buildCode(data)
+{
+  var code = [];
+  for ( var i in data )
+  {
+    var cmd = data[i];
+    var cmdcode = cmd.type + " ";
+    for ( var j in cmd )
+      if ( j != "type" )
+        cmdcode += j.toUpperCase() + "" + cmd[j].toFixed(3) + " ";
+    code.push(cmdcode);
+  }
+  return code;
+}
+
+function toGCode(data)
+{
+  var aux = [];
+  for ( var i in data )
+  {
+    var cmd = data[i];
+    var args = cmd.attributes;
+    if ( cmd.type == "M" )
+    {
+      position = makePos(args[0], args[1]);
+      aux.push({type:"G00", x:position.x, y:position.y});
+      continue;
+    }
+    if ( cmd.type == "l" )
+    {
+      position = addPos(position, makePos(args[0], args[1]));
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;
+    }          
+    if ( cmd.type == "L" )
+    {
+      position = makePos(args[0], args[1]);
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;        
+    }          
+    if ( cmd.type == "h" )
+    {
+      position = addPos(position, makePos(args[0], 0));
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;
+    }
+    if ( cmd.type == "v" )
+    {
+      position = addPos(position, makePos(0, args[0]));
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;
+    }
+    if ( cmd.type == "H" )
+    {
+      position = makePos(args[0], position.y);
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;
+    }
+    if ( cmd.type == "V" )
+    {
+      position = makePos(position.x, args[0]);
+      aux.push({type:"G01", x:position.x, y:position.y});
+      continue;
+    }          
+    if ( cmd.type == "c" )
+    {
+      var p1 = addPos(position, makePos(args[0], args[1]));
+      var p2 = addPos(position, makePos(args[2], args[3]));
+      var pn = addPos(position, makePos(args[4], args[5]));
+
+      // position - pn
+      if ( 1 )
+      {
+        var onCircle1 = position;
+        var onCircle2 = calcBezier(position, p1, p2, pn, 0.5);
+        var onCircle3 = pn;
+        var center = calculateCircleCenter(onCircle1, onCircle2, onCircle3);
+
+        aux.push({type:"G02", x:pn.x, y:pn.y, i:center.x-position.x, j:center.y-position.y});
+			} else {
+  			for ( var j = 0; j<=8; j++)
+        {
+          var pt = calcBezier(position, p1, p2, pn, j/8);
+          aux.push({type:"G01", x:pt.x, y:pt.y});
+        }
+      }
+      position = pn;
+      continue;
+    }          
+    if ( cmd.type == "z" )
+    {
+//      aux.push({type:"G01", x:aux[0].x, y:aux[0].y});
+      aux.push({type:"M02"});
+      continue;
+    }          
+    console.log("Unknown command " + cmd.type);
+    aux.push(cmd);
+  }
+  return aux;
+}
+
+function calculateCircleCenter(A, B, C)
+{
+  var yDelta_a = B.y - A.y; 
+  var xDelta_a = B.x - A.x; 
+  var yDelta_b = C.y - B.y; 
+  var xDelta_b = C.x - B.x; 
+  var aSlope = yDelta_a/xDelta_a; 
+  var bSlope = yDelta_b/xDelta_b; 
+  var center = {x:0, y:0};
+  center.x = (aSlope*bSlope*(A.y - C.y) + bSlope*(A.x + B.x) - aSlope*(B.x+C.x) )/(2* (bSlope-aSlope) );
+  center.y = -1*(center.x - (A.x+B.x)/2)/aSlope + (A.y+B.y)/2;
+  return center;
+}
+
+function linear(pt1, pt2, f)
+{
+  return {x:pt1.x + (pt2.x-pt1.x)*f, y:pt1.y + (pt2.y-pt1.y)*f};
+}
+
+function calcBezier(pt1, c1, c2, pt2, f)
+{
+  var lineA1 = linear(pt1, c1, f);
+  var lineA2 = linear(c1, c2, f);
+  var lineA3 = linear(c2, pt2, f);
+  var lineB1 = linear(lineA1, lineA2, f);
+  var lineB2 = linear(lineA2, lineA3, f);
+  return linear(lineB1, lineB2, f);
+}
+
+function parsePath(path)
+{
+  var pos = 0, aux = [];
+  while (pos < path.length && 
+         (token = getToken(path.substr(pos), pos)) && 
+         token.length > 0 )
+  {
+    aux.push(token);
     pos += token.length;
   }
+  return aux;
+}
+
+function drawPath(data)
+{
+  for (var i in data)
+    processToken(data[i]);
 }
 
 function getToken(str, pos)
@@ -33,13 +212,11 @@ function getToken(str, pos)
     /^([h|v|H|V])([\-]?[\d\.]+)/,
     /^([c|C])([\-]?[\d\.]+)([\-|\,][\d\.]+)([\-|\,][\d\.]+)([\-|\,][\d\.]+)([\-|\,][\d\.]+)([\-|\,][\d\.]+)/,
     /^(z)/
-   ];
-
-  var matches = [];
+  ];
 
   for ( var i in tests )
   {
-    matches = tests[i].exec(str.substr(pos));
+    var matches = tests[i].exec(str);
     if ( matches && matches.length > 0 )
     {
       var token = matches.splice(0, 1)[0];
@@ -47,14 +224,13 @@ function getToken(str, pos)
       for ( var i in matches )
       {
         if ( matches[i][0] == "," )
-          matches[i] = parseFloat(matches[i].substr(1));
-        else
-          matches[i] = parseFloat(matches[i]);
+          matches[i] = matches[i].substr(1);
+        matches[i] = parseFloat(matches[i]);
       }
       return {type:type, length:token.length, attributes:matches};
     }
   }
- console.log("Unknown command " + str[pos]);
+  console.log("Unknown command " + str[pos]);
 } 
 
 // canvas
@@ -82,6 +258,10 @@ function scalePos(p)
 {
   return {x:p.x*2+20, y:p.y*2+20};
 }
+function scaleGPos(p)
+{
+  return {x:p.x*2+20, y:-p.y*2+20};
+}
 function addPos(p1, p2)
 {
   return {x:p1.x+p2.x, y:p1.y+p2.y};
@@ -89,6 +269,7 @@ function addPos(p1, p2)
 
 function processToken(token)
 {
+  // SVG
   var args = token.attributes;
   if (token.type == "M")
   {
@@ -158,7 +339,52 @@ function processToken(token)
     ctx.stroke();
     return;
   }
+  // GCode
+  if ( token.type == "G00" )
+  {
+    ctx.beginPath();
+    position = token;
+    var tmp = scaleGPos(token);
+    ctx.moveTo( tmp.x, tmp.y );
+    return;
+  }
+  if ( token.type == "G01" )
+  {
+    position = token;
+    var tmp = scaleGPos(token);
+    ctx.lineTo( tmp.x, tmp.y );
+    return;
+  }
+  if ( token.type == "G02" )
+  {
+    var center = {x:position.x + token.i, y:position.y + token.j};
+    canvasArc(position, token, center);
+    position = token;
+    return;
+  }
+  if ( token.type == "M02" )
+  {
+    ctx.stroke();
+    return;
+  }
   console.log("Dont know how to draw "+token.type);
 }
 
+function canvasArc(pt1, pt2, center)
+{
+  var angle1 = Math.atan2(pt1.x - center.x, pt1.y - center.y);
+  var angle2 = Math.atan2(pt2.x - center.x, pt2.y - center.y);
+  var radius = Math.sqrt((pt1.x - center.x)*(pt1.x - center.x) + (pt1.y - center.y)*(pt1.y - center.y));
+  if ( angle2 < angle1 )
+    angle2 += Math.PI*2;
+
+  for (var a=angle1; a<angle2; a+=Math.PI/8)
+  {
+    var pos = {x:center.x+radius*Math.sin(a), y:center.y+radius*Math.cos(a)};
+    var tmp = scaleGPos(pos);
+    ctx.lineTo(tmp.x, tmp.y);
+  }
+  var tmp = scaleGPos(pt2);
+  ctx.lineTo(tmp.x, tmp.y);
+}
 </script>

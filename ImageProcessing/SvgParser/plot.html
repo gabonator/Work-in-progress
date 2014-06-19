@@ -2,9 +2,17 @@
 <br>
 <textarea id="text" cols="50" rows="10"></textarea><br>
 <div id="svgcontainer"></div>
+<canvas id="glcanvas" width="640" height="480">
+</canvas>
 
 <script language="javascript" src="clipper.js"></script>
 <script language="javascript" src="poly2tri.js"></script>
+<!--<script src="webgl-sylvester.js" type="text/javascript"></script>-->
+<script src="webgl-matrix.js" type="text/javascript"></script>
+<!--<script src="webgl-utils.js" type="text/javascript"></script>-->
+<script src="webgl-core.js" type="text/javascript"></script>
+<script src="webgl-main.js" type="text/javascript"></script>
+
 <script language="javascript">
 canvasInit();
 
@@ -37,7 +45,6 @@ for ( var i in paths )
 expcode += "M02";
 document.getElementById("text").value = expcode;
 
-
 var path = [toXYPath(parsePath(paths[3]))];
 document.getElementById('svgcontainer').innerHTML = pathToSvg(path);
 path = expandPath(path);
@@ -57,7 +64,7 @@ function expandPath(path)
   co.AddPaths(path, ClipperLib.PolyType.ptSubject, true);
   co.MiterLimit = 2;
   co.ArcTolerance = 0.25;
-  co.Execute(offsetted_paths, 5 * scale);
+  co.Execute(offsetted_paths, 2 * scale);
 
   ClipperLib.JS.ScaleUpPaths(offsetted_paths, 1/scale);
   return offsetted_paths;

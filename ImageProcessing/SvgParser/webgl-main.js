@@ -1,6 +1,7 @@
 function createModel(inpath, top, bottom)
 {
   paths = expandPath([inpath]);
+  paths = clipPath(paths);
 
   var vertices = [], indices = [], normals = [];
 
@@ -112,14 +113,14 @@ function drawScene()
   // }}}
 
   mat4.identity(mvMatrix);
-  mat4.translate(mvMatrix, [-140, -80, -400]);
-  mat4.rotate(mvMatrix, degToRad(-70), [1, 0, 0]);
+  mat4.translate(mvMatrix, [-140, 40, -500]);
+  mat4.rotate(mvMatrix, degToRad(-50), [1, 0, 0]);
 
   for (var i in paths)
   {
     var color = colors[i];
     color = [color[0]/255, color[1]/255, color[2]/255, 1.0];
     gl.uniform4fv(shaderProgram.materialColorUniform, color);
-    vboDraw(createModel(toXYPath(parsePath(paths[i])), i*20, -20));
+    vboDraw(createModel(toXYPath(flipY(parsePath(paths[i]))), i*20, -20));
   }
 }

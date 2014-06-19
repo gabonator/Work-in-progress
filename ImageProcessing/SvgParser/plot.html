@@ -19,12 +19,12 @@ canvasInit();
 d0="M37.2104,173.9185l-4.729-3.1582h-7.8101c-8.5967,0-15.5903-6.9932-15.5903-15.5898V28.1777"+
 "c0-8.5967,6.9937-15.5903,15.5903-15.5903h245.7642c8.5967,0,15.5908,6.9937,15.5908,15.5903v126.9927"+
 "c0,8.5967-6.9941,15.5898-15.5908,15.5898h-10.4219l-4.9375,3.1582H37.2104z";
-d1="M25.647,185.4146c-17.3618,0-31.4868-13.9883-31.4868-31.1816V26.6743c0-17.1934,14.125-31.1807,31.4868-31.1807h244.7065c17.3623,0,31.4873,13.9873,31.4873,31.1807v127.5586c0,17.1934-14.125,31.1816-31.4873,31.1816H25.647z";
+d3="M25.647,185.4146c-17.3618,0-31.4868-13.9883-31.4868-31.1816V26.6743c0-17.1934,14.125-31.1807,31.4868-31.1807h244.7065c17.3623,0,31.4873,13.9873,31.4873,31.1807v127.5586c0,17.1934-14.125,31.1816-31.4873,31.1816H25.647z";
 d2="M25.647,178.3276c-13.4546,0-24.4004-10.8086-24.4004-24.0947V26.6743c0-13.2856,10.9458-24.0942,24.4004-24.0942h244.7065c13.4541,0,24.4004,10.8086,24.4004,24.0942v127.5586c0,13.2861-10.9463,24.0947-24.4004,24.0947H25.647z";
-d3="M122.377,178.4185l-5.7534-2.9258H25.71c-11.8916,0-21.5659-9.5371-21.5659-21.2598v-4.4443l3-4.834v-48.793l-1.5-2.167V59.2778l1.5-2.834V35.313l-3-6.166v-2.4727c0-11.7227,9.6743-21.2598,21.5659-21.2598h244.707c11.8906,0,21.5645,9.5371,21.5645,21.2598v2.4043l-3.166,5.834v109.25l3.166,6.334v3.7363c0,11.7227-9.6738,21.2598-21.5645,21.2598h-13.7344l-5.166,2.9258H122.377z";
+d1="M122.377,178.4185l-5.7534-2.9258H25.71c-11.8916,0-21.5659-9.5371-21.5659-21.2598v-4.4443l3-4.834v-48.793l-1.5-2.167V59.2778l1.5-2.834V35.313l-3-6.166v-2.4727c0-11.7227,9.6743-21.2598,21.5659-21.2598h244.707c11.8906,0,21.5645,9.5371,21.5645,21.2598v2.4043l-3.166,5.834v109.25l3.166,6.334v3.7363c0,11.7227-9.6738,21.2598-21.5645,21.2598h-13.7344l-5.166,2.9258H122.377z";
 
 var paths = [d0, d1, d2, d3];
-var colors = [[0, 0, 0, 0.3], [255, 0, 0, 0.3], [0, 255, 0, 0.3], [0, 0, 255, 0.3]];
+var colors = [[128, 128, 128, 0.3], [255, 0, 0, 0.3], [0, 255, 0, 0.3], [0, 0, 255, 0.3]];
 var expcode = "";
 for ( var i in paths )
 {
@@ -45,13 +45,57 @@ for ( var i in paths )
 expcode += "M02";
 document.getElementById("text").value = expcode;
 
-var path = [toXYPath(parsePath(paths[3]))];
+var path = [toXYPath(parsePath(paths[1]))];
 document.getElementById('svgcontainer').innerHTML = pathToSvg(path);
 path = expandPath(path);
 document.getElementById('svgcontainer').innerHTML+= pathToSvg(path);
 path = triangulate(path);
 document.getElementById('svgcontainer').innerHTML+= pathToSvg(path);
 
+
+function clipPath(path)
+{
+  var subj_paths = path;
+  var bounds = ClipperLib.Clipper.GetBounds(subj_paths);
+
+  var middle = {X:bounds.left + (bounds.left + bounds.right)*0.7, Y:(bounds.top + bounds.bottom)/2};
+/*
+  var clip_paths = [[{X:bounds.left, Y:bounds.top}, {X:bounds.right, Y:bounds.top}, {X:bounds.right, Y:bounds.bottom}, 
+    {X:middle.X, Y:bounds.bottom}, middle, {X:bounds.left, Y:middle.Y}]];
+
+  var clip_paths = [[
+    middle, 
+    {X:middle.X,      Y:bounds.top},
+    {X:bounds.right,  Y:bounds.top},
+    {X:bounds.right,  Y:bounds.bottom},
+    {X:bounds.left,   Y:bounds.bottom},
+    {X:bounds.left,   Y:middle.Y}]];
+*/
+  var clip_paths = [[
+    middle, 
+    {X:bounds.right,  Y:middle.Y},
+    {X:bounds.right,  Y:bounds.bottom},
+    {X:bounds.left,   Y:bounds.bottom},
+    {X:bounds.left,   Y:bounds.top},
+    {X:middle.X,      Y:bounds.top}]];
+
+  var scale = 100;
+  ClipperLib.JS.ScaleUpPaths(subj_paths, scale);
+  ClipperLib.JS.ScaleUpPaths(clip_paths, scale);
+
+  var cpr = new ClipperLib.Clipper();
+  cpr.AddPaths(subj_paths, ClipperLib.PolyType.ptSubject, true);
+  cpr.AddPaths(clip_paths, ClipperLib.PolyType.ptClip, true);
+
+  var subject_fillType = ClipperLib.PolyFillType.pftNonZero;
+  var clip_fillType = ClipperLib.PolyFillType.pftNonZero;
+
+  solution_paths = new ClipperLib.Paths();
+  cpr.Execute(ClipperLib.ClipType.ctIntersection, solution_paths, subject_fillType, clip_fillType);
+
+  ClipperLib.JS.ScaleUpPaths(solution_paths, 1/scale);
+  return solution_paths;
+}
 
 function expandPath(path)
 {

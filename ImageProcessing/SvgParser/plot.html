@@ -1,6 +1,10 @@
 <canvas id="canvas" style="border:1px #808080 dashed"></canvas>
 <br>
-<textarea id="text" cols="50" rows="10"></textarea>
+<textarea id="text" cols="50" rows="10"></textarea><br>
+<div id="svgcontainer"></div>
+
+<script language="javascript" src="clipper.js"></script>
+<script language="javascript" src="poly2tri.js"></script>
 <script language="javascript">
 canvasInit();
 
@@ -27,9 +31,114 @@ for ( var i in paths )
 
   expcode += "(path "+i+")\n";
   expcode += outcode.join("\n") + "\n";
+
+//  break;
 }
 expcode += "M02";
 document.getElementById("text").value = expcode;
+
+
+var path = [toXYPath(parsePath(paths[3]))];
+document.getElementById('svgcontainer').innerHTML = pathToSvg(path);
+path = expandPath(path);
+document.getElementById('svgcontainer').innerHTML+= pathToSvg(path);
+path = triangulate(path);
+document.getElementById('svgcontainer').innerHTML+= pathToSvg(path);
+
+
+function expandPath(path)
+{
+  var scale = 100;
+  ClipperLib.JS.ScaleUpPaths(path, scale);
+
+  var co = new ClipperLib.ClipperOffset(); 
+  var offsetted_paths = new ClipperLib.Paths();
+  co.Clear();
+  co.AddPaths(path, ClipperLib.PolyType.ptSubject, true);
+  co.MiterLimit = 2;
+  co.ArcTolerance = 0.25;
+  co.Execute(offsetted_paths, 5 * scale);
+
+  ClipperLib.JS.ScaleUpPaths(offsetted_paths, 1/scale);
+  return offsetted_paths;
+}
+
+function paths2string (paths, scale) {
+  var svgpath = "", i, j;
+  if (!scale) scale = 1;
+  for(i = 0; i < paths.length; i++) {
+    for(j = 0; j < paths[i].length; j++){
+      if (!j) svgpath += "M";
+      else svgpath += "L";
+      svgpath += (paths[i][j].X / scale) + ", " + (paths[i][j].Y / scale);
+    }
+    svgpath += "Z";
+  }
+  if (svgpath=="") svgpath = "M0,0";
+  return svgpath;
+}
+
+function pathToSvg(path)
+{
+  return '<svg style="margin-top:10px; margin-right:10px;margin-bottom:10px;background-color:#dddddd" width="800" height="400">' +
+    '<path stroke="black" fill="yellow" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + paths2string(path, 0.5) + '"/>' +
+    '</svg>';
+}
+
+function triangulate(path)
+{
+  var lx = -999999, ly = -999999;
+
+  var p = path[0];
+  var contour = [];
+  for ( var i = 0; i < p.length; i++ )
+  {
+    var newp = new js.poly2tri.Point(p[i].X, p[i].Y);
+    if ( i > 0 && contour[contour.length-1].equals(newp) )
+      continue;
+
+    contour.push( newp );
+  }
+  if ( contour[contour.length-1].equals( contour[0] ) )
+    contour.pop();
+
+  var swctx = new js.poly2tri.SweepContext(contour); 
+
+  for ( var j=1; j<path.length; j++)
+  {
+    var p = path[j];
+    var contour = [];
+    for ( var i = 0; i < p.length; i++ )
+    {
+      var newp = new js.poly2tri.Point(p[i].X, p[i].Y);
+      if ( i > 0 && contour[contour.length-1].equals(newp) )
+        continue;
+
+      contour.push( newp );
+    }
+    if ( contour[contour.length-1].equals( contour[0] ) )
+      contour.pop();
+
+    swctx.AddHole(contour);
+  }
+
+  js.poly2tri.sweep.Triangulate(swctx);
+  var triangles = swctx.GetTriangles();
+  
+  var out = [];
+  for ( var i in triangles ) 
+  {
+    var outsingle = [];
+    var triangle = triangles[i];  
+    for ( var j=0; j<3; j++)
+    {
+      var point = triangle.GetPoint(j);
+      outsingle.push({X:point.x, Y:point.y});
+    }
+    out.push(outsingle);
+  }
+  return out;
+}
 
 function flipY(data)
 {
@@ -68,6 +177,80 @@ function buildCode(data)
     code.push(cmdcode);
   }
   return code;
+}
+
+function toXYPath(data)
+{
+  var aux = [];
+  for ( var i in data )
+  {
+    var cmd = data[i];
+    var args = cmd.attributes;
+    if ( cmd.type == "M" )
+    {
+      position = makePos(args[0], args[1]);
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }
+    if ( cmd.type == "l" )
+    {
+      position = addPos(position, makePos(args[0], args[1]));
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }          
+    if ( cmd.type == "L" )
+    {
+      position = makePos(args[0], args[1]);
+      aux.push({X:position.x, Y:position.y});
+      continue;        
+    }          
+    if ( cmd.type == "h" )
+    {
+      position = addPos(position, makePos(args[0], 0));
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }
+    if ( cmd.type == "v" )
+    {
+      position = addPos(position, makePos(0, args[0]));
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }
+    if ( cmd.type == "H" )
+    {
+      position = makePos(args[0], position.y);
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }
+    if ( cmd.type == "V" )
+    {
+      position = makePos(position.x, args[0]);
+      aux.push({X:position.x, Y:position.y});
+      continue;
+    }          
+    if ( cmd.type == "c" )
+    {
+      var p1 = addPos(position, makePos(args[0], args[1]));
+      var p2 = addPos(position, makePos(args[2], args[3]));
+      var pn = addPos(position, makePos(args[4], args[5]));
+
+      // position - pn
+			for ( var j = 0; j<=8; j++)
+      {
+        var pt = calcBezier(position, p1, p2, pn, j/8);
+        aux.push({X:pt.x, Y:pt.y});
+      }
+      position = pn;
+      continue;
+    }          
+    if ( cmd.type == "z" )
+    {
+//      aux.push(aux[0]);
+      continue;
+    }          
+    console.log("Unknown command " + cmd.type);
+  }
+  return aux;
 }
 
 function toGCode(data)
@@ -151,7 +334,7 @@ function toGCode(data)
       continue;
     }          
     console.log("Unknown command " + cmd.type);
-    aux.push(cmd);
+//    aux.push(cmd);
   }
   return aux;
 }
@@ -378,7 +561,7 @@ function canvasArc(pt1, pt2, center)
   if ( angle2 < angle1 )
     angle2 += Math.PI*2;
 
-  for (var a=angle1; a<angle2; a+=Math.PI/8)
+  for (var a=angle1; a<angle2; a+=Math.PI/16)
   {
     var pos = {x:center.x+radius*Math.sin(a), y:center.y+radius*Math.cos(a)};
     var tmp = scaleGPos(pos);

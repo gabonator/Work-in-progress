@@ -1,24 +1,6 @@
-/* 1wire.c
- * basic 1-wire slave functions
- *
- * Copyright (C) 2011 Bartek Fabiszewski (www.fabiszewski.net)
- *
- * This is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*/
+#include "1wire.h"
 
-#include "config.h"
+byte ow_error = 0;
 
 // detect reset pulse
 // returns 1 if pulse detected
@@ -39,23 +21,7 @@ int i;
 
 	return 1; // reset pulse detected
 }
-/*
-// main function for implementing "search rom" command
-// returns 1 if currently compared bit is positively matched
-byte OW_match_search (byte write_bit)
-{
-	byte result=0;
-	OW_write_bit(write_bit); 		    // send bit
-	while(OW);
-	OW_write_bit(write_bit ^ 0x01);		// sent complement bit
-	while(OW);
-	if (OW_read_bit() == write_bit)		// read bit and compare with sent one
-		result = 1;						// match
-	if(ow_error)
-		result = 0;						// error during reading 1-wire line
-	return result;
-}
-*/
+
 // main function for implementing "match rom" command
 // returns 1 if currently compared bit is positively matched
 byte OW_match_bits (byte read_bit)
@@ -67,6 +33,7 @@ byte OW_match_bits (byte read_bit)
 		result = 0;
 	return result;
 }
+
 // 1-wire slave write bit
 // must be run immediately after line is pulled down by master
 void OW_write_bit (byte write_bit)
@@ -146,6 +113,7 @@ byte OW_read_bit (void)
 	return 0;
 
 }
+
 // 1-wire slave read byte
 // must be run immediately after line is pulled down by master
 byte OW_read_byte (void)
@@ -187,29 +155,32 @@ byte OW_read_byte (void)
 	return result;
 }
 
-// these functions are for 1-wire serial number checksum generation
-void C_CRC(byte *CRCVal, byte value) {
+// these functions are for 1-wire serial number checksum generationb
+byte C_CRC(byte CRCVal, byte value) 
+{
 	byte odd, bcnt;
-	for (bcnt = 0; bcnt < 8; bcnt++) {
-		odd = (value ^ *CRCVal) & 0x01;
-		*CRCVal >>= 1;
+	for (bcnt = 0; bcnt < 8; bcnt++) 
+  {
+		odd = (value ^ CRCVal) & 0x01;
+		CRCVal >>= 1;
 		value >>= 1;
 		if (odd != 0)
-			*CRCVal ^= 0x8C;
+			CRCVal ^= 0x8C;
 	}
+  return CRCVal;
 }
-byte CalcCRC(byte code_len, byte *code) {
+
+byte CalcCRC(byte code_len, byte *code) 
+{
 	byte i, CRCVal = 0;
 	for (i = code_len; i > 0; i--)
-		C_CRC(&CRCVal, code[i]);
+		CRCVal = C_CRC(CRCVal, code[i]);
 	return CRCVal;
 }
 
-
-//byte OW_search_bit(byte data)
 byte OW_match_search(byte data)
 {
-  //while(OW);
+  //while(OW); // too late for calling this!
 	if (data) 
 	{
     // 1
@@ -253,19 +224,3 @@ byte OW_match_search(byte data)
 	}
   return 1;
 }
-/*
-byte OW_match_search (byte write_bit)
-{
-	byte result=0;
-	OW_write_bit(write_bit); 		    // send bit
-	while(OW);
-	OW_write_bit(write_bit ^ 0x01);		// sent complement bit
-	while(OW);
-	if (OW_read_bit() == write_bit)		// read bit and compare with sent one
-		result = 1;						// match
-	if(ow_error)
-		result = 0;						// error during reading 1-wire line
-	return result;
-}
-*/
-

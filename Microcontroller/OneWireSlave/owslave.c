@@ -1,66 +1,19 @@
-/* owslave.c
- * basic 1-wire slave functions
- *
- * Copyright (C) 2011 Bartek Fabiszewski (www.fabiszewski.net)
- *
- * This is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
- *  owslave
- *
- *  1-wire slave emulator for PIC16F84A
- *	10 MHz
- *  implemented commands: 0x33 send rom
- *						  0xF0 search rom
- *						  0x55 match rom
- *						  0xCC skip rom
- *						  0x44 start conversion (to initiate sensor measurment)
- *						  0xBE read scratchpad (to fetch conversion results)
- *  added support for sht1x, sht7x and sht2x (i2c) sensors
- *  compiler: PICC PRO
-*/
-
-#include "config.h"
+#include "1wire.h"
 
 __CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
-
-//__CONFIG(CP_OFF & PWRTE_ON & WDTE_ON & FOSC_HS);
-
-#ifdef MOD1
-__EEPROM_DATA(0xBF, 0x42, 0x41, 0x52, 0x54, 0x45, 0x4B, 0xFF);  // serial number sequence: 
-#else															// family code 0xBF, 
-__EEPROM_DATA(0xBF, 0x54, 0x59, 0x4D, 0x45, 0x4B, 0x00, 0xFF);	// 6-byte serial number, 
-#endif															// crc 0xFF will be substituted with calculated value
 
 void Read_SN(void);
 
 byte SN[8]; // serial number
-byte ow_status; // 1-wire status: 0 - waiting for reset
-			 // ROM_CMD - waiting for rom command
-			 // FUNCTION_CMD - waiting for function command
+byte ow_status; // 0 - waiting for reset, ROM_CMD - waiting for rom command, FUNCTION_CMD - waiting for function command
 byte ow_buffer; // buffer for data received on 1-wire line
-byte timeout; // timeout to go to sleep while inactive
-			  // because of tight timings we avoid sleep during conversation
+byte timeout; 
 
 #define INIT_SEQ		  	( ow_status=0, ow_error=0, ow_buffer=0, timeout=200 )
 
-#define SENSOR_TYPE 0xde
 #define ERR1() {DBG(0,1); __delay_ms(200); DBG(0,0);}
 
-
 #define SCRATCHPAD_LEN 7
-
 volatile byte scratchpad[SCRATCHPAD_LEN];
 volatile byte scratchpad_valid = 0;
 volatile byte scratchpad_request = 0;
@@ -262,12 +215,20 @@ void main(void)
 	}
 }
 
-void Read_SN(void) {
+void Read_SN(void) 
+{
 	byte address = 0;
-	do {
-		SN[7-address] = EEPROM_READ(address);
-	} while (++address < 7);
-	SN[7-address] = CalcCRC(7, SN);
+
+  SN[7] = 0xBF;
+  SN[6] = 0x54;
+  SN[5] = 0x59;
+  SN[4] = 0x4D;
+  SN[3] = 0x45;
+  SN[2] = 0x4B;
+  SN[1] = 0x00;
+  SN[0] = 0x94;
+
+//	SN[7] = CalcCRC(7, SN);
 
   scratchpad[0] = 0x12;
   scratchpad[1] = 0x34;

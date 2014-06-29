@@ -1,6 +1,7 @@
-#ifndef _1wire_H
-#define _1wire_H
-#include "config.h"
+#ifndef __OWUTILS_H__
+#define __OWUTILS_H__
+
+#include "owslave.h"
 
 #define ROM_CMD				1		// ROM Command
 
@@ -10,11 +11,12 @@
 // I turned some functions into macros to avoid losing time on jumps
 #define drive_OW_low() { TRIS_OW = OUTPUT; OW = LOW; }
 #define drive_OW_high() { TRIS_OW = INPUT;}
-#define OW_presence_pulse() {\
-  	drive_OW_low(); \
-	__delay_us(120); \
- 	drive_OW_high(); \
-}
+#define OW_presence_pulse() \
+  { \
+    drive_OW_low(); \
+    __delay_us(120); \
+    drive_OW_high(); \
+  }
 
 #define SEARCH_SEND_BIT() while(OW); if (!OW_match_search(current_byte & 1)) break;
 
@@ -64,7 +66,6 @@ void OW_write_byte (byte write_data);
 byte OW_read_byte (void);
 byte OW_match_search (byte write_bit);
 byte OW_match_bits (byte read_bit);
-byte C_CRC(byte CRCVal, byte value);
 byte CalcCRC(byte code_len, byte *code);
 byte OW_search_bit(byte data);
 

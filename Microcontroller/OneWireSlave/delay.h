@@ -1,3 +1,6 @@
+#ifndef __DELAY_H__
+#define __DELAY_H__
+
 // 8MHz
 #define	DelayUs(x)	\
  {  \
@@ -9,3 +12,5 @@
 
 void DelayMs(unsigned char);
 void isrDelayMs(unsigned char);
+
+#endif

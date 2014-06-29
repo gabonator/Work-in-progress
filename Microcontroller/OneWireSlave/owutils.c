@@ -1,4 +1,5 @@
-#include "1wire.h"
+#include "owutils.h"
+#include "owslave.h"
 
 byte ow_error = 0;
 

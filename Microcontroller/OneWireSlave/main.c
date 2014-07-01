@@ -17,10 +17,10 @@ void main(void)
   DelayMs(250);
   DBG(0, 0);
 
-	Read_SN(); // read serial number from eeprom
+  Read_SN(); 
 
   OW_start();
-	while (TRUE) 
+  while (TRUE) 
   {
     if ( OW_scratchpad_request )
     {
@@ -45,7 +45,7 @@ void main(void)
     }
 
     OW_loop(); // 10ms delay or sleep
-	}                         
+  }
 }
 
 void Read_SN(void) 
@@ -58,7 +58,7 @@ void Read_SN(void)
   OW_serial[2] = 0x4B;
   OW_serial[1] = 0x00;
   OW_serial[0] = 0x94;
-	//SN[0] = CalcCRC(7, SN);
+  //SN[0] = CalcCRC(7, SN);
 
   OW_scratchpad[0] = 0x12;
   OW_scratchpad[1] = 0x34;

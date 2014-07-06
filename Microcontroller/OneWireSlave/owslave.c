@@ -15,7 +15,8 @@ volatile byte OW_serial[8];
 
 void interrupt ISR(void)
 {
-  static byte i = 0; // always 0 when entering ISR
+  static byte i = 0; 
+  // always 0 when entering ISR, to save time, setting the value is not needed
   byte current_byte;
 	
   if ( ow_status == ROM_CMD )

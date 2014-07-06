@@ -7,7 +7,7 @@ byte ow_error = 0;
 // returns 1 if pulse detected
 byte OW_reset_pulse (void)
 {
-int i;
+  int i;
   byte len;
   for ( len=0; len<50; len++)
   {
@@ -27,13 +27,46 @@ int i;
 // returns 1 if currently compared bit is positively matched
 byte OW_match_bits (byte read_bit)
 {
-	byte result=0;
-	if (OW_read_bit() == read_bit)		// read bit on 1-wire line and compare with current one
-		result = 1;						// match
-	if(ow_error)
-		result = 0;
-	return result;
+	byte read_data;
+	byte del_count;
+
+  if ( read_bit )
+  {
+  	__delay_us(10);//15 
+    if ( !OW )
+      return 0;
+	  __delay_us(35);//35
+
+	  if (OW)
+		  return 1;
+
+  	del_count = 50;
+	  do
+	  {
+	  	if (OW) // wait for master to release line
+  	 		return 1;
+  	} while (del_count--);
+    return 0;
+  } else
+  {
+  	__delay_us(10);//15 
+    if ( OW )
+      return 0;
+	  __delay_us(35);//35
+
+	  if (OW)
+		  return 1;
+
+  	del_count = 50;
+	  do
+	  {
+	  	if (OW) // wait for master to release line
+  	 		return 1;
+  	} while (del_count--);
+    return 0;
+  }
 }
+
 
 // 1-wire slave write bit
 // must be run immediately after line is pulled down by master
@@ -99,7 +132,7 @@ byte OW_read_bit (void)
 		return read_data;			// return data when line is released
 	}
 
-	del_count = 40;
+	del_count = 80;
 	do
 	{
 		if (OW)						// wait for master to release line

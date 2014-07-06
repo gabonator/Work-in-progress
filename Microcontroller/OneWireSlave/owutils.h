@@ -66,7 +66,7 @@ void OW_write_byte (byte write_data);
 byte OW_read_byte (void);
 byte OW_match_search (byte write_bit);
 byte OW_match_bits (byte read_bit);
-byte CalcCRC(byte code_len, byte *code);
+byte OW_calcCrc(byte *code, byte code_len);
 byte OW_search_bit(byte data);
 
 extern byte ow_error;

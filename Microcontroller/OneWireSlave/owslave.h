@@ -5,8 +5,9 @@
 
 
 // OW pin must match the interrupt enabled pin, cannot be changed!
-#define OW       GPIO2	
-#define TRIS_OW  TRISIO2
+#define OW        GPIO2	
+#define TRIS_OW   TRISIO2
+#define PULLUP_OW WPU2
 
 // user defined scratchpad length
 

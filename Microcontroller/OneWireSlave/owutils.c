@@ -171,10 +171,10 @@ byte C_CRC(byte CRCVal, byte value)
   return CRCVal;
 }
 
-byte CalcCRC(byte code_len, byte *code) 
+byte OW_calcCrc(byte *code, byte code_len)
 {
 	byte i, CRCVal = 0;
-	for (i = code_len; i > 0; i--)
+	for (i = 0; i<code_len; i++)
 		CRCVal = C_CRC(CRCVal, code[i]);
 	return CRCVal;
 }

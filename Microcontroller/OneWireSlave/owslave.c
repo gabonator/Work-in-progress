@@ -11,10 +11,11 @@ volatile byte OW_scratchpad_request = 0;
 volatile byte OW_serial[8];
 
 #define INIT_SEQ() { ow_status=0; ow_error=0; ow_buffer=0; timeout=200; }
+#define _ASSUME(cond)
 
 void interrupt ISR(void)
 {
-  byte i;
+  static byte i = 0; // always 0 when entering ISR
   byte current_byte;
 	
   if ( ow_status == ROM_CMD )
@@ -26,19 +27,21 @@ void interrupt ISR(void)
 
     if ( ow_buffer == 0xF0 ) // search rom
     {
-      i = 7;
+      _ASSUME( i == 0 );
       do {
         SEARCH_SEND_BYTE( OW_serial[i] );
-      } while (i--);
+      } while (++i < 8);
+
       INIT_SEQ();
     } else
     if ( ow_buffer == 0x55 ) // match rom
     {
-      i = 7;
+      _ASSUME( i == 0 );
       do {
         SEARCH_MATCH_BYTE( OW_serial[i] );
-      } while (i--);
-      if ( i==(byte)-1 )
+      } while (++i < 8);
+
+      if ( i==8 )
       {
         INIT_SEQ();
         ow_status = FUNCTION_CMD;
@@ -51,11 +54,11 @@ void interrupt ISR(void)
     } else
     if ( ow_buffer == 0x33 ) // send rom
     {                
-      i = 7;
+      _ASSUME( i == 0 );
       do {
         while(OW);
         OW_write_byte(OW_serial[i]);
-      } while (i--);
+      } while (++i < 8);
 
       INIT_SEQ();
     } else
@@ -64,6 +67,8 @@ void interrupt ISR(void)
       INIT_SEQ();
       ow_status = FUNCTION_CMD;
     }
+
+    i = 0;
     INTF = 0;
     return;
   }
@@ -79,12 +84,11 @@ void interrupt ISR(void)
     // WTF? Not enough time to test scratchpad_valid value?
     if ( ow_buffer == 0xBE /*&& scratchpad_valid*/ ) // read scratchpad
     {
-      i = OW_SCRATCHPAD_LEN-1;   
-      do
-      {
-        while(OW);    
+      _ASSUME( i == 0 );
+      do {
+        while(OW);
         OW_write_byte(OW_scratchpad[i]);
-      } while (i--);
+      } while (++i < OW_SCRATCHPAD_LEN);
     } 
 
     if ( ow_buffer == 0x44 ) // start conversion
@@ -94,6 +98,7 @@ void interrupt ISR(void)
     }
 
     INIT_SEQ();
+    i = 0;
     INTF = 0;
     return;
   }
@@ -126,6 +131,10 @@ void OW_setup()
   // Disable ADC, enable using GPOI2 as INT
   ANSEL = 0; // all digital pins
   CMCON0 = 0b00000111;
+
+  // enable weak pull up - no pull up resistor necessary
+  PULLUP_OW = 1; // default:1, all pull ups are enabled!
+  GPPU = 0;
  
   // clear watchdog
   CLRWDT();

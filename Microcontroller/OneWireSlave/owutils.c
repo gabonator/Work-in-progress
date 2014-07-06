@@ -72,18 +72,18 @@ byte OW_match_bits (byte read_bit)
 // must be run immediately after line is pulled down by master
 void OW_write_bit (byte write_bit)
 {
-	if (write_bit)
-	{
-		//writing a bit '1'
-		__delay_us(55);//55					// bus is already pulled high by pullup resistor, so just wait
-	}
-	else
+	if (write_bit==0)
 	{
 		//writing a bit '0'
 		drive_OW_low();						// drive the bus low
 		__delay_us(17);//15
 		drive_OW_high();					// release the bus
 		__delay_us(35);//35
+	}
+	else
+	{
+		//writing a bit '1'
+		__delay_us(55);//55					// bus is already pulled high by pullup resistor, so just wait
 	}
 }
 
@@ -257,4 +257,19 @@ byte OW_match_search(byte data)
 	  while (!OW);
 	}
   return 1;
+}
+
+byte OW_wait_write_byte(byte data)
+{
+  byte temp = 70;
+  do 
+  {
+    if (!OW) 
+    {
+      // immediatelly we send the data
+      OW_write_byte(data);
+      return 1;
+    }
+  } while (--temp > 0);
+  return 0;
 }

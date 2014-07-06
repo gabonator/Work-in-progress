@@ -3,9 +3,9 @@
 
 #include "owslave.h"
 
-#define ROM_CMD				1		// ROM Command
-
-#define FUNCTION_CMD				2    	// Function Command
+#define CMD_INIT 0
+#define CMD_ROM 1
+#define CMD_FUNCTION 2
 
 // macros
 // I turned some functions into macros to avoid losing time on jumps
@@ -68,6 +68,7 @@ byte OW_match_search (byte write_bit);
 byte OW_match_bits (byte read_bit);
 byte OW_calcCrc(byte *code, byte code_len);
 byte OW_search_bit(byte data);
+byte OW_wait_write_byte(byte data);
 
 extern byte ow_error;
 

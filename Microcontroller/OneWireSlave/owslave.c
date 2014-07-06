@@ -10,19 +10,19 @@ volatile byte OW_scratchpad_valid = 0;
 volatile byte OW_scratchpad_request = 0;
 volatile byte OW_serial[8];
 
-#define INIT_SEQ() { ow_status=0; ow_error=0; ow_buffer=0; timeout=200; }
+#define SetState(state) ( ow_status=state, ow_error=0, ow_buffer=0, timeout=200 )
 #define _ASSUME(cond)
 
 void interrupt ISR(void)
 {
   static byte i = 0; 
   // always 0 when entering ISR, to save time, setting the value is not needed
-  byte current_byte;
+  byte current_byte; // used by macros
 	
-  if ( ow_status == ROM_CMD )
+  if ( ow_status == CMD_ROM )
   { 
     // ROM command
-    ow_buffer = OW_read_byte();
+    byte ow_buffer = OW_read_byte();
     if(ow_error)
       goto RST; // nedava zmysel
 
@@ -33,7 +33,7 @@ void interrupt ISR(void)
         SEARCH_SEND_BYTE( OW_serial[i] );
       } while (++i < 8);
 
-      INIT_SEQ();
+      SetState(CMD_INIT);
     } else
     if ( ow_buffer == 0x55 ) // match rom
     {
@@ -42,31 +42,21 @@ void interrupt ISR(void)
         SEARCH_MATCH_BYTE( OW_serial[i] );
       } while (++i < 8);
 
-      if ( i==8 )
-      {
-        INIT_SEQ();
-        ow_status = FUNCTION_CMD;
-        // OK
-      } else
-      {
-        // FAIL
-        INIT_SEQ();
-      }
+      SetState( i==8 ? CMD_FUNCTION : CMD_INIT);
     } else
     if ( ow_buffer == 0x33 ) // send rom
-    {                
+    {            
       _ASSUME( i == 0 );
-      do {
-        while(OW);
-        OW_write_byte(OW_serial[i]);
+      do {       
+        if ( !OW_wait_write_byte(OW_serial[i]) )
+          break;
       } while (++i < 8);
 
-      INIT_SEQ();
+      SetState(CMD_INIT);
     } else
     if ( ow_buffer == 0xCC ) // skip rom
     {
-      INIT_SEQ();
-      ow_status = FUNCTION_CMD;
+      SetState(CMD_FUNCTION);
     }
 
     i = 0;
@@ -74,21 +64,20 @@ void interrupt ISR(void)
     return;
   }
 
-  if ( ow_status == FUNCTION_CMD )
+  if ( ow_status == CMD_FUNCTION )
   { 
     // Function command
-    ow_buffer = OW_read_byte();
+    byte ow_buffer = OW_read_byte();
  
     if(ow_error)
-      goto RST;
+      goto RST;                                                       
 
-    // WTF? Not enough time to test scratchpad_valid value?
-    if ( ow_buffer == 0xBE /*&& scratchpad_valid*/ ) // read scratchpad
+    if ( ow_buffer == 0xBE && OW_scratchpad_valid ) // read scratchpad
     {
       _ASSUME( i == 0 );
       do {
-        while(OW);
-        OW_write_byte(OW_scratchpad[i]);
+        if ( !OW_wait_write_byte(OW_scratchpad[i]) )
+          break;
       } while (++i < OW_SCRATCHPAD_LEN);
     } 
 
@@ -98,7 +87,7 @@ void interrupt ISR(void)
       OW_scratchpad_request = 1;
     }
 
-    INIT_SEQ();
+    SetState(CMD_INIT);
     i = 0;
     INTF = 0;
     return;
@@ -110,12 +99,9 @@ RST:
     // if reset detected 
     __delay_us(30);
     OW_presence_pulse(); // generate presence pulse    
-    INIT_SEQ();
-    ow_status = ROM_CMD; // and wait for rom command
+    SetState(CMD_ROM);
   } else
-  {
-    INIT_SEQ(); // else reset all settings
-  }
+    SetState(CMD_INIT);
 
   INTF = 0;
   return;
@@ -148,7 +134,7 @@ void OW_setup()
 void OW_start(void)
 {
   // init state machine
-  INIT_SEQ();
+  SetState(CMD_INIT);
   // enable interrupts
   GIE = 1; 
 }

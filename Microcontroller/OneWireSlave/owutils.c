@@ -2,6 +2,9 @@
 #include "owslave.h"
 
 byte ow_error = 0;
+void OW_write_bit (byte write_data);
+byte OW_read_bit (void);
+void OW_write_byte_internal (byte write_data);
 
 // detect reset pulse
 // returns 1 if pulse detected
@@ -90,7 +93,7 @@ void OW_write_bit (byte write_bit)
 // 1-wire slave write byte
 // must be initiated immediately after line is pulled down by master
 // unfolded for increased speed
-void OW_write_byte (byte write_data)
+void OW_write_byte_internal(byte write_data)
 {
 		OW_write_bit(write_data & 0x01); 	// sending LS-bit first
 		while(OW);							// wait for master set bus low
@@ -148,16 +151,21 @@ byte OW_read_bit (void)
 
 }
 
-// 1-wire slave read byte
-// must be run immediately after line is pulled down by master
 byte OW_read_byte (void)
 {
-	// I unfold this and some other loops to meet very strict time limits
+  // when reading more bytes, this function should be used. 
+  // OW_read_byte_now is optimized to be called at the begin of ISR
+	while(OW);
+  return OW_read_byte_now();
+}
+
+byte OW_read_byte_now (void)
+{
 	byte result=0;
 	if (OW_read_bit())
-		result |= 0x80;				// if result is one, then set MS-bit
+		result |= 0x80;
 	while(OW);
-	result >>= 1; 				    // shift the result to get it ready for the next bit to receive
+	result >>= 1;
 	if (OW_read_bit())
 		result |= 0x80;	
 	while(OW);
@@ -165,11 +173,11 @@ byte OW_read_byte (void)
 	if (OW_read_bit())
 		result |= 0x80;		
 	while(OW);
-	result >>= 1; 	
+	result >>= 1; 		
 	if (OW_read_bit())
 		result |= 0x80;		
 	while(OW);
-	result >>= 1; 			
+	result >>= 1; 	
 	if (OW_read_bit())
 		result |= 0x80;			
 	while(OW);
@@ -188,6 +196,7 @@ byte OW_read_byte (void)
 		return 0;
 	return result;
 }
+
 
 // these functions are for 1-wire serial number checksum generationb
 byte C_CRC(byte CRCVal, byte value) 
@@ -259,7 +268,7 @@ byte OW_match_search(byte data)
   return 1;
 }
 
-byte OW_wait_write_byte(byte data)
+byte OW_write_byte(byte data)
 {
   byte temp = 70;
   do 
@@ -267,7 +276,7 @@ byte OW_wait_write_byte(byte data)
     if (!OW) 
     {
       // immediatelly we send the data
-      OW_write_byte(data);
+      OW_write_byte_internal(data);
       return 1;
     }
   } while (--temp > 0);

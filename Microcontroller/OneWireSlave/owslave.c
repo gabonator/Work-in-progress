@@ -1,28 +1,26 @@
 #include "owslave.h"
 #include "owutils.h"
+#include "ow1820.h"
 
 byte ow_status; // 0 - waiting for reset, ROM_CMD - waiting for rom command, FUNCTION_CMD - waiting for function command
 byte ow_buffer; // buffer for data received on 1-wire line
 byte timeout; 
 
-volatile byte OW_scratchpad[OW_SCRATCHPAD_LEN];
-volatile byte OW_scratchpad_valid = 0;
-volatile byte OW_scratchpad_request = 0;
 volatile byte OW_serial[8];
 
 #define SetState(state) ( ow_status=state, ow_error=0, ow_buffer=0, timeout=200 )
-#define _ASSUME(cond)
 
 void interrupt ISR(void)
 {
   static byte i = 0; 
-  // always 0 when entering ISR, to save time, setting the value is not needed
-  byte current_byte; // used by macros
+  // we save some instructions for clearing the variable by setting it to zero when leaving this function 
 	
   if ( ow_status == CMD_ROM )
   { 
     // ROM command
-    byte ow_buffer = OW_read_byte();
+    byte current_byte; // used by macros
+    byte ow_buffer = OW_read_byte_now();
+
     if(ow_error)
       goto RST; // nedava zmysel
 
@@ -48,7 +46,7 @@ void interrupt ISR(void)
     {            
       _ASSUME( i == 0 );
       do {       
-        if ( !OW_wait_write_byte(OW_serial[i]) )
+        if ( !OW_write_byte(OW_serial[i]) )
           break;
       } while (++i < 8);
 
@@ -66,26 +64,8 @@ void interrupt ISR(void)
 
   if ( ow_status == CMD_FUNCTION )
   { 
-    // Function command
-    byte ow_buffer = OW_read_byte();
- 
-    if(ow_error)
-      goto RST;                                                       
-
-    if ( ow_buffer == 0xBE && OW_scratchpad_valid ) // read scratchpad
-    {
-      _ASSUME( i == 0 );
-      do {
-        if ( !OW_wait_write_byte(OW_scratchpad[i]) )
-          break;
-      } while (++i < OW_SCRATCHPAD_LEN);
-    } 
-
-    if ( ow_buffer == 0x44 ) // start conversion
-    {
-      OW_scratchpad_valid = 0;
-      OW_scratchpad_request = 1;
-    }
+    if ( !Emulate1820() )
+      goto RST;
 
     SetState(CMD_INIT);
     i = 0;
@@ -155,7 +135,7 @@ void OW_loop()
     CLRWDT();
 
     // wait 10 ms or until a request was made
-    for (i=40; i-- && !OW_scratchpad_request; )
+    for (i=40; i-- && !OW_1820_scratchpad_request; )
     {
       DelayUs(250);
     }

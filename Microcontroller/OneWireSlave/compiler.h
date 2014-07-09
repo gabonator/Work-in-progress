@@ -16,5 +16,6 @@
 #define __delay_ms(x) isrDelayMs(x)
 #define DBG(a, b) { GPIO5 = a; GPIO4 = b; }
 #define DBGINIT() { TRISIO5 = 0; TRISIO4 = 0; }
+#define _ASSUME(cond)
 
 #endif

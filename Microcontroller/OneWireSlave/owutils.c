@@ -72,7 +72,9 @@ byte OW_match_bits (byte read_bit)
 // must be run immediately after line is pulled down by master
 void OW_write_bit (byte write_bit)
 {
-	if (write_bit==0)
+  // LSB of write_bit is sent
+
+	if ( (write_bit & 1) == 0 )
 	{
 		//writing a bit '0'
 		drive_OW_low();						// drive the bus low
@@ -167,65 +169,67 @@ byte OW_match_search(byte data)
 
 byte OW_write_byte(byte write_data)
 {
-  byte high = 100;
+  byte high = 80;
   byte low = 255;
-  byte b = write_data & 1;
 
+  // do not waste time if OW is already low
   do 
   {
     do 
     {
       if ( !OW )
       {
-        OW_write_bit(b);
+        // 1
+        OW_write_bit(write_data);
         write_data >>= 1;
-        b = write_data & 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-    		OW_write_bit(b); 	
-    		write_data >>= 1;				
-        b = write_data & 1;
+        // 2
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-    		OW_write_bit(b); 	
-    		write_data >>= 1;					
-        b = write_data & 1;
+        // 3
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-    		OW_write_bit(b); 	
-    		write_data >>= 1;	
-        b = write_data & 1;
+        // 4
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-    		OW_write_bit(b); 
-    		write_data >>= 1;		
-        b = write_data & 1;
+        // 5
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-    		OW_write_bit(b);
-    		write_data >>= 1;					
-        b = write_data & 1;
+        // 6
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
     		while(OW);
 
-        OW_write_bit(b); 	
-        write_data >>= 1;					
-        b = write_data & 1;
+        // 7
+        OW_write_bit(write_data);
+        write_data >>= 1;
         if ( ow_error )
           return FALSE;
-        while(OW);
-        OW_write_bit(b); 	
+    		while(OW);
+
+        // 8
+        OW_write_bit(write_data); 	
 
         if ( ow_error )
           return FALSE;

@@ -5,7 +5,7 @@
 
 // user defined scratchpad length
 
-#define OW_1820_SCRATCHPAD_LEN 7
+#define OW_1820_SCRATCHPAD_LEN 9
 
 extern volatile byte OW_1820_scratchpad[OW_1820_SCRATCHPAD_LEN];
 extern volatile byte OW_1820_scratchpad_valid;

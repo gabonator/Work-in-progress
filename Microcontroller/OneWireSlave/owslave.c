@@ -68,8 +68,8 @@ void interrupt ISR(void)
   if ( ow_status == CMD_FUNCTION )
   { 
     byte ow_buffer = OW_read_byte_lost10();
-//    if ( !Emulate1820(ow_buffer) )
-//      goto RST;
+    if ( !Emulate1820(ow_buffer) )
+      goto RST;
     if ( !Emulate2431(ow_buffer) )
       goto RST;
 

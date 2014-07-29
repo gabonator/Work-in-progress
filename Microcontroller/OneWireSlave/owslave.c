@@ -1,6 +1,7 @@
 #include "owslave.h"
 #include "owutils.h"
 #include "ow1820.h"
+#include "ow2431.h"
 
 byte ow_status; // 0 - waiting for reset, ROM_CMD - waiting for rom command, FUNCTION_CMD - waiting for function command
 byte ow_buffer; // buffer for data received on 1-wire line
@@ -19,7 +20,7 @@ void interrupt ISR(void)
   { 
     // ROM command
     byte current_byte; // used by macros
-    byte ow_buffer = OW_read_byte_now();
+    byte ow_buffer = OW_read_byte_lost10();
 
     if(ow_error)
       goto RST; // nedava zmysel
@@ -43,7 +44,7 @@ void interrupt ISR(void)
       SetState( i==8 ? CMD_FUNCTION : CMD_INIT);
     } else
     if ( ow_buffer == 0x33 ) // send rom
-    {            
+    {
       _ASSUME( i == 0 );
       do {       
         if ( !OW_write_byte(OW_serial[i]) )
@@ -55,8 +56,10 @@ void interrupt ISR(void)
     if ( ow_buffer == 0xCC ) // skip rom
     {
       SetState(CMD_FUNCTION);
+    } else
+    {
+      SetState(CMD_INIT);
     }
-
     i = 0;
     INTF = 0;
     return;
@@ -64,7 +67,10 @@ void interrupt ISR(void)
 
   if ( ow_status == CMD_FUNCTION )
   { 
-    if ( !Emulate1820() )
+    byte ow_buffer = OW_read_byte_lost10();
+//    if ( !Emulate1820(ow_buffer) )
+//      goto RST;
+    if ( !Emulate2431(ow_buffer) )
       goto RST;
 
     SetState(CMD_INIT);

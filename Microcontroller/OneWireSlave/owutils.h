@@ -61,12 +61,12 @@
 // prototypes
 byte OW_reset_pulse (void);
 byte OW_read_byte (void);
-byte OW_read_byte_now (void);
+byte OW_read_byte_lost10(void);
 byte OW_match_search (byte write_bit);
 byte OW_match_bits (byte read_bit);
-byte OW_calcCrc(byte *code, byte code_len);
 byte OW_search_bit(byte data);
 byte OW_write_byte(byte data);
+byte OW_calcCrc(byte *code, byte code_len);
 
 extern byte ow_error;
 

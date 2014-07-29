@@ -2,9 +2,6 @@
 #include "owslave.h"
 
 byte ow_error = 0;
-void OW_write_bit (byte write_data);
-byte OW_read_bit (void);
-void OW_write_byte_internal (byte write_data);
 
 // detect reset pulse
 // returns 1 if pulse detected
@@ -79,124 +76,24 @@ void OW_write_bit (byte write_bit)
 	{
 		//writing a bit '0'
 		drive_OW_low();						// drive the bus low
-		__delay_us(17);//15
+		__delay_us(28);//15
 		drive_OW_high();					// release the bus
-		__delay_us(35);//35
+		__delay_us(16);//35
 	}
 	else
 	{
 		//writing a bit '1'
-		__delay_us(55);//55					// bus is already pulled high by pullup resistor, so just wait
+//		__delay_us(50);//55					// bus is already pulled high by pullup resistor, so just wait
+		__delay_us(22);//55					// bus is already pulled high by pullup resistor, so just wait
+
+    if (!OW)
+    {
+      ow_error = 1;
+      return;
+    }
+		__delay_us(22);//55					// bus is already pulled high by pullup resistor, so just wait
 	}
-}
-
-// 1-wire slave write byte
-// must be initiated immediately after line is pulled down by master
-// unfolded for increased speed
-void OW_write_byte_internal(byte write_data)
-{
-		OW_write_bit(write_data & 0x01); 	// sending LS-bit first
-		while(OW);							// wait for master set bus low
-		write_data >>= 1;					// shift the data byte for the next bit to send
-		OW_write_bit(write_data & 0x01); 	
-		while(OW);
-		write_data >>= 1;				
-		OW_write_bit(write_data & 0x01); 	
-		while(OW);
-		write_data >>= 1;					
-		OW_write_bit(write_data & 0x01); 	
-		while(OW);
-		write_data >>= 1;					
-		OW_write_bit(write_data & 0x01); 	
-		while(OW);
-		write_data >>= 1;		
-		OW_write_bit(write_data & 0x01);
-		while(OW);
-		write_data >>= 1;					
-		OW_write_bit(write_data & 0x01); 	
-		while(OW);
-		write_data >>= 1;					
-		OW_write_bit(write_data & 0x01); 	
-}
-
-// 1-wire slave read bit
-// must be run immediately after line is pulled down by master
-byte OW_read_bit (void)
-{
-	byte read_data;
-	byte del_count;
-
-	__delay_us(10);//15
-	read_data = OW;					// read the status of 1-wire line
-	__delay_us(35);//35
-
-	if (OW)
-	{
-		return read_data;			// return data when line is released
-	}
-
-	del_count = 80;
-	do
-	{
-		if (OW)						// wait for master to release line
-		{
-			return read_data;
-		}
-	} while (del_count--);
-	ow_error = 1;					// bus is held low for too long, probably unpredicted reset
-									// FIXME: here we need immediate jump to reset detection and response with pulse
-									// currently unpredicted resets are not handled properly because
-									// we return to reset detection too late (too many nested functions to return from)
-	return 0;
-
-}
-
-byte OW_read_byte (void)
-{
-  // when reading more bytes, this function should be used. 
-  // OW_read_byte_now is optimized to be called at the begin of ISR
-	while(OW);
-  return OW_read_byte_now();
-}
-
-byte OW_read_byte_now (void)
-{
-	byte result=0;
-	if (OW_read_bit())
-		result |= 0x80;
-	while(OW);
-	result >>= 1;
-	if (OW_read_bit())
-		result |= 0x80;	
-	while(OW);
-	result >>= 1; 		
-	if (OW_read_bit())
-		result |= 0x80;		
-	while(OW);
-	result >>= 1; 		
-	if (OW_read_bit())
-		result |= 0x80;		
-	while(OW);
-	result >>= 1; 	
-	if (OW_read_bit())
-		result |= 0x80;			
-	while(OW);
-	result >>= 1; 		
-	if (OW_read_bit())
-		result |= 0x80;
-	while(OW);
-	result >>= 1;
-	if (OW_read_bit())
-		result |= 0x80;
-	while(OW);
-	result >>= 1; 
-	if (OW_read_bit())
-		result |= 0x80;
-	if(ow_error)
-		return 0;
-	return result;
-}
-
+}   
 
 // these functions are for 1-wire serial number checksum generationb
 byte C_CRC(byte CRCVal, byte value) 
@@ -268,17 +165,241 @@ byte OW_match_search(byte data)
   return 1;
 }
 
-byte OW_write_byte(byte data)
+byte OW_write_byte(byte write_data)
 {
-  byte temp = 70;
+  byte high = 100;
+  byte low = 255;
+  byte b = write_data & 1;
+
   do 
   {
-    if (!OW) 
+    do 
     {
-      // immediatelly we send the data
-      OW_write_byte_internal(data);
-      return 1;
-    }
-  } while (--temp > 0);
-  return 0;
+      if ( !OW )
+      {
+        OW_write_bit(b);
+        write_data >>= 1;
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+    		OW_write_bit(b); 	
+    		write_data >>= 1;				
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+    		OW_write_bit(b); 	
+    		write_data >>= 1;					
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+    		OW_write_bit(b); 	
+    		write_data >>= 1;	
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+    		OW_write_bit(b); 
+    		write_data >>= 1;		
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+    		OW_write_bit(b);
+    		write_data >>= 1;					
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+    		while(OW);
+
+        OW_write_bit(b); 	
+        write_data >>= 1;					
+        b = write_data & 1;
+        if ( ow_error )
+          return FALSE;
+        while(OW);
+        OW_write_bit(b); 	
+
+        if ( ow_error )
+          return FALSE;
+
+        return TRUE;
+      }
+    } while (--low > 0);
+  } while (--high > 0);
+
+  return FALSE;
+}
+
+
+
+byte OW_read_byte_lost10 (void)
+{
+  #define DLY_PRE 20
+  #define DLY_POST 15
+  #define DLY_LOST 20
+  #undef DBG      
+  #define DBG(c) c //{GPIO5 = 1; {c} GPIO5 = 0;}
+  byte result = 0;
+ 
+  // bit 0
+  __delay_us(DLY_PRE - DLY_LOST);
+  DBG(if ( OW )
+    result |= 1;
+  __delay_us(DLY_POST); )
+  
+  while (!OW);
+  // bit 1
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 2; 
+  __delay_us(DLY_POST);)
+
+  while (!OW);
+  // bit 2
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 4; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 3
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 8; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 5
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 16; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 6
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 32; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 7
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 64; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 8
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  if ( OW )
+    result |= 128; 
+  __delay_us(DLY_POST);
+
+  while (!OW);
+
+  return result;
+}
+
+byte OW_read_byte (void)
+{
+  #undef DLY_LOST
+  #define DLY_LOST 0
+  byte result = 0;
+
+  // bit 0
+  while (OW);
+  __delay_us(DLY_PRE - DLY_LOST);
+  DBG(if ( OW )
+    result |= 1;
+  __delay_us(DLY_POST); )
+  
+  while (!OW);
+  // bit 1
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 2; 
+  __delay_us(DLY_POST);)
+
+  while (!OW);
+  // bit 2
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 4; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 3
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 8; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 5
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 16; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 6
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 32; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 7
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  DBG( if ( OW )
+    result |= 64; 
+  __delay_us(DLY_POST); )
+
+  while (!OW);
+  // bit 8
+  while (OW);
+
+  __delay_us(DLY_PRE);
+  if ( OW )
+    result |= 128; 
+  __delay_us(DLY_POST);
+
+  while (!OW);
+
+  return result;
 }

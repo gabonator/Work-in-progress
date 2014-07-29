@@ -1,6 +1,7 @@
 #include "owslave.h"
 #include "owutils.h"
 #include "ow1820.h"
+#include "ow2431.h"
 
 __CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
 
@@ -25,7 +26,7 @@ void main(void)
   OW_setup();
   DBGINIT();
 
-  DBG(0, 1);
+  DBG(1, 0);
   DelayMs(250); // @ 4 MHz, -> 500ms
   DBG(0, 0);
   DelayMs(250);

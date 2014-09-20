@@ -119,7 +119,7 @@ var base = source;
 var tool = 20;
 
 document.getElementById('svgcontainer').innerHTML += "Orig<br>\n";
-document.getElementById('svgcontainer').innerHTML += pathToSvg(path) + "<br>\n";
+document.getElementById('svgcontainer').innerHTML += pathToSvg(path) + "\n";
 
 path = expandPath(path, -tool);
 for (var i=0; i<12 && path.length; i++)
@@ -128,11 +128,13 @@ for (var i=0; i<12 && path.length; i++)
   for (var j in path)
     result.push(path[j]);
 
-  document.getElementById('svgcontainer').innerHTML += "Pass " + i + "<br>\n";
   //base
+  document.getElementById('svgcontainer').innerHTML += "<br>Pass " + i + "<br>\n";
   document.getElementById('svgcontainer').innerHTML += pathToSvg(path);
+
   // expanded
   var pathout = contourPath(path, tool);
+  document.getElementById('svgcontainer').innerHTML += "<br>Pass " + i + " - tool cutout<br>\n";
   document.getElementById('svgcontainer').innerHTML += pathToSvg(pathout);
   // calc remaining
   path = subtractPath(path, pathout);
@@ -140,8 +142,39 @@ for (var i=0; i<12 && path.length; i++)
 
 
 document.getElementById('svgcontainer').innerHTML += linesToSvg(base, result);
+
+document.getElementById('svgcontainer').innerHTML += "<br>G Code:<br><textarea cols='40' rows='40'>"+buildCode(result)+"</textarea>";
 // end
 
+function buildCode(paths)
+{
+  var expcode = [];
+  expcode.push("G00 Z2");
+  paths.reverse(); 
+  for ( var i in paths )
+  {
+    var path = paths[i];
+    expcode.push("(path "+i+"/"+paths.length+")");
+    for ( var j=0; j<path.length; j++ )
+    {
+      if (j==0)
+      {
+        expcode.push("G00 X"+path[j].X/50+ " Y"+(-path[j].Y)/50 + " F600");
+        expcode.push("G01 Z0");
+      } else
+      {
+        expcode.push("G01 X"+path[j].X/50+ " Y"+(-path[j].Y)/50 + " F400");
+      }
+    }
+    if ( path[path.length-1] != path[0] )
+      expcode.push("G01 X"+path[0].X/50+ " Y"+(-path[0].Y)/50 + " F600");
+
+    expcode.push("G00 Z2");
+  }
+  expcode.push("M02");
+  expcode.push("(total "+expcode.length + " lines and " + paths.length + " paths)");
+  return expcode.join("\n") + "\n";
+}
 
 function reverse(arr)
 {

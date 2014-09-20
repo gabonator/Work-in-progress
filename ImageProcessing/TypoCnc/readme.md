@@ -10,10 +10,11 @@ Script implements these features:
 - SVG to XY path converter
 - Path expanding, contour calculation - using Angus Johnson's [Javascript Clipper](http://sourceforge.net/projects/jsclipper/)
 - Rendering paths using SVG element
+- Export to G-code
 
 Task list:
-- Export to G-code
 - Optimization of polylines to lines and arcs
+- Optimization of shapes order
 - User interface for entering text, font, size and drill diameter with realtime rendering
 - User interface for configuring the depth of drilling / multiple passes drilling
 
@@ -23,6 +24,10 @@ Task list:
 The target shape (gabo) is shown in yellow. You can only see it as light brown because it is covered with semitransparent blue lines representing the path a CNC drill 
 will cut. Where multiple paths are overlapping, we can see blue lines. Black lines are the final calculated paths for CNC drill.
 
-![Image 1](sample_detail.png)
+![Image 2](sample_detail.png)
 
 Yellow edges: Because of the diameter of the drill tool, some sharp parts of the SVG shape cannot be cut.
+
+![Image 3](sample_result.jpg)
+
+Result - on the yellow sheet I was having problems with acrylic melting caused by too deep drilling

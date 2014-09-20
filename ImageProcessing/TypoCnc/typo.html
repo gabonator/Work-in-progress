@@ -1,7 +1,6 @@
 <div id="svgcontainer"></div>
 
 <script language="javascript" src="clipper.js"></script>
-<script language="javascript" src="poly2tri.js"></script>
 
 <script language="javascript">
 
@@ -129,21 +128,14 @@ for (var i=0; i<12 && path.length; i++)
   for (var j in path)
     result.push(path[j]);
 
-//break;
-//  document.getElementById('svgcontainer').innerHTML += "<pre>" + paths2string(path) + "</pre>";
   document.getElementById('svgcontainer').innerHTML += "Pass " + i + "<br>\n";
   //base
   document.getElementById('svgcontainer').innerHTML += pathToSvg(path);
-
   // expanded
   var pathout = contourPath(path, tool);
   document.getElementById('svgcontainer').innerHTML += pathToSvg(pathout);
-
   // calc remaining
-  var path2 = subtractPath(path, pathout);
-//  document.getElementById('svgcontainer').innerHTML += pathToSvg(path2);
-  path = path2;
-//  path = expandPath(path, -3/2);
+  path = subtractPath(path, pathout);
 }
 
 
@@ -216,11 +208,7 @@ function contourPath(path_, r)
   var path = ClipperLib.JS.Clone(path_);
   ClipperLib.JS.ScaleUpPaths(path, scale);
 //  ClipperLib.JS.Lighten(path, 1.5 * scale);
- /*
-  for (var v in path) 
-    if ( path[v][0] != path[v][path[v].length-1] )
-      path[v].push(path[v][0]);
-  */
+
   var co = new ClipperLib.ClipperOffset(); 
   var offsetted_paths = new ClipperLib.Paths();
   co.Clear();
@@ -295,61 +283,6 @@ function linesToSvg(orig, path)
           '<path stroke="black" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="' + paths2string([path[p]], 0.5/2*10) + '"/>';
   r+=     '</svg>';
   return r;
-}
-
-function triangulate(path)
-{
-  var lx = -999999, ly = -999999;
-
-  var p = path[0];
-  var contour = [];
-  for ( var i = 0; i < p.length; i++ )
-  {
-    var newp = new js.poly2tri.Point(p[i].X, p[i].Y);
-    if ( i > 0 && contour[contour.length-1].equals(newp) )
-      continue;
-
-    contour.push( newp );
-  }
-  if ( contour[contour.length-1].equals( contour[0] ) )
-    contour.pop();
-
-  var swctx = new js.poly2tri.SweepContext(contour); 
-
-  for ( var j=1; j<path.length; j++)
-  {
-    var p = path[j];
-    var contour = [];
-    for ( var i = 0; i < p.length; i++ )
-    {
-      var newp = new js.poly2tri.Point(p[i].X, p[i].Y);
-      if ( i > 0 && contour[contour.length-1].equals(newp) )
-        continue;
-
-      contour.push( newp );
-    }
-    if ( contour[contour.length-1].equals( contour[0] ) )
-      contour.pop();
-
-    swctx.AddHole(contour);
-  }
-
-  js.poly2tri.sweep.Triangulate(swctx);
-  var triangles = swctx.GetTriangles();
-  
-  var out = [];
-  for ( var i in triangles ) 
-  {
-    var outsingle = [];
-    var triangle = triangles[i];  
-    for ( var j=0; j<3; j++)
-    {
-      var point = triangle.GetPoint(j);
-      outsingle.push({X:point.x, Y:point.y});
-    }
-    out.push(outsingle);
-  }
-  return out;
 }
 
 function toXYPaths(data)

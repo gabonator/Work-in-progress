@@ -11,12 +11,12 @@ Script implements these features:
 - Path expanding, contour calculation - using Angus Johnson's [Javascript Clipper](http://sourceforge.net/projects/jsclipper/)
 - Rendering paths using SVG element
 - Export to G-code
+- User interface for entering text, font, size and drill diameter with realtime rendering - Using [opentype.js](http://nodebox.github.io/opentype.js/)
+- User interface for configuring the depth of drilling / multiple passes drilling
 
 Task list:
 - Optimization of polylines to lines and arcs
 - Optimization of shapes order
-- User interface for entering text, font, size and drill diameter with realtime rendering
-- User interface for configuring the depth of drilling / multiple passes drilling
 
 
 ![Image 1](sample.png)

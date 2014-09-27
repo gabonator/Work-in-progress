@@ -1,6 +1,8 @@
 CNC Typocarver
 ==========
 
+[Try it here](https://rawgit.com/gabonator/Work-in-progress/master/ImageProcessing/TypoCnc/typo.html)
+
 Engraving single line letters with CNC is pretty simple task. But what if we want to engrave some bold text? At first we would engrave the outline of each letter and then considering the diameter of the engraving tool, we would engrave the inner parts of the letter. We would continue engraving until there are no untouched places inside. This can be done manually, or using Polygon Offset tool in Adobe Illustrator or other software. But I wanted to somehow automate this process, so I would just design the wanted text and use some utility that will calculate optimal paths for chosen drill tool diameter.
 
 This script transforms SVG shapes into series of paths which can be used for engraving bold letters by CNC machine. What is missing is the final conversion of XY paths into G code and optimization with arcs. 

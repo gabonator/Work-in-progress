@@ -154,11 +154,66 @@ GCode.prototype.build = function(xyPaths)
   return expcode.join("\n") + "\n";
 }
 
+GCode.prototype.format = function(code)
+{
+  var expcode = [];
+  var prevG = -1;
+
+  expcode.push("G00 Z" + this.safeZ + " F" + this.moveFeedRate);
+
+  for ( var i in code )
+  {
+    var cmd = code[i];
+    switch (cmd.G)
+    {
+      case 0: 
+        var point = this.transformCoord(cmd);
+        if ( prevG != 0 && prevG != -1 )
+        {
+          expcode.push("G00 Z" + this.safeZ + " F" + this.moveFeedRate);
+        }
+        expcode.push("G00 X" + point.X + " Y" + point.Y + " F" + this.moveFeedRate);
+        expcode.push("G01 Z" + this.drillZ + " F" + this.cutFeedRate);
+        break;
+
+      case 1: 
+        var point = this.transformCoord(cmd);
+        expcode.push("G01 X" + point.X + " Y" + point.Y + " F" + this.cutFeedRate);
+        break;
+ 
+      case 2:
+        var point = this.transformCoord(cmd);
+        var ij = this.transformRelative({X:cmd.I, Y:cmd.J});
+        expcode.push((this.transform.scaley > 0 ? "G02" : "G03") + " X" + point.X + " Y" + point.Y + " I" + ij.X + " J" + ij.Y + " F" + this.cutFeedRate);
+        break;
+
+      case 3:
+        var point = this.transformCoord(cmd);
+        var ij = this.transformRelative({X:cmd.I, Y:cmd.J});
+        expcode.push((this.transform.scaley > 0 ? "G03" : "G02") + " X" + point.X + " Y" + point.Y + " I" + ij.X + " J" + ij.Y + " F" + this.cutFeedRate);
+        break;
+    }
+    prevG = cmd.G;
+  }
+  expcode.push("G00 Z" + this.safeZ + " F" + this.moveFeedRate);
+  expcode.push("M02");
+  expcode.push("(total " + code.length + " commands in " + expcode.length + " lines)");
+  return expcode.join("\n") + "\n";
+}
+
 GCode.prototype.transformCoord = function(coord)
 {
   return {
     X: ((coord.X + this.transform.translatex) * this.transform.scalex).toFixed(2),
     Y: ((coord.Y + this.transform.translatey) * this.transform.scaley).toFixed(2)
+  }
+}
+
+GCode.prototype.transformRelative = function(coord)
+{
+  return {
+    X: (coord.X * this.transform.scalex).toFixed(2),
+    Y: (coord.Y * this.transform.scaley).toFixed(2)
   }
 }
 
@@ -283,7 +338,7 @@ SVGImport.prototype.toXYPaths = function(data)
       position = pn;
       continue;
     }          
-    if ( cmd.type == "Q" )
+    if ( cmd.type == "Q" )  // user quadratic
     {
       var p1 = this.makePos(args[0], args[1]);
       var pn = this.makePos(args[2], args[3]);
@@ -297,6 +352,22 @@ SVGImport.prototype.toXYPaths = function(data)
       position = pn;
       continue;
     }          
+/*
+    if ( cmd.type == "A" )  // user arc
+    {
+      var p1 = this.makePos(args[0], args[1]);
+      var pn = this.makePos(args[2], args[3]);
+      var n = 8;//this.calcCurvePoints(position, pn);
+
+			for ( var j = 1; j<=n; j++)
+      {
+        var pt = this.calcArc(position, p1, pn, j/n);
+        aux.push({X:pt.x, Y:pt.y});
+      }
+      position = pn;
+      continue;
+    }          
+*/
     if ( cmd.type == "s" )
     {
       var p2 = this.addPos(position, this.makePos(args[0], args[1]));
@@ -315,7 +386,8 @@ SVGImport.prototype.toXYPaths = function(data)
     if ( cmd.type == "z" || cmd.type == "Z" )
     {
       aux.push(lastAnchor);
-      paths.push(aux);
+      if ( aux.length > 2 ) // why!?
+        paths.push(aux);
       aux = [];
       continue;
     }          
@@ -491,11 +563,29 @@ SVGExport.prototype.paths2string = function (paths)
   return svgpath;
 }
 
-SVGExport.prototype.pathToSvg = function(path)
+SVGExport.prototype.build = function(paths)
 {
-  return '<svg style="margin-top:10px; margin-right:10px;margin-bottom:10px;background-color:#dddddd" width="1200" height="400">' +
-    '<path stroke="black" fill="yellow" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + this.paths2string(path) + '"/>' +
-    '</svg>';
+  return ''+
+    '<svg style="margin-top:10px; margin-right:10px;margin-bottom:10px;background-color:#dddddd" width="1200" height="400">\n' +
+    paths.join("\n") +
+    '</svg>'; 
+}
+
+SVGExport.prototype.path = function(paths, style)
+{
+  var svgstyle = style || {stroke:'black', strokeWidth:'2', fill:'yellow'};
+  svgstyle = 'stroke="'+svgstyle.stroke+'" fill="'+svgstyle.fill+'" stroke-linecap="round" stroke-linejoin="round" stroke-width="'+svgstyle.strokeWidth+'"';
+  var svgpath = '';
+  for (var j in paths)
+  {
+    var path = paths[j];
+    for (var i=0; i<path.length; i++)
+    {
+      svgpath += i ? 'L' : 'M';
+      svgpath += (path[i].X * this.transform.scalex + this.transform.translatex).toFixed(2) + "," + (path[i].Y * this.transform.scaley + this.transform.translatey).toFixed(2) + " ";
+    }
+  }
+  return '  <path '+svgstyle+' d="' + svgpath + '"/>\n';
 }
 
 SVGExport.prototype.linesToSvg = function(orig, path, d)

@@ -1,0 +1,231 @@
+<html>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<!--
+<script src="js/highcharts.js"></script>
+<script src="js/highcharts-more.js"></script>
+-->
+<script src="js/highcharts-all.js"></script>
+
+<input type="button" value="Predpredvcerom" onClick="LoadDay(-3)">
+<input type="button" value="Predvcerom" onClick="LoadDay(-2)">
+<input type="button" value="Vcera" onClick="LoadDay(-1)">
+<input type="button" value="Dnes" onClick="LoadDay(0)">
+
+<div id="container1" style="min-width: 400px; height: 350px; margin: 0 auto">Collecting data...</div>
+</body>
+<div id="container2" style="min-width: 400px; height: 350px; margin: 0 auto"></div>
+</body>
+<div id="container3" style="min-width: 400px; height: 350px; margin: 0 auto"></div>
+</body>
+
+
+<script language="javascript">
+  var day = 0;
+  var data = [];
+  var utc = -(new Date()).getTimezoneOffset()*1000*60;
+
+  pad = function(x) {	return (x < 10) ? "0" + x : "" + x; }
+
+  function getTimestamp()
+  {
+  	var tm = (new Date( (new Date()).getTime() + day*1000*60*60*24 ));
+  	return tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
+  }
+
+  function Load(name, handler)
+  {
+    console.log(name);
+    var client = new XMLHttpRequest();
+    client.url = name;
+    client.open('GET', name);
+    client.onreadystatechange = function() {
+      if (this.status == 404)
+      {
+        console.log("Failed to load " + client.url);
+        handler();
+      }
+      if (this.readyState == 4 && this.status == 200 )
+      {
+        handler(client.responseText);
+      }
+    }
+    client.send();
+  }
+
+  function LoadData(name, onFinish)
+  {
+    Load("data/"+name+".txt", function(cont)
+    {
+      if ( typeof(cont) == "string" )
+      {
+        data = [];
+        window["add"] = function(json)
+        {
+          data.push({time:parseInt(json.timestamp), co2:parseInt(json.args.co2), light:parseFloat(json.args.light)});
+        }
+        eval(cont);
+        window["add"] = null;
+        onFinish();
+      } else
+      {
+        alert("No data");
+      }
+    });
+  }
+
+
+  function makeSeries( label, data, clr, suffix )
+  {
+  	return {
+  		    	name: label,
+  		    	data: data,
+  		    	zIndex: 1,
+  		    	color: Highcharts.getOptions().colors[clr],
+  		    	marker: {
+  		    		fillColor: 'white',
+  		    		lineWidth: 2,
+  		    		lineColor: Highcharts.getOptions().colors[clr]
+  		    	},
+            valueSuffix: suffix
+  	};
+  }
+
+  function makeRangeSeries( label, data, clr, suffix )
+  {
+  	return {
+  		        name: label,
+  		        data: data,
+  		        type: 'arearange',
+  		        lineWidth: 0,
+  		    	linkedTo: ':previous',
+  		    	color: Highcharts.getOptions().colors[clr],
+  		    	fillOpacity: 0.3,
+  		    	zIndex: 0,
+            valueSuffix: suffix
+  		    };
+  }
+
+  function Finish()
+  {
+    var sData = [];
+    var sRange = []; 
+    var sPerc = [];
+    var sLight = [];
+
+    // adaptive ranging constants
+    var vmax = 245;
+    var vdiff = 35;
+    var noise = 2;
+    var localmin = -1;
+
+    for (var i=0; i<data.length; i++) 
+    {
+      var v = data[i].co2;
+      var t = data[i].time;
+
+      // transform
+      t = t*1000+utc;
+      v = rawToVoltage(v)*1000;
+      v = Math.floor(v * 100)/100;
+
+      if ( localmin == -1 || v < localmin )
+        localmin = v;
+
+      // raw values - copy
+      sData[i] = [t, v];
+
+      // calculate range
+      if ( v > vmax + noise )
+        vmax  = v - noise;
+      if ( v < vmax - vdiff - noise )
+        vmax = v + vdiff + noise;
+ 
+      var vmin = vmax - vdiff;
+      sRange[i] = [t, vmin, vmax];
+
+      // calculate percentage
+      var perc = (v - vmin)/vdiff;
+      if ( perc < 0 )
+        perc = 0;
+      if ( perc > 1 )
+        perc = 1;
+
+      perc *= 100;
+      perc = Math.floor(perc*10)/10;
+
+      sPerc[i] = [t, perc];
+
+      // others
+      var l = data[i].light;
+      sLight[i] = [t, l];
+
+    }
+
+    var set = chartSettings();
+
+    if ( data.length > 120 )
+      set.plotOptions = {line:{marker:{enabled:false}}};
+    set.exporting = {enabled:false};
+    set.credits = {enabled:false};
+//    if ( localmin < 150 )
+//      set.yAxis.min = 150;
+
+    drawChart(set, "container1",
+      [makeSeries("CO2 measurement", sData, 0, "mV"),
+       makeRangeSeries("estimated sensor range", sRange, 0, "mV")]);
+
+
+    set.yAxis.min = 0;
+    set.yAxis.max = 100;
+    drawChart(set, "container2",
+      [makeSeries("Air quality", sPerc, 3, "%")])
+
+    set.yAxis.min = 0;
+    set.yAxis.max = null;
+
+//    set.yAxis = {title:{text:null}};
+    drawChart(set, "container3",
+      [makeSeries("Light level", sLight, 4, "%")])
+  }
+
+  function drawChart(settings, target, series)
+  {
+    var chartSet = settings;
+    chartSet.chart.renderTo = target;
+    chartSet.series = series;
+		chartSet.tooltip.valueSuffix = series[0].valueSuffix;
+    new Highcharts.Chart(chartSet);
+  }
+
+  function chartSettings()
+  {
+  	return {
+ 				chart: { },
+		    title: { text: null },
+		    xAxis: { type: 'datetime' },
+		    yAxis: { title: { text: null } },
+		    tooltip: {
+		        crosshairs: true,
+		        shared: true,
+		        valueSuffix: "mV"
+		    },
+		    legend: {}
+		};
+  }
+
+  function rawToVoltage(n)
+  {
+		var n100mV = 0x34e;
+		var n300mV = 0x9ed;
+		return 0.1 + (n - n100mV)/(n300mV-n100mV)*0.2;
+  }
+
+  function LoadDay(d)
+  {
+    day = d;
+    LoadData(getTimestamp(), Finish);
+  }
+ 
+  LoadDay(0);
+</script>                                               	
+</html>

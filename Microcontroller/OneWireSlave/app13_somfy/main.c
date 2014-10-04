@@ -3,6 +3,7 @@
 #include "ow2431.h"
 #include "timer.h"
 #include "adc.h"
+#include "crc.h"
 
 __CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
 
@@ -40,11 +41,27 @@ _eeprom_read(unsigned char addr)
 	return EEPROM_READ(addr);
 }
 
+void
+_eeprom_write(unsigned char addr, unsigned char value)
+{
+	EEPROM_WRITE(addr, value);
+}
+
+
 void InitSerial(void) 
 {
-  byte i;
+  unsigned int i;
+  const unsigned char addrbuf[8] = {0x2D, 'G', 'A', 'B',  '#', '0', '0', 0x00};
   for (i=0; i<16; i++)
     OW_2431_data[i] = ' '; //0xa0 | i;
+
+
+//  for (i=128; i<256; i++)
+//    _eeprom_write(i, 32);
+
+	
+  for (i=0; i<8; i++)
+    _eeprom_write(0xc0 | i, addrbuf[i]);
 
   // family code: 0x2D - ds2431, 0x28 - ds18b20
   for (i=0; i<7; i++)
@@ -62,11 +79,13 @@ void InitSerial(void)
 
 void UpdateBuffer(void)
 {
+  // 0x079 .. 0xA50
+#if 1
     #define ITOA( var, decr, char ) while ( var >= decr ) { var -= decr; char++; }
     unsigned int nTime = TMR_nSeconds;
     unsigned int nWind = nWindFinal;
     signed int nLight = nAdcResult;
-    unsigned char i, sum;
+    unsigned char i, crc;
 
     // ........--------
     // T00 L111 W123
@@ -90,20 +109,24 @@ void UpdateBuffer(void)
     // time
     ITOA( nTime, 10, OW_2431_data[1] );
     ITOA( nTime, 1, OW_2431_data[2] );
-
+                         
+    // 0xb06
     // 800..3000 
     nLight -= 800;
+    // nesmie byt viacej ako 18!
+    #define DIVIDER 16
     // 0..2200
     if (nLight < 0)
       nLight = 0;
-    if (nLight > 2200-1)
-      nLight = 2200-1;
+    if (nLight > (DIVIDER*100)-1)
+      nLight = (DIVIDER*100)-1;
 
 //    ITOA( nLight, 22*100, OW_2431_data[5] );
-    ITOA( nLight, 22*10, OW_2431_data[4] );
-    ITOA( nLight, 22*1, OW_2431_data[5] );
-    nLight = (nLight*29) >> 6; //*10/22;
-    ITOA( nLight, 1, OW_2431_data[7] );
+    ITOA( nLight, DIVIDER*10, OW_2431_data[4] );
+    ITOA( nLight, DIVIDER*1, OW_2431_data[5] );
+//    nLight = (nLight*29) >> 6; //*10/22;
+    nLight = nLight*10;
+    ITOA( nLight, DIVIDER*1, OW_2431_data[7] );
 
 
     // windspd kmh = frequency, nWind = frequency * 20
@@ -112,15 +135,17 @@ void UpdateBuffer(void)
     ITOA( nWind, 20*1, OW_2431_data[11] );
     ITOA( nWind, 2, OW_2431_data[13] );
 
-    sum = 0;
+    crc = 0;
     for (i=0; i<15; i++)
-    { 
-      sum ^= sum<<1;
-      sum += OW_2431_data[i];
-    }
-    OW_2431_data[15] = 0x40 + (sum&63);
+      crc = crcPush(crc, OW_2431_data[i]);
+
+    OW_2431_data[15] = 0x40 + (crc&63);
      
-#if 0
+#else
+    unsigned int nTime = TMR_nSeconds;
+    unsigned int nWind = nWindFinal;
+    signed int nLight = nAdcResult;
+
     OW_2431_data[0] = 'T';
     OW_2431_data[1] = '0';
     OW_2431_data[2] = '0';

@@ -6,6 +6,7 @@
 #define CMD_INIT 0
 #define CMD_ROM 1
 #define CMD_FUNCTION 2
+#define CMD_NOMATCH 3
 
 // macros
 // I turned some functions into macros to avoid losing time on jumps

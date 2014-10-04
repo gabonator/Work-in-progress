@@ -1,5 +1,6 @@
 #include "owutils.h"
 #include "owslave.h"
+#include "fastcall.h"
 
 byte ow_error = 0;
 
@@ -17,7 +18,7 @@ byte OW_reset_pulse (void)
   }
 
   // vacsinou len=30
-  if ( len < 10 )
+  if ( len < 10*2 )
     return 0;  
 
 	return 1; // reset pulse detected
@@ -237,6 +238,10 @@ byte OW_write_byte(byte write_data)
         return TRUE;
       }
     } while (--low > 0);
+
+    if ((high&7) == 4)
+      UFASTCALL();
+
   } while (--high > 0);
 
   return FALSE;

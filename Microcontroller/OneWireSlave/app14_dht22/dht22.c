@@ -15,9 +15,9 @@ unsigned char bits[5];
 #define LOW 0
 #define HIGH 1
 
-#define pinMode(pin, tris) TRISIO5 = tris
-#define digitalWrite(pin, logic) GPIO5 = logic
-#define digitalRead(pin) GPIO5
+#define pinMode(pin, tris) TRISIO4 = tris
+#define digitalWrite(pin, logic) GPIO4 = logic
+#define digitalRead(pin) GPIO4
 
 #define delayMicroseconds DelayUs
 #define delay DelayMs

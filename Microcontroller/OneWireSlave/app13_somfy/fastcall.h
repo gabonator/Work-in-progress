@@ -1,11 +1,14 @@
 #ifndef __FASTCALL__
 #define __FASTCALL__
 
-void TMR_Do_isr(void);
-void User_Do_isr(void);
-void User_Do_fast(void);
+//void User_FastIsr(void);
+extern unsigned char nPrevWind;
+extern unsigned int nWindCounter;
+//extern unsigned char nInhibitOw;
 
-#define FASTCALL() { TMR_Do_isr(); User_Do_isr(); }
-#define UFASTCALL() { User_Do_fast(); }
+//#define SLOWCALL() { INTE = 0; nInhibitOw = 100; }
+
+#define FASTCALL() { if ( GPIO5 != nPrevWind ) { nPrevWind ^= 1; nWindCounter++; } }
+//#define FASTCALL() { User_FastIsr(); }
 
 #endif

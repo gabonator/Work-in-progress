@@ -25,11 +25,14 @@ void interrupt ISR(void)
     if(ow_error)
       goto RST; // nedava zmysel
 
+    FASTCALL();
+
     if ( ow_buffer == 0xF0 ) // search rom
     {
       _ASSUME( i == 0 );
       do {
         SEARCH_SEND_BYTE( OW_serial[i] );
+        FASTCALL();
       } while (++i < 8);
 
       SetState(CMD_INIT);
@@ -39,8 +42,8 @@ void interrupt ISR(void)
       _ASSUME( i == 0 );
       do {
         SEARCH_MATCH_BYTE( OW_serial[i] );
+        FASTCALL();
       } while (++i < 8);
-
       SetState( i==8 ? CMD_FUNCTION : CMD_INIT);
     } else
     if ( ow_buffer == 0x33 ) // send rom
@@ -69,8 +72,7 @@ void interrupt ISR(void)
   if ( ow_status == CMD_FUNCTION )
   { 
     byte ow_buffer = OW_read_byte_lost10();
-//    if ( !Emulate1820(ow_buffer) )
-//      goto RST;
+
     if ( !Emulate2431(ow_buffer) )
       goto RST;
 
@@ -82,16 +84,17 @@ void interrupt ISR(void)
   }
 
 RST:
-  UFASTCALL();
+  FASTCALL();
   if ( OW_reset_pulse() )
   {
-    UFASTCALL();
     // if reset detected 
     __delay_us(30);
     OW_presence_pulse(); // generate presence pulse    
     SetState(CMD_ROM);
   } else
+  {
     SetState(CMD_INIT);
+  }
 
   FASTCALL();
   INTF = 0;

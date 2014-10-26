@@ -13,6 +13,7 @@ byte OW_reset_pulse (void)
   for ( len=0; len<50*2*2; len++)
   {
     __delay_us(5);
+    FASTCALL();
     if ( OW )
       break;
   }
@@ -240,14 +241,12 @@ byte OW_write_byte(byte write_data)
     } while (--low > 0);
 
     if ((high&7) == 4)
-      UFASTCALL();
+      FASTCALL();
 
   } while (--high > 0);
 
   return FALSE;
 }
-
-
 
 byte OW_read_byte_lost10 (void)
 {

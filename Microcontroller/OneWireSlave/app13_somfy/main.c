@@ -4,6 +4,8 @@
 #include "timer.h"
 #include "adc.h"
 #include "crc.h"
+#include "fastcall.h"
+#include "eeprom.h"
 
 __CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
 
@@ -20,7 +22,6 @@ __CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
 
 extern bank1 byte timeout; 
 unsigned int nAdcResult = 0;
-extern unsigned char TMR_overflow;
 
 unsigned char nPrevWind = 0;
 unsigned int nWindCounter = 0;
@@ -34,59 +35,32 @@ byte hex(byte v)
   return 'a' + v - 10;
 }
 
-unsigned char
-_eeprom_read(unsigned char addr)
-{
-	while (WR) continue;
-	return EEPROM_READ(addr);
-}
-
-void
-_eeprom_write(unsigned char addr, unsigned char value)
-{
-	EEPROM_WRITE(addr, value);
-}
-
-
 void InitSerial(void) 
 {
   unsigned int i;
-  const unsigned char addrbuf[8] = {0x2D, 'G', 'A', 'B',  '#', '0', '0', 0x00};
   for (i=0; i<16; i++)
     OW_2431_data[i] = ' '; //0xa0 | i;
 
-
-//  for (i=128; i<256; i++)
-//    _eeprom_write(i, 32);
-
-	
-  for (i=0; i<8; i++)
-    _eeprom_write(0xc0 | i, addrbuf[i]);
-
   // family code: 0x2D - ds2431, 0x28 - ds18b20
   for (i=0; i<7; i++)
-    OW_serial[i] = _eeprom_read(0xC0 | i);
-//  OW_serial[0] = 0x2D;
-//  OW_serial[1] = 0x54;
-//  OW_serial[2] = 0x59;
-//  OW_serial[3] = 0x4D;
-//  OW_serial[4] = 0x45;
-//  OW_serial[5] = 0x4B;
-//  OW_serial[6] = 0x00;
+    OW_serial[i] = eeprom_read(0xC0 | i);
+
   OW_serial[7] = OW_calcCrc((byte*)OW_serial, 7);
 }
 
-
 void UpdateBuffer(void)
 {
-  // 0x079 .. 0xA50
-#if 1
     #define ITOA( var, decr, char ) while ( var >= decr ) { var -= decr; char++; }
-    unsigned int nTime = TMR_nSeconds;
+    unsigned char nTime = TMR_nSeconds;
     unsigned int nWind = nWindFinal;
     signed int nLight = nAdcResult;
-    unsigned char i, crc;
+    unsigned char i, crc, bDebug;
+    unsigned int nZeroAdc; // = 0x338;
 
+    bDebug = eeprom_read(0xD0) == 1;
+    nZeroAdc = ( eeprom_read(0xD1) << 8 ) | eeprom_read(0xD2);
+
+    OW_2431_data[15] = ' ';
     // ........--------
     // T00 L111 W123
     OW_2431_data[0]  = 'T';
@@ -104,32 +78,42 @@ void UpdateBuffer(void)
     OW_2431_data[12] = '.';
     OW_2431_data[13] = '0';
     OW_2431_data[14] = '#';
-    OW_2431_data[15] = ' ';
 
-    // time
-    ITOA( nTime, 10, OW_2431_data[1] );
-    ITOA( nTime, 1, OW_2431_data[2] );
-                         
-    // 0xb06
-    // 800..3000 
-    nLight -= 800;
-    // nesmie byt viacej ako 18!
-    #define DIVIDER 16
+    if ( bDebug )
+    {
+      // debug:                
+      OW_2431_data[0] = hex(nLight>>8);
+      OW_2431_data[1] = hex((nLight>>4)&15);
+      OW_2431_data[2] = hex(nLight&15);
+    } else
+    {
+      // time
+      ITOA( nTime, 10, OW_2431_data[1] );
+      ITOA( nTime, 1, OW_2431_data[2] );
+    }
+
+    // 0x330 .. 0x640
+    // 330..730  (73f-74b max)
+    nLight -= nZeroAdc;
+    // 0x000 .. 0x310
+    #define DIVIDER 102
+
+    nLight = nLight*10;
+
     // 0..2200
     if (nLight < 0)
       nLight = 0;
     if (nLight > (DIVIDER*100)-1)
       nLight = (DIVIDER*100)-1;
 
-//    ITOA( nLight, 22*100, OW_2431_data[5] );
     ITOA( nLight, DIVIDER*10, OW_2431_data[4] );
     ITOA( nLight, DIVIDER*1, OW_2431_data[5] );
-//    nLight = (nLight*29) >> 6; //*10/22;
     nLight = nLight*10;
     ITOA( nLight, DIVIDER*1, OW_2431_data[7] );
 
-
     // windspd kmh = frequency, nWind = frequency * 20
+    if ( nWind > 20*100*10-1 )
+      nWind = 20*100*10-1;
     ITOA( nWind, 20*100, OW_2431_data[9] );
     ITOA( nWind, 20*10, OW_2431_data[10] );
     ITOA( nWind, 20*1, OW_2431_data[11] );
@@ -140,130 +124,50 @@ void UpdateBuffer(void)
       crc = crcPush(crc, OW_2431_data[i]);
 
     OW_2431_data[15] = 0x40 + (crc&63);
-     
-#else
-    unsigned int nTime = TMR_nSeconds;
-    unsigned int nWind = nWindFinal;
-    signed int nLight = nAdcResult;
-
-    OW_2431_data[0] = 'T';
-    OW_2431_data[1] = '0';
-    OW_2431_data[2] = '0';
-    OW_2431_data[3] = ' ';
-
-    #define ITOA( var, decr, char ) while ( var >= decr ) { var -= decr; char++; }
-//    ITOA( nTime, 100, OW_2431_data[1] );
-    ITOA( nTime, 10, OW_2431_data[1] );
-    ITOA( nTime, 1, OW_2431_data[2] );
-
-    OW_2431_data[4] = 'L';
-    OW_2431_data[5] = hex(nAdcResult >> 12);
-    OW_2431_data[6] = hex(nAdcResult >> 8);
-    OW_2431_data[7] = hex(nAdcResult >> 4);
-    OW_2431_data[8] = hex(nAdcResult >> 0);
-    OW_2431_data[9] = ' ';
-
-    OW_2431_data[10] = 'W';
-    OW_2431_data[11] = '0';
-    OW_2431_data[12] = '0';
-    OW_2431_data[13] = '0';
-    OW_2431_data[14] = '0';
-    OW_2431_data[15] = 0;
-
-    ITOA( nWind, 1000, OW_2431_data[11] );
-    ITOA( nWind, 100, OW_2431_data[12] );
-    ITOA( nWind, 10, OW_2431_data[13] );
-    ITOA( nWind, 1, OW_2431_data[14] );
-#endif
 }
 
-static unsigned int lastSecond = 0;
-unsigned char doProc = 0;
-
-void User_Do_fast(void)
+void Wait(unsigned char l)
 {
-  unsigned char nNewWind = GPIO5;
-  if ( nPrevWind != nNewWind )
-  {  
-    nPrevWind = nNewWind;
-    nWindCounter++;
-  }
-}
-
-void User_Do_isr(void)
-{
-  unsigned char nNewWind = GPIO5;
-  if ( nPrevWind != nNewWind )
-  {  
-    nPrevWind = nNewWind;
-    nWindCounter++;
-  }
-
-  if ( TMR_nSeconds == lastSecond )
-    return;
-
-  GPIO0 ^= 1;
-
-  if (TMR_nSeconds >= 10)
+  l <<= 2;
+  while (l--)
   {
-    TMR_nSeconds = 0;
-    nWindFinal = nWindCounter;
-    nWindCounter = 0;
+    FASTCALL();
+    DelayUs(245);
   }
-
-  lastSecond = TMR_nSeconds;  
-  doProc = 1;
-}
-
-void User_Do(void)
-{
-  unsigned char nNewWind = GPIO5;
-  if ( nPrevWind != nNewWind )
-  {  
-    nPrevWind = nNewWind;
-    nWindCounter++;
-  }
-
-  if ( TMR_nSeconds == lastSecond )
-    return;
-
-  GPIO0 ^= 1;
-
-  if (TMR_nSeconds >= 10)
-  {
-    TMR_nSeconds = 0;
-    nWindFinal = nWindCounter;
-    nWindCounter = 0;
-  }
-
-  lastSecond = TMR_nSeconds;  
-  doProc = 1;
 }
 
 void APP_Do(void)
 {
+  static unsigned char lastSecond = 0;
   unsigned int nAdcNewResult = 0;
 
-  User_Do();
-
-  if ( !doProc )
+  FASTCALL();
+  if ( TMR_nSeconds == lastSecond )
     return;
-  doProc = 0;
 
+  GPIO0 ^= 1;
+
+  if (TMR_nSeconds >= 10)
+  {
+    TMR_nSeconds -= 10;
+    nWindFinal = nWindCounter;
+    nWindCounter = 0;
+  }
+
+  lastSecond = TMR_nSeconds;  
   // 50Hz : 4 = 5ms, pozor, mohlo byt ovplyvnene prerusenim
 
   nAdcNewResult = ADC_Get16();
-  /*User_Do();*/ DelayMs(5);
+  Wait(5);
   nAdcNewResult += ADC_Get16();
-  /*User_Do();*/ DelayMs(5);
+  Wait(5); 
   nAdcNewResult += ADC_Get16();
-  /*User_Do();*/ DelayMs(5);
+  Wait(5); 
   nAdcNewResult += ADC_Get16();
-
+  Wait(5);
   nAdcResult = nAdcNewResult;
-  //User_Do();
+
   UpdateBuffer();
-  //User_Do();
 }
 
 void main(void) 
@@ -283,7 +187,6 @@ void main(void)
   GPIO0 = 1;
   DelayMs(250); // @ 4 MHz, -> 500ms
   GPIO0 = 0;
-  DelayMs(250);
 
   InitSerial(); 
 
@@ -292,8 +195,8 @@ void main(void)
   ADC_Init();
   while (TRUE) 
   {
-    APP_Do();
     TMR_Do();
+    APP_Do();
     CLRWDT();
   }
 }

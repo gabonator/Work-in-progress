@@ -1,6 +1,7 @@
 #include "ow2431.h"
 #include "owutils.h"
 #include "fastcall.h"
+#include "isreeprom.h"
 
 volatile byte OW_2431_address = 0;
 volatile byte bank1 OW_2431_data[16];
@@ -38,26 +39,26 @@ byte Emulate2431(byte ow_buffer)
   {
     //OW_2431_address = 0;
     OW_2431_address = OW_read_byte(); // low address byte
-    FASTCALL();
     OW_read_byte(); // high address byte
     do {
       byte bData = 0;
       if ( OW_2431_address < 16 )
-        bData = eeprom_read(OW_2431_address + 128);
+        bData = _eeprom_read(OW_2431_address + 128);
       else 
       if ( OW_2431_address < 16+16 )
         bData = OW_2431_data[OW_2431_address - 16];
       else
       if ( OW_2431_address < 32+32 )
-        bData = eeprom_read(OW_2431_address - 32 + 128 + 16);
+        bData = _eeprom_read(OW_2431_address - 32 + 128 + 16);
       else
       if ( OW_2431_address >= 128 /*&& OW_2431_address <= 255*/ )
-        bData = eeprom_read(OW_2431_address);
+        bData = _eeprom_read(OW_2431_address);
 
       if ( !OW_write_byte(bData) )
         break;
 
       OW_2431_address++;
+      FASTCALL();
     } while (1);
   }
 
@@ -92,7 +93,7 @@ byte Emulate2431(byte ow_buffer)
       if ( /*i >= 0 && */ addr <= 15 )
         OW_2431_data[addr] = data; 
       if ( addr >= 128 /* && i <= 255 */ )
-        eeprom_write(addr, data);
+        _eeprom_write(addr, data);
     }
   }
 

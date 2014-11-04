@@ -32,7 +32,7 @@ function init() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
-	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 100000 );
+	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
 	camera.position.z = 3200;
 
 	// scenes
@@ -177,6 +177,39 @@ function init() {
 //  scene.add(meshMoonPath);
 
   // north
+  var geometry = new THREE.Geometry();
+ 
+  var t = {w:489, h:687, s:1.3};
+  var coords = [[-t.w/2*t.s, -t.h/2*t.s], [t.w/2*t.s, -t.h/2*t.s], [t.w/2*t.s, t.h/2*t.s], [-t.w/2*t.s, t.h/2*t.s]];
+  var textco = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  var tc = [];
+  for (var i = 0; i < 4; i++)
+  {
+    geometry.vertices.push(new THREE.Vector3(coords[i][0], 0, coords[i][1]));
+    tc[i] = new THREE.Vector2(1-textco[i][0], textco[i][1]);
+  }
+
+  geometry.faces.push(new THREE.Face3(0, 1, 2));
+  geometry.faces.push(new THREE.Face3(0, 2, 3));
+  geometry.faceVertexUvs[ 0 ].push([tc[0], tc[1], tc[2]]);
+  geometry.faceVertexUvs[ 0 ].push([tc[0], tc[2], tc[3]]);
+
+  geometry.computeFaceNormals();
+  geometry.computeVertexNormals();
+
+  var texture = new THREE.ImageUtils.loadTexture('north.png');
+  var material = new THREE.MeshBasicMaterial( {map: texture, side:THREE.DoubleSide, transparent:true, alphaTest:0.5  } );
+
+  var northarrow = new THREE.Mesh(geometry, material);
+  northarrow.rotation.y = 180*degToRad;
+  northarrow.position.z = -1800;
+  northarrow.position.x = 0;
+  northarrow.position.y = 100;
+  northarrow.updateMatrix();
+  scene.add(northarrow);
+  meshCylinder = northarrow;
+
+/*
   var material =new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: false, opacity: 1.0 } );
   var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0, 200, 400, 50, 50, false), material);
   cylinder.rotation.x = -90*degToRad;
@@ -187,8 +220,10 @@ function init() {
 
   meshCylinder = cylinder;
   meshCylinder.updateMatrix();
+*/
 
   // clock
+/*
   var material = new THREE.MeshBasicMaterial( { color: 0x909090, transparent: false, opacity: 1.0 } );
   var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0, 100, 300, 50, 50, false), material);
   cylinder.rotation.x = 90*degToRad;
@@ -199,6 +234,20 @@ function init() {
 
   meshClock = cylinder;
   meshClock.updateMatrix();
+*/
+
+  var texture = new THREE.ImageUtils.loadTexture('clock.png');
+  var material = new THREE.MeshBasicMaterial( {map: texture, side:THREE.DoubleSide, transparent:true, alphaTest:0.5  } );
+
+  var clockarrow= new THREE.Mesh(geometry, material);
+  clockarrow.rotation.y = 0*degToRad;
+  clockarrow.position.z = 1200;
+  clockarrow.position.x = 0;
+  clockarrow.position.y = 50;
+  clockarrow.scale.x = clockarrow.scale.y = clockarrow.scale.z = 0.75;
+  clockarrow.updateMatrix();
+  scene.add(clockarrow);
+  meshClock = clockarrow;
 
   // sun
   var material =new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: false, opacity: 1.0 } );
@@ -233,7 +282,7 @@ function init() {
   renderer.setClearColor( 0xf0f0f0, 1);
 	container.appendChild( renderer.domElement );
 
-
+  renderer.sortObjects = false;
 	renderer.shadowMapEnabled = true;
 	renderer.shadowMapType = THREE.PCFShadowMap;
 //  renderer.shadowMapType = THREE.PCFSoftShadowMap;

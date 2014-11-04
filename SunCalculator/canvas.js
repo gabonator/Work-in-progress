@@ -27,6 +27,17 @@ for (var a=0; a<360; a++)
   ctx.lineTo( c1.x + w/2, c1.y + h/2);
   ctx.stroke();
 
+  //
+  var c0 = circlePoint(a, r0*0);
+  var c1 = circlePoint(a, r0);
+  var p = phase(t, sunset.sunrise, sunset.sunset );
+  ctx.strokeStyle = rgbcolor(interpolate([0, 0, 80], [255, 255, 0], p, 0.2));
+
+  ctx.beginPath();
+  ctx.moveTo( c0.x + w/2, c0.y + h/2);
+  ctx.lineTo( c1.x + w/2, c1.y + h/2);
+  ctx.stroke();
+
 //continue;
   var c0 = circlePoint(a, r0);
   var c1 = circlePoint(a, r1);
@@ -71,11 +82,14 @@ var sunposition12 = {t:i, zenith:p.zenithAngle, azimuth:p.azimuth};
 
 var hours = 0;
 var sunpositions = [];
-for ( var i=sunset.sunrise - 0*sunset.timezone; i<sunset.sunset - sunset.timezone*1; i+=0.25)
-//for ( var i=2; i<=18; i+=0.1)
+//for ( var i=sunset.sunrise - 0*sunset.timezone; i<sunset.sunset - sunset.timezone*1; i+=0.25)
+for ( var i=-10; i<=14; i+=0.1)
 {
   hours = i;
   var p = sunpos.GetPosition({days:days, hours:hours}, pos);
+  if ( i > -2.5 && i < -2 )
+    continue;
+
   sunpositions[sunpositions.length] = {t:i, zenith:p.zenithAngle, azimuth:p.azimuth};
 }
 //var p = sunpos.GetPosition({days:days, hours:sunset.sunset}, pos);

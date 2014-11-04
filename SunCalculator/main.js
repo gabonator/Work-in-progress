@@ -38,18 +38,35 @@ function init() {
 	// scenes
 	scene = new THREE.Scene();
 
+  // light
+  var light = new THREE.AmbientLight( 0x303030 ); // soft white light
+  scene.add( light );
+
+	var light = new THREE.PointLight(0xffffff, 1.5);
+	light.position.set(0,20000,10000);
+	scene.add(light);
+
+  var spotLight = new THREE.SpotLight( 0xffffff, 2 );
+//  spotLight.shadowCameraVisible = true;
+  spotLight.position.set( 0, 2000, 0 );
+  spotLight.target.position.set( 0, 0, 0 );
+  spotLight.castShadow = true;
+  spotLight.shadowCameraNear = 1000;
+  spotLight.shadowCameraFar = 6000;
+  spotLight.shadowCameraFov = 50;
+
+  scene.add( spotLight );
+  lightSpot = spotLight;
+
 	// sphere
-	var geometry = new THREE.SphereGeometry( 100, 32*2, 16*2, 0, 2*Math.PI, 0, Math.PI/2 );
+	var geometry = new THREE.SphereGeometry( 2000, 32*2, 16*2/*, 0, 2*Math.PI, 0, Math.PI/2*/ );
 
 	var shader = THREE.FresnelShader;
 	var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
-	var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms };
+	var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, transparent:true };
 	var material = new THREE.ShaderMaterial( parameters );
-	material.transparent = true;
 	var mesh = new THREE.Mesh( geometry, material );
-
-	mesh.scale.x = mesh.scale.y = mesh.scale.z = 20; //Math.random() * 3 + 1;
 
 	scene.add( mesh );
 	scene.matrixAutoUpdate = false;
@@ -77,15 +94,13 @@ function init() {
   squareGeometry.computeFaceNormals();
   squareGeometry.computeVertexNormals();
 
-  var light = new THREE.AmbientLight( 0xffffff ); // soft white light
-  scene.add( light );
-
   var texture = new THREE.Texture(can); 
   texture.needsUpdate = true;
 
   var material = new THREE.MeshBasicMaterial( {map: texture, side:THREE.DoubleSide, transparent:true } );
 
   var plane = new THREE.Mesh( squareGeometry, material );
+  plane.receiveShadow = true;
   scene.add( plane );
   squareMesh = plane;
 
@@ -124,7 +139,7 @@ function init() {
   var path = new SunPath( 10 );
   var geometry = new THREE.TubeGeometry(
       path,  //path
-      30,    //segments
+      40,    //segments
       30,     //radius
       8,     //radiusSegments
       false  //closed
@@ -189,7 +204,8 @@ function init() {
   var material =new THREE.MeshBasicMaterial( { color: 0xffff00, transparent: false, opacity: 1.0 } );
 	var geometry = new THREE.SphereGeometry( 200, 32, 16 );
   var sun = new THREE.Mesh(geometry, material);
-  var p = celestialPosition(sunpositionnow.azimuth, sunpositionnow.zenith).multiplyScalar(r);
+  var sunpos = 0 ? sunposition12 : sunpositionnow;
+  var p = celestialPosition(sunpos.azimuth, sunpos.zenith).multiplyScalar(r);
   sun.position.x = p.x;
   sun.position.y = p.y;
   sun.position.z = p.z;
@@ -198,12 +214,29 @@ function init() {
   meshSun = sun;
   meshSun.updateMatrix();
 
+  // model
+  var jsonLoader = new THREE.JSONLoader();
+	jsonLoader.load( "model.js", function ( geometry, materials ) 
+  {
+  	var material = new THREE.MeshFaceMaterial( materials );
+  	model = new THREE.Mesh( geometry, material );
+  	model.scale.set(100,100,100);
+    model.rotation.y = 180*degToRad;
+    model.castShadow = true;
+  	scene.add( model );
+  });
+
   // renderer
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.autoClear = false;
   renderer.setClearColor( 0xf0f0f0, 1);
 	container.appendChild( renderer.domElement );
+
+
+	renderer.shadowMapEnabled = true;
+	renderer.shadowMapType = THREE.PCFShadowMap;
+//  renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
 	window.addEventListener( 'resize', onWindowResize, false );
 }
@@ -230,6 +263,13 @@ function render() {
   camera.position.y = 7000*Math.cos(motionTilt*degToRad);
   camera.position.z = 7000*Math.sin(motionTilt*degToRad);
 	camera.lookAt( scene.position );
+
+  // update light
+  scene.updateMatrixWorld(true);
+
+  var sunPosition = new THREE.Vector3();
+  sunPosition.setFromMatrixPosition( meshSun.matrixWorld );
+  lightSpot.position.set(sunPosition.x, sunPosition.y*3, sunPosition.z); 
 
 	renderer.clear();
 	renderer.render( scene, camera );

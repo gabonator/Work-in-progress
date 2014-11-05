@@ -314,7 +314,7 @@ function render() {
 	camera.lookAt( scene.position );
 
   // update light
-  scene.updateMatrixWorld(true);
+  //scene.updateMatrixWorld(true);
 
   var sunPosition = new THREE.Vector3();
   sunPosition.setFromMatrixPosition( meshSun.matrixWorld );

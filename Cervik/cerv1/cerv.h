@@ -27,6 +27,7 @@ public:
 	int m_nPrevX, m_nPrevY;
 	float m_fCrash;
 	COLORREF m_clrHitColor;
+	float m_fAdvanceRemain;
 
 	static float g_fSpeedMultiply;
 
@@ -42,8 +43,8 @@ public:
 	{
 		m_Attrs.m_nId = pPlayer->m_nId;
 
-		m_Attrs.m_fX = CFrameBuffer::Width/2;
-		m_Attrs.m_fY = CFrameBuffer::Height/2;
+		m_Attrs.m_fX = g_dev.display.Width()/2.0f;
+		m_Attrs.m_fY = g_dev.display.Height()/2.0f;
 		m_Attrs.m_fAngle = 0.0f;
 		m_Attrs.m_fSpeed = pPlayer->m_fSpeed;
 		m_Attrs.m_fSteering = pPlayer->m_fSteering;
@@ -55,6 +56,7 @@ public:
 		m_fCrash = 0;
 		m_Attrs.m_color = pPlayer->m_cColor;
 		m_clrHitColor = 0;
+		m_fAdvanceRemain = 0;
 		/*
 		if ( m_Attrs.m_nId == 1 )
 		{
@@ -87,12 +89,15 @@ public:
 		m_Origin.m_fAngle = m_Attrs.m_fAngle;
 
 		m_clrHitColor = 0;
+		m_fAdvanceRemain = 0;
 	}
 	
 	static bool CanWalk(COLORREF c)
 	{
 		if ( c == 0 )
 			return true;
+		if ( c == RGB(255, 255, 255) )
+			return false;
 		int r = GetRValue(c);
 		int g = GetGValue(c);
 		int b = GetBValue(c);
@@ -113,9 +118,10 @@ public:
 		if ( nX-2 < nLeft || nX+2 >= nRight || nY-2 < nTop || nY+2 >= nBottom )
 			m_Attrs.m_bColliding = true;
 		
+		int nMask = 0;
 		for ( int y = -2; y <= 2; y++ )
 			for ( int x = -2; x <= 2; x++ )
-				if ( CTools::TestMask(x, y) )
+				if ( (nMask = CTools::TestMask(x, y)) != 0 )
 				{
 					if ( m_nPrevX != -1 && m_nPrevY != -1 )
 					{
@@ -139,7 +145,7 @@ public:
 					// collision test
 					if ( cCurrent == RGB(0, 0, 255) )
 						continue;
-
+					/*
 					int nFactor = 0;
 					nFactor += cCurrent != RGB(0, 0, 0) ? 1 : 0;
 					nFactor += GfxGetPixel(nX+x-1, nY+y) != RGB(0, 0, 0) ? 1 : 0;
@@ -148,11 +154,17 @@ public:
 					nFactor += GfxGetPixel(nX+x, nY+y+1) != RGB(0, 0, 0) ? 1 : 0;
 					int nLevel = 256*(nFactor+1)/6;
 
-					COLORREF clrDraw = m_Attrs.m_color;
-					if ( m_Attrs.m_fImmortal > 0 )
-						clrDraw = RGB(255, 255, 255);
 
 					COLORREF clrAntialias = CTools::InterpolateColor( RGB(0, 0, 0), clrDraw, nLevel );
+					GfxPutPixel(nX+x, nY+y, clrAntialias);
+					*/
+					if ( m_Attrs.m_fImmortal > 0 )
+					{
+						GfxPutPixel(nX+x, nY+y, RGB(255, 255, 255));
+						continue;
+					}
+					//COLORREF clrDraw = ( m_Attrs.m_fImmortal == 0 ) ? m_Attrs.m_color : RGB(255, 255, 255);
+					COLORREF clrAntialias = CTools::InterpolateColor( cCurrent, m_Attrs.m_color, nMask*20 );
 					GfxPutPixel(nX+x, nY+y, clrAntialias);
 				}
 				
@@ -167,6 +179,14 @@ public:
 
 	void AdvanceCerv(float fSteps)
 	{
+		m_fAdvanceRemain += fSteps;
+		while (m_fAdvanceRemain >= 1.0)
+		{
+			AdvanceBy( 1.0f );
+			m_fAdvanceRemain -= 1.0f;
+			DrawCerv();
+		}
+#if 0
 		float fDistance = /*m_Attrs.m_fSpeed * */ fSteps;
 		DrawCerv();
 		while (fDistance >= 1.0)
@@ -176,6 +196,7 @@ public:
 			DrawCerv();
 		}
 		AdvanceBy(fDistance);
+#endif
 	}
 
 	void AdvanceBy(float fDistance)

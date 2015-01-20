@@ -16,8 +16,7 @@ CPlayer::CPlayer(int nId)
 	m_nLastKey = 0;
 	m_nCurrentKey = 0;
 
-	m_fSteering = 4.0f; //CTools::RandRange(3.0f, 6.0f);
-	m_fSpeed = CTools::RandRange(0.5f, 1.3f);
+	Randomize();
 
 	m_nKeyLeft = 0;
 	m_nKeyRight = 0;
@@ -77,16 +76,35 @@ CPlayer::CPlayer(int nId)
 
 bool CPlayer::IsMyColor(COLORREF c)
 {
-	for ( int i=0; i<6; i++)
-	{
-		int nLevel = 256*(i+1)/6;
-		if ( c == CTools::InterpolateColor( RGB(0, 0, 0), m_cColor, nLevel ) )
-			return true;
-	}
+	if ( c == 0 || c == RGB(255, 255, 255) )
+		return false;
+	int r = GetRValue(c);
+	int g = GetGValue(c);
+	int b = GetBValue(c);
+
+	int myr = GetRValue( m_cColor );
+	int myg = GetGValue( m_cColor );
+	int myb = GetBValue( m_cColor );
+
+	int l = max(max(r, g), b);
+	r = r * 255 / l;
+	g = g * 255 / l;
+	b = b * 255 / l;
+
+	if ( abs(r-myr)<10 && abs(g-myg)<10 && abs(b-myb) < 10 )
+		return true;
+	
 	return false;
 }
 
 bool CPlayer::IsAlive()
 {
 	return m_bAlive;
+}
+
+void CPlayer::Randomize()
+{
+	m_fSteering = 4.0f;
+	m_fSpeed = CTools::RandRange(0.8f, 1.3f);
+	m_fSteering = m_fSpeed * CTools::RandRange(2.0f, 5.0f);
 }

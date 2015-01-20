@@ -1,20 +1,20 @@
 
 void GfxPutPixel(int x, int y, COLORREF c)
 {
-	if ( x < 0 || y < 0 || x >= CFrameBuffer::Width || y >= CFrameBuffer::Height )
+	if ( x < 0 || y < 0 || x >= g_dev.display.Width() || y >= g_dev.display.Height() )
 		return;
 
 	DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
-	pBuf[y*CFrameBuffer::Width+x] = c;
+	pBuf[y*g_dev.display.Width()+x] = c;
 }
 
 COLORREF GfxGetPixel(int x, int y)
 {
-	if ( x < 0 || y < 0 || x >= CFrameBuffer::Width || y >= CFrameBuffer::Height )
+	if ( x < 0 || y < 0 || x >= g_dev.display.Width() || y >= g_dev.display.Height() )
 		return 0;
 
 	DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
-	return pBuf[y*CFrameBuffer::Width+x];
+	return pBuf[y*g_dev.display.Width()+x];
 }
 
 void GfxLine(int x0, int y0, int x1, int y1, COLORREF c)
@@ -36,6 +36,6 @@ void GfxLine(int x0, int y0, int x1, int y1, COLORREF c)
 void GfxClear(COLORREF c)
 {
 	DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
-	for (int i=0; i<CFrameBuffer::Width*CFrameBuffer::Height; i++, pBuf++)
+	for (int i=0; i<g_dev.display.Width()*g_dev.display.Height(); i++, pBuf++)
 		*pBuf = c;
 }

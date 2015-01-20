@@ -2,28 +2,33 @@
 //#include <Source/Main/Application.h>
 
 class CFrameBuffer {
-public:
-	enum {
-		Width = 1000,
-		Height = 1000
-	};
-
 private:
 
 	LPVOID m_pBuffer;
 	HDC m_pDC;
 	HANDLE m_Old;
 	HBITMAP m_ourbitmap;
+	LONG m_lWidth;
+	LONG m_lHeight;
+
+	LONG m_lWindowWidth;
+	LONG m_lWindowHeight;
 
 public:
 	CFrameBuffer()
 	{
+		m_lWidth = GetSystemMetrics(SM_CXSCREEN);
+		m_lHeight = GetSystemMetrics(SM_CYSCREEN);
+
+		m_lWindowWidth = m_lWidth;
+		m_lWindowHeight = m_lHeight;
+
 		HDC hDC;
 		BITMAPINFO bitmapinfo;
 		hDC=CreateCompatibleDC(NULL);
 		bitmapinfo.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
-		bitmapinfo.bmiHeader.biWidth=Width;
-		bitmapinfo.bmiHeader.biHeight=-Height; /* top-down */
+		bitmapinfo.bmiHeader.biWidth=Width();
+		bitmapinfo.bmiHeader.biHeight=-Height(); /* top-down */
 		bitmapinfo.bmiHeader.biPlanes=1;
 		bitmapinfo.bmiHeader.biBitCount=32;
 		bitmapinfo.bmiHeader.biCompression=BI_RGB;
@@ -36,7 +41,7 @@ public:
 		m_Old=SelectObject(m_pDC,m_ourbitmap);
 		DeleteDC(hDC);
 
-		FillMemory(m_pBuffer, sizeof(DWORD)*Width*Height, 0xb0);
+		FillMemory(m_pBuffer, sizeof(DWORD)*Width()*Height(), 0xb0);
 	}
 
 	LPVOID GetBuffer()
@@ -46,7 +51,7 @@ public:
 
 	void Blit(HDC hDC)
 	{
-		BitBlt(hDC,0,0,Width,Height,m_pDC,0,0,SRCCOPY);
+		BitBlt(hDC,0,0,Width(),Height(),m_pDC,0,0,SRCCOPY);
 	}
 
 	HDC GetDc()
@@ -59,6 +64,32 @@ public:
 		SelectObject(m_pDC,m_Old);
 		DeleteDC(m_pDC);
 		DeleteObject(m_ourbitmap);
+	}
+
+	LONG Width()
+	{
+		return m_lWidth;
+	}
+
+	LONG Height()
+	{
+		return m_lHeight;
+	}
+
+	LONG WindowWidth()
+	{
+		return m_lWindowWidth;
+	}
+
+	LONG WindowHeight()
+	{
+		return m_lWindowHeight;
+	}
+
+	void SetDisplay(int w, int h)
+	{
+		m_lWindowWidth = min(m_lWidth, w);
+		m_lWindowHeight = min(m_lHeight, h);
 	}
 };
 

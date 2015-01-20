@@ -55,6 +55,7 @@ public:
 	CPlayer(int nId);
 	bool IsMyColor(COLORREF c);
 	bool IsAlive();
+	void Randomize();
 };
 
 #endif

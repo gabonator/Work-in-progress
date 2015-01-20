@@ -35,6 +35,76 @@ HANDLE g_hAppThread = NULL;
 
 float CCerv::g_fSpeedMultiply = 1.0f;
 CGame game;
+bool bFullscreen = false;
+
+void SetFullscreen( HWND hwnd, bool enable )
+{
+	long style = enable ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+	static DWORD dwStyle = 0;
+	static HMENU hMenu = NULL;
+	static RECT windowRect = {};
+	static bool needRect = true;
+
+	if (needRect)
+	{
+		dwStyle = ::GetWindowLong(hwnd, GWL_STYLE);
+		GetWindowRect(hwnd,&windowRect);
+		hMenu = ::GetMenu(hwnd);
+		needRect = false;
+	}
+
+	SetWindowLong(hwnd,GWL_STYLE,style);
+
+	if ( enable )
+	{
+		::LockWindowUpdate(hwnd); 
+		::SetMenu(hwnd, NULL);
+		::LockWindowUpdate(NULL); 
+
+		SetWindowPos(hwnd, HWND_TOPMOST,
+			0,0,
+			GetSystemMetrics(SM_CXSCREEN),
+			GetSystemMetrics(SM_CYSCREEN),
+			SWP_SHOWWINDOW);
+
+		g_dev.display.SetDisplay(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+	}
+	else
+	{
+		::LockWindowUpdate(hwnd); // prevent intermediate redrawing
+		::SetMenu(hwnd, hMenu);
+		//::SetWindowLong(m_hWnd, GWL_STYLE, dwStyle & ~dwRemove);
+		//HDC hDC = ::GetWindowDC(NULL);
+		::LockWindowUpdate(NULL); // allow redrawing
+
+		SetWindowPos(hwnd, 0,
+			windowRect.left,windowRect.top,
+			windowRect.right - windowRect.left,
+			windowRect.bottom - windowRect.top,
+			SWP_SHOWWINDOW);
+
+		g_dev.display.SetDisplay(windowRect.right - windowRect.left-16, windowRect.bottom - windowRect.top-62);
+
+	}
+
+	/*
+DWORD dwRemove = WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+// This should be kept for reverse operation
+DWORD dwStyle = ::GetWindowLong(m_hWnd, GWL_STYLE);
+HMENU hMenu = ::GetMenu(m_hWnd);
+WINDOWPLACEMENT wp = {sizeof WINDOWPLACEMENT};
+::GetWindowPlacement(m_hWnd, &wp);
+ 
+// Hide the menu bar, change styles and position and redraw
+::LockWindowUpdate(m_hWnd); // prevent intermediate redrawing
+::SetMenu(m_hWnd, NULL);
+::SetWindowLong(m_hWnd, GWL_STYLE, dwStyle & ~dwRemove);
+HDC hDC = ::GetWindowDC(NULL);
+::LockWindowUpdate(NULL); // allow redrawing
+::SetWindowPos(m_hWnd, NULL, 0, 0, GetDeviceCaps(hDC, HORZRES), GetDeviceCaps(hDC, VERTRES), SWP_FRAMECHANGED);
+	*/
+	bFullscreen = enable;
+}
 
 DWORD WINAPI ThreadProcDraw(HANDLE handle) 
 {
@@ -202,6 +272,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_CHAR:
+		if (wParam == 'f')
+		{
+			SetFullscreen( g_hwnd, !bFullscreen );
+			//SetMenu(g_hwnd, bFullscreen ? NULL : AKEINTRESOURCE(IDC_CERV1));
+		}
+		
 		if (wParam == VK_ESCAPE)
 		{
 			g_running = FALSE;
@@ -222,6 +298,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
+		SetFullscreen(hWnd, false);
 		g_running = TRUE;
 		g_hDrawThread = CreateThread( NULL, NULL, &ThreadProcDraw, NULL, NULL, NULL );
 		//hAppThread = CreateThread( NULL, NULL, &ThreadProcApp, NULL, NULL, NULL );

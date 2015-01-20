@@ -377,6 +377,7 @@ public:
 		{
 			arrCerv.Add( new CCerv( arrPlayer[i] ) ); //arrPlayer[i]->m_nId ) );
 			arrPlayer[i]->m_bAlive = true;
+			arrPlayer[i]->Randomize();
 		}
 
 		int nLeft, nTop, nRight, nBottom;
@@ -456,7 +457,7 @@ public:
 			CPlayer* pPlayer = arrPlayer[pCerv->m_Attrs.m_nId];
 
 			//pCerv->DrawCerv();
-			pCerv->AdvanceCerv(2.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed);
+			pCerv->AdvanceCerv(1.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed);
 			//pCerv->DrawCerv();
 			//pCerv->AdvanceCerv();
 
@@ -470,6 +471,9 @@ public:
 				i--;
 				continue;
 			}
+
+			//if ( pPlayer->m_nKeyLeft != VK_LEFT )
+				Robot(pCerv, pPlayer);
 
 			pCerv->Command( (CCerv::EAction)pPlayer->m_nCurrentKey );
 
@@ -510,6 +514,7 @@ public:
 			if ( arrPlayer[i]->IsAlive() && arrPlayer[i]->m_nId != pPlayer->m_nId )
 				arrPlayer[i]->m_nScore++;
 
+		// todo!
 		for ( int i = 0; i < arrPlayer.GetSize(); i++ )
 			if ( arrPlayer[i]->IsAlive() && arrPlayer[i]->IsMyColor( pCerv->m_clrHitColor ) )
 				arrPlayer[i]->m_nScore++;
@@ -520,28 +525,23 @@ public:
 
 	void Fade()
 	{
-		//return;
-		COLORREF c0 = RGB(64, 64, 64);
-		COLORREF c1 = RGB(32, 32, 32);
-		COLORREF c2 = RGB(16, 16, 16);
-		COLORREF c3 = RGB(0, 0, 0);
-
 		DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
-//	return pBuf[y*CFrameBuffer::Width+x];
 
-		for (int y=0; y< CFrameBuffer::Height; y++)
-			for (int x=0; x< CFrameBuffer::Width; x++, pBuf++)
-			{
-				COLORREF c = *pBuf;
-				if ( c != 0 && c != RGB(255, 255, 255) && GetRValue(c) == GetGValue(c) && GetGValue(c) == GetBValue(c) )
-				{
-					if ( GetRValue(c) >= 0x02 )
-						c -= 0x020202;
-					else 
-						c = 0;
-					*pBuf = c;
-				}
-			}
+		LONG lPoints = g_dev.display.Width() * g_dev.display.Height();
+		while (lPoints--)
+		{
+			COLORREF c = *pBuf;
+
+			if ( c == 0 || c == RGB(255, 255, 255) )
+				goto skip;
+
+			if ( GetRValue(c) != GetGValue(c) || GetGValue(c) != GetBValue(c) )
+				goto skip;
+
+			*pBuf = c - 0x020202;
+skip:
+			pBuf++;
+		}
 	}
 
 	void ResetSpeeds()
@@ -741,7 +741,7 @@ public:
 
 					int x, y;
 					pCerv->GetCoordsInFront(x, y);
-					if ( GfxGetPixel( x, y ) != RGB(0, 0, 0) && GfxGetPixel( x, y ) != RGB(64, 64, 64) )
+					if ( !pCerv->CanWalk( GfxGetPixel( x, y ) ) )
 					{
 						pPlayer->m_nExtraActivated = CPlayer::EENone;
 						//pCerv->m_Attrs.m_fImmortal = 15.0f;
@@ -877,7 +877,6 @@ public:
 		m_Powerup.Render(hdc);
 		m_Bullets.Render(hdc);
 		
-		/*
 		CString strInfo;
 		strInfo.Format( _T("FPS: %d   "), nFps );
 		RECT r;
@@ -886,7 +885,6 @@ public:
 		//SetBkMode(hdc, TRANSPARENT);
 		SetTextColor(hdc, RGB(255, 255, 255));
 		DrawText(hdc, strInfo, -1, &r, 0);
-		*/
 		DrawScores(hdc);
 	}
 
@@ -964,5 +962,57 @@ public:
 				}
 			}
 		}
+	}
+
+	float TestDir( CCerv* pCerv, float fAngle )
+	{
+		int bx, by;
+		pCerv->GetCoordsInFront(bx, by, 5.0f);
+		float a = (pCerv->m_Attrs.m_fAngle + fAngle) / 180.0f * 3.141592f;
+		float vx = cos(a);
+		float vy = sin(a);
+
+		float f;
+		int nLeft, nTop, nRight, nBottom;
+		CTools::GetMapArea( nLeft, nTop, nRight, nBottom );
+
+		for ( f=5.0; f<200.0f; f+=1.0f)
+		{
+			float x = bx + vx*f;
+			float y = by + vy*f;
+			if ( x <= nLeft || x >= nRight || y <= nTop || y >= nBottom )
+				return f;
+			if ( !pCerv->CanWalk( GfxGetPixel( (int)x, (int)y) ) )
+				return f;
+		}
+		return f;
+	}
+	void Robot(CCerv* pCerv, CPlayer* pPlayer)
+	{
+		pPlayer->m_nCurrentKey = CCerv::goNone;
+
+		float fForward = TestDir(pCerv, 0.0f);
+		if ( fForward >= 200.0f )
+			return;
+
+		float fBestDist = 0.0f;
+		float fBestAngle = 0;
+		for (float fTest = -20.0f; fTest <= 20.0f; fTest += 2.0f )
+		{
+			float fDist = TestDir(pCerv, pCerv->m_Attrs.m_fSteering*fTest);
+			if ( fDist > fBestDist )
+			{
+				fBestDist = fDist;
+				fBestAngle = fTest;
+			}
+		}
+
+		if ( fBestDist < 100 )
+			pPlayer->m_nCurrentKey = CCerv::goLeft;
+
+		if ( fBestAngle < 0 )
+			pPlayer->m_nCurrentKey = CCerv::goLeft;
+		else
+			pPlayer->m_nCurrentKey = CCerv::goRight;
 	}
 };

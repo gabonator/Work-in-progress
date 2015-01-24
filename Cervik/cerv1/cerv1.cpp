@@ -106,6 +106,103 @@ HDC hDC = ::GetWindowDC(NULL);
 	bFullscreen = enable;
 }
 
+void Swap(DWORD& a, DWORD& b)
+{
+	DWORD c = a;
+	a = b;
+	b = c;
+}
+
+void SwapAvg(DWORD& a, DWORD& b)
+{
+	DWORD c;
+	c = RGB(
+			(GetRValue(a)+GetRValue(b))>>1, 
+			(GetGValue(a)+GetGValue(b))>>1,
+			(GetBValue(a)+GetBValue(b))>>1);
+	a = c;
+	b = c;
+}
+
+void SwapOr(DWORD& a, DWORD& b)
+{
+	DWORD c = a | b;
+	a = c;
+	b = c;
+}
+
+void Blur1(CFrameBuffer& b, RECT r)
+{
+	int bx = b.WindowWidth()/2;
+	int by = b.WindowHeight()/2;
+
+	DWORD* pBuffer = (DWORD*)b.GetBuffer();
+	LONG w = b.Width();
+
+	static int noise[2048] = {0};
+	if ( noise[0] == 0 )
+	{
+		for ( int i=0; i<2048; i++)
+		{
+			int dx=(rand()&15)-7;
+			int dy=(rand()%15)-7;
+			noise[i] = dy*w + dx;
+		}
+		noise[0] |= 1;
+	}
+
+	int rw = r.right - r.left;
+	int rh = r.bottom - r.top;
+	pBuffer += r.left + r.top * w;
+	int gap = w-rw;
+
+	int ri = 0;
+	DWORD* pBuffer_ = pBuffer;
+	for (int y=rh; y; y--)
+	{
+		for ( int x=rw; x; x--, pBuffer_++)
+		{		
+			Swap(*pBuffer_, pBuffer_[noise[ri++]]);
+			ri &= 2047;
+		}
+		pBuffer_ += gap;
+	}
+
+	pBuffer_ = pBuffer;
+	for (int y=rh; y; y--)
+	{
+		for ( int x=rw; x; x--, pBuffer_++)
+		{			
+			SwapAvg(*pBuffer_, pBuffer_[noise[ri++]]);
+			ri &= 2047;
+		}
+		pBuffer_ += gap;
+	}
+}
+
+void Blur(CFrameBuffer& b, RECT r)
+{
+	int bx = b.WindowWidth()/2;
+	int by = b.WindowHeight()/2;
+
+	DWORD* pBuffer = (DWORD*)b.GetBuffer();
+	LONG w = b.Width();
+
+	int rw = r.right - r.left;
+	int rh = r.bottom - r.top;
+	pBuffer += r.left + r.top * w;
+	int gap = w-rw;
+
+	int ri = 0;
+	DWORD* pBuffer_ = pBuffer;
+	for (int y=rh; y; y--)
+	{
+		for ( int x=rw; x; x--, pBuffer_++)
+			*pBuffer_ = pBuffer_[-(x&7) -((y+1)&7)*w];		//SwapOr(*pBuffer_, pBuffer_[-(x&7) -(y&7)*w]);
+		pBuffer_ += gap;
+	}
+}
+
 DWORD WINAPI ThreadProcDraw(HANDLE handle) 
 {
 	OutputDebugString( _T("Main thread started!\n") );
@@ -120,9 +217,25 @@ DWORD WINAPI ThreadProcDraw(HANDLE handle)
 
 	while (g_running) 
 	{
+		RECT blurRect1, blurRect2;
+		int brLeft, brTop, brRight, brBottom;
+		CTools::GetMapArea(brLeft, brTop, brRight, brBottom);
+
+		blurRect1.left = brLeft+1;
+		blurRect1.top = brBottom-50;
+		blurRect1.right = brRight-1;
+		blurRect1.bottom = brBottom-1;
+
+		blurRect2.left = brLeft+1;
+		blurRect2.top = brTop+1;
+		blurRect2.right = brRight-1;
+		blurRect2.bottom = brTop+100;
+
 		game.Do();
 		g_dev.Blit( tempBuffer.GetDc() );
 		game.Blit( tempBuffer.GetDc() );
+		Blur(tempBuffer, blurRect1);
+		Blur(tempBuffer, blurRect2);
 		tempBuffer.Blit(hdc);
 		Sleep( 10 );
 	}

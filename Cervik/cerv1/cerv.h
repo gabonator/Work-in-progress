@@ -135,7 +135,7 @@ public:
 								if ( m_Attrs.m_fImmortal == 0 )
 									m_fCrash += 1.0f;
 									//m_Attrs.m_bColliding = true;
-								GfxPutPixel(nX+x + nOfsX, nY+y + nOfsY, RGB(0, 0, 255));
+								//GfxPutPixel(nX+x + nOfsX, nY+y + nOfsY, RGB(0, 0, 255));
 								continue;
 							}
 						}
@@ -143,27 +143,15 @@ public:
 
 					COLORREF cCurrent = GfxGetPixel(nX+x, nY+y);
 					// collision test
-					if ( cCurrent == RGB(0, 0, 255) )
-						continue;
-					/*
-					int nFactor = 0;
-					nFactor += cCurrent != RGB(0, 0, 0) ? 1 : 0;
-					nFactor += GfxGetPixel(nX+x-1, nY+y) != RGB(0, 0, 0) ? 1 : 0;
-					nFactor += GfxGetPixel(nX+x+1, nY+y) != RGB(0, 0, 0) ? 1 : 0;
-					nFactor += GfxGetPixel(nX+x, nY+y-1) != RGB(0, 0, 0) ? 1 : 0;
-					nFactor += GfxGetPixel(nX+x, nY+y+1) != RGB(0, 0, 0) ? 1 : 0;
-					int nLevel = 256*(nFactor+1)/6;
+					//if ( cCurrent == RGB(0, 0, 255) )
+//						continue;
 
-
-					COLORREF clrAntialias = CTools::InterpolateColor( RGB(0, 0, 0), clrDraw, nLevel );
-					GfxPutPixel(nX+x, nY+y, clrAntialias);
-					*/
 					if ( m_Attrs.m_fImmortal > 0 )
 					{
 						GfxPutPixel(nX+x, nY+y, RGB(255, 255, 255));
 						continue;
 					}
-					//COLORREF clrDraw = ( m_Attrs.m_fImmortal == 0 ) ? m_Attrs.m_color : RGB(255, 255, 255);
+
 					COLORREF clrAntialias = CTools::InterpolateColor( cCurrent, m_Attrs.m_color, nMask*20 );
 					GfxPutPixel(nX+x, nY+y, clrAntialias);
 				}

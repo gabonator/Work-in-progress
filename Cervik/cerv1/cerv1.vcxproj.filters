@@ -57,6 +57,24 @@
     <ClInclude Include="cerv.h">
       <Filter>App</Filter>
     </ClInclude>
+    <ClInclude Include="ai.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="bullets.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="eraser.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="extras.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="hud.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="powerups.h">
+      <Filter>App</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -78,6 +96,24 @@
       <Filter>App</Filter>
     </ClCompile>
     <ClCompile Include="cerv.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="ai.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="bullets.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="eraser.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="extras.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="hud.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="powerups.cpp">
       <Filter>App</Filter>
     </ClCompile>
   </ItemGroup>

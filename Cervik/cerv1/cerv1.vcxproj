@@ -77,23 +77,35 @@
     <None Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ai.h" />
+    <ClInclude Include="bullets.h" />
     <ClInclude Include="cerv.h" />
     <ClInclude Include="cerv1.h" />
     <ClInclude Include="Device.h" />
+    <ClInclude Include="eraser.h" />
+    <ClInclude Include="extras.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="gfx.h" />
+    <ClInclude Include="hud.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="powerups.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ai.cpp" />
+    <ClCompile Include="bullets.cpp" />
     <ClCompile Include="cerv.cpp" />
     <ClCompile Include="cerv1.cpp" />
+    <ClCompile Include="eraser.cpp" />
+    <ClCompile Include="extras.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gfx.cpp" />
+    <ClCompile Include="hud.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="powerups.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

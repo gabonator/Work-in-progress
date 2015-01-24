@@ -35,7 +35,7 @@ extern CDevice g_dev;
 
 	/*static*/ void CTools::GetMapArea(int& nLeft, int& nTop, int& nRight, int& nBottom)
 	{
-		nLeft = 20;
+		nLeft = 30;
 		nTop = 20;
 		nRight = g_dev.display.WindowWidth() - 200;
 		nBottom = g_dev.display.WindowHeight() - 20;

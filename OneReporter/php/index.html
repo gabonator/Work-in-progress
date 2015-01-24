@@ -1,0 +1,194 @@
+<html>
+<head>
+
+<body>
+<div id="text" style="font-size:80px;"></div>
+<div id="dbg" style="font-size:14px; color:#808080"></div>
+<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+</body>
+
+<script language="javascript">
+var lastTime = "";
+var prevScript = false;
+var dvLastData, dvCurData;
+var bAnyData = false;
+
+var arrData = [];
+var nDataAcc = 0;
+var bFirst = true;
+var nSum = 0;
+var nSum0 = -1;
+
+function load(fname, handler)
+{
+	var script = document.createElement('script');
+  script.type= 'text/javascript';
+  script.onreadystatechange= function () {
+//alert(this.readyState);
+    if (this.readyState == 'complete') this.onload();
+  }
+  script.onload = handler;
+	var rnd = Math.random().toString().substr(-6);
+  script.src = (fname.indexOf("?") != -1) ? fname+"&rnd="+rnd : fname+"?rnd="+rnd;
+//	console.log("load: "+script.src);
+
+	var head = document.getElementsByTagName('head')[0];
+	if ( prevScript )
+		head.removeChild( prevScript );
+	head.appendChild(script);
+	prevScript = script;
+}
+
+function add(json)
+{
+	if ( !json["ts"] )
+		return;
+
+	lastTime = parseInt(json["ts"]);
+	lastArgs = json;
+	pushVal( json );
+	dvLastData = dvCurData;
+	dvCurData = lastArgs;
+  bAnyData = true;
+}
+
+function pushVal( json )
+{
+	var lastCount = 0;
+	var newCount = parseInt(json.args.counter) + nDataAcc;
+
+	if ( arrData.length > 0 )
+		lastCount = arrData[arrData.length-1].counter;
+	
+	if ( lastCount == newCount )
+		return;
+	
+	if ( newCount /*+ nDataAcc*/ < lastCount )
+	{
+//		console.log("log broken " + lastCount + " => " + newCount);
+		newCount -= nDataAcc;
+		nDataAcc = lastCount;
+		newCount += nDataAcc;
+	}
+
+//console.log(arrData.length);
+
+	arrData[arrData.length] = {ts:json.ts, counter:newCount};
+	nSum = newCount;
+	if ( nSum0 == -1 )
+		nSum0 = nSum;
+}
+
+function processLog()
+{
+	var nUtcOffset = 60000 * (new Date()).getTimezoneOffset();
+/*
+	for (var i=0; i<arrData.length-1; i++)
+	{
+		arrData[i].rate = (arrData[i+1].counter - arrData[i].counter)/(arrData[i+1].ts - arrData[i].ts); // impulses per second
+		//console.log((arrData[i].rate*3600/1800).toFixed(3) + " kW");
+	}
+*/
+	var resamplelen = 200;
+
+	if ( arrData.length-1 < resamplelen )
+		resamplelen = arrData.length - 1;
+
+	var chdata = [];
+	for (var i=0; i<resamplelen; i++)
+	{
+		var j0 = Math.floor(i*(arrData.length-1)/resamplelen);
+		var j1 = Math.floor((i+1)*(arrData.length-1)/resamplelen);
+		var rate = (arrData[j1].counter - arrData[j0].counter)/(arrData[j1].ts - arrData[j0].ts);
+		var ts = (arrData[j1].ts + arrData[j0].ts)/2;
+
+		chdata[i] = [ts*1000-nUtcOffset, Math.floor(rate*3600/1800 *1000)/1000];
+	}
+
+	var series = [];
+
+	series[series.length] = {
+		    	name: "Consumption rate",
+		    	data: chdata,
+		    	zIndex: 1,
+		    	marker: {
+		    		fillColor: 'white',
+		    		lineWidth: 2,
+		    		lineColor: Highcharts.getOptions().colors[0]
+		    	}
+	};
+
+ 	$('#container').highcharts({
+    title: {text: 'Power consumption rate'},
+		xAxis: {type: 'datetime'},
+		yAxis: {min: 0, title: {text: null}},
+		tooltip: {crosshairs: true, shared: true, valueSuffix: 'kW'},
+		legend: { },
+		series: series });
+
+}
+
+function updateInfo()
+{
+	if (!bAnyData)
+		return;
+
+	console.log( dvCurData["ts"] + " " + dvCurData["time"] + " " + dvCurData["args"]["counter"] );
+
+	if ( !dvCurData["args"] )
+		return;
+
+	var report = "update=" + dvCurData["time"] + " ip=" + dvCurData["ip"] + " ";
+	for ( var i in dvCurData["args"] )
+		report += i + "=" + dvCurData["args"][i] + " ";
+	document.getElementById("dbg").innerHTML = report;
+
+	if ( !dvCurData["args"] || !dvLastData["args"] )
+		return;
+
+	var diff = parseInt(dvCurData["args"]["counter"]) - parseInt(dvLastData["args"]["counter"]);
+	var tdif = (parseInt(dvCurData["args"]["tick"]) - parseInt(dvLastData["args"]["tick"]))/1000; // [s]
+	var power = diff*60*60/tdif/1800;
+
+	var energy = ((nSum-nSum0) / 1800).toFixed(3);
+	document.getElementById("text").innerHTML = diff + " imp/min " + power.toFixed(3) + "kW &Sigma; " + energy + " kWh";
+
+	if ( bFirst )
+	{
+		processLog();
+		bFirst = false;
+	}
+}
+
+function pad(x)
+{
+	return (x < 10) ? "0" + x : "" + x;
+}
+
+function getTimestamp(day)
+{
+/////return "2013-05-15";
+	var tm = (new Date( (new Date()).getTime() + day*1000*60*60*24 ));
+	return tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
+}
+
+var baseTime = getTimestamp(0);
+
+
+function timer()
+{
+	bAnyData = false;
+	load( "http://pub.valky.eu/redir/get.php?day="+baseTime+"&from="+lastTime, updateInfo );
+}
+
+timer();
+setInterval("timer()", 20000);
+
+
+</script>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+
+</head>
+</html>

@@ -106,9 +106,27 @@ public:
 
 	void Do()
 	{
+		static DWORD lLastTick = 0;
+		DWORD lCurTick = GetTickCount();
+		if ( lLastTick == 0)
+			lLastTick = lCurTick;
+
+		float fPassedS = (lCurTick - lLastTick)/1000.0f;
+		float fTargetFps = 65.0f;
+		
+		float fFrameCompensation = fPassedS / (1.0f/fTargetFps);
+		if ( fFrameCompensation < 0.1f )
+			fFrameCompensation = 0.1f;
+		if ( fFrameCompensation > 5.0f )
+			fFrameCompensation  = 5.0f;
+		lLastTick = lCurTick;
+
 		if ( m_bGamePaused )
 		{
 			GamePaused();
+			m_Powerup.Do();
+			m_Bullets.Do();
+			FxFade();
 			return;
 		}
 
@@ -145,7 +163,7 @@ public:
 			CCerv* pCerv = arrCerv[i];
 			CPlayer* pPlayer = arrPlayer[pCerv->m_Attrs.m_nId];
 
-			pCerv->AdvanceCerv(1.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed);
+			pCerv->AdvanceCerv(1.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed * fFrameCompensation);
 
 			if ( pCerv->m_Attrs.m_bColliding )
 			{
@@ -161,7 +179,8 @@ public:
 			if ( pPlayer->m_nKeyLeft != VK_LEFT )
 				Robot(pCerv, pPlayer);
 
-			pCerv->Command( (CCerv::EAction)pPlayer->m_nCurrentKey );
+			// TODO: add framecompensation
+			pCerv->Command( (CCerv::EAction)pPlayer->m_nCurrentKey, CCerv::g_fSpeedMultiply * fFrameCompensation );
 
 			CPlayer::EExtra eType = m_Powerup.GetCollision( (int)pCerv->m_Attrs.m_fX, (int)pCerv->m_Attrs.m_fY );
 			if ( eType != CPlayer::EENone )
@@ -265,7 +284,7 @@ skip:
 	void GamePaused()
 	{
 		static bool bPrevSpace = false;
-		bool bCurSpace = (bool)g_dev.GetKeys()[VK_SPACE];
+		bool bCurSpace = g_dev.GetKeys()[VK_SPACE] != 0;
 
 		if ( !m_bGamePaused )
 		{

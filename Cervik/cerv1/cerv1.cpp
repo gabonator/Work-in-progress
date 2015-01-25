@@ -414,6 +414,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetFullscreen(hWnd, false);
 		g_running = TRUE;
 		g_hDrawThread = CreateThread( NULL, NULL, &ThreadProcDraw, NULL, NULL, NULL );
+		//SetThreadPriority( g_hDrawThread, THREAD_PRIORITY_ABOVE_NORMAL );
+		//SetThreadPriority( g_hDrawThread, THREAD_PRIORITY_HIGHEST );
 		//hAppThread = CreateThread( NULL, NULL, &ThreadProcApp, NULL, NULL, NULL );
 		break;
 	}

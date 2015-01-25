@@ -80,7 +80,13 @@ private:
 
 			if ( pPlayer->m_nExtraActivated )
 			{
-				CPowerup::Render(hdc, pPlayer->m_nExtraActivated, rp);
+				CPowerup::TPowerup powerup;
+				powerup.m_lValidSince = 0;
+				powerup.m_lValidUntil = 0;
+				powerup.m_rcPosition = rp;
+				powerup.m_Type = pPlayer->m_nExtraActivated;
+
+				CPowerup::Render(hdc, powerup);
 				SetTextColor(hdc, cPlayer);
 
 				RECT rpt = rp;
@@ -99,7 +105,13 @@ private:
 			rp.right += 40;
 			if ( pPlayer->m_nExtraAvailable )
 			{
-				CPowerup::Render(hdc, pPlayer->m_nExtraAvailable, rp);
+				CPowerup::TPowerup powerup;
+				powerup.m_lValidSince = 0;
+				powerup.m_lValidUntil = 0;
+				powerup.m_rcPosition = rp;
+				powerup.m_Type = pPlayer->m_nExtraAvailable;
+
+				CPowerup::Render(hdc, powerup);
 				
 				SetTextColor(hdc, cPlayer);
 				RECT rpt = rp;

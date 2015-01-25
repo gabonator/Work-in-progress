@@ -1,11 +1,13 @@
 class CPowerup
 {
+public:
 	class TPowerup
 	{
 	public:
 		CPlayer::EExtra m_Type;
 		RECT m_rcPosition;
-		LONG m_lValidUntil;
+		DWORD m_lValidUntil;
+		DWORD m_lValidSince;
 	};
 
 	CArray<TPowerup> m_arrPowerups;
@@ -53,8 +55,11 @@ public:
 		return _T("???");
 	}
 
-	static void Render(HDC hdc, CPlayer::EExtra eType, RECT r)
+	static void Render(HDC hdc, const TPowerup& powerup)
 	{
+		CPlayer::EExtra eType = powerup.m_Type;
+		RECT r = powerup.m_rcPosition;
+
 		static HBRUSH brush = NULL;
 		if ( brush == NULL )
 			brush = CreateSolidBrush(RGB(255, 255, 0) );
@@ -62,7 +67,31 @@ public:
 		SetBkMode(hdc, TRANSPARENT);
 		SetTextColor(hdc, RGB(0, 0, 0));
 
-		FillRect(hdc, &r, brush);
+		float fTransition = GetTransition(powerup);
+		
+		if ( fTransition != 1.0f )
+			fTransition = sin(fTransition*3.141592f*0.7f)/sin(3.141592f*0.7f);
+
+		POINT center;
+		center.x = (r.left + r.right)/2;
+		center.y = (r.top + r.bottom)/2;
+
+		SIZE sz;
+		sz.cx = r.right - r.left;
+		sz.cy = r.bottom - r.top;
+
+		RECT r1;
+		r1.right = (int)(sz.cx/2*fTransition);
+		r1.bottom = (int)(sz.cy/2*fTransition);
+		r1.left = -r1.right;
+		r1.top = -r1.bottom;
+
+		r1.left += center.x;
+		r1.right += center.x;
+		r1.top += center.y;
+		r1.bottom += center.y;
+
+		FillRect(hdc, &r1, brush);
 		DrawText(hdc, GetName(eType), -1, 
 			&r, DT_CENTER | DT_SINGLELINE | DT_VCENTER );
 	}
@@ -70,7 +99,7 @@ public:
 	void Render(HDC hdc)
 	{
 		for ( int i=0; i<m_arrPowerups.GetSize(); i++)
-			Render(hdc, m_arrPowerups[i].m_Type, m_arrPowerups[i].m_rcPosition);
+			Render(hdc, m_arrPowerups[i]);
 	}
 
 	void Do()
@@ -81,7 +110,7 @@ public:
 				AddRandom();
 		}
 
-		LONG lTick = GetTickCount();
+		DWORD lTick = GetTickCount();
 		for ( int i=0; i<m_arrPowerups.GetSize(); i++)
 			if ( lTick > m_arrPowerups[i].m_lValidUntil )
 				m_arrPowerups.RemoveAt(i--);
@@ -115,7 +144,8 @@ public:
 		powerup.m_rcPosition.top = nTop + (rand()%(nBottom-nTop-nHeight));
 		powerup.m_rcPosition.right = powerup.m_rcPosition.left + nWidth;
 		powerup.m_rcPosition.bottom = powerup.m_rcPosition.top + nHeight;
-		powerup.m_lValidUntil = GetTickCount() + 20000;
+		powerup.m_lValidSince = GetTickCount();
+		powerup.m_lValidUntil = powerup.m_lValidSince + 20000;
 
 		m_arrPowerups.Add(powerup);
 	}
@@ -133,6 +163,30 @@ public:
 			return eType;
 		}
 		return CPlayer::EENone;
+	}
+
+	static float GetTransition(const TPowerup& powerup)
+	{
+		if ( powerup.m_lValidSince == powerup.m_lValidUntil )
+			return 1.0f;
+
+		const float fTime0 = 0.5f;
+		const float fTime1 = 3.0f;
+
+		DWORD lTick = GetTickCount();
+		float fSince = (lTick - powerup.m_lValidSince) / 1000.0f;
+		float fTo = (powerup.m_lValidUntil - lTick) / 1000.0f;
+
+		float fResult = 1.0f;
+
+		if ( fTo < fTime1 )
+			fResult = fTo / fTime1;
+		else if ( fSince < fTime0 )
+			fResult = fSince / fTime0;
+		if ( fResult < 0.0f )
+			fResult = 0.0f;
+
+		return fResult;
 	}
 
 };

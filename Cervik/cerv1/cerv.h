@@ -202,12 +202,12 @@ public:
 		}
 	}
 
-	void Command(EAction eAction)
+	void Command(EAction eAction, float fMultiply)
 	{
 		if ( eAction & goLeft )
-			m_Attrs.m_fAngle -= m_Attrs.m_fSteering;
+			m_Attrs.m_fAngle -= m_Attrs.m_fSteering * fMultiply;
 		if ( eAction & goRight )
-			m_Attrs.m_fAngle += m_Attrs.m_fSteering;
+			m_Attrs.m_fAngle += m_Attrs.m_fSteering * fMultiply;
 	}
 
 	void SwapEnds()

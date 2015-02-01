@@ -1,0 +1,50 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<style>
+input {width:40%; height:50%;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;}
+</style>
+</head>
+<input type="button" value="Left" onMouseDown="send(this, chLeft+'1')" onMouseUp="send(this, chLeft+'0')" onTouchStart="sendi(this, chLeft+'1')" onTouchEnd="sendi(this, chLeft+'0')">
+<input type="button" value="Right" onMouseDown="send(this, chRight+'1')" onMouseUp="send(this, chRight+'0')" onTouchStart="sendi(this, chRight+'1')" onTouchEnd="sendi(this, chRight+'0')"><br>
+<input type="button" value="Action" onMouseDown="send(this, chAction+'1')" onMouseUp="send(this, chAction+'0')" onTouchStart="sendi(this, chAction+'1')" onTouchEnd="sendi(this, chAction+'0')">
+<input type="button" value="Space" onMouseDown="send(this, ' 1')" onMouseUp="send(this, ' 0')" onTouchStart="sendi(this, ' 1')" onTouchEnd="sendi(this, ' 0')">
+
+<script language="javascript">
+chLeft = 'Z'; chRight = 'X';
+
+var url = "ws:" + window.location.href.substr(5) + "index.html";
+var buffer = "";
+var socket = new WebSocket(url);
+
+socket.onmessage = function(msg)
+{
+  buffer += new String(msg.data);
+  var lines = buffer.split("\n");
+  while ( lines.length > 1 )
+    Receive( lines.shift() );
+  buffer = lines.join("\n");
+}
+
+function Receive(line)
+{
+  console.log(line);
+  setTimeout(line, 0);
+}
+
+var senddisabled = false;
+function send(obj, msg)
+{
+  if ( senddisabled ) return;
+  socket.send(msg);
+}
+
+function sendi(obj, msg)
+{
+  senddisabled = true;
+  socket.send(msg);
+}
+</script>
+</html>

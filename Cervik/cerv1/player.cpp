@@ -72,6 +72,7 @@ CPlayer::CPlayer(int nId)
 	m_nExtraNewDuration = 0;
 	m_nExtraNewCount = 0;
 
+	m_bRobot = true; //nId > 0;
 }
 
 bool CPlayer::IsMyColor(COLORREF c)

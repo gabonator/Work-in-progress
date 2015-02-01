@@ -50,6 +50,7 @@ public:
 	int m_nScore;
 
 	bool m_bAlive;
+	bool m_bRobot;
 
 public:
 	CPlayer(int nId);

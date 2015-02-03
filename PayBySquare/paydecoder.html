@@ -1,0 +1,188 @@
+<input id="input" type="text" size=100 value="0004S000EM7JROM9A000OF2NF598N8LOKF5B8MVF9D9HEHOD0KH1FNA4NPQMIRGO43NEAUDGLQBBUIEDALCLQKR4OSU1Q3SDLNB72R18M73FCV7P00"><br>
+<input type="button" value="Convert" onClick="convert(document.getElementById('input').value)"><br>
+<div id="output"></div>
+
+<script language="javascript" src="lzma_worker.js"></script>
+
+<script language="javascript">
+
+function _ASSERT(e, msg)
+{
+  if (!e) console.log("ASSERT: " + msg);
+}
+
+function toChar32(n)
+{
+  var table = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+  return table.charAt(n);
+}
+
+function fromChar32(ch)
+{
+  var table = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+  var i = table.indexOf(ch);
+  _ASSERT( i != -1, "Cannot convert char : " + ch );
+  return i;
+}
+
+function fromBase32(str)
+{
+  var arrValues = [];
+  var nBits = 0;
+  var nValue = 0;
+  for (var i=0; i<str.length; i++)
+  {
+    nValue <<= 5;
+    nValue |= fromChar32(str.charAt(i));
+    nBits += 5;
+
+    //console.log( i +". char = '"+str.charAt(i)+"' value = "+fromChar32(str.charAt(i)) + " sum ="+nValue + " bits="+nBits);
+
+    if ( nBits >= 8 )
+    {
+       var nExtraBits = (nBits - 8);
+       arrValues.push(nValue >> nExtraBits );
+       nValue &= (1<<nExtraBits) - 1;
+       nBits -= 8; 
+    }
+  }
+  if ( nBits != 0 )
+    arrValues.push( nValue );
+  return arrValues;
+}
+
+function toBase32(arr)
+{
+  var nBits = 0;
+  var nValue = 0;
+  var strResult = "";
+  for (var i=0; i<arr.length; i++)
+  {
+    nValue <<= 8;
+    nValue |= arr[i];
+    nBits += 8;
+
+    while ( nBits >= 5 )
+    {
+      var nExtraBits = (nBits - 5);
+
+      strResult += toChar32(nValue >> nExtraBits );
+      nValue &= (1<<nExtraBits) - 1;
+      nBits -= 5;
+    }
+  }
+  return strResult;
+}
+
+function toHex16(arr)
+{
+  var out = "";
+  for (var i=0; i<arr.length; i++)
+    out += ("0" + arr[i].toString(16)).substr(-2) + " ";
+  return out;
+}
+
+
+function convert(code)
+{
+  //code = "0004S000EM7JROM9A000OF2NF598N8LOKF5B8MVF9D9HEHOD0KH1FNA4NPQMIRGO43NEAUDGLQBBUIEDALCLQKR4OSU1Q3SDLNB72R18M73FCV7P00";
+
+  var arr = fromBase32(code);
+  //console.log( toHex16(arr) );
+  //console.log( toBase32(arr) );
+
+  _ASSERT( (arr[0] >> 4) == 0, "BySquareType mismatch" );
+  _ASSERT( (arr[0] & 15) == 0, "Version mismatch" );
+  _ASSERT( (arr[1] >> 4) == 0, "Document type mismatch" );
+
+
+  var arr_u8 = new Uint8Array(arr.length-4+13);
+  for (var i=0; i<arr.length-4; i++)
+    arr_u8[i+13] = arr[i+4];
+
+  var dataLength = arr[2] + (arr[3] << 8)
+  var lzmaConf = {lc:3, lp:0, pb:2, dictSize: 128*1024, dataLength:dataLength};
+  arr_u8[0] = lzmaConf.lc + lzmaConf.lp*5 + lzmaConf.pb*9*5;
+
+  arr_u8[1] = (lzmaConf.dictSize >> 24) & 0xff;
+  arr_u8[2] = (lzmaConf.dictSize >> 16) & 0xff;
+  arr_u8[3] = (lzmaConf.dictSize >>  8) & 0xff;
+  arr_u8[4] = (lzmaConf.dictSize >>  0) & 0xff; // little endian
+
+  arr_u8[5] = (lzmaConf.dataLength >>  0) & 0xff;
+  arr_u8[6] = (lzmaConf.dataLength >>  8) & 0xff;
+  arr_u8[7] = (lzmaConf.dataLength >> 16) & 0xff;
+  arr_u8[8] = (lzmaConf.dataLength >> 24) & 0xff;
+
+  arr_u8[9] = 0x00;
+  arr_u8[10] = 0x00;
+  arr_u8[11] = 0x00;
+  arr_u8[12] = 0x00;
+
+  console.log( toHex16(arr_u8) );
+
+  LZMA.decompress(arr_u8, onDecompressed, function(percent) {});
+}
+
+function parseStream(data)
+{
+  // skip CRC
+  var aux = "";
+  for (var i=5; i<data.length; i++)
+    aux += String.fromCharCode(data[i]);
+  return aux.split("\t");
+}
+
+function onDecompressed(data)
+{
+  var fields = parseStream(data);
+  var aux = "<table border=1>";
+  for (i in fields)
+    aux += "<tr><td>Field "+i+"</td><td>"+fields[i]+"</td></tr>";
+  aux += "</table>";
+  document.getElementById("output").innerHTML = aux;
+}
+
+</script>
+
+
+<!--
+max 550 UTF8 znakov
+CRC32
+
+LZMA: 
+  header 2 (size of data)
+  LC = 3
+  LP = 0
+  PB = 2
+  DICT = 128 kb (2^17)
+
+po dekompresii prve 4 bajty su CRC32 (little endian)
+4x BCD (square type, version, document type, reserved)
+
+Base32hex - konverzia na 5 bitove slova, padding
+
+"0123456789ABCDEFGHIJKLMNOPQRSTUV"
+
+
+"0004S000EM7JROM9A000OF2NF598N8LOKF5B8MVF9D9HEHOD0KH1FNA4NPQMIRGO43NEAUDGLQBBUIEDALCLQKR4OSU1Q3SDLNB72R18M73FCV7P00"
+
+
+frame:
+1: BySquareType, Version
+1: DocumentType, Reserved
+2: data length
+X: lzma stream
+
+00 00 4e 00 00 75 8f 3d e2 c9 50 00 0c 3c 57 79 52 8b a2 b8 a3 ca b4 5b ef 4b 53 17 47 0d 05 22 17 dd 44 be 75 69 6e 18 20 ee e5 79 b0 ae 96 bf 49 cd 55 59 5d 53 64 c7 3c 1d 0f 8d ad d6 71 6c 28 b1 c6 f6 7c f9 00 00 
+
+
+working: 5d 00 00 00 02 4e 00 00 00 00 00 00 00 00 75 8f 3d e2 c9 50 00 0c 3c 57 79 52 8b a2 b8 a3 ca b4 5b ef 4b 53 17 47 0d 05 22 17 dd 44 be 75 69 6e 18 20 ee e5 79 b0 ae 96 bf 49 cd 55 59 5d 53 64 c7 3c 1d 0f 8d ad d6 71 6c 28 b1 c6 f6 7c f9 00 00 
+
+
+decoded:
+235, 61, 15, 46, 9, 49, 9, 49, 9, 49, 9, 69, 85, 82, 9, 50, 48, 49, 51, 48, 52, 48, 56, 9, 49, 50, 51, 52, 54, 53, 54, 9, 51, 48, 56, 9, 9, 9, 9, 49, 9, 83, 75, 54, 55, 48, 50, 48, 48, 48, 48, 48, 48, 48, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 9, 83, 85, 66, 65, 83, 75, 66, 88, 9, 48, 9, 48
+
+http://www.sbaonline.sk/files/subory/projekty/qr-kod/by-square-pay-specifications-1.0.0.pdf
+http://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
+-->

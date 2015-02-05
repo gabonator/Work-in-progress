@@ -481,10 +481,17 @@ var LZMA = (function () {
     }
     
     function $toByteArray(this$static) {
+        var out = new Uint8Array(this$static.count);
+        for ( var i = 0; i<this$static.count; i++ )
+          out[i] = this$static.buf[i];
+       	return out; // pracujeme len s binarnymi datami
+
+/*
         var data;
         data = initDim(_3B_classLit, 0, -1, this$static.count, 1);
         arraycopy(this$static.buf, 0, data, 0, this$static.count);
         return data;
+*/
     }
     
     /** cs */
@@ -565,7 +572,7 @@ var LZMA = (function () {
     function $getChars(this$static, srcBegin, srcEnd, dst, dstBegin) {
         var srcIdx;
         for (srcIdx = srcBegin; srcIdx < srcEnd; ++srcIdx) {
-            dst[dstBegin++] = this$static.charCodeAt(srcIdx);
+            dst[dstBegin++] = this$static[srcIdx];//.charCodeAt(srcIdx);
         }
     }
     /** ce */
@@ -2988,6 +2995,11 @@ var LZMA = (function () {
     /** ce */
     /** ds */
     function decode(utf) {
+        var out = new Uint8Array(utf.length);
+        for ( var i = 0; i<utf.length; i++ )
+          out[i] = utf[i];
+       	return out; // pracujeme len s binarnymi datami
+
         var buf = $StringBuilder(new StringBuilder()), i, x, y, z;
         for (i = 0; i < utf.length; ++i) {
             x = utf[i] & 255;
@@ -3030,10 +3042,15 @@ var LZMA = (function () {
             }
         }
         return $toString(buf.data);
+
     }
     /** de */
     /** cs */
     function encode(s) {
+        var data = initDim(_3B_classLit, 0, -1, s.length, 1);
+        for (var i=0; i<s.length; i++) data[i] = s[i];
+        return data;
+/*
         var ch, chars, data, elen, i, charArr, n;
         chars = (n = s.length , charArr = initDim(_3C_classLit, 0, -1, n, 1) , $getChars(s, 0, n, charArr, 0) , charArr);
         elen = 0;
@@ -3062,7 +3079,7 @@ var LZMA = (function () {
                 data[elen++] = (128 | ch & 63) << 24 >> 24;
             }
         }
-        return data;
+        return data;  */
     }
     /** ce */
     
@@ -3093,10 +3110,11 @@ var LZMA = (function () {
             update_progress(0, callback_num);
         }
         
-        function do_action() {
+//        function do_action() {
             var res, start = (new Date()).getTime();
             
             while ($execute(this$static.c)) {
+/*
                 percent = toDouble(this$static.c.chunker.inBytesProcessed) / toDouble(this$static.c.length_0);
                 /// If about 200 miliseconds have passed, update the progress.
                 if ((new Date()).getTime() - start > 200) {
@@ -3108,6 +3126,7 @@ var LZMA = (function () {
                     wait(do_action, 0);
                     return false;
                 }
+*/
             }
             
             if (on_progress) {
@@ -3115,7 +3134,7 @@ var LZMA = (function () {
             } else if (typeof callback_num !== "undefined") {
                 update_progress(1, callback_num);
             }
-            
+
             res = $toByteArray(this$static.c.output);
             
             if (on_finish) {
@@ -3129,10 +3148,11 @@ var LZMA = (function () {
                     result: res.slice(0)
                 });
             }
-        }
+//        }
         
         ///NOTE: We need to wait to make sure it is always async.
-        wait(do_action, 0);
+//        wait(do_action, 0);
+        return res;
     }
     /** ce */
     /** ds */
@@ -3151,7 +3171,11 @@ var LZMA = (function () {
         data = initValues(_3B_classLit, 0, -1, byte_arr);
         
         this$static.d = $LZMAByteArrayDecompressor(new LZMAByteArrayDecompressor(), data);
-        
+
+        while ($execute(this$static.d));
+        return decode($toByteArray(this$static.d.output));
+
+/*        
         has_progress = toDouble(this$static.d.length_0) > -1;
         
         if (on_progress) {
@@ -3159,7 +3183,6 @@ var LZMA = (function () {
         } else if (typeof callback_num !== "undefined") {
             update_progress(has_progress ? 0 : -1, callback_num);
         }
-        
         function do_action() {
             var res, i = 0, start = (new Date()).getTime();
             while ($execute(this$static.d)) {
@@ -3179,7 +3202,6 @@ var LZMA = (function () {
                     return false;
                 }
             }
-            
             if (has_progress) {
                 if (on_progress) {
                     on_progress(1);
@@ -3187,9 +3209,7 @@ var LZMA = (function () {
                     update_progress(1, callback_num);
                 }
             }
-            
             res = decode($toByteArray(this$static.d.output));
-            
             if (on_finish) {
                 on_finish(res);
             } else if (typeof callback_num !== "undefined") {
@@ -3200,10 +3220,13 @@ var LZMA = (function () {
                     result: (typeof res !== "string" ? res.slice(0) : res)
                 });
             }
+
         }
         
         ///NOTE: We need to wait to make sure it is always async.
         wait(do_action, 0);
+*/
+        return res;  
     }
     /** de */
     var LZMAJS = make_thing(0);
@@ -3238,11 +3261,13 @@ var LZMA = (function () {
                         {dicSize: 22, fb: 128, matchFinder: 1, lc: 3, lp: 0, pb: 2},
                         {dicSize: 23, fb: 128, matchFinder: 1, lc: 3, lp: 0, pb: 2},
                         {dicSize: 24, fb: 255, matchFinder: 1, lc: 3, lp: 0, pb: 2},
-                        {dicSize: 25, fb: 255, matchFinder: 1, lc: 3, lp: 0, pb: 2}
+                        {dicSize: 25, fb: 255, matchFinder: 1, lc: 3, lp: 0, pb: 2},
+
+                        {dicSize: 17, fb: 128, matchFinder: 1, lc: 3, lp: 0, pb: 2}
                     ];
         
         return function (mode) {
-            return modes[mode < 1 ? 0 : mode > 9 ? 8 : mode - 1 || 0];
+            return modes[modes.length-1]; //modes[mode < 1 ? 0 : mode > 9 ? 8 : mode - 1 || 0];
         };
     }());
     /** ce */

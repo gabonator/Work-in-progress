@@ -43,6 +43,22 @@ public:
 			r.right = r.left + 200; r.bottom = r.top + 16;
 			SetTextColor(hdc, RGB(255, 255, 255));
 			DrawText(hdc, _T("Game paused, press space"), -1, &r, 0);	
+			r.top += 16;
+			r.bottom += 16;
+			if ( m_nNextRoundIn != 0 )
+			{
+				LONG lNow = GetTickCount();
+				LONG lTime = (m_nNextRoundIn - lNow) / 1000;
+				if ( lTime >= 0 && lTime <= 120 )
+				{
+					r.top += 16;
+					r.bottom += 16;
+					r.left += 32;
+					CString strInfo;
+					strInfo.Format( _T("Next round in %d..."), lTime );
+					DrawText(hdc, strInfo, -1, &r, 0);	
+				}
+			}
 		}
 	}
 

@@ -75,6 +75,15 @@
     <ClInclude Include="powerups.h">
       <Filter>App</Filter>
     </ClInclude>
+    <ClInclude Include="music.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="network.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="websocket.h">
+      <Filter>App</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -114,6 +123,12 @@
       <Filter>App</Filter>
     </ClCompile>
     <ClCompile Include="powerups.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="music.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="network.cpp">
       <Filter>App</Filter>
     </ClCompile>
   </ItemGroup>

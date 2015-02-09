@@ -29,30 +29,19 @@ CPlayer::CPlayer(int nId)
 
 	switch ( nId )
 	{
-	case 0:
-		m_nKeyLeft = VK_LEFT;
-		m_nKeyRight = VK_RIGHT;
-		m_nKeyAction = VK_UP;
-		m_nExtraAvailable = EEWalkThrough;
-		break;
-	case 1:
-		m_nKeyLeft = 'Z';
-		m_nKeyRight = 'X';
-		m_nKeyAction = 'S';
-		m_nExtraAvailable = EEFlower;
-		break;
-	case 2:
-		m_nKeyLeft = 'N';
-		m_nKeyRight = 'M';
-		m_nKeyAction = 'J';
-		m_nExtraAvailable = EESwapper;
-		break;
-	case 3:
-		m_nKeyLeft = 'Q';
-		m_nKeyRight = 'W';
-		m_nKeyAction = '2';
-		m_nExtraAvailable = EESlowMo;
-		break;
+	case 0:	m_nKeyLeft = VK_LEFT;	m_nKeyRight = VK_RIGHT;		m_nKeyAction = VK_UP;	break;
+	case 1: m_nKeyLeft = 'Z';		m_nKeyRight = 'X';			m_nKeyAction = 'S';		break;
+	case 2:	m_nKeyLeft = 'N';		m_nKeyRight = 'M';			m_nKeyAction = 'J';		break;
+	case 3:	m_nKeyLeft = 'Q';		m_nKeyRight = 'W';			m_nKeyAction = '2';		break;
+
+	case 4:	m_nKeyLeft = 'R';		m_nKeyRight = 'T';			m_nKeyAction = '5';		break;
+	case 5:	m_nKeyLeft = 'Y';		m_nKeyRight = 'U';			m_nKeyAction = '7';		break;
+	case 6:	m_nKeyLeft = 'I';		m_nKeyRight = 'O';			m_nKeyAction = '9';		break;
+
+	case 7:	m_nKeyLeft = 'D';		m_nKeyRight = 'F';			m_nKeyAction = 'G';		break;
+	case 8:	m_nKeyLeft = 'H';		m_nKeyRight = 'J';			m_nKeyAction = 'K';		break;
+	case 9:	m_nKeyLeft = VK_F1;		m_nKeyRight = VK_F2;		m_nKeyAction = VK_F3;	break;
+	case 10:m_nKeyLeft = VK_F4;		m_nKeyRight = VK_F5;		m_nKeyAction = VK_F5;	break;
 	}
 
 	m_cColor = RGB(255, 255, 255);
@@ -64,8 +53,20 @@ CPlayer::CPlayer(int nId)
 		case 2: m_cColor = RGB(0, 255, 255); break;
 		case 3: m_cColor = RGB(255, 255, 0); break;
 		case 4: m_cColor = RGB(255, 0, 255); break;
-	}
+		case 5: m_cColor = RGB(0, 0, 255); break;
 
+		case 6: m_cColor = RGB(255, 0, 0); break;
+		case 7: m_cColor = RGB(128, 255, 0); break;
+		case 8: m_cColor = RGB(128, 255, 255); break;
+		case 9: m_cColor = RGB(255, 255, 128); break;
+		case 10: m_cColor = RGB(255, 128, 255); break;
+		case 11: m_cColor = RGB(128, 0, 255); break;
+
+		case 12: m_cColor = RGB(255, 0, 128); break;
+		case 13: m_cColor = RGB(0, 255, 128); break;
+		case 14: m_cColor = RGB(0, 128, 255); break;
+	}
+		
 	m_nExtraActivated = EENone;
 	m_nExtraAvailable = EENone;
 
@@ -107,5 +108,5 @@ void CPlayer::Randomize()
 {
 	m_fSteering = 4.0f;
 	m_fSpeed = CTools::RandRange(0.8f, 1.3f); //*0.5f;
-	m_fSteering = m_fSpeed * CTools::RandRange(2.0f, 5.0f);
+	m_fSteering = CTools::RandRange(2.0f, 5.0f) * m_fSpeed;
 }

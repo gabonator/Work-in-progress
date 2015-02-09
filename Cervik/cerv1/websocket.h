@@ -209,7 +209,7 @@ class CWebSockets
 {
 public:
 	enum {
-		NUMCLIENTS = 3,
+		NUMCLIENTS = 10,
 		BUFLEN = 1024
 	};
 

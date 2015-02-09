@@ -41,6 +41,8 @@ public:
 			return _T(" ! ");
 		case CPlayer::EEDouble:
 			return _T("x2 ");
+		case CPlayer::EEThroughWall:
+			return _T("<^>");
 			/*
 	EEShooter = 3,			// vystreli a spravi dieru, 3x
 	EERespawn = 7,			// objavi sa niekde inde na mape
@@ -69,6 +71,9 @@ public:
 
 		float fTransition = GetTransition(powerup);
 		
+		if ( fTransition <= 0 )
+			return;
+
 		if ( fTransition != 1.0f )
 			fTransition = sin(fTransition*3.141592f*0.7f)/sin(3.141592f*0.7f);
 
@@ -119,7 +124,7 @@ public:
 	void AddRandom()
 	{
 		CPlayer::EExtra eType = CPlayer::EENone;
-		switch (rand()%9)
+		switch (rand()%10)
 		{
 		case 0: eType = CPlayer::EEWalkThrough; break;
 		case 1: eType = CPlayer::EEFlower; break;
@@ -130,6 +135,7 @@ public:
 		case 6: eType = CPlayer::EEEraser; break;
 		case 7: eType = CPlayer::EEShooter; break;
 		case 8: eType = CPlayer::EEDouble; break;
+		case 9: eType = CPlayer::EEThroughWall; break;
 		}
 
 		int nLeft, nTop, nRight, nBottom;
@@ -179,6 +185,8 @@ public:
 
 		float fResult = 1.0f;
 
+		if ( fTo < 0 )
+			return 0.0f;
 		if ( fTo < fTime1 )
 			fResult = fTo / fTime1;
 		else if ( fSince < fTime0 )

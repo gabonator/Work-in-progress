@@ -14,6 +14,10 @@ public:
 		bool m_bColliding;
 		COLORREF m_color;
 		int m_nId;
+		enum {
+			ENormal,
+			EBlink
+		} m_eMode;
 	} m_Attrs;
 
 	class COrigin 
@@ -57,6 +61,7 @@ public:
 		m_Attrs.m_color = pPlayer->m_cColor;
 		m_clrHitColor = 0;
 		m_fAdvanceRemain = 0;
+		m_Attrs.m_eMode = pPlayer->m_bRobot ? CAttrs::EBlink : CAttrs::ENormal;
 		/*
 		if ( m_Attrs.m_nId == 1 )
 		{
@@ -152,7 +157,10 @@ public:
 						continue;
 					}
 
-					COLORREF clrAntialias = CTools::InterpolateColor( cCurrent, m_Attrs.m_color, nMask*20 );
+					COLORREF clrWorm = m_Attrs.m_color;
+					if ( m_Attrs.m_eMode == CAttrs::EBlink && GetTickCount() % 500 < 250 )
+						clrWorm = CTools::InterpolateColor( clrWorm, RGB(0, 0, 0), 80 );
+					COLORREF clrAntialias = CTools::InterpolateColor( cCurrent, clrWorm, nMask*20 );
 					GfxPutPixel(nX+x, nY+y, clrAntialias);
 				}
 				
@@ -168,23 +176,22 @@ public:
 	void AdvanceCerv(float fSteps)
 	{
 		m_fAdvanceRemain += fSteps;
+	}
+
+	bool AdvanceDo()
+	{
+		if ( m_fAdvanceRemain < 1.0 )
+			return false;
+
 		while (m_fAdvanceRemain >= 1.0)
 		{
 			AdvanceBy( 1.0f );
 			m_fAdvanceRemain -= 1.0f;
 			DrawCerv();
+			return true;
 		}
-#if 0
-		float fDistance = /*m_Attrs.m_fSpeed * */ fSteps;
-		DrawCerv();
-		while (fDistance >= 1.0)
-		{
-			AdvanceBy( 1.0f );
-			fDistance -= 1.0f;
-			DrawCerv();
-		}
-		AdvanceBy(fDistance);
-#endif
+
+		return true;
 	}
 
 	void AdvanceBy(float fDistance)

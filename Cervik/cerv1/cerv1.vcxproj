@@ -87,12 +87,15 @@
     <ClInclude Include="game.h" />
     <ClInclude Include="gfx.h" />
     <ClInclude Include="hud.h" />
+    <ClInclude Include="music.h" />
+    <ClInclude Include="network.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="powerups.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tools.h" />
+    <ClInclude Include="websocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ai.cpp" />
@@ -104,6 +107,8 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gfx.cpp" />
     <ClCompile Include="hud.cpp" />
+    <ClCompile Include="music.cpp" />
+    <ClCompile Include="network.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="powerups.cpp" />
     <ClCompile Include="stdafx.cpp">

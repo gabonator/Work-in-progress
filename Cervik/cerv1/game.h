@@ -2,13 +2,7 @@
 #include "eraser.h"
 #include "powerups.h"
 #include "bullets.h"
-
-#include "websocket.h"
-
-void PlayerDo();
-void PlayerFaster();
-void PlayerStart();
-void PlayerStop();
+#include "music.h"
 
 class CGameCommon_
 {
@@ -20,11 +14,13 @@ public:
 	CBullets m_Bullets;
 	bool m_bGamePaused;
 	static CGameCommon_* m_pThis;
+	LONG m_nNextRoundIn;
 	
 	CGameCommon_()
 	{
 		m_pThis = this;
 		m_bGamePaused = false;
+		m_nNextRoundIn = 0;
 	}
 
 	~CGameCommon_()
@@ -155,7 +151,9 @@ public:
 				pPlayer->m_nCurrentKey |= CCerv::goAction;
 
 			if ( pPlayer->m_nCurrentKey != 0 ) // duplicity with ws
-				pPlayer->m_bRobot = false;
+			{
+				ActivateRobot(pPlayer, false);
+			}
 
 			bool bAction = ( (pPlayer->m_nCurrentKey & CCerv::goAction) && 
 				 !(pPlayer->m_nLastKey & CCerv::goAction) );
@@ -177,40 +175,59 @@ public:
 			CCerv* pCerv = arrCerv[i];
 			CPlayer* pPlayer = arrPlayer[pCerv->m_Attrs.m_nId];
 
-			pCerv->AdvanceCerv(1.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed * fFrameCompensation);
-
-			if ( pCerv->m_Attrs.m_bColliding )
-			{
-				pCerv->DrawCerv();
-				CervKilled(pPlayer, pCerv);
-
-				delete pCerv;
-				arrCerv.RemoveAt(i);
-				i--;
-				continue;
-			}
-
 			if ( pPlayer->m_bRobot )
 				Robot(pCerv, pPlayer);
 
-			// TODO: add framecompensation
 			pCerv->Command( (CCerv::EAction)pPlayer->m_nCurrentKey, CCerv::g_fSpeedMultiply * fFrameCompensation );
+			pCerv->AdvanceCerv(1.0f * CCerv::g_fSpeedMultiply * pCerv->m_Attrs.m_fSpeed * fFrameCompensation);
 
 			CPlayer::EExtra eType = m_Powerup.GetCollision( (int)pCerv->m_Attrs.m_fX, (int)pCerv->m_Attrs.m_fY );
 			if ( eType != CPlayer::EENone )
 				ExtraAccept(pPlayer, eType);
 		}
+
+		bool bAdvancing;
+		do {
+			bAdvancing = false;
+			for ( int i = 0; i < arrCerv.GetSize(); i++ )
+			{
+				CCerv* pCerv = arrCerv[i];
+				CPlayer* pPlayer = arrPlayer[pCerv->m_Attrs.m_nId];
+
+				bAdvancing |= pCerv->AdvanceDo();
+
+				if ( pCerv->m_Attrs.m_bColliding )
+				{
+					pCerv->DrawCerv();
+					CervKilled(pPlayer, pCerv);
+
+					delete pCerv;
+					arrCerv.RemoveAt(i);
+					i--;
+					continue;
+				}
+			}
+		} while (bAdvancing);
 		
 		if ( arrCerv.GetSize() <= 1 )
 		{
-			PlayerStop();
-			m_bGamePaused = true;
-			//GamePaused();
+			EndOfRound();
 		}
 		
 		m_Powerup.Do();
 		m_Bullets.Do();
 		FxFade();
+	}
+
+	void ActivateRobot(CPlayer* pPlayer, bool bEnable)
+	{
+		pPlayer->m_bRobot = bEnable;
+
+		for ( int i = 0; i < arrCerv.GetSize(); i++ )
+			if ( arrCerv[i]->m_Attrs.m_nId == pPlayer->m_nId )
+			{
+				arrCerv[i]->m_Attrs.m_eMode = bEnable ? CCerv::CAttrs::EBlink : CCerv::CAttrs::ENormal;
+			}
 	}
 
 	void RoundFinished()
@@ -298,23 +315,38 @@ skip:
 		return nLow + rand() % (nHigh-nLow+1);
 	}
 
+	void EndOfRound()
+	{
+		PlayerStop();
+		m_bGamePaused = true;
+		m_nNextRoundIn = GetTickCount() + 5000;
+		//GamePaused();
+	}
+
 	void GamePaused()
 	{
 		static bool bPrevSpace = false;
 		bool bCurSpace = g_dev.GetKeys()[VK_SPACE] != 0;
+		bool bPressedSpace = false;
 
 		if ( !m_bGamePaused )
 		{
 			bPrevSpace = bCurSpace;
 			return;
 		}
-		if ( !bPrevSpace && bCurSpace )
+
+		bPressedSpace = ( !bPrevSpace && bCurSpace );
+		if ( m_nNextRoundIn != 0 && (LONG)GetTickCount() > m_nNextRoundIn )
+			bPressedSpace = true;
+
+		bPrevSpace = bCurSpace;
+
+		if ( bPressedSpace )
 		{
 			m_bGamePaused = false;
 			RoundFinished();
 			NextRound();
 		}
-		bPrevSpace = bCurSpace;
 	}
 
 	virtual void ExtraAccept(CPlayer* pPlayer, CPlayer::EExtra eType) = 0;
@@ -328,108 +360,7 @@ skip:
 
 /*static*/ CGameCommon_* CGameCommon_::m_pThis = NULL;
 
-class CGameCommon : public CGameCommon_
-{
-	CWebSockets m_ws;
-	CMap<DWORD, DWORD, int, int> m_mapConnections;
-
-	static void Listener( DWORD dwId, CWebSockets::EEvent evt, unsigned char* buf )
-	{
-		_ASSERT(m_pThis);
-		((CGameCommon*)m_pThis)->_Listener(dwId, evt, buf);
-	}
-
-	void _Listener( DWORD dwId, CWebSockets::EEvent evt, unsigned char* buf )
-	{
-		/*
-		CString strMsg;
-		strMsg.Format( _T("Received %08x : '%S'\n"), dwId, buf );
-		OutputDebugString(strMsg);
-		*/
-		if ( buf && strlen((char*)buf) == 2)
-		{
-			int *pKeys = g_dev.GetKeys();
-			pKeys[buf[0]] = buf[1]-'0';
-		}
-
-		if ( evt == CWebSockets::EResponse )
-		{
-			CFile f;
-			f.Open(_T("index.html"), CFile::modeRead);
-			LONG lLength = (LONG)f.GetLength();
-			char *pData = new char[lLength+1];
-			f.Read(pData, lLength);
-			pData[lLength] = 0;
-			f.Close();
-
-			CString strData(pData);
-			delete pData;
-
-			CString strResponse;
-			
-			strResponse.Format( 
-				_T("HTTP/1.1 200 OK\n")
-				_T("Content-Type: text/html\n")
-				_T("Content-Length: %d\n")
-				_T("Connection: close\n\n%s"),
-				strData.GetLength(), strData);
-
-			m_ws.Send( ToAscii(strResponse), dwId );
-		}
-
-		if ( evt == CWebSockets::EDisconnect )
-		{
-			int nPlayerId = 0;
-			if ( m_mapConnections.Lookup(dwId, nPlayerId) )
-			{
-				CPlayer* pPlayer = arrPlayer[nPlayerId];
-				pPlayer->m_bRobot = true;
-			}
-			m_mapConnections.RemoveKey( dwId );
-		}
-
-		if ( evt == CWebSockets::EConnect )
-		{
-			// assign new player
-			int nPlayerId = m_mapConnections.GetSize()+1;
-			_ASSERT( nPlayerId < arrPlayer.GetSize() );
-			m_mapConnections.SetAt(dwId, nPlayerId);
-			CPlayer* pPlayer = arrPlayer[nPlayerId];
-			pPlayer->m_bRobot = false;
-
-			CString str;
-			str.Format( _T("document.body.style.background = '#%02x%02x%02x'; chLeft = '%c'; chRight = '%c'; chAction = '%c';\n"),
-				GetRValue(pPlayer->m_cColor), GetGValue(pPlayer->m_cColor), GetBValue(pPlayer->m_cColor),
-				pPlayer->m_nKeyLeft, pPlayer->m_nKeyRight, pPlayer->m_nKeyAction);
-
-			m_ws.Send( ToAscii(str), dwId );
-		}
-	}
-
-	char* ToAscii(CString& str)
-	{
-		static char strAscii[1024];
-		int i;
-		for ( i=0; str[i]; i++ )
-			strAscii[i] = (char)str[i];
-		strAscii[i] = 0;
-		return strAscii;
-	}
-
-public:
-	CGameCommon()
-	{
-		m_ws.Setup( "127.0.0.1", 38950 );
-		m_ws.SetListener( Listener );
-		m_ws.Start();
-	}
-
-	~CGameCommon()
-	{
-		m_ws.Stop();
-	}
-};
-
+#include "network.h"
 #include "ai.h"
 #include "hud.h"
 #include "extras.h"

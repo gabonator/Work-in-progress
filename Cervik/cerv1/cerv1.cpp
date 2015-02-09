@@ -211,6 +211,8 @@ DWORD WINAPI ThreadProcDraw(HANDLE handle)
 	
 	CFrameBuffer tempBuffer;
 
+	srand( (unsigned)time( NULL ) );
+
 	ShowWindow( g_hwnd, SW_SHOW );
 	HDC hdc = GetDC( g_hwnd );
 	game.Init();

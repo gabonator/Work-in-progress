@@ -7,14 +7,18 @@ class CBullets
 		float m_fY;
 		float m_fAngle;
 		float m_fSpeed;
+		CPlayer::EExtra m_eType;
+		COLORREF m_clrHit;
 
 	public:
-		CBullet(int x, int y, float fAngle, float fSpeed)
+		CBullet(int x, int y, float fAngle, float fSpeed, CPlayer::EExtra eType)
 		{
 			m_fX = (float)x;
 			m_fY = (float)y;
 			m_fAngle = fAngle;
 			m_fSpeed = fSpeed;
+			m_eType = eType;
+			m_clrHit = RGB(0, 0, 0);
 		}
 		
 		bool Advance()
@@ -41,8 +45,10 @@ class CBullets
 
 				COLORREF clr = GfxGetPixel( (int)m_fX, (int)m_fY);
 				if ( !CCerv::CanWalk ( clr ) )
-				//if ( clr != RGB(0, 0, 0) && clr != RGB(64, 64, 64) )
+				{
+					m_clrHit = clr;
 					return false;
+				}
 			}
 			return true;
 		}
@@ -51,12 +57,12 @@ class CBullets
 	CArray<CBullet*> m_arrBullets;
 
 public:
-	void Shoot(CCerv* pCerv)
+	void Shoot(CCerv* pCerv, CPlayer::EExtra eType)
 	{
 		int x, y;
 		pCerv->GetCoordsInFront( x, y, 7.0f );
 
-		m_arrBullets.Add( new CBullet(x, y, pCerv->m_Attrs.m_fAngle, 5.0) );
+		m_arrBullets.Add( new CBullet(x, y, pCerv->m_Attrs.m_fAngle, 5.0, eType) );
 	}
 
 	void Do()
@@ -66,15 +72,34 @@ public:
 			CBullet* pBullet = m_arrBullets[i];
 			if ( !pBullet->Advance() )
 			{
-				Action((int)pBullet->m_fX, (int)pBullet->m_fY);
+				Action(pBullet);
 				delete pBullet;
 				m_arrBullets.RemoveAt(i--);
 			}
 		}
 	}
 
-	void Action(int bx, int by)
+	void Action(CBullet* pBullet)
 	{
+		switch (pBullet->m_eType)
+		{
+		case CPlayer::EEShooter: 
+			ActionExplode(pBullet); 
+			break;
+
+		case CPlayer::EEDisease:
+			ActionDisease(pBullet);
+			break;
+
+		default:
+			_ASSERT(0);
+		}
+	}
+
+	void ActionExplode(CBullet* pBullet)
+	{
+		int bx = (int)pBullet->m_fX;
+		int by = (int)pBullet->m_fY;
 		int r = 50;
 		int rr = r*r;
 
@@ -96,6 +121,17 @@ public:
 
 				GfxPutPixel(_x, _y, RGB(64, 64, 64));
 			}
+	}
+
+	void ActionDisease(CBullet* pBullet)
+	{
+		/*
+		for ( int i = 0; i < CGameCommon_::m_pThis->arrPlayer.GetSize(); i++ )
+			if ( CGameCommon_::m_pThis->arrPlayer[i]->IsMyColor( pBullet->m_clrHit ) )
+			{
+				((CGameExtras*)CGameCommon_::m_pThis)->ExtraAccept(arrPlayer[i], CPlayer::EESwapControls);
+			}
+		*/
 	}
 
 	void Render(HDC hdc)

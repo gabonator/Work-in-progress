@@ -24,7 +24,10 @@ public:
 		EESlowMo = 10,			// ostatnych spomali az zastavi na 5sekund
 		EETurbo = 11,			// brutalna rychlost na 5sekund
 
-		EEDouble = 12			// zdvoji pocet pouziti / interval
+		EEDouble = 12,			// zdvoji pocet pouziti / interval
+		EEThroughWall = 13,
+		EEDisease = 14,
+		EESwapControls = 15
 	};
 
 	COLORREF m_cColor;

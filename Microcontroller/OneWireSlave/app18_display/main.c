@@ -129,6 +129,13 @@ void ProcessScratchpad(void)
           break;
       }
     }
+    if ( OW_2431_scratchpad_addr == 0xF4 )
+    {
+      __LCD_SEND(OW_2431_scratchpad[0], 0);
+      _ASSUME( OW_2431_scratchpad_len == 8+1 );
+      for (i = 1; i < OW_2431_scratchpad_len; i++)
+        __LCD_SEND( OW_2431_scratchpad[i], 1 );
+    }
   }
 
   report_status |= OW_2431_scratchpad_status;

@@ -45,7 +45,9 @@ byte Emulate2431(byte ow_buffer)
     OW_read_byte(); // high address byte
     do {
       byte bData = 0;
-      if ( OW_2431_address < 64 )
+      if ( OW_2431_address >= 16 && OW_2431_address < 16+16 )
+        bData = OW_2431_data[OW_2431_address - 16];
+      else if ( OW_2431_address < 64 )
         bData = _eeprom_read(OW_2431_address + 128);
       else 
         bData = 0;
@@ -96,7 +98,7 @@ byte Emulate2431(byte ow_buffer)
 
     crc = crc16(crc, OW_2431_scratchpad_addr);
     crc = crc16(crc, OW_2431_scratchpad_len);
-    for (i=0; i<16; i++)
+    for (i=0; i<OW_2431_scratchpad_len; i++)
       crc = crc16(crc, OW_2431_scratchpad[i]);
 
     if ( crc != checkcrc )

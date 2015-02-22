@@ -9,3 +9,9 @@ Description of garmin protocol, stuffing and crc can be found here: http://www8.
 And here is a video of Sygic Navigation working with Garmin HUD, I am proud to say that all this took about 24 hours to get it working:
 http://www.youtube.com/watch?v=WK9IV0syupE
 
+In folder Version1 you will find my initial code. Frank Huebenthal has made some improvements and was kind enough to share his code, you will find his work in folder Version2.
+
+
+Contributors:
+- Gabriel Valky - initial research
+- Frank Huebenthal - some improvements, added roundabouts, removed MFC dependency

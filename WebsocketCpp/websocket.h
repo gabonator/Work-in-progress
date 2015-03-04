@@ -1,7 +1,5 @@
 /* 
-  Ugly but working single file websocket version 13 implementation in Win32 C++
-  Author: Gabriel Valky, 2015
-  License: do whatever you want with it, you do not need my permission to use or modify this code
+  Ugly but working single file websocket version 13 implementation in Win32 C++ by Gabriel Valky, 2015
   Latest version can be found here https://github.com/gabonator/ 
 
   This code was based on work by trevor.n.webster, Micael Hildenborg (SHA1) and Rene Nyffenegger (Base64)

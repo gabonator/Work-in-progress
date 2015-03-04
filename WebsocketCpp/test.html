@@ -1,0 +1,18 @@
+<script language="javascript">
+var buffer = "";
+var socket = new WebSocket("ws://localhost:38950/index.html");
+
+socket.onmessage = function(msg)
+{
+  buffer += new String(msg.data);
+  var lines = buffer.split("\n");
+  while ( lines.length > 1 )
+    Receive( lines.shift() );
+  buffer = lines.join("\n");
+}
+
+function Receive(line)
+{
+  console.log(line);
+}
+</script>

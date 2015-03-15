@@ -638,9 +638,3 @@ int GSM::isIP(const char* cadena)
             return 0;
     return 1;
 }
-
-
-
-
-
-

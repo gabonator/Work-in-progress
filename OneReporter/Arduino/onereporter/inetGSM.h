@@ -24,6 +24,9 @@ class InetGSM
     int connectTCPServer(int port);
     boolean connectedClient();
 
+  boolean ReadNonEmptyLine(char* strOut, int nMaxLen, int nMaxTimeout);
+  boolean ReadLine(char* strOut, int nMaxLen, int nMaxTimeout);
+
 };
 
 #endif

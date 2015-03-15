@@ -5,6 +5,45 @@
 
 //#define DEBUG_ON
 
+boolean InetGSM::ReadLine(char* strOut, int nMaxLen, int nMaxTimeout)
+{
+  int i = 0;
+  long nTimeout = millis() + nMaxTimeout;
+
+  while ( millis() < nTimeout && i < nMaxLen )
+  {
+    if ( !gsm.available() )
+      continue;
+
+    char ch = gsm.read();
+
+    // line endings CR LF
+    if ( ch == 13 )
+      continue;
+
+    if ( ch == 10 )
+    {
+      strOut[i++] = '\n';
+      break;
+//      strOut[i] = 0;
+//      return true;
+    }
+    strOut[i++] = ch;
+  }
+
+  strOut[i] = 0; // writing 0 to offset maxlen
+  return i > 0;
+}
+
+boolean InetGSM::ReadNonEmptyLine(char* strOut, int nMaxLen, int nMaxTimeout)
+{
+  do {
+    if ( !ReadLine(strOut, nMaxLen, nMaxTimeout) )
+      return false;
+  } while (strlen(strOut) <= 1); // "\n"
+  return true;
+}
+
 int InetGSM::httpOpen(const char* server, int port)
 {
   int n_of_at=0;
@@ -32,26 +71,10 @@ int InetGSM::httpOpen(const char* server, int port)
 int InetGSM::httpClose()
 {
   gsm.SimpleWrite("\x1a");
-
-  switch(gsm.WaitResp(10000, 100, "SEND")){
-	case RX_TMOUT_ERR: 
-		//Serial.println("gerr:RX_TMOUT_ERR");
-		return 0;
-	break;
-	case RX_FINISHED_STR_NOT_RECV: 
-		//Serial.println("gerr:RX_FINISHED_STR_NOT_RECV");
-		return 0; 
-	break;
-  }
-	//Serial.println("gerr:OK");
-
-	#ifdef DEBUG_ON
-		Serial.println("DB:SENT");
-	#endif	
-
-  return 1;
+  char response[16];
+  ReadNonEmptyLine(response, 15, 12000); // 'SEND OK' in 900..1350 ms (max 10000ms)
+  return strcmp(response, "SEND OK\n") == 0;
 }
-
 
 
 // ----------------------------------------

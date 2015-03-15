@@ -4,6 +4,8 @@
 #define UNO
 //#define MEGA
 
+#define _SS_MAX_RX_BUFF 64 // ggg: override softserial buffer size
+
 #include <SoftwareSerial.h>
 #include <inttypes.h>
 #include "WideTextFinder.h"

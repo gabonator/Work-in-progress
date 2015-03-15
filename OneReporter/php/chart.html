@@ -1,0 +1,260 @@
+<html>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script src="js/highcharts-all.js"></script>
+
+<input type="button" value="Predpredvcerom" onClick="LoadDay(-3)">
+<input type="button" value="Predvcerom" onClick="LoadDay(-2)">
+<input type="button" value="Vcera" onClick="LoadDay(-1)">
+<input type="button" value="Dnes" onClick="LoadDay(0)">
+
+<div id="container0">Collecting data...</div>
+<div id="container00" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+<div id="container01" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+<div id="container1"></div>
+<div id="container10" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+<div id="container11" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+<div id="container2"></div>
+<div id="container20" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+<div id="container21" style="min-width: 400px; height: 350px; margin: 0 auto; display:none"></div>
+
+<script language="javascript">
+  var day = 0;
+  var data = [];
+  var utc = -(new Date()).getTimezoneOffset()*1000*60;
+
+  pad = function(x) {	return (x < 10) ? "0" + x : "" + x; }
+
+  function getTimestamp()
+  {
+  	var tm = (new Date( (new Date()).getTime() + day*1000*60*60*24 ));
+  	return tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
+  }
+
+  function Load(name, handler)
+  {
+    console.log(name);
+    var client = new XMLHttpRequest();
+    client.url = name;
+    client.open('GET', name);
+    client.onreadystatechange = function() {
+      if (this.status == 404)
+      {
+        console.log("Failed to load " + client.url);
+        handler();
+      }
+      if (this.readyState == 4 && this.status == 200 )
+      {
+        handler(client.responseText);
+      }
+    }
+    client.send();
+  }
+
+  function checkCrc(buf)
+  {
+    if ( buf.length != 16 ) 
+      return false;
+
+		var POLYNOMIAL = 0x47;
+
+		crcPush = function(remainder, data)
+		{
+		  var b;
+		  remainder ^= data;
+
+		  for (b = 8; b > 0; b--)
+		  {
+    	  if (remainder & 0x80)
+          remainder = (remainder << 1) ^ POLYNOMIAL;
+     		else
+          remainder = (remainder << 1);
+		  }
+		  return remainder;
+		}
+
+		var	crc = 0;
+    for (i=0; i<15; i++)
+      crc = crcPush(crc, buf.charCodeAt(i));
+
+    crc = 0x40 + (crc&63);
+    return buf.charCodeAt(15) == crc;
+  }
+
+  function LoadData(name, onFinish)
+  {
+//    Load("data/"+name+".txt", function(cont)
+    Load("get.php?day="+name, function(cont)
+    {
+      if ( typeof(cont) == "string" )
+      {
+        data = [];
+        window["add"] = function(json)
+        {
+//          var raw = json.args.dev_2d474142233038c5;  
+          var records = {};
+
+          for (var arg in json.args)
+            if ( arg.substr(0, 4) == "dev_" )
+            {
+//console.log(arg);
+              var raw = json.args[arg];
+//console.log(raw);
+//              records[arg] = json.args[arg];
+              
+              if ( typeof(raw) == "undefined" )
+							{
+				    		console.log("No data "+json);
+                continue;
+							}
+
+              if ( !checkCrc(raw) )
+  	  				{
+				    		console.log("Crc failed = '"+raw+"'");
+                continue;
+    					}
+              var temp = parseFloat(raw.substr(3, 5));
+              var humi = parseFloat(raw.substr(9, 4));
+              records[arg] = {temp:temp, humi:humi};
+            }
+
+//          "S9T+20.5H33.6 #f"
+          data.push({time:parseInt(json.ts), records:records} );
+        }
+        eval(cont);
+        window["add"] = null;
+        onFinish();
+      } else
+      {
+        alert("No data");
+      }
+    });
+  }
+
+
+  function makeSeries( label, data, clr, suffix )
+  {
+  	return {
+  		    	name: label,
+  		    	data: data,
+  		    	zIndex: 1,
+  		    	color: Highcharts.getOptions().colors[clr],
+  		    	marker: {
+  		    		fillColor: 'white',
+  		    		lineWidth: 2,
+  		    		lineColor: Highcharts.getOptions().colors[clr]
+  		    	},
+            valueSuffix: suffix
+  	};
+  }
+
+  function makeRangeSeries( label, data, clr, suffix )
+  {
+  	return {
+  		        name: label,
+  		        data: data,
+  		        type: 'arearange',
+  		        lineWidth: 0,
+  		    	linkedTo: ':previous',
+  		    	color: Highcharts.getOptions().colors[clr],
+  		    	fillOpacity: 0.3,
+  		    	zIndex: 0,
+            valueSuffix: suffix
+  		    };
+  }
+
+  function Finish()
+  {
+    var devices = [];
+
+    for (var i=0; i<data.length; i++) 
+    {
+      for (var j in data[i].records)
+        devices[j] = 1; //data[i].records[j]
+    }
+
+    var devn = 0;
+
+    for (var d in devices)
+    {
+      var sData = [];
+      var sTemp = [];
+      var sHumi = [];
+
+      document.getElementById("container" + devn).innerHTML = d;
+
+      for (var i=0; i<data.length; i++) 
+      {
+        var t = data[i].time;
+
+        // transform
+        t = t*1000+utc;
+
+  //console.log(data[i].records);
+
+        if ( typeof(data[i].records[d]) != "object" )
+          continue;
+
+        if ( !isNaN(data[i].records[d].temp) ) 
+          sTemp.push([t, data[i].records[d].temp]);
+
+        if ( !isNaN(data[i].records[d].humi) ) 
+          sHumi.push([t, data[i].records[d].humi]);
+      }
+
+      var set = chartSettings();
+
+      if ( data.length > 120 )
+        set.plotOptions = {line:{marker:{enabled:false}}};
+      set.exporting = {enabled:false};
+      set.credits = {enabled:false};
+
+      set.yAxis = {title:{text:null}};
+      if (sTemp.length > 0)
+        drawChart(set, "container" + devn + "0",
+          [makeSeries("Temperature", sTemp, 0, "C")])
+
+      set.yAxis = {title:{text:null}};
+      if (sTemp.length > 0)
+        drawChart(set, "container" + devn + "1",
+          [makeSeries("Humidity", sHumi, 1, "%")])
+
+      devn++;
+    }
+  }
+
+  function drawChart(settings, target, series)
+  {
+    document.getElementById(target).style.display = "";
+    var chartSet = settings;
+    chartSet.chart.renderTo = target;
+    chartSet.series = series;
+		chartSet.tooltip.valueSuffix = series[0].valueSuffix;
+    new Highcharts.Chart(chartSet);
+  }
+
+  function chartSettings()
+  {
+  	return {
+ 				chart: { },
+		    title: { text: null },
+		    xAxis: { type: 'datetime' },
+		    yAxis: { title: { text: null } },
+		    tooltip: {
+		        crosshairs: true,
+		        shared: true,
+		        valueSuffix: "mV"
+		    },
+		    legend: {}
+		};
+  }
+
+  function LoadDay(d)
+  {
+    day = d;
+    LoadData(getTimestamp(), Finish);
+  }
+ 
+  LoadDay(0);
+</script>                                               	
+</body>
+</html>

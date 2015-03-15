@@ -31,14 +31,8 @@
                   nSerialStream(&stream) 
   { 
     this->timeout = timeout * 1000L;     
-	debug=true;
   }
   
-  void WideTextFinder::setDebug(boolean d)
-  {
-	debug=d;
-  }
-
   // public methods
   //
   // find returns true if the target string is found
@@ -111,85 +105,6 @@
     }   
     return 0;    //failed to find the prestring
   } 
-
-  // getValue method:
-  // returns the first valid (long) integer value from the current position.
-  // initial characters that are not digits (or the minus sign) are skipped
-  // function is terminated by the first character that is not a digit.
-  long WideTextFinder::getValue()
-  {
-      return getValue(NO_SKIP_CHAR); // terminate on first non-digit character 
-  }
-  
-  // as above but a given skipChar is ignored
-  // this allows format characters (typically commas) in values to be ignored
-  long WideTextFinder::getValue(char skipChar)
-  {
-      boolean isNegative = false;
-      long value = 0;   
-      char c;
-
-      while( (c = read()) != '-' && (c < '0' || c > '9') && (c!=0) )
-         ;// ignore non numeric leading characters  
-      do{ 
-        if(c == skipChar )
-           ; // ignore this charactor        
-        else if (c==0) // Timeout
-           return 0;
-        else if(c == '-') 
-           isNegative = true;          
-        else if(c >= '0' && c <= '9')        // is c a digit?  
-           value = value * 10 + c - '0';         
-        c = read();        
-      }
-      while( (c >= '0' && c <= '9')  || c == skipChar );
-      if(isNegative)
-        value = -value;   
-     return value;
-  }
-
-  // float version of getValue method:
-  // as integer version but returns a floating point value
-    float WideTextFinder::getFloat()
-    {
-       getFloat(NO_SKIP_CHAR);
-    }
-
-  // as above but the given skipChar is ignored
-  // this allows format characters (typically commas) in values to be ignored  
-  float WideTextFinder::getFloat(char skipChar){
-      boolean isNegative = false;
-      boolean isFraction = false;
-      long value = 0;  
-      float fValue;       
-      char c;
-      float fraction = 1.0;
-
-      while( (c = read()) != '-' && (c < '0' || c > '9') )
-         ; // ignore non numeric leading characters
-      do{    
-        if(c == skipChar)
-           ; // ignore 
-        else if(c == '-') 
-           isNegative = true;     
-        else if (c == '.')
-            isFraction = true;
-        else if(c >= '0' && c <= '9')  {      // is c a digit?  
-           value = value * 10 + c - '0'; 
-           if(isFraction)
-              fraction *= 0.1;
-        }           
-        c = read();     
-      }
-      while( (c >= '0' && c <= '9')  || c == '.' || c == skipChar );
-      if(isNegative)
-        value = -value;      
-      if(isFraction)
-        return value * fraction;        
-      else  
-        return value;
-  }
-
 
   // returns the number of seconds to wait for the next char before aborting read
   unsigned long WideTextFinder::getTimeout()

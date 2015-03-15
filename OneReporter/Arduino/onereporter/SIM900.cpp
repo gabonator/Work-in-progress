@@ -319,6 +319,11 @@ int SIMCOM900::getIP(char *ip)
   return 1;
 }
 
+bool SIMCOM900::available()
+{
+  return _cell.available();
+}
+
 uint8_t SIMCOM900::read()
 {
   return _cell.read();
@@ -334,6 +339,7 @@ void SIMCOM900::SimpleRead()
 		}
 	}
 }
+
 
 void SIMCOM900::SimpleSkip()
 {

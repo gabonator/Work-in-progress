@@ -1,4 +1,6 @@
 <?
+  require "check.php";
+
 	//error_reporting(E_ALL);
 	$rec = "";
 	foreach ($_GET as $k => $v)
@@ -15,11 +17,71 @@
 	fwrite($f, $rec);
 	//echo $rec;
 	fclose($f);
-	echo("Ok.");
+/*
+F
+C0
+AA
+7
+on,5s
+5E
+2A
+-----
+
+*/
+
+  {
+    $message = date("H:i m.d.Y");
+    $req0 = toRequest(buffer(array(0x0f, 0xd1, 0xaa), array(0xdd, 0x01)));
+
+    $req1 = toRequest(buffer(array(0x0f, 0xd1, 0xaa), keyString(0xd1, $message)));
+    $message = "No sensor!"; //dev_2d4741422330399b
+
+    if (isset($_GET["dev_2d4741422330399b"]))
+    {
+      $raw = $_GET["dev_2d4741422330399b"];
+      $message = "T=".substr($raw, 3, 5)." H=".substr($raw, 9, 4);
+    }
+
+    $req2 = toRequest(buffer(array(0x0f, 0xd1, 0xaa), keyString(0xd2, $message)));
+    $req3 = toRequest(buffer(array(0x0f, 0xc0, 0xaa), nokeyString("on,5s")));
+
+    $resp = "";
+    $resp .= "{";
+    $resp .= "\"dev_2d474142233038c5\": \"".$req0."\"";
+    $resp .= ",";
+//    $resp .= "\"delay\":\"30\"";
+//    $resp .= ",";
+    $resp .= "\"dev_2d474142233038c5\": \"".$req1."\"";
+    $resp .= ",";
+//    $resp .= "\"delay\":\"30\"";
+//    $resp .= ",";
+    $resp .= "\"dev_2d474142233038c5\": \"".$req2."\"";
+    $resp .= ",";
+    $resp .= "\"dev_2d474142233235a9\": \"".$req3."\"";
+    $resp .= "}";
+/*
+    $arrResp = explode( ",", $resp );
+    for ($i = 0; $i < count($arrResp); $i++)
+    {
+      if ($i > 0)
+      {
+        usleep(1000 * 500);
+        echo(",");
+      }
+      echo $arrResp[$i];
+    }*/
+    echo($resp);
+    file_put_contents("debug", $resp);
+//    echo("{\"dev_2d474142233038c5\": \"".$req2."\"}");
+  }
+
+
+//  echo("{\"dev_2d474142233235a9\": \"".$req."\"}");
+//	echo("{ \"my_key\": \"my_value\", \"second\":\"xyz\"}");
 
   function getCurrent()
   {
-    return date("Y-m-d").".txt";
+    return "data/".date("Y-m-d").".txt";
   }
   function getTs()
   {
@@ -73,7 +135,7 @@
       if ( ($c >= 'a' && $c <= 'z') ||
            ($c >= 'A' && $c <= 'Z') ||
            ($c >= '0' && $c <= '9') ||
-           ($c == ' ' || $c == '_' || $c == '#' || $c == '-' || $c == '+' || $c == ',' || $c == '.' ) 
+           ($c == ' ' || $c == '_' || $c == '#' || $c == '-' || $c == '+' || $c == ',' || $c == '.' || $c == '?' ) 
          )
       {
         $r .= $c;
@@ -85,4 +147,3 @@
     return $r;
   }
 ?>
-Response: Helo!

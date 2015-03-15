@@ -9,7 +9,7 @@
 		//die( "alert('invalid from value')");
 	}
 
-  $f = fopen($_GET["day"].".txt", "r");
+  $f = fopen("data/".$_GET["day"].".txt", "r");
 	while (!feof($f))
 	{
 		$line = fgets( $f );

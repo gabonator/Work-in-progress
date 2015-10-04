@@ -113,6 +113,7 @@ GCode = function ()
   this.moveFeedRate = 600;
   this.safeZ = 2;
   this.drillZ = 0;
+  this.returnToOrigin = false;
   // TODO: optimize shape order!
   // TODO: arc fitter!
 }
@@ -146,6 +147,11 @@ GCode.prototype.build = function(xyPaths)
     }
 
     expcode.push("G00 Z" + this.safeZ);
+  }
+  if ( this.returnToOrigin )
+  {
+    expcode.push("(return home)");
+    expcode.push("G00 X0 Y0 F" + this.moveFeedRate);
   }
   expcode.push("M02");
   expcode.push("(total " + expcode.length + " lines and " + xyPaths.length + " paths)");

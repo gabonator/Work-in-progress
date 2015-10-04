@@ -1,3 +1,14 @@
+/* 
+  Ugly but working single file websocket version 13 implementation in Win32 C++
+  Author: Gabriel Valky, 2015
+  License: do whatever you want with it, you do not need my permission to use or modify this code
+  Latest version can be found here https://github.com/gabonator/ 
+
+  This code was based on work by trevor.n.webster, Micael Hildenborg (SHA1) and Rene Nyffenegger (Base64)
+  http://www.codeproject.com/Articles/222487/Deadlocks-and-race-condition-scenarios-with-a-WebS
+  http://code.google.com/p/smallsha1/source/browse/trunk/sha1.cpp
+  http://www.adp-gmbh.ch/cpp/common/base64.html
+*/
 
 #include <process.h>
 #include <list>
@@ -6,12 +17,10 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 using namespace std;
-#pragma push_macro("printf")
-#define printf Print
 
 void Print(LPSTR pFormat, ...)
 {
-	static CHAR buff[1024];
+	static CHAR buff[1024];	// TODO: possible buffer overflow
 	va_list argList;
 
 	va_start(argList, pFormat);
@@ -22,7 +31,6 @@ void Print(LPSTR pFormat, ...)
 	OutputDebugStringA(buff);
 }
  
-// http://code.google.com/p/smallsha1/source/browse/trunk/sha1.cpp
 class CSHA1
 {
 private:
@@ -201,9 +209,7 @@ public:
 	  }
 	  *out = 0;
 	}
-
 };
-
 
 class CWebSockets
 {
@@ -238,7 +244,6 @@ private:
 	BOOL	m_isMutexEnabled;	//FALSE to allow race conditions.
 	SOCKET	m_listenfd;
 	list<SConnect*> m_connectList;
-	char*	m_szHost;
 	int		m_nPort;
 	Listener	m_Listener;
 
@@ -246,14 +251,13 @@ public:
 	CWebSockets()
 	{
 		m_isMutexEnabled = FALSE;
-		m_szHost = "127.0.0.1";
 		m_nPort = 38950;
 		m_Listener = NULL;
 
 		WSADATA wsaData;	
 		if (WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)// Initialize Winsock
 		{
-			printf("Error at WSAStartup()\n");
+			Print("Error at WSAStartup()\n");
 			_ASSERT(0);
 		}
 	}
@@ -263,15 +267,14 @@ public:
 		WSACleanup();
 	}
 
-	void Setup(char* szHost, int nPort)
+	void Setup(int nPort)
 	{
-		m_szHost = szHost; // only static!
 		m_nPort = nPort;
 	}
 
 	void Start()
 	{
-		printf("Start()\n");
+		Print("Start()\n");
 		m_mainThread = (HANDLE)_beginthreadex(
 				NULL, 
 				0, 
@@ -283,17 +286,17 @@ public:
 
 	void Stop()
 	{
-		printf("Stop()\n");
+		Print("Stop()\n");
 		::SuspendThread(m_mainThread);
 		closesocket(m_listenfd);
 		m_listenfd = NULL;
 		::ResumeThread(m_mainThread);
 
-		Sleep(300);
+		Sleep(300); // TODO: proper synchronization
 		CloseHandle(m_mainThread);
 		ServerDispose();
 		ServerCleanup();
-		printf("Done\n");
+		Print("Done\n");
 	}
 	
 	void SetListener( Listener l )
@@ -339,25 +342,25 @@ private:
 		{
 			if ( m_connectList.size() >= NUMCLIENTS )
 			{
-				printf("No more clients allowed.\n");
+				Print("No more clients allowed.\n");
 				for (int i=0; i<200 && m_listenfd; i++)
-					Sleep(100);
+					Sleep(100); 
 				continue;
 			}
 
-			printf("WebSocket: Waiting for client ... (listenfd=%d)\n", m_listenfd);
+			Print("WebSocket: Waiting for client ... (listenfd=%d)\n", m_listenfd);
 			SOCKET connectfd = AcceptClient();
-			printf("WebSocket: AcceptClient returned %d (listenfd=%d)\n", connectfd, m_listenfd);
+			Print("WebSocket: AcceptClient returned %d (listenfd=%d)\n", connectfd, m_listenfd);
 			if ( !m_listenfd )
 				break;
 
 			if ( connectfd == INVALID_SOCKET )
 			{
-				printf("Restarting server\n");
-				Sleep( 1000 );
+				Print("Restarting server\n");
+				Sleep( 1000 ); 
 				if ( !Restart() ) 
 				{
-					printf("Failed to restart, disabling server...\n");
+					Print("Failed to restart, disabling server...\n");
 				}
 				continue;
 			}
@@ -378,7 +381,7 @@ private:
 
 			::ResumeThread(pConnect->handle);
 		}
-		printf("Closing Main thread.\n");
+		Print("Closing Main thread.\n");
 		ServerDispose();
 		return TRUE;
 	}
@@ -402,16 +405,16 @@ private:
 		// Bind the socket.
 		if (bind( m_listenfd, (SOCKADDR*)&server, sizeof(server)) == SOCKET_ERROR) 	
 		{
-			printf("Error on server bind.\n");
-			printf("WSAGetLastError = %d\n", WSAGetLastError() );
+			Print("Error on server bind.\n");
+			Print("WSAGetLastError = %d\n", WSAGetLastError() );
 			return FALSE;
 		}		
 		if (listen(m_listenfd, SOMAXCONN ) == SOCKET_ERROR)
 		{
-			printf("Error listening on socket.\n");
+			Print("Error listening on socket.\n");
 			return FALSE;
 		}		
-		printf("Server is listening on socket... %s:%d\n", inet_ntoa(server.sin_addr), ntohs(server.sin_port));	
+		Print("Server is listening on socket... %s:%d\n", inet_ntoa(server.sin_addr), ntohs(server.sin_port));	
 		return TRUE;
 	}
 
@@ -424,7 +427,7 @@ private:
 
 		if (m_ghMutex == NULL) 
 		{
-			printf("CreateMutex error: %x\n", GetLastError());
+			Print("CreateMutex error: %x\n", GetLastError());
 			return FALSE;
 		}
 
@@ -459,7 +462,7 @@ private:
 			}
 		}
 
-		Sleep(100);
+		Sleep(100); // TODO: proper synchronization
 		
 		for( i = m_connectList.begin(); i != m_connectList.end(); i++ )
 		{
@@ -484,11 +487,11 @@ private:
 		SOCKET connectfd = accept(m_listenfd, &clientinfo, NULL);		
 		if ( connectfd == INVALID_SOCKET )
 		{
-			printf("Invalid socket, WSAGetLastError = %d\n", WSAGetLastError() );
+			Print("Invalid socket, WSAGetLastError = %d\n", WSAGetLastError() );
 			return INVALID_SOCKET;
 		}
 		struct sockaddr_in* ipv4info = (struct sockaddr_in*)&clientinfo;
-		printf("Client connected on socket %x. Address %s:%d\n", connectfd, 
+		Print("Client connected on socket %x. Address %s:%d\n", connectfd, 
 		inet_ntoa(ipv4info->sin_addr), ntohs(ipv4info->sin_port));		
 		return connectfd;
 	}
@@ -573,7 +576,7 @@ private:
 			if ( *pmsg != 0x81 ) 
 			{
 				// buffer mismatch
-				printf("Buffer mismatch, ignored %d bytes\n", nRecv);
+				Print("Buffer mismatch, ignored %d bytes\n", nRecv);
 				return 0;
 			}
 
@@ -617,7 +620,7 @@ private:
 			if ( pmsg-msg != nRecv-nLen )
 			{
 				int nExtra = nRecv-nLen+(msg-pmsg);
-				printf("Ignored %d bytes from buffer\n", nExtra);
+				Print("Ignored %d bytes from buffer\n", nExtra);
 			}
 
 			_ASSERT( (int)nLen < (int)buflen );
@@ -690,10 +693,8 @@ private:
 			if ( received > 0 )
 			{
 				shared_buffer[received] = 0;
-				//printf("server thread %x\tshared buffer: \"%s\"\n", GetCurrentThreadId(), shared_buffer);
 				if ( m_Listener )
 					m_Listener(pConnect->socket, EReceive, (unsigned char*)shared_buffer );
-				//Send(shared_buffer, pConnect->socket, pConnect->nWebSocket);
 			}
 			ReleaseMutex();
 		} while (received > -1 && pConnect->socket);	//continue until client SOCKET closes.
@@ -703,7 +704,7 @@ private:
 		if ( m_Listener )
 			m_Listener( dwId, EDisconnect, NULL );
 
-		printf("Client socket connection closed. Exiting server thread %x...\n", (DWORD)pConnect->handle);
+		Print("Client socket connection closed. Exiting server thread %x...\n", (DWORD)pConnect->handle);
 		return TRUE;
 	}
 
@@ -711,9 +712,8 @@ private:
 	{
 		if (!m_isMutexEnabled)	
 			return;
-		if ( WaitForSingleObject(m_ghMutex, INFINITE) != WAIT_OBJECT_0) { 
-			printf("Error on WaitForSingleObject (thread %x)\n", GetCurrentThreadId()); 
-		}
+		if ( WaitForSingleObject(m_ghMutex, INFINITE) != WAIT_OBJECT_0)
+			Print("Error on WaitForSingleObject (thread %x)\n", GetCurrentThreadId()); 
 	}
 
 	void ReleaseMutex() 
@@ -722,9 +722,7 @@ private:
 			return;
 
 		if (!::ReleaseMutex(m_ghMutex)) 
-		{ 
-			printf("Error releasing Mutex on thread %x.\n", GetCurrentThreadId()); 
-		}
+			Print("Error releasing Mutex on thread %x.\n", GetCurrentThreadId()); 
 	}
 
 	static int Handshake( SOCKET connectfd )
@@ -760,13 +758,13 @@ private:
 			return FALSE;
 		*pend = 0;
 
-		char strHash[256];
+		char strHash[256]; // TODO: possible buffer overflow
 		strcpy(strHash, pkey);
 		strcat(strHash, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
 		CHash::CreateSHA1(strHash);
 		CHash::base64_encode((unsigned char*)CHash::GetBuffer(), CHash::GetLength(), strHash );
 		
-		char strReply[256];
+		char strReply[256]; // TODO: possible buffer overflow
 		sprintf(strReply,
 			"HTTP/1.1 101 Switching Protocols\r\n"
 			"Upgrade: websocket\r\n"
@@ -779,5 +777,3 @@ private:
 		return nVersion;
 	}
 };
-
-#pragma pop_macro("printf")

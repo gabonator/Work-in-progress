@@ -33,8 +33,9 @@ Padding:<input id="outerpadding" type="text" value="10" size="3">
 Curner:<input id="outercorner" type="text" value="3" size="3"><br>
 
 <input type="checkbox" id="enablearc">Enable arc optimizer (experimental)
-<input type="checkbox" id="showarc">Show arc optimizer
+<input type="checkbox" id="showarc">Show arc optimizer<br>
 
+<input type="checkbox" id="center">Center around 0,0
 <div id="svgcontainer"></div>
 </body>
 
@@ -87,7 +88,7 @@ function onTextChange()
   if (!font)
     return;
 
-  var newText = unescape(document.getElementById("text").value);
+  var newText = _unescape(document.getElementById("text").value);
   if ( newText == renderedText )
     return;
 
@@ -183,7 +184,7 @@ function calculateBorder(range, border, corner)
 
 function onDrawText()
 {
-  renderedText = unescape(document.getElementById("text").value);
+  renderedText = _unescape(document.getElementById("text").value);
   if ( renderedText == "" )
   {
     document.getElementById('svgcontainer').innerHTML = "No text to draw";
@@ -194,6 +195,7 @@ function onDrawText()
   var usrShowArc = document.getElementById("showarc").checked;
   var usrFontSize = parseFloat(document.getElementById("fontsize").value);
   var usrCutOuter = document.getElementById("cutouter").checked;
+  var usrCenter = document.getElementById("center").checked;
   var usrOuterPadding = parseFloat(document.getElementById("outerpadding").value);
   var usrOuterCorner = parseFloat(document.getElementById("outercorner").value);
 
@@ -219,6 +221,13 @@ function onDrawText()
   gCode.transform.translatey = -range.range.top;
   gCode.transform.scalex = usrFontSize/100;
   gCode.transform.scaley = -usrFontSize/100;
+
+  if (usrCenter)
+  {
+    gCode.transform.translatex = -(range.range.left + range.range.right)/2;
+    gCode.transform.translatey = -(range.range.top + range.range.bottom)/2;
+    gCode.returnToOrigin = true;
+  }
 
   if ( usrEnableArc )
   {
@@ -265,7 +274,7 @@ function onDrawText()
 
 function onCalculate()
 {
-  renderedText = unescape(document.getElementById("text").value);
+  renderedText = _unescape(document.getElementById("text").value);
   if ( renderedText == "" )
   {
     document.getElementById('svgcontainer').innerHTML = "No text to draw";
@@ -281,6 +290,7 @@ function onCalculate()
   var usrEnableArc = document.getElementById("enablearc").checked;
   var usrShowArc = document.getElementById("showarc").checked;
   var usrCutOuter = document.getElementById("cutouter").checked;
+  var usrCenter = document.getElementById("center").checked;
   var usrOuterPadding = parseFloat(document.getElementById("outerpadding").value);
   var usrOuterCorner = parseFloat(document.getElementById("outercorner").value);
 
@@ -313,11 +323,19 @@ function onCalculate()
   gCode.transform.translatey = -range.range.top;
   gCode.transform.scalex = usrFontSize/100;
   gCode.transform.scaley = -usrFontSize/100;
+
+  if (usrCenter)
+  {
+    gCode.transform.translatex = -(range.range.left + range.range.right)/2;
+    gCode.transform.translatey = -(range.range.top + range.range.bottom)/2;
+    gCode.returnToOrigin = true;
+  }
  
   gCode.cutFeedRate = usrDrillFeed;
   gCode.moveFeedRate = usrMoveFeed;
   gCode.safeZ = usrSafeZ;
   gCode.drillZ = usrDrillZ;
+//  gCode.center = usrCenter;
 
   var projectedDiameter = usrToolDiam/usrFontSize * 100 * svgExport.transform.scalex;
 
@@ -348,7 +366,17 @@ function onCalculate()
 
 function codeBox(code)
 {
- return "G Code:<br><textarea cols='40' rows='10'>"+code+"</textarea>";
+ var usrText = document.getElementById("text").value;
+ var usrFontName = document.getElementById("font").value;
+ var usrToolDiam = document.getElementById("tooldiam").value;
+ var usrFontSize = document.getElementById("fontsize").value;
+
+ return "G Code:<br><textarea cols='40' rows='10'>" +
+  "(valky typocarver:"+usrText+")\n"+
+  "(font:"+usrFontName+" "+usrFontSize+")\n"+
+  "(tool diameter:"+usrToolDiam+")\n"+
+  code+
+  "</textarea>";
 }
 
 function Range(paths)
@@ -433,5 +461,17 @@ function _convert(cmds)
   return aux;
 }
 
+function _unescape(str)
+{
+  var i = str.indexOf("&#");
+  if ( i == -1 )
+    return str;
+
+  var semi = str.indexOf(";", i);
+  var code = parseInt(str.substr(i+2, semi-i-2));
+  str = str.substr(0, i) + String.fromCharCode(code) + str.substr(semi+1);
+
+  return _unescape(str);
+}
 </script>
 </html>

@@ -5,7 +5,7 @@
 
 <script language="javascript" src="lzma.js"></script>
 <script language="javascript" src="paybysquare.js"></script>
-<!--<script language="javascript" src="qrcode.js"></script>-->
+<script language="javascript" src="qrcode.js"></script>
 
 <script language="javascript">
 var codec = new PayBySquare();
@@ -59,16 +59,15 @@ function onEncode()
 
 function showQr(sequence)
 {
-/*
   var qrcode = new QRCode("qrcode", {
       text: sequence,
+      typeNumber: 0,
       width: 256,
       height: 256,
       colorDark : "#000000",
       colorLight : "#ffffff",
       correctLevel : QRCode.CorrectLevel.L
   });
-*/
 }
 
 /*

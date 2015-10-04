@@ -17,17 +17,6 @@
 	fwrite($f, $rec);
 	//echo $rec;
 	fclose($f);
-/*
-F
-C0
-AA
-7
-on,5s
-5E
-2A
------
-
-*/
 
   {
     $message = date("H:i m.d.Y");
@@ -47,37 +36,79 @@ on,5s
 
     $resp = "";
     $resp .= "{";
-    $resp .= "\"dev_2d474142233038c5\": \"".$req0."\"";
+    $resp .= "\"dev_2d474142233038c5\":\"".$req0."\"";
     $resp .= ",";
 //    $resp .= "\"delay\":\"30\"";
 //    $resp .= ",";
-    $resp .= "\"dev_2d474142233038c5\": \"".$req1."\"";
+    $resp .= "\"dev_2d474142233038c5\":\"".$req1."\"";
     $resp .= ",";
 //    $resp .= "\"delay\":\"30\"";
 //    $resp .= ",";
-    $resp .= "\"dev_2d474142233038c5\": \"".$req2."\"";
+    $resp .= "\"dev_2d474142233038c5\":\"".$req2."\"";
     $resp .= ",";
-    $resp .= "\"dev_2d474142233235a9\": \"".$req3."\"";
+    $resp .= "\"dev_2d474142233235a9\":\"".$req3."\"";
     $resp .= "}";
-/*
-    $arrResp = explode( ",", $resp );
-    for ($i = 0; $i < count($arrResp); $i++)
-    {
-      if ($i > 0)
-      {
-        usleep(1000 * 500);
-        echo(",");
-      }
-      echo $arrResp[$i];
-    }*/
-    echo($resp);
-    file_put_contents("debug", $resp);
-//    echo("{\"dev_2d474142233038c5\": \"".$req2."\"}");
+    echo "{}";
+//    echo($resp);
+//    file_put_contents("debug", $resp);
   }
 
+  function getHostClass() 
+  {
+    if ( $_GET["v"] == "1.4" && isset($_GET["imei"]) )
+      return "gsm-1.4";
+  }
 
-//  echo("{\"dev_2d474142233235a9\": \"".$req."\"}");
-//	echo("{ \"my_key\": \"my_value\", \"second\":\"xyz\"}");
+  function getDeviceInfo($raw)    
+  {
+    $aux = array();
+    $aux["validity"] = 0;
+    if ( strlen($raw) == 16 && $raw[0] == "S" && $raw[3] == " " && $raw[4] == "C" ) // display
+    {
+      $aux["class"] = "hd44780";
+    } else
+    if ( strlen($raw) == 16 && $raw[0] == "S" && $raw[2] == "T" && $raw[8] == "H" ) // DHT22
+    {
+      $aux["class"] = "dht22";
+      $aux["temperature"] = substr($raw, 3, 5);
+      $aux["humidity"] = substr($raw, 9, 4);
+
+      $aux["units_temperature"] = "deg C";
+      $aux["units_humidity"] = "percent";
+//      updateVariable(array("name" => safe($k), "host" => safe($_GET["imei"]), "variable" => "temperature", "class"=>"DHT22", "value" => substr($raw, 3, 5), "validity" => 0));
+//      updateVariable(array("name" => safe($k), "host" => safe($_GET["imei"]), "variable" => "humidity", "class"=>"DHT22", "value" => substr($raw, 9, 4), "validity" => 0));
+    } else
+    if ( strlen($raw) == 16 && $raw[0] == "O" && $raw[2] == "T" && $raw[6] == "S" ) // RELAY
+    {
+      $aux["class"] = "moc3040";
+      $aux["state"] = $raw[0] == "1" ? 1 : 0;
+      $aux["units_state"] = "logic";
+    } else
+    {
+      $aux["class"] = "unknown";
+      report("INFO: Unknown class '".$raw."', len=".strlen($raw));
+    }
+
+    return $aux;
+  }
+
+	// db
+  require "db.php";
+  $hostclass = getHostClass();
+  updateHost(array("name" => safe($_GET["imei"]), "class" => $hostclass, "ip" => $_SERVER["REMOTE_ADDR"], "validity" => $valid));
+	foreach ($_GET as $k => $v)
+	{
+    if ( substr($k, 0, 4) == "dev_" )
+    {
+      $devInfo = getDeviceInfo($v);
+      updateDevice(array("host" => safe($_GET["imei"]), "name" => safe($k), "data" => safe($v), "class" => $devInfo["class"], "ip" => $_SERVER["REMOTE_ADDR"], "validity" => 0));
+    	foreach ($devInfo as $diKey => $diValue)
+      {
+        if ( $diKey != "class" && $diKey != "validity" && substr($diKey, 0, 6) != "units_" )
+          updateVariable(array("name" => safe($k), "host" => safe($_GET["imei"]), "variable" => $diKey, "units" =>$devInfo["units_".$diKey], "class"=>$devInfo["class"], "value" => $diValue, "validity" => $devInfo["validity"]));
+      }
+    }
+	}
 
   function getCurrent()
   {

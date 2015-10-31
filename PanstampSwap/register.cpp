@@ -28,6 +28,7 @@
 
 /*static*/ uint8_t REGISTER::regIndex = 0;
 /*static*/ REGISTER* REGISTER::pLast = NULL;
+/*static*/ uint16_t REGISTER::ackWaitingNonce = (uint16_t)-1;
 
 /**
  * init
@@ -125,25 +126,27 @@ REGISTER *REGISTER::sendSwapStatus(uint16_t targetAddr /* = SWAP_BCAST_ADDR */)
  */
 REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR */) 
 {
-  // tu by taktiez mala byt adresa komu to posielame
   SWSTATUS packet = SWSTATUS(id, value, length, type, targetAddr);
   packet.function = SWAPFUNCT_REQ;
-  
+
   // retry 2 times if no response in half second
   for ( uint8_t retry = 0; retry < 3; retry++)
   {  
     packet.send();
-    ackWaitingNonce = packet.nonce;
+    REGISTER::ackWaitingNonce = packet.nonce;
 
     for ( uint8_t wait = 0; wait < 50; wait++)
     {
-      delay(10);
-      if ( receivedAck() ) // unsafe to use 0 as OK marker
+      delay(10); 
+
+      // waiting for packet.nonce match, usually takes 85-105ms
+      if ( receivedAck() ) 
         return this;
     }
+
     packet.nonce = ++swap.nonce;
   }
-  // waiting for packet.nonce mach
+
   return this;
 }
 
@@ -154,7 +157,7 @@ REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR *
  */
 bool REGISTER::receivedAck(void)
 {
-  return ackWaitingNonce == (uint16_t)-1; // asi staticka
+  return REGISTER::ackWaitingNonce == (uint16_t)-1; 
 }
 
 /**
@@ -164,10 +167,13 @@ bool REGISTER::receivedAck(void)
  */
 /*static*/ void REGISTER::replySwapStatusAck(SWPACKET* pRcvdPacket)
 {
-  // prijimatel spravy chce informovat odosielatela o uspesnom prijati
-  static uint8_t data[1] = {pRcvdPacket->nonce};
-  SWSTATUS packet = SWSTATUS(pRcvdPacket->regId, data, sizeof(data), SWDTYPE_INTEGER);
+  // acknowledge sender that we received his message
+  static uint8_t data;
+  data = pRcvdPacket->nonce;
+  
+  SWSTATUS packet = SWSTATUS(pRcvdPacket->regId, &data, sizeof(data), SWDTYPE_INTEGER);
   packet.destAddr = pRcvdPacket->srcAddr;
+  packet.function = SWAPFUNCT_ACK;
   packet.send();
 }
 
@@ -178,14 +184,17 @@ bool REGISTER::receivedAck(void)
  */
 /*static*/ void REGISTER::handleSwapStatusAck(SWPACKET* pRcvdPacket)
 {
-  REGISTER* reg = getRegisterById(pRcvdPacket->regId);
+  // Got some acknowledge message, does it match?
+  //REGISTER* reg = getRegisterById(pRcvdPacket->regId);
 
   if ( pRcvdPacket->value.length == 1 )
   {
     uint8_t ackNonce = pRcvdPacket->value.data[0];
-    if ( ackNonce == reg->ackWaitingNonce )
+
+    if ( ackNonce == REGISTER::ackWaitingNonce )
     {
-      reg->ackWaitingNonce = (uint16_t)-1;
+      // this is what we have been waiting for!
+      REGISTER::ackWaitingNonce = (uint16_t)-1;
     }
   }
 }

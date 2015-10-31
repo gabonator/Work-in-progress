@@ -9,7 +9,68 @@
 #include "swap.h"
 
 //#define RXER
-#define TXER
+#define TXER   /// slave com3
+//#define RXER2    /// master com60
+
+
+
+#ifdef RXER2
+const unsigned char addr = 0xB5;
+boolean packetAvailable = false;
+
+void onPacket(SWPACKET *swPacket)
+{
+    REGISTER *reg;
+    
+    if ( swPacket->addrType == SWAPADDR_SIMPLE )
+      Serial.print("SIMPLE packet");
+    else 
+    if ( swPacket->addrType == SWAPADDR_EXTENDED )
+      Serial.print("EXTENDED packet");
+    else 
+      Serial.print("UNKNOWN packet");
+      
+    Serial.print(", function=");
+    Serial.print(swPacket->function);
+    Serial.print(", destAddr=");
+    Serial.print(swPacket->destAddr);
+    Serial.print(", regAddr=");
+    Serial.print(swPacket->regAddr);
+    Serial.print(", regId=");
+    Serial.print(swPacket->regId);
+//    Serial.print(", SWDATA:type=");
+    //Serial.print(swPacket.value.type);
+    //Serial.print(", payload.len=");
+    //Serial.print(swPacket.value.length);
+    Serial.print(", payload=");
+    for (unsigned char i=0; i<swPacket->value.length; i++)
+    {
+      Serial.print(swPacket->value.data[i], HEX);
+      Serial.print(' ');
+    }
+     Serial.print("\n");
+}
+
+void setup()
+{
+  Serial.begin(9600); 
+  Serial.print("booting RXer2...\n");
+  // Init SWAP stack
+  panstamp.init(0,0);
+  Serial.print("post panstamp init\n");
+  swap.init();
+  swap.attachInterrupt(STATUS, onPacket);
+
+  Serial.print("master address=");
+  Serial.print(panstamp.radio.devAddress, HEX);  
+  Serial.print("\n");
+
+}
+
+void loop()
+{
+}
+#endif
 
 #ifdef RXER
 const unsigned char addr = 0xB5;
@@ -112,7 +173,7 @@ void setup()
 {
   int i;
   Serial.begin(9600); 
-  Serial.print("booting TXer...\n");
+  Serial.print("booting DHT22 slave TXer...\n");
   // Init SWAP stack
   panstamp.init(0,0);
   Serial.print("post panstamp init\n");
@@ -160,16 +221,14 @@ void loop()
 {
   Serial.print("main loop\n");
   
-//CCPACKET p;
-//  panstamp.radio.sendData(p);
-  
-//  digitalWrite(LED, HIGH);
   // Transmit sensor data
-  swap.getRegister(regSensor.id)->updateData()->sendSwapStatusAck();
-  // Transmit power voltage
-  swap.getRegister(regVoltSupply.id)->updateData()->sendSwapStatusAck();
-//  digitalWrite(LED, LOW);
+  bool bSuccess = swap.getRegister(regSensor.id)
+    ->updateData()
+    ->sendSwapStatusAck()
+    ->receivedAck();
 
+  Serial.print(bSuccess ? "Send Ok!\n" : "Send error!\n");
+  
   // Sleep
   swap.goToSleep();
 }

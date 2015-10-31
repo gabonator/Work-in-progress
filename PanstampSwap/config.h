@@ -26,19 +26,47 @@
 #define _CONFIG_H
 
 /**
- * Repeater options
- */
-// Amount of transactions to be saved for evaluation before repeating a packet
-// Maximum depth = 255
-#define REPEATER_TABLE_DEPTH  20
-// Expiration time (in ms) for any transaction
-#define REPEATER_EXPIRATION_TIME  2000
-
-/**
  * Addressing schema
  */
 // Extended addresses (2 bytes)
 //#define SWAP_EXTENDED_ADDRESS     1
+
+
+typedef enum CONFIG {
+/**
+ * Repeater options
+ */
+
+  // Amount of transactions to be saved for evaluation before repeating a packet
+  // Maximum depth = 255
+  REPEATER_TABLE_DEPTH = 20,
+
+  // Expiration time (in ms) for any transaction
+  REPEATER_EXPIRATION_TIME = 2000
+};
+
+typedef enum PRODUCT {
+
+/**
+ * Hardware version
+ */
+  HARDWARE_VERSION = 0x00000200L,
+
+/**
+ * Firmware version
+ */
+  FIRMWARE_VERSION = 0x00000101L,
+
+/**
+ * Manufacturer SWAP ID
+ */
+  SWAP_MANUFACT_ID = 0x00000001L,
+
+/**
+ * Product SWAP ID
+ */
+  SWAP_PRODUCT_ID = 0x0000000AL
+};
 
 #endif
 

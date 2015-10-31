@@ -24,9 +24,18 @@
  * Creation date: 03/31/2011
  */
 
-#include "product.h"
+#include "config.h"
 #include "register.h"
 #include "commonregs.h"
+#include "DHT.h"
+
+enum {
+  DHT_DATA = A4,
+  DHT_POWER = A5,
+  DHT_GROUND = A2
+};
+
+DHT dht(DHT_DATA, DHT22);
 
 const void updtVoltSupply(REGISTER* pRegister);
 const void updtSensor(REGISTER* pRegister);
@@ -34,62 +43,18 @@ const void updtSensor(REGISTER* pRegister);
 /*
  * Definition of custom registers
  */
-// Voltage supply
-static unsigned long voltageSupply = 3300;
-static byte dtVoltSupply[2];
-REGISTER regVoltSupply(dtVoltSupply, sizeof(dtVoltSupply), &updtVoltSupply, NULL);
+
+// Dummy register to maintain their order
+REGISTER regVoltSupply(NULL, 0, NULL, NULL, REGISTER::NoAccess);
 
 // Sensor value register
 byte dtSensor[4];
-REGISTER regSensor(dtSensor, sizeof(dtSensor), &updtSensor, NULL);
-
-
-////const SWDTYPE _type=SWDTYPE_OTHER, EAccess _access=Public
+REGISTER regSensor(dtSensor, sizeof(dtSensor), &updtSensor, NULL, REGISTER::Public);
 
 /**
  * Definition of custom getter/setter callback functions
  */
  
-/**
- * updtVoltSupply
- *
- * Measure voltage supply and update register
- *
- * 'rId'  Register ID
- */
-const void updtVoltSupply(REGISTER* pRegister)
-{  
-  unsigned long result;
-  
-  // Read 1.1V reference against AVcc
-  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  delay(2); // Wait for Vref to settle
-  ADCSRA |= _BV(ADSC); // Convert
-  while (bit_is_set(ADCSRA,ADSC));
-  result = ADCL;
-  result |= ADCH << 8;
-  result = 1126400L / result; // Back-calculate AVcc in mV
-  voltageSupply = result;     // Update global variable Vcc
-  
-  #ifdef VOLT_SUPPLY_A7
-  
-  // Read voltage supply from A7
-  unsigned short ref = voltageSupply;
-  result = analogRead(7);
-  result *= ref;
-  result /= 1024;
-  #endif
-
-  /**
-   * register[eId]->member can be replaced by regVoltSupply in this case since
-   * no other register is going to use "updtVoltSupply" as "updater" function
-   */
-
-  // Update register value
-  pRegister->value[0] = (result >> 8) & 0xFF;
-  pRegister->value[1] = result & 0xFF;
-}
-
 /**
  * updtSensor
  *
@@ -99,8 +64,48 @@ const void updtVoltSupply(REGISTER* pRegister)
  */
 const void updtSensor(REGISTER* pRegister)
 {
-  dtSensor[0] = 0x12; //(temperature >> 8) & 0xFF;
-  dtSensor[1] = 0x34; //temperature & 0xFF;
-  dtSensor[2] = 0x56; //(humidity >> 8) & 0xFF;
-  dtSensor[3] = 0x78; //humidity & 0xFF;
+  // Power sensor
+  pinMode(DHT_DATA, INPUT);
+
+  pinMode(DHT_GROUND, OUTPUT);
+  digitalWrite(DHT_POWER, LOW);
+
+  pinMode(DHT_POWER, OUTPUT);
+  digitalWrite(DHT_POWER, HIGH);
+
+  delay(1500);
+
+  // Read humidity
+  float h = dht.readHumidity();
+  // Read temperature
+  float t = dht.readTemperature();
+
+  // Unpower sensor
+  digitalWrite(DHT_POWER, LOW);
+  // TODO: shoud set dht_data as output to reduce consumption
+
+  if ( isnan(h) || isnan(t) ) 
+  {
+    // set invalid value
+    Serial.print("sensor error!\n");
+    pRegister->value[0] = 0xEE;
+    pRegister->value[1] = 0xEE;
+    pRegister->value[2] = 0xEE;
+    pRegister->value[3] = 0xEE;
+    return;
+  }
+
+  uint16_t humidity = h * 10;
+  uint16_t temperature = t * 10;
+
+  Serial.print("read temp=");
+  Serial.print(temperature);
+  Serial.print(" read hum=");
+  Serial.print(humidity);
+  Serial.print("\n");
+
+  pRegister->value[0] = (temperature >> 8) & 0xFF;
+  pRegister->value[1] = temperature & 0xFF;
+  pRegister->value[2] = (humidity >> 8) & 0xFF;
+  pRegister->value[3] = humidity & 0xFF;
 }

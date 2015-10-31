@@ -67,7 +67,7 @@ extern REGISTER regProductCode;
   }
   else
     eval = false;
-    
+
   if (eval)
   {
     // Function
@@ -135,17 +135,15 @@ extern REGISTER regProductCode;
         break;
 
       case SWAPFUNCT_REQ:
-        // User callback function declared?
         if (swap.statusReceived != NULL)
           swap.statusReceived(&swPacket);
 
-        // odosielatel (slave) pozaduje mastra aby sme ho notifikovali o prijati
+        // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
         REGISTER::replySwapStatusAck(&swPacket); 
-        // paket co bude obsahovat function=SWAPFUNC_ACK, 'nonce' a 'regid'
         break;
 
       case SWAPFUNCT_ACK:
-        // notifikacia o prijati od mastra prisla ku slave, mozeme zrusit retry loop
+        // receiver notifies us back about successfull reception
         REGISTER::handleSwapStatusAck(&swPacket);
         break;
 

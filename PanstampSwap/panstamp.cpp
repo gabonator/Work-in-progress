@@ -51,10 +51,10 @@ void CPanstamp::goToWirelessBoot()
   
 }
 
-  void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
-     {
-       ccPacketReceived = funct;
-     }
+void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
+{
+  ccPacketReceived = funct;
+}
 
 
 //attachInterrupt(0, cc1101signalsInterrupt, FALLING);
@@ -79,13 +79,16 @@ void CPanstamp::init(uint8_t freq, uint8_t mode)
 //  state = RXON;
 }
 
+void CPanstamp::sleepSec(int n) 
+{ 
+  Serial.print("Should sleep for ");
+  Serial.print(n);
+  Serial.print("seconds...\n");
+  delay(5000);
+  //while (n--) delay(1000); 
+}
 
-
-  void CPanstamp::sleepSec(int n) 
-  { 
-    Serial.print("Should sleep for ");
-    Serial.print(n);
-    Serial.print("seconds...\n");
-    delay(5000);
-    //while (n--) delay(1000); 
-  }
+uint16_t CPanstamp::GET_RANDOM(void)
+{
+  return OSCCAL;
+}

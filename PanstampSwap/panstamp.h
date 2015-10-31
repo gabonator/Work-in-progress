@@ -5,8 +5,7 @@
 #include "cc1101.h"
 #include "ccpacket.h"
 
-typedef unsigned char uint8_t;
-
+// Minimalistic arduino compatible implementation of panstamp class
 class CPanstamp
 {
 public:
@@ -19,11 +18,7 @@ public:
      
   void attachInterrupt(void (*funct)(CCPACKET*));
   void sleepSec(int n);
-     inline uint16_t GET_RANDOM(void)
-     {
-       return OSCCAL;
-     }
-
+  uint16_t GET_RANDOM(void);
 };
 
 extern CPanstamp panstamp;

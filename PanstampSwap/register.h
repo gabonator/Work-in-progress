@@ -43,7 +43,8 @@ class REGISTER
     enum EAccess {
       Public = 0,
       ReadOnly = 1,       
-      Private = 2 
+      Private = 2,
+      NoAccess = 3
     };
 
   private:
@@ -124,8 +125,7 @@ class REGISTER
      * @param bank sector in eeprom or flash
      */
     REGISTER(uint8_t *val, const uint8_t len, TValueUpdaterFunction updateValH, TValueSetterFunction setValH, EAccess _access=Public, const SWDTYPE _type=SWDTYPE_OTHER, const int eepromAddr=-1, const uint16_t bank=DEFAULT_NVOLAT_SECTION) : 
-      id(regIndex++), value(val), length(len), updateValue(updateValH), setValue(setValH), type(_type), access(_access), eepromAddress(eepromAddr), eepromBank(bank),
-      ackWaitingNonce((uint16_t)-1)
+      id(regIndex++), value(val), length(len), updateValue(updateValH), setValue(setValH), type(_type), access(_access), eepromAddress(eepromAddr), eepromBank(bank)
     {
       pPrev = pLast;
       pLast = this;
@@ -239,11 +239,12 @@ class REGISTER
     }
 
   public:
+    // TODO: should be in separate class?
     REGISTER* sendSwapStatusAck(uint16_t targetAddr = SWAP_BCAST_ADDR);
     bool receivedAck(void);
     static void replySwapStatusAck(SWPACKET* pRcvdPacket);
     static void handleSwapStatusAck(SWPACKET* pRcvdPacket);
-    uint16_t ackWaitingNonce;
+    static uint16_t ackWaitingNonce;
 };
 
 #endif

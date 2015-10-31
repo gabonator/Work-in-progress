@@ -29,7 +29,7 @@
 #include "nvolat.h"
 #include "register.h"
 #include "swap.h"
-#include "product.h"
+#include "config.h"
 
 const void setSysState(REGISTER* pRegister, uint8_t *state);
 const void setFreqChannel(REGISTER* pRegister, uint8_t *channel);

@@ -66,10 +66,14 @@ enum SWAPFUNCT
   SWAPFUNCT_STA = 0x00,
   SWAPFUNCT_QRY,
   SWAPFUNCT_CMD,
-  //SWAPFUNCT_ACK,  // 0x03 - Reserved for future adoption by SWAP
 
   SWAPFUNCT_REQ, // same as QRY, but requests the receiver to notify sender about successfull reception
-  SWAPFUNCT_ACK  // receiver notifies sender that packet was received
+  SWAPFUNCT_ACK,  // receiver notifies sender that packet was received
+
+  SWAPFUNCT_FORWARD_REQ,
+  SWAPFUNCT_FORWARD_ACK,
+
+  SWAPFUNCT_INQUIRY
 };
 
 /**
@@ -215,6 +219,8 @@ class SWPACKET
      *  False otherwise
      */
     bool send(void);
+
+    CCPACKET& getPacket() { return ccPacket; }
 };
 
 #endif

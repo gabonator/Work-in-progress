@@ -26,10 +26,14 @@
 #include "swap.h"
 #include "swpacket.h"
 #include "nvolat.h"
+#include "inquiry.h"
+#include "mediator.h"
 
 extern REGISTER regSecuNonce;
 extern REGISTER regProductCode;
 
+INQUIRY procInquiry;
+MEDIATOR procMediator;
 /**
  * pacKetReceived
  *
@@ -44,112 +48,118 @@ extern REGISTER regProductCode;
   
   SWPACKET swPacket = SWPACKET(packet);
   REGISTER *reg;
-  bool eval = true;
-
 
   #ifdef SWAP_EXTENDED_ADDRESS
-  if (swPacket.addrType == SWAPADDR_EXTENDED)
+  if (swPacket.addrType != SWAPADDR_EXTENDED)
+    return;
   #else
-  if (swPacket.addrType == SWAPADDR_SIMPLE)
+  if (swPacket.addrType != SWAPADDR_SIMPLE)
+    return;
   #endif
+  
+  // Repeater enabled?
+  PROCESSOR* p = swap.processor;
+  while (p)
   {
-    // Repeater enabled?
-    if (swap.repeater != NULL)
-      swap.repeater->packetHandler(&swPacket);
+    if ( !p->packetHandler(&swPacket) )
+      return;
 
-    // Smart encryption locally enabled?
-    if (swap.security & 0x02)
-    {
-      // OK, then incoming packets must be encrypted too
-      if (!(swPacket.security & 0x02))
-        eval = false;
-    }
+    p = p->pNext;
   }
-  else
-    eval = false;
 
-  if (eval)
+  // Smart encryption locally enabled?
+  if (swap.security & 0x02)
   {
-    // Function
-    switch(swPacket.function)
-    {
-      case SWAPFUNCT_CMD:
-        // Command not addressed to us?
-        if (swPacket.destAddr != swap.devAddress)
-          break;
-        // Current version does not support data recording mode
-        // so destination address and register address must be the same
-        if (swPacket.destAddr != swPacket.regAddr)
-          break;
-        // Valid register?
-        if ((reg = swap.getRegister(swPacket.regId)) == NULL)
-          break;
-        // Anti-playback security enabled?
-        if (swap.security & 0x01)
-        {
-          // Check received nonce
-          if (swap.nonce != swPacket.nonce)
-          {
-            // Nonce missmatch. Transmit correct nonce.
-            reg = swap.getRegister(regSecuNonce.id);
-            reg->sendSwapStatus();
-            break;
-          }
-        }
-        // handle write protection reg->access == Public
+    // OK, then incoming packets must be encrypted too
+    if (!(swPacket.security & 0x02))
+      return;
+  }
 
-        // Filter incorrect data lengths
-        if (swPacket.value.length == reg->length)
-          reg->setData(swPacket.value.data)->save()->sendSwapStatus();
-        else
+  // Function
+  switch(swPacket.function)
+  {
+    case SWAPFUNCT_CMD:
+      // Command not addressed to us?
+      if (swPacket.destAddr != swap.devAddress)
+        break;
+      // Current version does not support data recording mode
+      // so destination address and register address must be the same
+      if (swPacket.destAddr != swPacket.regAddr)
+        break;
+      // Valid register?
+      if ((reg = swap.getRegister(swPacket.regId)) == NULL)
+        break;
+      // Anti-playback security enabled?
+      if (swap.security & 0x01)
+      {
+        // Check received nonce
+        if (swap.nonce != swPacket.nonce)
+        {
+          // Nonce missmatch. Transmit correct nonce.
+          reg = swap.getRegister(regSecuNonce.id);
           reg->sendSwapStatus();
-        break;
-
-      case SWAPFUNCT_QRY:
-        // Only Product Code can be broadcasted
-        if (swPacket.destAddr == SWAP_BCAST_ADDR)
-        {
-          if (swPacket.regId != regProductCode.id)
-            break;
+          break;
         }
-        // Query not addressed to us?
-        else if (swPacket.destAddr != swap.devAddress)
+      }
+      // handle write protection reg->access == Public
+
+      // Filter incorrect data lengths
+      if (swPacket.value.length == reg->length)
+      {
+        reg = reg->setData(swPacket.value.data);
+        if (reg)
+          reg->save()->sendSwapStatus();
+      }
+      else
+        reg->sendSwapStatus();
+      break;
+
+    case SWAPFUNCT_QRY:
+      // Only Product Code can be broadcasted
+      if (swPacket.destAddr == SWAP_BCAST_ADDR)
+      {
+        if (swPacket.regId != regProductCode.id)
           break;
-        // Current version does not support data recording mode
-        // so destination address and register address must be the same
-        if (swPacket.destAddr != swPacket.regAddr)
-          break;
-        // Valid register?
-        if ((reg = swap.getRegister(swPacket.regId)) == NULL)
-          break;
-        
-        // handle write protection reg->access == Public, Readonly
-
-        reg->updateData()->sendSwapStatus();
+      }
+      // Query not addressed to us?
+      else if (swPacket.destAddr != swap.devAddress)
         break;
-
-      case SWAPFUNCT_STA:
-        // User callback function declared?
-        if (swap.statusReceived != NULL)
-          swap.statusReceived(&swPacket);
+      // Current version does not support data recording mode
+      // so destination address and register address must be the same
+      if (swPacket.destAddr != swPacket.regAddr)
         break;
-
-      case SWAPFUNCT_REQ:
-        if (swap.statusReceived != NULL)
-          swap.statusReceived(&swPacket);
-
-        // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
-        REGISTER::replySwapStatusAck(&swPacket); 
+      // Valid register?
+      if ((reg = swap.getRegister(swPacket.regId)) == NULL)
         break;
+      
+      // handle write protection reg->access == Public, Readonly
+      reg = reg->updateData();
+      if (reg)
+        reg->sendSwapStatus();
+      break;
 
-      case SWAPFUNCT_ACK:
-        // receiver notifies us back about successfull reception
-        REGISTER::handleSwapStatusAck(&swPacket);
-        break;
+    case SWAPFUNCT_STA:
+      // User callback function declared?
+      if (swap.statusReceived != NULL)
+        swap.statusReceived(&swPacket);
+      break;
 
-      default:
-        break;
-    }
+// todo: move into separate processor!
+    case SWAPFUNCT_REQ:
+      if (swap.statusReceived != NULL)
+        swap.statusReceived(&swPacket);
+
+      // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
+      REGISTER::replySwapStatusAck(&swPacket); 
+      break;
+
+    case SWAPFUNCT_ACK:
+      // receiver notifies us back about successfull reception
+      REGISTER::handleSwapStatusAck(&swPacket);
+      break;
+
+    default:
+      break;
   }
 }
 
@@ -161,7 +171,7 @@ extern REGISTER regProductCode;
 SWAP::SWAP(void)
 {  
   statusReceived = NULL;
-  repeater = NULL;
+  processor = NULL;
   encryptPwd = NULL;
   security = 0;
 }
@@ -192,7 +202,11 @@ void SWAP::init(void)
   panstamp.radio.setCCregs();
   
   // Attach RF ISR
-  panstamp.attachInterrupt(SWAP::onPacketReceived);
+  panstamp.attachInterrupt(SWAP::onPacketReceived);  
+
+  // processors
+  addProcessor(&procMediator);
+  addProcessor(&procInquiry);
 }
 
 /**
@@ -204,15 +218,54 @@ void SWAP::init(void)
  */
 void SWAP::enableRepeater(unsigned char maxHop)
 {
-  if (repeater == NULL)
+  static REPEATER repe;
+
+  if ( maxHop )
   {
-    static REPEATER repe;
-    repeater = &repe;
-    repeater->init(maxHop);
+    repe.init(maxHop);
+    addProcessor(&repe);
+  }
+  else
+  {
+    repe.stop();
+    removeProcessor(&repe);
+  }
+}
+
+void SWAP::addProcessor(PROCESSOR* pAddProcessor)
+{
+  // don't add the sam processor twice
+  PROCESSOR* p = processor;
+  while (p)
+  {
+    if ( p == pAddProcessor )
+      return;
+    p = p->pNext;
   }
 
-  if (maxHop == 0)
-    repeater->stop();
+  // add as first
+  p = processor;
+  processor = pAddProcessor;
+  processor->pNext = p;
+}
+
+void SWAP::removeProcessor(PROCESSOR* pRemoveProcessor)
+{
+  PROCESSOR* p = processor;
+  if ( p == pRemoveProcessor )
+  {
+    processor = pRemoveProcessor->pNext;
+    return;
+  }
+
+  while (p)
+  {
+    if ( p->pNext == pRemoveProcessor )
+    {
+      p->pNext = pRemoveProcessor->pNext;
+    }
+    p = p->pNext;
+  }
 }
 
 /**

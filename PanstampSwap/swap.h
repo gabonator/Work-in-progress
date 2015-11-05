@@ -28,6 +28,7 @@
 #include "register.h"
 #include "config.h"
 #include "repeater.h"
+#include "processor.h"
 
 #ifdef PANSTAMP_NRG
 #include "cc430aes.h"
@@ -81,7 +82,8 @@ class SWAP
     /**
      * Pointer to repeater object
      */
-    REPEATER *repeater;
+    PROCESSOR *processor;
+//    REPEATER *repeater;
 
     /**
      * SWAP address
@@ -229,6 +231,10 @@ class SWAP
       security |= 0x04;
     }
     #endif
+
+    void addProcessor(PROCESSOR* pAddProcessor);
+    void removeProcessor(PROCESSOR* pRemoveProcessor);
+
 };
 
 /**

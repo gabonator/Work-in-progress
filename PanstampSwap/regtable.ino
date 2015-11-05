@@ -27,6 +27,7 @@
 #include "config.h"
 #include "register.h"
 #include "commonregs.h"
+#include "inquiry.h"
 #include "DHT.h"
 
 enum {
@@ -37,8 +38,7 @@ enum {
 
 DHT dht(DHT_DATA, DHT22);
 
-const void updtVoltSupply(REGISTER* pRegister);
-const void updtSensor(REGISTER* pRegister);
+const bool updtSensor(REGISTER* pRegister);
 
 /*
  * Definition of custom registers
@@ -62,7 +62,7 @@ REGISTER regSensor(dtSensor, sizeof(dtSensor), &updtSensor, NULL, REGISTER::Publ
  *
  * 'rId'  Register ID
  */
-const void updtSensor(REGISTER* pRegister)
+const bool updtSensor(REGISTER* pRegister)
 {
   // Power sensor
   pinMode(DHT_DATA, INPUT);
@@ -92,7 +92,7 @@ const void updtSensor(REGISTER* pRegister)
     pRegister->value[1] = 0xEE;
     pRegister->value[2] = 0xEE;
     pRegister->value[3] = 0xEE;
-    return;
+    return true;
   }
 
   uint16_t humidity = h * 10;
@@ -108,4 +108,6 @@ const void updtSensor(REGISTER* pRegister)
   pRegister->value[1] = temperature & 0xFF;
   pRegister->value[2] = (humidity >> 8) & 0xFF;
   pRegister->value[3] = humidity & 0xFF;
+
+  return true;
 }

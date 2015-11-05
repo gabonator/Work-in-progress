@@ -50,7 +50,7 @@ REGISTER* REGISTER::updateData(void)
 {
   // Update register value
   if (updateValue != NULL)
-    updateValue(this);
+    return updateValue(this) ? this : NULL;
   
   return this;
 }
@@ -66,7 +66,7 @@ REGISTER *REGISTER::setData(unsigned char *data)
 {
   // Update register value
   if (setValue != NULL)
-    setValue(this, data);
+    return setValue(this, data) ? this : NULL;
 
   return this;
 }
@@ -119,6 +119,7 @@ REGISTER *REGISTER::sendSwapStatus(uint16_t targetAddr /* = SWAP_BCAST_ADDR */)
   return this;
 }
 
+// todo: move these to separate PROCESSOR
 /**
  * sendSwapStatusAck
  * 

@@ -54,56 +54,56 @@ REPEATER::REPEATER(void)
  *
  * @param packet Pointer to the SWAP packet received
  */
-void REPEATER::packetHandler(SWPACKET *packet)
+bool REPEATER::packetHandler(SWPACKET *packet)
 {
   bool repeatPacket = true;
   uint32_t currentTime;
 
-  if (enabled)
+  if (!enabled)
+    return true;
+
+  // Don't repeat packets addressed to our device
+  if (packet->destAddr != swap.devAddress)
+    return true;
+
+  // Don't repeat beyond the maximum hop count
+  if (packet->hop >= maxHopCount)
+    return true;
+
+  uint8_t i;        
+
+  // Check received packet against the latest transactions
+  for(i=0 ; i<REPEATER_TABLE_DEPTH ; i++)
   {
-    // Don't repeat packets addressed to our device
-    if (packet->destAddr != swap.devAddress)
+    // Same source/destination node?
+    if (transactions[i].regAddr != packet->regAddr)
+      continue;
+
+    // Same SWAP function?
+    if (transactions[i].function != packet->function)
+      continue;
+
+      // Same cyclic nonce?
+    if (transactions[i].nonce != packet->nonce)
+      continue;
+
+    currentTime = millis();
+    // Time stamp not expired?
+    if ((currentTime - transactions[i].timeStamp) < REPEATER_EXPIRATION_TIME)
     {
-      // Don't repeat beyond the maximum hop count
-      if (packet->hop < maxHopCount)
-      {
-        uint8_t i;        
-
-        // Check received packet against the latest transactions
-        for(i=0 ; i<REPEATER_TABLE_DEPTH ; i++)
-        {
-          // Same source/destination node?
-          if (transactions[i].regAddr == packet->regAddr)
-          {
-            // Same SWAP function?
-            if (transactions[i].function == packet->function)
-            {
-              // Same cyclic nonce?
-              if (transactions[i].nonce == packet->nonce)
-              {
-                currentTime = millis();
-                // Time stamp not expired?
-                if ((currentTime - transactions[i].timeStamp) < REPEATER_EXPIRATION_TIME)
-                {
-                  repeatPacket = false;   //Don't repeat packet
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        // Repeat packet?
-        if (repeatPacket)
-        {
-          packet->srcAddr = swap.devAddress;              // Modify source address
-          packet->hop++;                                  // Increment hop counter
-          delay(SWAP_TX_DELAY);                           // Delay before sending
-          if (packet->send())                             // Repeat packet
-            saveTransaction(packet);                      // Save transaction
-        }
-      }
+      repeatPacket = false;   //Don't repeat packet
+      break;
     }
+  }
+
+  // Repeat packet?
+  if (repeatPacket)
+  {
+    packet->srcAddr = swap.devAddress;              // Modify source address
+    packet->hop++;                                  // Increment hop counter
+    delay(SWAP_TX_DELAY);                           // Delay before sending
+    if (packet->send())                             // Repeat packet
+      saveTransaction(packet);                      // Save transaction
   }
 }
 

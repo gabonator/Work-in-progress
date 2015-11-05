@@ -37,8 +37,8 @@
 class REGISTER
 {
   public:
-    typedef const void (*TValueUpdaterFunction)(REGISTER* pRegister);
-    typedef const void (*TValueSetterFunction)(REGISTER* pRegister, uint8_t *v);
+    typedef const bool (*TValueUpdaterFunction)(REGISTER* pRegister);
+    typedef const bool (*TValueSetterFunction)(REGISTER* pRegister, uint8_t *v);
     
     enum EAccess {
       Public = 0,

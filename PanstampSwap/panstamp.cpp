@@ -92,3 +92,11 @@ uint16_t CPanstamp::GET_RANDOM(void)
 {
   return OSCCAL;
 }
+
+uint16_t CPanstamp::rand(void)
+{
+  // todo: init, or custom PRNG
+  return OSCCAL ^ rand();
+}
+
+

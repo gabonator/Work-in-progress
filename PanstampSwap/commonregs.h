@@ -31,11 +31,11 @@
 #include "swap.h"
 #include "config.h"
 
-const void setSysState(REGISTER* pRegister, uint8_t *state);
-const void setFreqChannel(REGISTER* pRegister, uint8_t *channel);
-const void setDevAddress(REGISTER* pRegister, uint8_t *addr);
-const void setNetworkId(REGISTER* pRegister, uint8_t *nId);
-const void setTxInterval(REGISTER* pRegister, uint8_t *interval);
+const bool setSysState(REGISTER* pRegister, uint8_t *state);
+const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel);
+const bool setDevAddress(REGISTER* pRegister, uint8_t *addr);
+const bool setNetworkId(REGISTER* pRegister, uint8_t *nId);
+const bool setTxInterval(REGISTER* pRegister, uint8_t *interval);
 
 /**
  * Macro for the definition of registers common to all SWAP devices
@@ -91,7 +91,7 @@ REGISTER regTxInterval((uint8_t*)&swap.txInterval, sizeof(swap.txInterval), NULL
  * 'id'     Register ID                                     
  * 'state'  New system state                                
  */                                                         
-const void setSysState(REGISTER* pRegister, uint8_t *state)       
+const bool setSysState(REGISTER* pRegister, uint8_t *state)       
 {                                                           
   swap.systemState = state[0];                              
   switch(state[0])                                         
@@ -107,6 +107,7 @@ const void setSysState(REGISTER* pRegister, uint8_t *state)
     default:                                                
       break;                                                
   }                                                         
+  return true;
 }                                                           
                                                             
 /**                                                         
@@ -117,7 +118,7 @@ const void setSysState(REGISTER* pRegister, uint8_t *state)
  * 'id'       Register ID                                   
  * 'channel'  New channel                                   
  */                                                         
-const void setFreqChannel(REGISTER* pRegister, uint8_t *channel)           
+const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel)           
 {                                                           
   if (channel[0] != regFreqChannel.value[0])                
   {                                                         
@@ -129,7 +130,8 @@ const void setFreqChannel(REGISTER* pRegister, uint8_t *channel)
     panstamp.radio.setChannel(channel[0]);                  
     /* Restart device */                                    
     panstamp.reset();                                       
-  }                                                         
+  }       
+  return true;                                                  
 }                                                           
                                                             
                                                             
@@ -141,7 +143,7 @@ const void setFreqChannel(REGISTER* pRegister, uint8_t *channel)
  * 'id'    Register ID                                      
  * 'addr'  New device address                               
  */                                                         
-const void setDevAddress(REGISTER* pRegister, uint8_t *addr)               
+const bool setDevAddress(REGISTER* pRegister, uint8_t *addr)               
 {                                                           
   /* Send status before setting the new address */          
   SWSTATUS packet = SWSTATUS(regDevAddress.id, addr, regDevAddress.length); 
@@ -150,6 +152,7 @@ const void setDevAddress(REGISTER* pRegister, uint8_t *addr)
   regDevAddress.setValueFromBeBuffer(addr);                 
   /* Update register value */                               
   panstamp.radio.setDevAddress(addr[regDevAddress.length-1]); 
+  return true;
 }                                                           
                                                             
 /**                                                         
@@ -160,7 +163,7 @@ const void setDevAddress(REGISTER* pRegister, uint8_t *addr)
  * 'rId' Register ID                                        
  * 'nId' New network id                                     
  */                                                         
-const void setNetworkId(REGISTER* pRegister, uint8_t *nId)       
+const bool setNetworkId(REGISTER* pRegister, uint8_t *nId)       
 {                                                           
   if ((nId[0] != regNetworkId.value[0]) ||                  
       (nId[1] != regNetworkId.value[1]))                    
@@ -171,6 +174,7 @@ const void setNetworkId(REGISTER* pRegister, uint8_t *nId)
     /* Update register value */                             
     panstamp.radio.setSyncWord(nId);                        
   }                                                         
+  return true;
 }                                                           
 
 /**                                                         
@@ -181,10 +185,11 @@ const void setNetworkId(REGISTER* pRegister, uint8_t *nId)
  * 'id'        Register ID                                  
  * 'interval'  New interval (in seconds)                    
  */                                                         
-const void setTxInterval(REGISTER* pRegister, uint8_t *interval)  
+const bool setTxInterval(REGISTER* pRegister, uint8_t *interval)  
 {                                                           
   /* Set new Tx interval. BE to LE conversion */            
   regTxInterval.setValueFromBeBuffer(interval);             
+  return true;
 }
 #endif
 

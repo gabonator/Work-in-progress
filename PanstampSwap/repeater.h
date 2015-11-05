@@ -28,25 +28,26 @@
 #include "panstamp.h"
 #include "swpacket.h"
 #include "config.h"
+#include "processor.h"
 
 /**
- * Transaction
+ * Class declaration
  */
-typedef struct
+class REPEATER : public PROCESSOR
 {
-  unsigned long timeStamp;  // Transmission time stamp (ms)
-  unsigned char function;   // SWAP function
-  unsigned char srcAddr;    // Source address
-  unsigned char nonce;      // Cyclic nonce
-  unsigned char regAddr;    // Register address
-} Transaction;
+  private:
+    /**
+     * Transaction
+     */
+    typedef struct
+    {
+      unsigned long timeStamp;  // Transmission time stamp (ms)
+      unsigned char function;   // SWAP function
+      unsigned char srcAddr;    // Source address
+      unsigned char nonce;      // Cyclic nonce
+      unsigned char regAddr;    // Register address
+    } Transaction;
 
-
-/**
- * Cñass declaration
- */
-class REPEATER
-{
   private:
     /**
      * Maximum hop
@@ -89,7 +90,7 @@ class REPEATER
      *
      * @param packet Pointer to the SWAP packet received
      */
-    void packetHandler(SWPACKET *packet);
+    virtual bool packetHandler(SWPACKET *packet);
 
     /**
      * Class constructor

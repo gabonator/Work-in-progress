@@ -9,8 +9,8 @@
 #include "swap.h"
 
 //#define RXER
-#define TXER   /// slave com3
-//#define RXER2    /// master com60
+//#define TXER   /// slave com3
+#define RXER2    /// master com60
 
 
 

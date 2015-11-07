@@ -36,7 +36,11 @@
 SWPACKET::SWPACKET(CCPACKET *packet) 
 {
   uint8_t i;
-   
+ 
+  ccPacket.crc_ok = packet->crc_ok;
+  ccPacket.rssi = packet->rssi;
+  ccPacket.lqi = packet->lqi;
+
   // Save raw data and length
   ccPacket.length = packet->length;
   for(i=0 ; i<ccPacket.length ; i++)

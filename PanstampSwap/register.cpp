@@ -23,12 +23,13 @@
  */
 
 #include "register.h"
-#include "swstatus.h"
 #include "swap.h"
 
 /*static*/ uint8_t REGISTER::regIndex = 0;
 /*static*/ REGISTER* REGISTER::pLast = NULL;
 /*static*/ uint16_t REGISTER::ackWaitingNonce = (uint16_t)-1;
+
+extern REGISTER regSecuNonce;
 
 /**
  * init
@@ -107,18 +108,6 @@ REGISTER *REGISTER::save()
   return this;
 }
 
-/**
- * sendSwapStatus
- * 
- * Send SWAP status message
- */
-REGISTER *REGISTER::sendSwapStatus(uint16_t targetAddr /* = SWAP_BCAST_ADDR */) 
-{
-  SWSTATUS packet = SWSTATUS(id, value, length, type, targetAddr);
-  packet.send();
-  return this;
-}
-
 // todo: move these to separate PROCESSOR
 /**
  * sendSwapStatusAck
@@ -127,14 +116,14 @@ REGISTER *REGISTER::sendSwapStatus(uint16_t targetAddr /* = SWAP_BCAST_ADDR */)
  */
 REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR */) 
 {
-  SWSTATUS packet = SWSTATUS(id, value, length, type, targetAddr);
-  packet.function = SWAPFUNCT_REQ;
+  SWPACKET* packet = getStatusPacket(targetAddr);
+  packet->function = SWAPFUNCT_REQ;
 
   // retry 2 times if no response in half second
   for ( uint8_t retry = 0; retry < 3; retry++)
   {  
-    packet.send();
-    REGISTER::ackWaitingNonce = packet.nonce;
+    packet->send();
+    REGISTER::ackWaitingNonce = packet->nonce;
 
     for ( uint8_t wait = 0; wait < 50; wait++)
     {
@@ -145,7 +134,7 @@ REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR *
         return this;
     }
 
-    packet.nonce = ++swap.nonce;
+    packet->nonce = ++swap.nonce;
   }
 
   return this;
@@ -172,10 +161,14 @@ bool REGISTER::receivedAck(void)
   static uint8_t data;
   data = pRcvdPacket->nonce;
   
-  SWSTATUS packet = SWSTATUS(pRcvdPacket->regId, &data, sizeof(data), SWDTYPE_INTEGER);
-  packet.destAddr = pRcvdPacket->srcAddr;
-  packet.function = SWAPFUNCT_ACK;
-  packet.send();
+  SWPACKET* packet = regSecuNonce.getStatusPacket();
+  packet->regId = pRcvdPacket->regId;
+  packet->value.length = sizeof(data);
+  packet->value.data = &data;
+  packet->value.type = SWDTYPE_INTEGER;
+  packet->destAddr = pRcvdPacket->srcAddr;
+  packet->function = SWAPFUNCT_ACK;
+  packet->send();
 }
 
 /**
@@ -214,4 +207,24 @@ void REGISTER::setValueFromBeBuffer(unsigned char* beBuffer)
   for(i=0 ; i<length ; i++)
     value[i] = beBuffer[length-1-i];
 }
+
+SWPACKET* REGISTER::getStatusPacket(uint16_t destAddr /*= SWAP_BCAST_ADDR*/)
+{
+  static SWPACKET commonPacket;
+
+  commonPacket.destAddr = destAddr;
+  commonPacket.srcAddr = swap.devAddress;
+  commonPacket.hop = 0;
+  commonPacket.security = swap.security & 0x0F;
+  commonPacket.nonce = ++swap.nonce;
+  commonPacket.function = SWAPFUNCT_STA;
+  commonPacket.regAddr = swap.devAddress;
+  commonPacket.regId = id;
+  commonPacket.value.length = length;
+  commonPacket.value.data = value;
+  commonPacket.value.type = type;
+
+  return &commonPacket;
+}
+
 

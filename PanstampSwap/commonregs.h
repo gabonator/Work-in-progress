@@ -25,7 +25,6 @@
 #ifndef _COMMONREGS_H
 #define _COMMONREGS_H
 
-#include "swstatus.h"
 #include "nvolat.h"
 #include "register.h"
 #include "swap.h"
@@ -98,7 +97,7 @@ const bool setSysState(REGISTER* pRegister, uint8_t *state)
   {                                                         
     case SYSTATE_RESTART:                                  
       /* Send status message before restarting the mote */  
-      swap.getRegister(regSysState.id)->sendSwapStatus();    
+      swap.getRegister(regSysState.id)->getStatusPacket()->send();    
       panstamp.reset();                                     
       break;                                                
     case SYSTATE_UPGRADE:                                   
@@ -123,9 +122,12 @@ const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel)
   if (channel[0] != regFreqChannel.value[0])                
   {                                                         
     /* Send status message before entering the new          
-    frequency channel */                                    
-    SWSTATUS packet = SWSTATUS(regFreqChannel.id, channel, regFreqChannel.length); 
-    packet.send();                                          
+    frequency channel */    
+
+    SWPACKET* packet = pRegister->getStatusPacket();
+    packet->value.data = channel;
+    packet->send();                                          
+                                    
     /* Update register value */                             
     panstamp.radio.setChannel(channel[0]);                  
     /* Restart device */                                    
@@ -146,8 +148,10 @@ const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel)
 const bool setDevAddress(REGISTER* pRegister, uint8_t *addr)               
 {                                                           
   /* Send status before setting the new address */          
-  SWSTATUS packet = SWSTATUS(regDevAddress.id, addr, regDevAddress.length); 
-  packet.send();                                            
+  SWPACKET* packet = pRegister->getStatusPacket();
+  packet->value.data = addr;
+  packet->send();                                          
+  
   /* Set new SWAP address. BE to LE conversion */           
   regDevAddress.setValueFromBeBuffer(addr);                 
   /* Update register value */                               
@@ -169,8 +173,9 @@ const bool setNetworkId(REGISTER* pRegister, uint8_t *nId)
       (nId[1] != regNetworkId.value[1]))                    
   {                                                         
     /* Send status before taking the new network ID */      
-    SWSTATUS packet = SWSTATUS(regNetworkId.id, nId, regNetworkId.length); 
-    packet.send();                                          
+    SWPACKET* packet = pRegister->getStatusPacket();
+    packet->value.data = nId;
+    packet->send();                                          
     /* Update register value */                             
     panstamp.radio.setSyncWord(nId);                        
   }                                                         

@@ -172,13 +172,6 @@ class REGISTER
     REGISTER* save();
 
     /**
-     * sendSwapStatus
-     * 
-     * Send SWAP status message
-     */
-    REGISTER* sendSwapStatus(uint16_t targetAddr = SWAP_BCAST_ADDR);
-
-    /**
      * setValueFromBeBuffer
      *
      * Set curent value from a Big Endian buffer passed as argument
@@ -237,6 +230,8 @@ class REGISTER
         p = p->pPrev;
       }
     }
+
+    SWPACKET* getStatusPacket(uint16_t destAddr = SWAP_BCAST_ADDR);
 
   public:
     // TODO: should be in separate class?

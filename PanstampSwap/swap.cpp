@@ -28,12 +28,15 @@
 #include "nvolat.h"
 #include "inquiry.h"
 #include "mediator.h"
+#include "logger.h"
 
 extern REGISTER regSecuNonce;
 extern REGISTER regProductCode;
 
 INQUIRY procInquiry;
 MEDIATOR procMediator;
+LOGGER procLogger;
+
 /**
  * pacKetReceived
  *
@@ -97,7 +100,7 @@ MEDIATOR procMediator;
         {
           // Nonce missmatch. Transmit correct nonce.
           reg = swap.getRegister(regSecuNonce.id);
-          reg->sendSwapStatus();
+          reg->getStatusPacket()->send();
           break;
         }
       }
@@ -108,10 +111,10 @@ MEDIATOR procMediator;
       {
         reg = reg->setData(swPacket.value.data);
         if (reg)
-          reg->save()->sendSwapStatus();
+          reg->save()->getStatusPacket()->send();
       }
       else
-        reg->sendSwapStatus();
+        reg->getStatusPacket()->send();
       break;
 
     case SWAPFUNCT_QRY:
@@ -135,7 +138,7 @@ MEDIATOR procMediator;
       // handle write protection reg->access == Public, Readonly
       reg = reg->updateData();
       if (reg)
-        reg->sendSwapStatus();
+        reg->getStatusPacket()->send();
       break;
 
     case SWAPFUNCT_STA:
@@ -207,6 +210,7 @@ void SWAP::init(void)
   // processors
   addProcessor(&procMediator);
   addProcessor(&procInquiry);
+  addProcessor(&procLogger);
 }
 
 /**

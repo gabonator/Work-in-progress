@@ -61,6 +61,7 @@ void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
 
 void CPanstamp::init(uint8_t freq, uint8_t mode)
 {
+  srand(analogRead(0) ^ OSCCAL);
   // Calibrate internal RC oscillator
 //  rcOscCalibrate();
 
@@ -96,7 +97,7 @@ uint16_t CPanstamp::GET_RANDOM(void)
 uint16_t CPanstamp::rand(void)
 {
   // todo: init, or custom PRNG
-  return OSCCAL ^ rand();
+  return rand();
 }
 
 

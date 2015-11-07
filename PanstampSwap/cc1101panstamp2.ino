@@ -2,164 +2,136 @@
 
 #include "cc1101.h"
 #include "panstamp.h"
-//#define cc1101 radio
-
-
-//#include "regtable.h"
+#include "logger.h"
 #include "swap.h"
 
-//#define RXER
-//#define TXER   /// slave com3
-#define RXER2    /// master com60
+#define MODEM
 
+#ifdef MODEM
+char strCommand[80];
+uint8_t iCommand = 0;
 
+extern LOGGER procLogger;
 
-#ifdef RXER2
-const unsigned char addr = 0xB5;
-boolean packetAvailable = false;
-
-void onPacket(SWPACKET *swPacket)
+uint8_t hex(char c)
 {
-    REGISTER *reg;
-    
-    if ( swPacket->addrType == SWAPADDR_SIMPLE )
-      Serial.print("SIMPLE packet");
-    else 
-    if ( swPacket->addrType == SWAPADDR_EXTENDED )
-      Serial.print("EXTENDED packet");
-    else 
-      Serial.print("UNKNOWN packet");
-      
-    Serial.print(", function=");
-    Serial.print(swPacket->function);
-    Serial.print(", destAddr=");
-    Serial.print(swPacket->destAddr);
-    Serial.print(", regAddr=");
-    Serial.print(swPacket->regAddr);
-    Serial.print(", regId=");
-    Serial.print(swPacket->regId);
-//    Serial.print(", SWDATA:type=");
-    //Serial.print(swPacket.value.type);
-    //Serial.print(", payload.len=");
-    //Serial.print(swPacket.value.length);
-    Serial.print(", payload=");
-    for (unsigned char i=0; i<swPacket->value.length; i++)
-    {
-      Serial.print(swPacket->value.data[i], HEX);
-      Serial.print(' ');
-    }
-     Serial.print("\n");
+  if (c >= '0' && c <= '9' )
+    return c - '0';
+  if (c >= 'a' && c <= 'f' )
+    return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F' )
+    return c - 'A' + 10;
+  return 0;
 }
 
-void setup()
+void eval(char* strCommand)
 {
-  Serial.begin(9600); 
-  Serial.print("booting RXer2...\n");
-  // Init SWAP stack
-  panstamp.init(0,0);
-  Serial.print("post panstamp init\n");
-  swap.init();
-  swap.attachInterrupt(STATUS, onPacket);
+  // send register   
+  // swap.getRegister(regTxInterval.id)->updateData()->sendSwapStatus();
+  // send register ack 
+  // bool bSuccess = swap.getRegister(regSensor.id)->updateData()->sendSwapStatusAck()->receivedAck();
 
-  Serial.print("master address=");
-  Serial.print(panstamp.radio.devAddress, HEX);  
-  Serial.print("\n");
+  // update register data
+  // swap.getRegister(regTxInterval.id)->updateData()
 
-}
+  // get register data
+  // swap.getRegister(regTxInterval.id)->value.length ->value.data
 
-void loop()
-{
-}
-#endif
+  // inquiry
 
-#ifdef RXER
-const unsigned char addr = 0xB5;
-boolean packetAvailable = false;
+  // transmit
 
-void onPacket(CCPACKET *packet)
-{
-  if ( 0 ) 
+  // TX max 18 chars
+  // TX:11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11
+  Serial.print("INFO: command '");
+  Serial.print(strCommand);
+  Serial.print("'\n");
+
+  CCPACKET packet;
+
+  if ( strncmp(strCommand, "TX:", 3) == 0 )
   {
-    Serial.print("RX: ");
-    for(int j=0; j<packet->length; j++)
+    packet.length = 0;
+    for (uint8_t i=3; i<strlen(strCommand); i+=3)
     {
-      Serial.print(packet->data[j],HEX);
-      Serial.print(" ");
+      char digit0 = strCommand[i];
+      char digit1 = strCommand[i+1];
+      unsigned char data = (hex(digit0) << 4) | hex(digit1);
+      packet.data[packet.length++] = data;
     }
-  
-    Serial.print("crc ");
-    Serial.print(packet->crc_ok);
-    Serial.print("\n");   
-  } else
-  {
-    Serial.print(packet->rssi);
-    Serial.print("/");
-    Serial.print(packet->lqi);
-    Serial.print(" ");
 
-    if (packet->length <= SWAP_DATA_HEAD_LEN)
+    Serial.print("TX: ");
+    LOGGER::dumpPacket(packet);
+
+    uint8_t i = SWAP_NB_TX_TRIES;
+    uint8_t res;
+    while(!(res = panstamp.radio.sendData(packet)) && i>1)
     {
-      Serial.print("Packet too small\n");
-      return;
+      i--;
+      delay(SWAP_TX_DELAY);
     }
-  
-    SWPACKET swPacket = SWPACKET(packet);
-    REGISTER *reg;
     
-    if ( swPacket.addrType == SWAPADDR_SIMPLE )
-      Serial.print("SIMPLE packet");
-    else 
-    if ( swPacket.addrType == SWAPADDR_EXTENDED )
-      Serial.print("EXTENDED packet");
-    else 
-      Serial.print("UNKNOWN packet");
-      
-    Serial.print(", function=");
-    Serial.print(swPacket.function);
-    Serial.print(", destAddr=");
-    Serial.print(swPacket.destAddr);
-    Serial.print(", regAddr=");
-    Serial.print(swPacket.regAddr);
-    Serial.print(", regId=");
-    Serial.print(swPacket.regId);
-//    Serial.print(", SWDATA:type=");
-    //Serial.print(swPacket.value.type);
-    //Serial.print(", payload.len=");
-    //Serial.print(swPacket.value.length);
-    Serial.print(", payload=");
-    for (unsigned char i=0; i<swPacket.value.length; i++)
+    if (!res)
+      Serial.print("INFO: TX error\n");    
+  }
+
+  if ( strncmp(strCommand, "EM:", 3) == 0 )
+  {
+    packet.length = 0;
+    for (uint8_t i=3; i<strlen(strCommand); i+=3)
     {
-      Serial.print(swPacket.value.data[i], HEX);
-      Serial.print(' ');
+      char digit0 = strCommand[i];
+      char digit1 = strCommand[i+1];
+      unsigned char data = (hex(digit0) << 4) | hex(digit1);
+      packet.data[packet.length++] = data;
     }
-     Serial.print("\n");
+
+    Serial.print("EM: ");
+    LOGGER::dumpPacket(packet);
+
+    SWAP::onPacketReceived(&packet);
   }
 }
 
 void setup()
 {
-  int i;
   Serial.begin(9600); 
-  Serial.print("booting RXer...\n");
+  Serial.print("INFO: Booting modem\n");
+
   panstamp.init(0,0);
-  panstamp.radio.devAddress = addr; // nemalo by byt potrebne
   panstamp.radio.setCCregs();
-
-  Serial.print("address=");
-  Serial.print(panstamp.radio.devAddress, HEX);  
-  Serial.print("\n");
-
-  panstamp.attachInterrupt(onPacket);
-
-  Serial.print("setup end\n");
+  swap.init();
+  panstamp.radio.disableAddressCheck();
+  swap.enterSystemState(SYSTATE_RXON);
+  procLogger.setEnabled(true);
+  
+  Serial.print("INFO: Ready\n");
 }
 
 void loop()
 {
+  while (Serial.available())
+  {
+    char ch = Serial.read();
+    if ( ch == '\n' )
+    {
+      if ( iCommand != -1 )
+      {
+        strCommand[iCommand] = 0;
+        eval(strCommand);
+      }
+      iCommand = 0;
+    } else
+    if ( iCommand != -1 )
+    {
+      if ( iCommand < sizeof(strCommand)-2 )
+        strCommand[iCommand++] = ch;
+      else
+        iCommand = -1;
+    }
+  }
 }
-
 #endif
-
 
 #ifdef TXER
 #define LED 3
@@ -179,7 +151,7 @@ void setup()
   Serial.print("post panstamp init\n");
   swap.init();
   Serial.print("post swap init, address=");
-  Serial.print(panstamp.radio.devAddress, HEX);	
+  Serial.print(panstamp.radio.devAddress, HEX);  
   Serial.print("\n");
   
   pinMode(LED, OUTPUT);
@@ -233,3 +205,4 @@ void loop()
   swap.goToSleep();
 }
 #endif
+

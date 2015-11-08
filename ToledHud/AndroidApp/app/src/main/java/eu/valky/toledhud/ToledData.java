@@ -29,7 +29,7 @@ public class ToledData
 		IconT(31),
 		ExitLeft(34),
 		ExitRight(35),
-		Straight(138),
+		Straight(0),
 		None(0);
 
         private int mValue;

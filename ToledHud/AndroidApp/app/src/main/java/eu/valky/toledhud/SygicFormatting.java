@@ -141,6 +141,15 @@ class CSygicFormatting {
         final  int DirectionRoundaboutSW	= 29;
         final  int DirectionRoundaboutS	= 30;
         // 31..39 UK roundabouty
+        final  int DirectionUkRoundaboutSE	= 23+10;
+        final  int DirectionUkRoundaboutE	= 24+10;
+        final  int DirectionUkRoundaboutNE	= 25+10;
+        final  int DirectionUkRoundaboutN	= 26+10;
+        final  int DirectionUkRoundaboutNW	= 27+10;
+        final  int DirectionUkRoundaboutW	= 28+10;
+        final  int DirectionUkRoundaboutSW	= 29+10;
+        final  int DirectionUkRoundaboutS	= 30+1;
+
         final  int DirectionFerry			= 40;
         final  int DirectionStateBoundary	= 41;
         final  int DirectionExitRight		= 43;

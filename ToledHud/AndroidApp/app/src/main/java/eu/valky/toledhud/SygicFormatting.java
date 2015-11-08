@@ -193,6 +193,7 @@ class CSygicFormatting {
                 return ToledData.ToledDirection.UturnLeft;
             case DirectionUTurnRight:
                 return ToledData.ToledDirection.UturnRight;
+
             case DirectionRoundaboutSE:
                 return ToledData.ToledDirection.Rb5;
             case DirectionRoundaboutE:
@@ -208,6 +209,24 @@ class CSygicFormatting {
             case DirectionRoundaboutSW:
                 return ToledData.ToledDirection.Rb7;
             case DirectionRoundaboutS:
+                return ToledData.ToledDirection.IconQ;
+
+
+            case DirectionUkRoundaboutSE:
+                return ToledData.ToledDirection.RbUk5;
+            case DirectionUkRoundaboutE:
+                return ToledData.ToledDirection.RbUk3;
+            case DirectionUkRoundaboutNE:
+                return ToledData.ToledDirection.RbUk2;
+            case DirectionUkRoundaboutN:
+                return ToledData.ToledDirection.RbUk12;
+            case DirectionUkRoundaboutNW:
+                return ToledData.ToledDirection.RbUk11;
+            case DirectionUkRoundaboutW:
+                return ToledData.ToledDirection.RbUk9;
+            case DirectionUkRoundaboutSW:
+                return ToledData.ToledDirection.RbUk7;
+            case DirectionUkRoundaboutS:
                 return ToledData.ToledDirection.IconQ;
 
             case DirectionFerry:

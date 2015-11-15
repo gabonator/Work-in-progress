@@ -18,6 +18,13 @@ public class ToledData
 		Rb9(21),
 		Rb11(22),
 		Rb12(24),
+		RbUk2(56),
+		RbUk3(55),
+		RbUk5(53),
+		RbUk7(51),
+		RbUk9(50),
+		RbUk11(48),
+		RbUk12(58),
 		AnimationWaiting(45),
 		AnimationWaiting2(46),
 		AnimationWaiting3(47),
@@ -29,7 +36,7 @@ public class ToledData
 		IconT(31),
 		ExitLeft(34),
 		ExitRight(35),
-		Straight(138),
+		Straight(0),
 		None(0);
 
         private int mValue;

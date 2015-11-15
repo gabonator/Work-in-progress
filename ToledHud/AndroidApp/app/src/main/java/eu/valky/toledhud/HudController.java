@@ -41,7 +41,7 @@ public class HudController //extends Activity // TODO: len kvoli reg receiver
 
     public void setBacklight(int nValue)
     {
-        sendRaw(mToled.GetFullPacket(mToled.GetBacklightPacket(6)));
+        //sendRaw(mToled.GetFullPacket(mToled.GetBacklightPacket(6)));
     }
 
     public void setUnits(CSygicFormatting.SygicUnits eUnits)

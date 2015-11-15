@@ -106,7 +106,7 @@ class INQUIRY : public PROCESSOR
 
         SWPACKET ackPacket;
         INQUIRY::buildInquiryPacket(&ackPacket, Hello, packet->srcAddr);
-        ackPacket.send();
+        ackPacket.prepare()->_send();
       }
 
       // Addressed ack from master to slave
@@ -123,7 +123,7 @@ class INQUIRY : public PROCESSOR
         // Thank you for indentifyng yourself, please do not respond to following Scan commands
         SWPACKET ackPacket;
         INQUIRY::buildInquiryPacket(&ackPacket, Silent, packet->srcAddr);
-        ackPacket.send();
+        ackPacket.prepare()->_send();
       }
 
       return false;
@@ -176,7 +176,7 @@ class INQUIRYPROCESS : public INQUIRY
         m_nTryCount--;
 
         INQUIRY::buildInquiryPacket(&packet, ResetAndScan);
-        packet.send();
+        packet.prepare()->_send();
         delay(2500);
 
       } while (m_nTryCount > 0);

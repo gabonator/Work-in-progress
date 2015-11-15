@@ -102,7 +102,7 @@ bool REPEATER::packetHandler(SWPACKET *packet)
     packet->srcAddr = swap.devAddress;              // Modify source address
     packet->hop++;                                  // Increment hop counter
     delay(SWAP_TX_DELAY);                           // Delay before sending
-    if (packet->send())                             // Repeat packet
+    if (packet->prepare()->_send())                 // Repeat packet
       saveTransaction(packet);                      // Save transaction
   }
 }

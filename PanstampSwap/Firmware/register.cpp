@@ -122,7 +122,7 @@ REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR *
   // retry 2 times if no response in half second
   for ( uint8_t retry = 0; retry < 3; retry++)
   {  
-    packet->send();
+    packet->prepare()->_send();
     REGISTER::ackWaitingNonce = packet->nonce;
 
     for ( uint8_t wait = 0; wait < 50; wait++)
@@ -168,7 +168,7 @@ bool REGISTER::receivedAck(void)
   packet->value.type = SWDTYPE_INTEGER;
   packet->destAddr = pRcvdPacket->srcAddr;
   packet->function = SWAPFUNCT_ACK;
-  packet->send();
+  packet->prepare()->_send();
 }
 
 /**

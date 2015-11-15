@@ -67,25 +67,37 @@ class MEDIATOR : public PROCESSOR
         UnmediateRequest(packet);
 
         waiting = true;
-        checkAddr = packet->srcAddr;
+        checkAddr = packet->destAddr;   // !!! dstAddr !
         checkRegAddr = packet->regAddr;
         checkRegId = packet->regId;
 
-        packet->send();
+        packet->prepare()->_send();
         // do not proces this packet by swap
         return false;
       }
 
-      // from slave to mediator
-      if ( waiting && packet->srcAddr == checkAddr && packet->regAddr == checkRegAddr && packet->regId == checkRegId )
+
+      // from slave to mediator - INQUIRY
+      if ( waiting )
       {
-        MediateAnswer(packet, masterAddr);
-        packet->send();
+        waiting = true; // we must implement some mechanism to stop waiting
+      }
+      // from slave to mediator
+      
+      if ( waiting )
+      {
+        // do register matching, or broadcasted ?
+        // in case of broadcasted INQUIRY function, we forward first ours packet to the master
+        if ( (checkAddr == 0x00 && packet->srcAddr != masterAddr) || (packet->srcAddr == checkAddr && packet->regAddr == checkRegAddr && packet->regId == checkRegId) )
+        {
+          MediateAnswer(packet, masterAddr);
+          packet->prepare()->_send();
 
-        waiting = false;
+          waiting = false;
 
-        // do not process this packet by swap
-        return false;
+          // do not process this packet by swap
+          return false;
+        }
       }
 
       // from mediator to master

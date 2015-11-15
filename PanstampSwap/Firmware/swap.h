@@ -156,7 +156,11 @@ class SWAP
      */
     void __inline__ enterSystemState(SYSTATE state)
     {
-      regSysState.setData((uint8_t *) &state)->save()->getStatusPacket()->send();
+      regSysState.setData((uint8_t *) &state)
+        ->save()
+        ->getStatusPacket()
+        ->prepare()
+        ->_send();
     }
     
     /**

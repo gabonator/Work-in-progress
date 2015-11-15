@@ -18,7 +18,6 @@ public:
      
   void attachInterrupt(void (*funct)(CCPACKET*));
   void sleepSec(int n);
-  uint16_t GET_RANDOM(void);
   uint16_t rand(void);
 };
 

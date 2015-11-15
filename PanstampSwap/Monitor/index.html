@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SWAP monitor</title>
+
+  <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="lib/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+  <script src="lib/jquery.min.js"></script>
+  <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+  <script src="lib/bootstrap/js/bootstrap-dialog.js"></script>
+</head>
+
+<body>
+<div class="container" style="padding-top:80px;">
+
+  <!-- nav bar -->
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">SWAP Monitor</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Connection<span class="caret"></span></a>
+            <ul class="dropdown-menu" id="navbar-portlist">
+              <li><a href="#">Loading...</a></li>
+            </ul>
+          </li>
+          <li><a href="#ports">Ports</a></li>
+          <li><a href="#sniffer">Sniffer</a></li>
+          <li><a href="#builder">Packet builder</a></li>
+          <li><a href="#devices">Devices</a></li>
+          <li><a href="#registers">Device Registers</a></li>
+        </ul>
+      </div><!--/.nav-collapse -->
+    </div>
+  </nav>
+
+  <!-- modal pre alery a message -->
+  <div id="myModal" class="modal fade">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                  <h4 class="modal-title">Edit...</h4>
+              </div>
+              <div class="modal-body">
+              </div>
+              <div class="modal-footer">
+                  <button id="myModalDelete" type="button" class="btn btn-danger" onClick="onPersonalizeDelete()">Delete !</button>
+                  <button type="button" class="btn btn-primary" onClick="onPersonalizeSave()">Save</button>
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <a name="ports"></a>
+
+    <div id="panelPorts" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Available ports
+       <button type="button" class="btn btn-primary btn-xs" onClick="onRefreshList()" style="float:right">Refresh</button>
+    </div>
+    <div class="nowrap panel-body" style="max-height:400px; overflow:auto;">
+       <table class="table table-striped">
+         <thead>
+           <tr>
+             <th>Port name</th>
+             <th>Manufacturer</th>
+             <th>PNP</th>
+             <th>Location</th>
+           </tr>
+         </thead>
+         <tbody id="ports">
+         </tbody>
+       </table>
+    </div>
+    </div>
+
+  <a name="sniffer"></a>
+
+    <div id="panelConsole" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Packet monitor
+       <button type="button" class="btn btn-primary btn-xs" onClick="onClearConsole()" style="float:right">Clear</button>
+    </div>
+    <div class="nowrap panel-body" id="console" style="height:400px; overflow:auto; white-space: pre-wrap; word-wrap: none;"></div>
+    </div>
+
+    <div id="panelConsole" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Packet builder
+       <button type="button" class="btn btn-primary btn-xs" onClick="onPacketSend()" style="float:right">Send</button>
+    </div>
+    <div class="nowrap panel-body" style="">
+                   
+
+  <a name="builder"></a>
+
+      <form name="sendpacket">
+      <!-- sp_preset, sp_dstbroadcas, sp_dstmodem, sp_dstaddr, sp_addrvalue, sp_func, sp_regid, sp_payload, sp_contents -->
+      <table style="width:600px;">
+      <tr><td style="width:200px;">Preset:</td><td>
+      <select id="sp_preset">
+        <option></option>
+        <option value="ff,ff,00,06,02,ff,09,01">Set modem address 01</option>
+
+        <option value="00,01,00,0a,07,00,00">Inquiry</option>
+<!--
+        <option value="05,01,00,AB,??">Request dev id</option>
+        <option value="05,01,00,AB,??">Get sync word</option>
+        <option value="05,01,00,AB,??">Set sync word</option>
+-->
+        <option value="B5,01,00,AB,01,B5,07">Get nonce @ B5</option>
+        <option value="B5,01,00,AB,01,B5,00">Get product code @ B5</option>
+      </select>
+      </td></tr>
+      <tr><td>Destination addr:</td><td>
+        <input id="sp_dstbroadcast" type="radio" value="broadcast" name="dsttype">Broadcast
+        <input id="sp_dstmodem" type="radio" value="modem" name="dsttype">Modem
+        <input id="sp_dstaddr" type="radio" value="addr" name="dsttype">
+          <input id="sp_dstaddrvalue" name="dstaddr" type="text" size="4"></td></tr>
+      <tr><td>Source addr:</td><td>
+        <input id="sp_srcmodem" type="radio" value="modem" name="srctype">Modem
+        <input id="sp_srcaddr" type="radio" value="addr" name="srctype">
+          <input id="sp_srcaddrvalue" name="srcaddr" type="text" size="4"></td></tr>
+      <tr><td>Function:</td><td>
+      <select id="sp_func" name="func">
+        <option value="0">STATUS</option>
+        <option value="1">QUERY</option>
+        <option value="2">COMMAND</option>
+        <option disabled>---</option>
+        <option value="3">REQUEST</option>
+        <option value="4">ACKNOWLEDGE</option>
+        <option disabled>---</option>
+        <option value="5">FORWARD REQUEST</option>
+        <option value="6">FORWARD ACKNOWLEDGE</option>
+        <option disabled>---</option>
+        <option value="7">INQUIRY</option>
+      </select>
+      </td></tr>
+      <tr><td>Register:</td><td>
+      <select id="sp_regid" name="regid">
+        <option value="0">regProductCode</option>
+        <option value="1">regHwVersion</option>
+        <option value="2">regFwVersion</option>
+        <option value="3">regSysState</option>
+        <option value="4">regFreqChannel</option>
+        <option value="5">regSecuOption</option>
+        <option value="6">regPassword</option>
+        <option value="7">regSecuNonce</option>
+        <option value="8">regNetworkId</option>
+        <option value="9">regDevAddress</option>
+        <option value="10">regTxInterval</option>
+        <option disabled>---
+        <option value="11">user (reg 11)</option>
+        <option value="12">user (reg 12)</option>
+        <option value="13">user (reg 13)</option>
+        <option value="14">user (reg 14)</option>
+      </select>
+      </td></tr>
+      <tr><td>Payload:</td><td><input id="sp_payload" name="payload" type="text" size="20"></td></tr>
+      <tr><td>Packet contents:</td><td><input type="text" id="sp_contents" disabled size="50" name="packet"></td></tr>
+      </table>
+      </form>
+
+    </div>
+    </div>
+
+  <a name="devices"></a>
+
+    <div id="panelDevices" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Devices
+       <button type="button" class="btn btn-primary btn-xs" onClick="onDevicesFlush()" style="float:right">Flush</button>
+    </div>
+    <div class="nowrap panel-body" style="max-height:400px; overflow:auto;">
+       <table class="table table-striped">
+         <thead>
+           <tr>
+             <th>Scan</th>
+             <th>Addr</th>
+             <th>Device type</th>
+             <th>Rssi</th>
+             <th>Value</th>
+           </tr>
+         </thead>
+         <tbody id="devices">
+         </tbody>
+       </table>
+    </div>
+    </div>
+
+  <a name="registers"></a>
+
+    <div id="panelRegisters" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Registers</div>
+    <div class="nowrap panel-body" style="overflow:auto;">
+       <table class="table table-striped">
+         <thead>
+           <tr>
+             <th></th>
+             <th>Id</th>
+             <th>Register</th>
+             <th>Value</th>
+             <th>Ping</th>
+           </tr>
+         </thead>
+         <tbody id="registers">
+         </tbody>
+       </table>
+    </div>
+    </div>
+
+</div> 
+</body>
+
+<script>
+"use strict";
+
+
+var localSwapAddress = 0x00;
+var localSwapNonce = 0x01;
+
+// Websocket
+var buffer = "";
+
+window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+var connection = new WebSocket('ws://127.0.0.1:1337');
+
+connection.onerror = function (error) 
+{
+  myAlert($('<p>', { text: 'Sorry, but there\'s some problem with your connection or the server is down.' } ));
+}
+
+connection.onmessage = function (message) {
+  buffer += new String(message.data);
+  var lines = buffer.split("\n");
+  while ( lines.length > 1 )
+    setTimeout( lines.shift(), 0 );
+  buffer = lines.join("\n");
+};
+
+function onRx(msg)
+{
+  var validCrc = msg.indexOf("crc=0") == -1;
+  if ( validCrc )
+  {  
+    var addrExp = new RegExp("(INFO: modem address=)(.*)$");
+    var addrFound = addrExp.exec(msg);
+    if ( addrFound && addrFound.length == 3 )
+    {
+      localSwapAddress = parseInt("0x"+addrFound[2]);
+    } 
+  }
+
+  var packetExp = new RegExp("(RX: )(.*)( crc.*)$");
+  var packetFound = packetExp.exec(msg);
+  if ( packetFound && packetFound.length == 4 )
+  {
+    $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "\n");
+    if ( validCrc )
+      processDeviceData(sendpacket.parseData(sendpacket.dataFromString(packetFound[2])), packetFound[3]);
+    return;
+  } 
+
+  var packetExp = new RegExp("^(.*TX:)(.*)('.*)$");
+  var packetFound = packetExp.exec(msg);
+  if ( packetFound && packetFound.length == 4 )
+  {
+    $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "\n");
+    return;
+  } 
+
+  $("#console").prepend(msg + "\n");
+}
+
+// NodeJs handlers
+function onPorts(arrPorts)
+{
+  var html = "";
+  var tdata = "";
+
+  for (var i in arrPorts)
+  {
+    var pnp = arrPorts[i].pnpId;
+//    if ( pnp.length > 22 )
+//      pnp = pnp.substr(0, 22) + "...";	
+    html += "<li><a href=\"javascript:openPort('"+arrPorts[i].comName+"')\">"+arrPorts[i].comName+"</a></li>\n";
+    tdata += "<tr><td>"+arrPorts[i].comName+"</td><td>"+arrPorts[i].manufacturer+"</td><td>"+pnp+"</td><td>"+arrPorts[i].locationId+"</td></tr>\n";
+  }
+  if ( arrPorts.length == 0 )
+    html += "<li><a href=\"#\">No ports found!</a></li>\n";
+
+  html += "<li role=\"separator\" class=\"divider\"></li>\n";
+  html += "<li><a href=\"javascript:onRefreshList()\">Refresh list</a></li>\n";
+  html += "<li><a href=\"javascript:onCloseLink()\">Close link</a></li>\n";
+
+  $("#ports").html(tdata);
+  $("#navbar-portlist").html(html);
+}
+
+// Local handlers
+function onRefreshList()
+{
+  connection.send("onRequestPortList();\n");
+}
+
+function onClearConsole()
+{
+  $("#console").html("");
+}
+
+function onCloseLink()
+{
+  connection.send("onClosePort();\n");
+}
+
+function openPort(comName)
+{
+  connection.send("onOpenPort('"+comName+"');\n");
+  $("#myModal").modal("hide");
+}
+
+function myAlert(msg)
+{
+  $("#myModal").find(".modal-footer").hide();
+  $("#myModal").find(".modal-title").html("Alert!");
+  $("#myModal").find(".modal-body").html(msg);
+  $("#myModal").modal("show");
+}
+
+function onParsePacket(pdata)
+{
+  sendpacket.use(pdata);
+}
+
+function setupform()
+{
+// <!-- sp_preset, sp_dstbroadcas, sp_dstmodem, sp_dstaddr, sp_addrvalue, sp_func, sp_regid, sp_payload, sp_contents -->
+  $("#sp_preset").on('change', function() { sendpacket.use(this.value); });
+  $('input[type=radio][name=dsttype]').change(function() { sendpacket.updateDstType(); } );
+  $('input[type=radio][name=srctype]').change(function() { 
+    if ( this.value == "modem" )
+      document["sendpacket"]["srcaddr"].value = sendpacket.toHex(localSwapAddress);
+    sendpacket.update();
+  } );
+  $("#sp_preset").on('change', function() { sendpacket.update(); });
+  $("#sp_func").on('change', function() { sendpacket.update(); });
+  $("#sp_regid").on('change', function() { sendpacket.update(); });
+  $("#sp_payload").on('change', function() { sendpacket.update(); });
+  $("#sp_dstaddr").on('change', function() { sendpacket.update(); });
+  $("#sp_dstaddrvalue").on('change', function() { sendpacket.updateDstType("addr"); sendpacket.update(); });
+  $("#sp_srcaddrvalue").on('change', function() { document["sendpacket"]["srctype"].value = "addr" });
+}
+
+// devices list
+var devices = [];
+
+function processDeviceData(packet, ext)
+{
+  // crc=1,rssi=38,lqi=43
+  var rssi = -1, lqi = -1;
+
+  var extExp = new RegExp("(rssi=)(.*)(,lqi=)(.*)$");
+  var extFound = extExp.exec(ext);
+
+  if ( extFound && extFound.length == 5 )
+  {
+    rssi = parseInt(extFound[2]);
+    lqi = parseInt(extFound[4]);
+  } 
+
+  if (!devices[packet.srcAddr])
+  {
+    devices[packet.srcAddr] = {addr:packet.srcAddr};
+  }
+  var device = devices[packet.srcAddr];
+
+  device.rssi = rssi;
+  device.lqi = lqi;
+
+  if (packet.regId == 0)
+  {
+    device.manufactId = (packet.payload[0]<<24) | (packet.payload[1]<<16) | (packet.payload[2]<<8) | (packet.payload[3]<<0);
+    device.productId =  (packet.payload[4]<<24) | (packet.payload[5]<<16) | (packet.payload[6]<<8) | (packet.payload[7]<<0);
+//    if ( packet.manufactId
+    device.type = "unknown";
+    var devId = device.manufactId + "." + device.productId;
+    if ( devId == "1.10" )
+      device.type = "DHT22";
+  }
+
+  if (/*device.type == "DHT22" &&*/ packet.regId == 12)
+    device.raw = packet.payload;
+
+  if ( scanProc.handler )
+    scanProc.handler(packet);
+
+  updateDevicesList();
+}
+
+function updateDevicesList()
+{
+  var tdata = "";
+
+  for (var i in devices)
+  {
+    var device = devices[i];
+    var type = typeof(device.type) == "string" ? 
+      device.type + " (" + device.manufactId + "." + device.productId + ")" : 
+      "<a href='javascript:onRequestProductCode("+device.addr+")'>request type</a>";
+
+    var info = device.raw;
+    if ( info[0] == 0xee )
+      info = "sensor error";
+    else
+      info = "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
+    tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\"scanRegisters("+device.addr+")\">Scan</button></td><td>"+device.addr+"</td><td>"+type+"</td><td>"+device.rssi + "/" + device.lqi +"</td><td>"+info+"</td></tr>\n";
+  }
+  $("#devices").html(tdata);
+}
+
+function onRequestProductCode(addr)
+{
+  var packet = sendpacket.parseData(sendpacket.dataFromString("B5,01,00,AB,01,B5,00"))
+  packet.dstAddr = addr;
+  packet.regAddr = addr;
+  packet.srcAddr = localSwapAddress; 
+  packet.nonce = localSwapNonce++; 
+
+  var raw = sendpacket.toHex(sendpacket.getBytes(packet));
+  connection.send("onTransmit('"+raw+"');\n");
+
+//localSwapAddress
+  // B5,01,00,AB,01,B5,00
+}
+
+function onPacketSend()
+{
+  var hdata = sendpacket.toHex(sendpacket.getBytes(sendpacket.createPacketByForm()));
+  connection.send("onTransmit('"+hdata+"');\n");
+//  sendpacket.getBytes();
+}
+
+var scanProc = {registers:[], addr:0, index:0, handler:false};
+
+function scanRegisters(addr)
+{ 
+  scanProc.registers = [];
+  scanProc.addr = addr;
+  scanProc.index = 0;
+  scanProc.handler = function(packet)
+  {
+    if ( packet.func == 0 /* status */ && packet.regId == scanProc.index && packet.srcAddr == scanProc.addr )
+    {
+      scanProc.rcvdTimestamp = (new Date()).getTime();
+      // got the response!
+      var regNames = ["regProductCode", "regHwVersion", "regFwVersion", "regSysState", "regFreqChannel",
+        "regSecuOption", "regPassword", "regSecuNonce", "regNetworkId", "regDevAddress", "regTxInterval",
+        "user1", "user2", "user3", "user4"];
+
+      var regName = regNames[packet.regId];
+
+      scanProc.registers[packet.regId] = {index:scanProc.index, name:regName, payload:packet.payload, ping:scanProc.rcvdTimestamp - scanProc.sentTimestamp};
+      // update table
+      updateRegistersTable();
+      scanProc.index++;
+      scanRegisterSend();
+    }
+    
+  }
+  scanRegisterSend();
+}
+
+function scanRegisterSend()
+{
+  var packet = sendpacket.parseData(sendpacket.dataFromString("B5,01,00,AB,01,B5,00"))
+  packet.dstAddr = scanProc.addr;
+  packet.regAddr = scanProc.addr;
+  packet.srcAddr = localSwapAddress; 
+  packet.regId = scanProc.index;
+  packet.nonce = localSwapNonce++; 
+
+  var raw = sendpacket.toHex(sendpacket.getBytes(packet));
+  scanProc.sentTimestamp = (new Date()).getTime();
+  connection.send("onTransmit('"+raw+"');\n");
+}
+
+function updateRegistersTable()
+{
+  var tdata = "";
+
+  for (var i in scanProc.registers)
+  {
+    var register = scanProc.registers[i];
+
+    tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-xs\" onClick=\"requestRegister("+scanProc.addr+","+register.index+")\">Refresh</button></td><td>"+register.index+"</td><td>"+register.name+"</td><td>"+sendpacket.toHex(register.payload)	+"</td><td>"+register.ping+" ms</td></tr>\n";
+  }
+  $("#registers").html(tdata);
+}
+
+function requestRegister(addr, index)
+{
+  scanProc.registers[index].payload = [];
+  scanProc.registers[index].ping = 0;
+  updateRegistersTable();
+
+  scanProc.addr = addr;
+  scanProc.index = index;
+  scanProc.handler = function(packet)
+  {
+    if ( packet.func == 0 /* status */ && packet.regId == scanProc.index && packet.srcAddr == scanProc.addr )
+    {
+      scanProc.rcvdTimestamp = (new Date()).getTime();
+      scanProc.registers[packet.regId].payload = packet.payload;
+      scanProc.registers[packet.regId].ping = scanProc.rcvdTimestamp - scanProc.sentTimestamp;
+
+      // update table
+      updateRegistersTable();
+    }
+    
+  }
+
+  scanRegisterSend();
+}
+
+// packet builder
+
+setupform();
+
+function _ASSERT(cond) { if (!cond) alert("assert!"); }
+
+var sendpacket = {
+  use:function(data)
+  {
+    this.apply(this.parseData(this.dataFromString(data)));
+    this.update();
+  },
+  dataFromString:function(str)
+  {
+    if (str=="")
+      return [];
+    var arrHex = str.split(",");
+    var arrBin = [];
+    for (var i in arrHex)
+      arrBin.push(this.fromHex(arrHex[i]));
+    return arrBin;
+  },
+  fromHex:function(twodigit)
+  {
+    return parseInt("0x"+twodigit);
+  },
+  parseData:function(arrBytes)
+  {
+    _ASSERT(arrBytes.length>5);
+    var payload = [];
+    for (var i=7; i<arrBytes.length; i++)
+      payload[i-7] = arrBytes[i];
+
+    return {
+      dstAddr:arrBytes[0],
+      srcAddr:arrBytes[1],
+      security:arrBytes[2] & 0x0f,
+      hop:arrBytes[2]>>4,
+      nonce:arrBytes[3],
+      func:arrBytes[4],
+      regAddr:arrBytes[5],
+      regId:arrBytes[6],
+      payload:payload
+    };
+  },
+  apply:function(packet)
+  {
+    document["sendpacket"]["srcaddr"].value = this.toHex(packet.srcAddr);
+    document["sendpacket"]["dstaddr"].value = this.toHex(packet.dstAddr);
+    if ( packet.dstAddr == 0xff && packet.srcAddr == 0xff )
+      document["sendpacket"]["dsttype"].value = "modem";
+    else 
+    if ( packet.dstAddr == 0x00 )
+      document["sendpacket"]["dsttype"].value = "broadcast";
+    else
+      document["sendpacket"]["dsttype"].value = "addr";
+      
+    document["sendpacket"]["func"].value = packet.func;
+    document["sendpacket"]["regid"].value = packet.regId;
+    document["sendpacket"]["payload"].value = this.toHex(packet.payload).join(",");
+  },
+  toHex:function(src)
+  {
+    if (typeof(src) == "object" && typeof(src.length) == "number")
+    {
+      var aux = [];
+      for (var i in src)
+        aux[i] = this.toHex(src[i]);
+      return aux;
+    }
+    return ("0"+src.toString(16)).substr(-2);
+  },
+  updateDstType:function(val)
+  {
+    if (val)
+    {
+      document["sendpacket"]["dsttype"].value = val;
+      return;
+    }
+    var type = document["sendpacket"]["dsttype"].value;
+    if (type == "broadcast")
+      document["sendpacket"]["dstaddr"].value = "00";
+    if (type == "modem")            
+    {
+      document["sendpacket"]["dstaddr"].value = "ff";
+      document["sendpacket"]["srcaddr"].value = "ff";
+    }
+  },
+  update:function()
+  {
+    document["sendpacket"]["packet"].value = this.toHex(this.getBytes(this.createPacketByForm()));
+  },
+  createPacketByForm:function()
+  {
+    return {
+      dstAddr: this.fromHex(document["sendpacket"]["dstaddr"].value),
+      srcAddr: this.fromHex(document["sendpacket"]["srcaddr"].value),
+      security: 0,
+      hop: 0,
+      nonce: localSwapNonce++, 
+      func: parseInt(document["sendpacket"]["func"].value),
+      regAddr: this.fromHex(document["sendpacket"]["dstaddr"].value),
+      regId: document["sendpacket"]["regid"].value,
+      payload: this.dataFromString(document["sendpacket"]["payload"].value)
+    };
+  },
+  getBytes:function(packet)
+  {
+    var aux = [packet.dstAddr, packet.srcAddr, packet.security | (packet.hop<<4), packet.nonce & 0xff, packet.func, packet.regAddr, packet.regId];
+    if ( typeof(packet.payload) == "object" && packet.payload.length > 0 )
+      aux = aux.concat(packet.payload);
+    return aux;
+  }
+};
+
+</script>
+
+</html>

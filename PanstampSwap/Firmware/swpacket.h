@@ -210,6 +210,13 @@ class SWPACKET
     SWPACKET(void);
     
     /**
+     * prepare
+     * 
+     * ...
+     */
+    SWPACKET* prepare(void);
+
+    /**
      * send
      * 
      * Send SWAP packet
@@ -218,7 +225,7 @@ class SWPACKET
      *  True if the transmission succeeds
      *  False otherwise
      */
-    bool send(void);
+    bool _send(void);
 
     CCPACKET& getPacket() { return ccPacket; }
 };

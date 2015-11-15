@@ -24,7 +24,7 @@ void radioISR(void)
     if (panstamp.radio.receiveData(&ccPacket) > 0)
     {
       // Is CRC OK?
-      if (ccPacket.crc_ok)
+      //if (ccPacket.crc_ok)
       {
         if (panstamp.ccPacketReceived != NULL)
           panstamp.ccPacketReceived(&ccPacket);
@@ -82,16 +82,14 @@ void CPanstamp::init(uint8_t freq, uint8_t mode)
 
 void CPanstamp::sleepSec(int n) 
 { 
+  if ( n > 180 )
+    n = 5;
+
   Serial.print("Should sleep for ");
   Serial.print(n);
   Serial.print("seconds...\n");
-  delay(5000);
-  //while (n--) delay(1000); 
-}
-
-uint16_t CPanstamp::GET_RANDOM(void)
-{
-  return OSCCAL;
+//  delay(5000);
+  while (n--) delay(1000); 
 }
 
 uint16_t CPanstamp::rand(void)

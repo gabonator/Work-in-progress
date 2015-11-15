@@ -113,10 +113,9 @@ SWPACKET::SWPACKET(void)
  *  True if the transmission succeeds
  *  False otherwise
  */
-bool SWPACKET::send(void)
+SWPACKET* SWPACKET::prepare(void)
 {
   byte i;
-  boolean res;
 
   // LE -> BE conversion for numeric values
   if (value.type == SWDTYPE_INTEGER)
@@ -167,8 +166,15 @@ bool SWPACKET::send(void)
   if (security & 0x04)
     aesCrypto();  // Encrypt
   #endif
+  
+  return this;
+}
 
-  i = SWAP_NB_TX_TRIES;
+bool SWPACKET::_send(void)
+{
+  byte i = SWAP_NB_TX_TRIES;
+  bool res;
+  
   while(!(res = panstamp.radio.sendData(ccPacket)) && i>1)
   {
     i--;

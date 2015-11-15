@@ -40,7 +40,7 @@ class LOGGER : public PROCESSOR
       return true;
     }
 
-    static void dumpPacket(CCPACKET& ccPacket)
+    static void dumpPacket(CCPACKET& ccPacket, bool bExtra = true)
     {
       for ( uint8_t i = 0; i < ccPacket.length; i++ )
       {
@@ -53,12 +53,16 @@ class LOGGER : public PROCESSOR
         Serial.print(data, HEX);
       }
 
-      Serial.print(" crc=");
-      Serial.print(ccPacket.crc_ok);
-      Serial.print(",rssi=");
-      Serial.print(ccPacket.rssi);
-      Serial.print(",lqi=");
-      Serial.print(ccPacket.lqi);
+      if ( bExtra )
+      {
+        Serial.print(" crc=");
+        Serial.print(ccPacket.crc_ok);
+        Serial.print(",rssi=");
+        Serial.print(ccPacket.rssi);
+        Serial.print(",lqi=");
+        Serial.print(ccPacket.lqi);
+      }
+      
       Serial.print('\n');
     }
 

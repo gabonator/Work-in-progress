@@ -51,6 +51,12 @@ REGISTER regVoltSupply(NULL, 0, NULL, NULL, REGISTER::NoAccess);
 byte dtSensor[4];
 REGISTER regSensor(dtSensor, sizeof(dtSensor), &updtSensor, NULL, REGISTER::Public);
 
+byte dtTargetAddr[1] = {0};
+REGISTER regTargetAddr(dtTargetAddr, sizeof(dtTargetAddr), NULL, NULL, REGISTER::Private);
+
+byte dtMediateAddr[1] = {0};
+REGISTER regMediateAddr(dtMediateAddr, sizeof(dtMediateAddr), NULL, NULL, REGISTER::Private);
+
 /**
  * Definition of custom getter/setter callback functions
  */

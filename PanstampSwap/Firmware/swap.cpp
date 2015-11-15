@@ -100,7 +100,7 @@ LOGGER procLogger;
         {
           // Nonce missmatch. Transmit correct nonce.
           reg = swap.getRegister(regSecuNonce.id);
-          reg->getStatusPacket()->send();
+          reg->getStatusPacket()->prepare()->_send();
           break;
         }
       }
@@ -111,10 +111,10 @@ LOGGER procLogger;
       {
         reg = reg->setData(swPacket.value.data);
         if (reg)
-          reg->save()->getStatusPacket()->send();
+          reg->save()->getStatusPacket()->prepare()->_send();
       }
       else
-        reg->getStatusPacket()->send();
+        reg->getStatusPacket()->prepare()->_send();
       break;
 
     case SWAPFUNCT_QRY:
@@ -138,7 +138,7 @@ LOGGER procLogger;
       // handle write protection reg->access == Public, Readonly
       reg = reg->updateData();
       if (reg)
-        reg->getStatusPacket()->send();
+        reg->getStatusPacket(swPacket.srcAddr)->prepare()->_send();
       break;
 
     case SWAPFUNCT_STA:
@@ -306,12 +306,12 @@ void SWAP::nvolatToFactoryDefaults(void)
   nvMem.write(syncW, DEFAULT_NVOLAT_SECTION, NVOLAT_SYNC_WORD, sizeof(syncW));
 
   // SWAP address (pseudo-random number)
-  uint16_t random = panstamp.GET_RANDOM();
+  uint16_t random = panstamp.rand();
   uint8_t addr[] = {(random >> 8) & 0xFF, random & 0xFF};
   nvMem.write(addr, DEFAULT_NVOLAT_SECTION, NVOLAT_DEVICE_ADDR, sizeof(addr));
   
-  // TX interval
-  uint8_t txInt[] = {0xFF, 0};
+  // TX interval: 15 seconds
+  uint8_t txInt[] = {15, 0};
   nvMem.write(txInt, DEFAULT_NVOLAT_SECTION, NVOLAT_TX_INTERVAL, sizeof(txInt));
 }
 

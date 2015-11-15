@@ -14,21 +14,32 @@ This utility communicates through virtual serial port with panstamp module which
 - serialport: for enumerating available serial pors and for communicating with them
 - websocket: for creating local websocket server
 
+
+Features:
+- Available ports - list of serial ports
+- Packet monitor - here every received packet from MODEM is displayed, by clicking on the packet bytes, you send the packet to Packet builder
+- Packet builder - can be used for creating and sending packets or for analysing packets from packet monitor
+- Devices - shows all devices present on network and device data depending on swap device type
+- Registers - shows all registers and values from selected swap device
+
 ![Image 1](Readme/monitor1.jpg)
 ![Image 2](Readme/monitor2.jpg)
 
 Hw configuration
 -----------------
 For attaching CC1101 module to your arduino, you will need to wire up 7 signals:
-- VCC: CC1101 pin 1 - Arduino 3.3V 
-- SI (spi): CC1101 pin 3 - Arduino pin 11
-- SCK (spi): CC1101 pin 4 - Arduino pin 13
-- SO (spi): CC1101 pin 5 - Arduino pin 12
-- CSn (chip select): CC1101 pin 7 - Arduino pin 10
-- GDO0 (interrupt on packet receive): CC1101 pin 8 - Arduino pin 2 
-- GND: CC1101 pin 9 - Arduino GND
 
-![Image 2](Readme/monitor2.jpg)
+| Signal        | CC1101 module pin | Arduino pin |       |
+| :------------ | :---------------: | :---------: | :---- |
+| VCC           | 1                 | 3.3V        |
+| SI            | 3                 | 11          | spi
+| SCK           | 4                 | 13          | spi
+| SO            | 5                 | 12          | spi
+| CSn           | 7                 | 10          | chip select
+| GD0           | 8                 | 2           | interrupt on packet receive
+| GND           | 9                 | GND         |
+
+![Image 2](Readme/connection.jpg)
 
 Module pinout:
 ![Image 2](Readme/cc1101_pinout.jpg)

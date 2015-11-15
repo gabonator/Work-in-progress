@@ -52,10 +52,10 @@ byte dtSensor[4];
 REGISTER regSensor(dtSensor, sizeof(dtSensor), &updtSensor, NULL, REGISTER::Public);
 
 byte dtTargetAddr[1] = {0};
-REGISTER regTargetAddr(dtTargetAddr, sizeof(dtTargetAddr), NULL, NULL, REGISTER::Private);
+REGISTER regTargetAddr(dtTargetAddr, sizeof(dtTargetAddr), NULL, NULL, REGISTER::Private, SWDTYPE_INTEGER, NVOLAT_FIRST_CUSTOM+0);
 
 byte dtMediateAddr[1] = {0};
-REGISTER regMediateAddr(dtMediateAddr, sizeof(dtMediateAddr), NULL, NULL, REGISTER::Private);
+REGISTER regMediateAddr(dtMediateAddr, sizeof(dtMediateAddr), NULL, NULL, REGISTER::Private, SWDTYPE_INTEGER, NVOLAT_FIRST_CUSTOM+0);
 
 /**
  * Definition of custom getter/setter callback functions
@@ -103,13 +103,13 @@ const bool updtSensor(REGISTER* pRegister)
 
   uint16_t humidity = h * 10;
   uint16_t temperature = t * 10;
-
+/*
   Serial.print("read temp=");
   Serial.print(temperature);
   Serial.print(" read hum=");
   Serial.print(humidity);
   Serial.print("\n");
-
+*/
   pRegister->value[0] = (temperature >> 8) & 0xFF;
   pRegister->value[1] = temperature & 0xFF;
   pRegister->value[2] = (humidity >> 8) & 0xFF;

@@ -14,6 +14,7 @@ public:
   }
 
   virtual bool packetHandler(SWPACKET *packet) = 0;
+  virtual void tick() {}
 };
 
 #endif

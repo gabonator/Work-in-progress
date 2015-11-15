@@ -186,6 +186,7 @@ void setup()
 {
   Serial.begin(9600); 
   Serial.print("\nBooting DHT22 slave TXer\n");
+
   // Init SWAP stack
   Serial.print("Initializing panstamp...");
   panstamp.init(CFREQ_433, 0);

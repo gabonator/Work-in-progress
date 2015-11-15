@@ -239,6 +239,7 @@ class SWAP
     void addProcessor(PROCESSOR* pAddProcessor);
     void removeProcessor(PROCESSOR* pRemoveProcessor);
 
+    static void tick();
 };
 
 /**

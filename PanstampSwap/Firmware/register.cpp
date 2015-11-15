@@ -67,7 +67,13 @@ REGISTER *REGISTER::setData(unsigned char *data)
 {
   // Update register value
   if (setValue != NULL)
+  {
     return setValue(this, data) ? this : NULL;
+  } else
+  {
+    if ( /*access == EPublic &&*/ type == SWDTYPE_INTEGER )
+      setValueFromBeBuffer(data);
+  }
 
   return this;
 }

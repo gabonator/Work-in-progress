@@ -14,6 +14,14 @@ This utility communicates through virtual serial port with panstamp module which
 - serialport: for enumerating available serial pors and for communicating with them
 - websocket: for creating local websocket server
 
+Using SWAP monitor:
+- download NodeJs
+- go to folder where 'server.js' is placed
+- execute 'npm install serial port'
+- execute 'npm install websocket'
+- execute 'node server.js'
+- open 'index.html'
+
 
 Features:
 - Available ports - list of serial ports
@@ -42,6 +50,7 @@ For attaching CC1101 module to your arduino, you will need to wire up 7 signals:
 ![Image 2](Readme/connection.jpg)
 
 Module pinout:
+
 ![Image 2](Readme/cc1101_pinout.jpg)
 
 Links:

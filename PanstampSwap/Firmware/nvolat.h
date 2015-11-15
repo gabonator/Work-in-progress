@@ -41,7 +41,7 @@
 
 // Signature
 #define NVOLAT_SIGNATURE_HIGH     0xAB
-#define NVOLAT_SIGNATURE_LOW      0xCD
+#define NVOLAT_SIGNATURE_LOW      0xCE
 
 // Extended address
 #ifdef SWAP_EXTENDED_ADDRESS

@@ -52,22 +52,28 @@
  */
 class INQUIRY : public PROCESSOR
 {
-  private:
-    bool wasPaired;
-  
   public:
     enum ECommand
     {
       ResetAndScan,  // master to slave
       Scan,          // master to slave
       Hello,         // slave to master
-      Silent         // master to slave
+      Silent,        // master to slave
+      None
     };
 
+  private:
+    bool wasPaired;
+    long lResponse;
+    ECommand eResponseType;
+    uint16_t nResponseAddr;
+    
   public:
     INQUIRY()
     {
       wasPaired = false;
+      eResponseType = None;
+      lResponse = 0;
     }
 
     /**
@@ -77,6 +83,42 @@ class INQUIRY : public PROCESSOR
      *
      * @param packet Pointer to the SWAP packet received
      */
+
+    virtual void tick()
+    {
+      // TODO: Ugly but working, instead of using regId for request types, use 4 functions
+      // TODO: consider implementation without tick handler
+      
+      if ( eResponseType == None )
+        return;
+
+      if ( eResponseType == Hello )
+      {
+        Serial.print("INQ: Sending hello response\n");
+        uint16_t postpone = 100 + (panstamp.getRand() & 511);
+
+        // wait 100 .. 600ms to prevent traffic conflicts
+        delay(postpone); 
+
+        SWPACKET ackPacket;
+        INQUIRY::buildInquiryPacket(&ackPacket, Hello, nResponseAddr);
+        ackPacket.prepare()->_send();
+      }
+      
+      if ( eResponseType == Silent )
+      {
+        Serial.print("INQ: Sending silent response\n");
+        onDeviceFound(nResponseAddr);
+        
+        SWPACKET ackPacket;
+        INQUIRY::buildInquiryPacket(&ackPacket, Silent, nResponseAddr);
+        ackPacket.prepare()->_send();
+      }
+
+      Serial.print("Done!\n");
+
+      eResponseType = None;
+    }
 
     virtual bool packetHandler(SWPACKET *packet) 
     {
@@ -96,34 +138,27 @@ class INQUIRY : public PROCESSOR
       if ( wasPaired )
         return false;
 
+
       // Broadcasted message by master
       if ( command == Scan )
       {
-        uint16_t postpone = 100 + (panstamp.rand() & 511);
-
-        // wait 100 .. 600ms to prevent traffic conflicts
-        delay(postpone); 
-
-        SWPACKET ackPacket;
-        INQUIRY::buildInquiryPacket(&ackPacket, Hello, packet->srcAddr);
-        ackPacket.prepare()->_send();
+        nResponseAddr = packet->srcAddr;
+        eResponseType = Hello;
       }
 
       // Addressed ack from master to slave
       if ( command == Silent && packet->destAddr == swap.devAddress )
       {
+        eResponseType = None;
         wasPaired = true;
       }
 
       // Master handling 'hello' from slave
       if ( command == Hello && packet->destAddr == swap.devAddress )
       {
-        onDeviceFound(packet->srcAddr);
-
         // Thank you for indentifyng yourself, please do not respond to following Scan commands
-        SWPACKET ackPacket;
-        INQUIRY::buildInquiryPacket(&ackPacket, Silent, packet->srcAddr);
-        ackPacket.prepare()->_send();
+        nResponseAddr = packet->srcAddr;
+        eResponseType = Hello;
       }
 
       return false;

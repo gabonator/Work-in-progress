@@ -82,17 +82,18 @@ void CPanstamp::init(uint8_t freq, uint8_t mode)
 
 void CPanstamp::sleepSec(int n) 
 { 
-  if ( n > 180 )
+  if ( n < 0 || n > 180 )
     n = 5;
 
-  Serial.print("Should sleep for ");
+  Serial.print("Sleeping for ");
   Serial.print(n);
-  Serial.print("seconds...\n");
-//  delay(5000);
-  while (n--) delay(1000); 
+  Serial.print(" seconds...\n");
+
+  while (n--) 
+    delay(1000); 
 }
 
-uint16_t CPanstamp::rand(void)
+uint16_t CPanstamp::getRand(void)
 {
   // todo: init, or custom PRNG
   return rand();

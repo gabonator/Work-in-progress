@@ -37,6 +37,18 @@ INQUIRY procInquiry;
 MEDIATOR procMediator;
 LOGGER procLogger;
 
+
+/*static*/ void SWAP::tick()
+{
+  // Repeater enabled?
+  PROCESSOR* p = swap.processor;
+  while (p)
+  {
+    p->tick();
+    p = p->pNext;
+  }
+}
+
 /**
  * pacKetReceived
  *
@@ -149,6 +161,9 @@ LOGGER procLogger;
 
 // todo: move into separate processor!
     case SWAPFUNCT_REQ:
+      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != swap.devAddress )
+        break;
+
       if (swap.statusReceived != NULL)
         swap.statusReceived(&swPacket);
 
@@ -157,6 +172,9 @@ LOGGER procLogger;
       break;
 
     case SWAPFUNCT_ACK:
+      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != swap.devAddress )
+        break;
+
       // receiver notifies us back about successfull reception
       REGISTER::handleSwapStatusAck(&swPacket);
       break;
@@ -279,9 +297,27 @@ void SWAP::removeProcessor(PROCESSOR* pRemoveProcessor)
  */
 void SWAP::goToSleep(void)
 {
+  int n = txInterval;
+  if ( n < 0 || n > 180 )
+    n = 5;
+
+  Serial.print("Sleeping for ");
+  Serial.print(n);
+  Serial.print(" seconds...\n");
+
+  n *= 8;
+
+  while (n--) 
+  {
+    delay(125);
+    tick();
+  }
+  
+  /*
   systemState = SYSTATE_RXOFF;
   panstamp.sleepSec(txInterval);
   systemState = SYSTATE_RXON;
+  */
 }
 
 /**
@@ -306,7 +342,7 @@ void SWAP::nvolatToFactoryDefaults(void)
   nvMem.write(syncW, DEFAULT_NVOLAT_SECTION, NVOLAT_SYNC_WORD, sizeof(syncW));
 
   // SWAP address (pseudo-random number)
-  uint16_t random = panstamp.rand();
+  uint16_t random = panstamp.getRand();
   uint8_t addr[] = {(random >> 8) & 0xFF, random & 0xFF};
   nvMem.write(addr, DEFAULT_NVOLAT_SECTION, NVOLAT_DEVICE_ADDR, sizeof(addr));
   

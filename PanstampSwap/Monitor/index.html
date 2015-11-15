@@ -117,6 +117,8 @@
         <option value="05,01,00,AB,??">Get sync word</option>
         <option value="05,01,00,AB,??">Set sync word</option>
 -->
+
+        <option value="5a,01,00,22,05,5a,07,01,b5,00">Get nonce @ B5 through 5A</option>
         <option value="B5,01,00,AB,01,B5,07">Get nonce @ B5</option>
         <option value="B5,01,00,AB,01,B5,00">Get product code @ B5</option>
       </select>
@@ -166,7 +168,7 @@
       </select>
       </td></tr>
       <tr><td>Payload:</td><td><input id="sp_payload" name="payload" type="text" size="20"></td></tr>
-      <tr><td>Packet contents:</td><td><input type="text" id="sp_contents" disabled size="50" name="packet"></td></tr>
+      <tr><td>Packet contents:</td><td><input type="text" id="sp_contents" size="50" name="packet"></td></tr>
       </table>
       </form>
 
@@ -264,9 +266,15 @@ function onRx(msg)
   var packetFound = packetExp.exec(msg);
   if ( packetFound && packetFound.length == 4 )
   {
-    $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "\n");
+    var packetData = sendpacket.parseData(sendpacket.dataFromString(packetFound[2]));
+
+    if (packetData.dstAddr == localSwapAddress )
+      $("#console").prepend("<b>" + packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "</b>\n");
+    else
+      $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "\n");
+
     if ( validCrc )
-      processDeviceData(sendpacket.parseData(sendpacket.dataFromString(packetFound[2])), packetFound[3]);
+      processDeviceData(packetData, packetFound[3]);
     return;
   } 
 
@@ -357,7 +365,8 @@ function setupform()
   $("#sp_payload").on('change', function() { sendpacket.update(); });
   $("#sp_dstaddr").on('change', function() { sendpacket.update(); });
   $("#sp_dstaddrvalue").on('change', function() { sendpacket.updateDstType("addr"); sendpacket.update(); });
-  $("#sp_srcaddrvalue").on('change', function() { document["sendpacket"]["srctype"].value = "addr" });
+  $("#sp_srcaddrvalue").on('change', function() { document["sendpacket"]["srctype"].value = "addr"; });
+  $("#sp_contents").on('change', function() { sendpacket.use(document["sendpacket"]["sp_contents"].value); });
 }
 
 // devices list
@@ -418,11 +427,12 @@ function updateDevicesList()
       "<a href='javascript:onRequestProductCode("+device.addr+")'>request type</a>";
 
     var info = device.raw;
-    if ( info[0] == 0xee )
-      info = "sensor error";
-    else
+    if ( typeof(info) == "object" && info.length > 0 && info[0] != 0xee)
       info = "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
-    tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\"scanRegisters("+device.addr+")\">Scan</button></td><td>"+device.addr+"</td><td>"+type+"</td><td>"+device.rssi + "/" + device.lqi +"</td><td>"+info+"</td></tr>\n";
+    else
+      info = "sensor error";
+
+    tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\"scanRegisters("+device.addr+")\">Scan</button></td><td>"+sendpacket.toHex(device.addr)+"</td><td>"+type+"</td><td>"+device.rssi + "/" + device.lqi +"</td><td>"+info+"</td></tr>\n";
   }
   $("#devices").html(tdata);
 }
@@ -500,8 +510,10 @@ function updateRegistersTable()
   for (var i in scanProc.registers)
   {
     var register = scanProc.registers[i];
+    var buttons = "<button type=\"button\" class=\"btn btn-primary btn-xs\" onClick=\"requestRegister("+scanProc.addr+","+register.index+")\">Refresh</button>";
+    buttons += "&nbsp;<button type=\"button\" class=\"btn btn-info btn-xs\" onClick=\"changeValue("+scanProc.addr+","+register.index+",'"+sendpacket.toHex(register.payload)+"')\">Change</button>";
 
-    tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-xs\" onClick=\"requestRegister("+scanProc.addr+","+register.index+")\">Refresh</button></td><td>"+register.index+"</td><td>"+register.name+"</td><td>"+sendpacket.toHex(register.payload)	+"</td><td>"+register.ping+" ms</td></tr>\n";
+    tdata += "<tr><td>"+buttons+"</td><td>"+register.index+"</td><td>"+register.name+"</td><td>"+sendpacket.toHex(register.payload) +"</td><td>"+register.ping+" ms</td></tr>\n";
   }
   $("#registers").html(tdata);
 }
@@ -529,6 +541,36 @@ function requestRegister(addr, index)
   }
 
   scanRegisterSend();
+}
+
+function changeValue(addr, index, oldValue)
+{
+  $("#myModal").find(".modal-footer").hide();
+  $("#myModal").find(".modal-title").html("Change value...");
+  $("#myModal").find(".modal-body").html( "change value for device "+addr+" register "+index+" <input type='text' id='changeValueEdit' value='"+oldValue+"'>" +
+  "&nbsp;<input type='button' value='Set' onClick='changeValueDo("+addr+","+index+")'>");
+  $("#myModal").modal("show");
+
+}
+
+function changeValueDo(addr, index)
+{
+  var value = $("#changeValueEdit").val();
+
+  var packet = sendpacket.parseData(sendpacket.dataFromString("B5,01,00,AB,01,B5,00"))
+  packet.dstAddr = addr;
+  packet.regAddr = addr;
+  packet.srcAddr = localSwapAddress; 
+  packet.regId = index;
+  packet.func = 2; // FUNCT_CMD
+  packet.nonce = localSwapNonce++; 
+  packet.payload = sendpacket.dataFromString(value); 
+
+  var raw = sendpacket.toHex(sendpacket.getBytes(packet));
+  connection.send("onTransmit('"+raw+"');\n");
+  setTimeout( "requestRegister("+addr+", "+index+")", 300);
+
+  $("#myModal").modal("hide");
 }
 
 // packet builder
@@ -633,7 +675,7 @@ var sendpacket = {
       nonce: localSwapNonce++, 
       func: parseInt(document["sendpacket"]["func"].value),
       regAddr: this.fromHex(document["sendpacket"]["dstaddr"].value),
-      regId: document["sendpacket"]["regid"].value,
+      regId: parseInt(document["sendpacket"]["regid"].value),
       payload: this.dataFromString(document["sendpacket"]["payload"].value)
     };
   },

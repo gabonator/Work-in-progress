@@ -111,7 +111,8 @@
         <option></option>
         <option value="ff,ff,00,06,02,ff,09,01">Set modem address 01</option>
 
-        <option value="00,01,00,0a,07,00,00">Inquiry</option>
+        <option value="00,01,00,0a,07,00,00">Inquiry (first)</option>
+        <option value="00,01,00,0a,07,00,01">Inquiry (next)</option>
 <!--
         <option value="05,01,00,AB,??">Request dev id</option>
         <option value="05,01,00,AB,??">Get sync word</option>
@@ -219,6 +220,20 @@
     </div>
     </div>
 
+  <a name="topology"></a>
+
+    <div id="panelRegisters" class="panel panel-info" style="">
+    <div class="nowrap panel-heading">Network topology</div>
+    <div class="nowrap panel-body" style="overflow:auto;">
+       <table class="table table-striped">
+         <thead id="topology-head">
+         </thead>
+         <tbody id="topology-body">
+         </tbody>
+       </table>
+    </div>
+    </div>
+
 </div> 
 </body>
 
@@ -259,6 +274,9 @@ function onRx(msg)
     if ( addrFound && addrFound.length == 3 )
     {
       localSwapAddress = parseInt("0x"+addrFound[2]);
+
+      devices[localSwapAddress] = {addr:localSwapAddress, rssi:0, lqi:0, manufactId:0, productId:0, type:"modem", raw:[]};
+      updateDevicesList();
     } 
   }
 
@@ -278,6 +296,19 @@ function onRx(msg)
     return;
   } 
 
+  var packetExp = new RegExp("(ME: )(.*)$");
+  var packetFound = packetExp.exec(msg);
+  if ( packetFound && packetFound.length == 3 )
+  {
+    var packetData = sendpacket.parseData(sendpacket.dataFromString(packetFound[2]));
+
+    $("#console").prepend("<b>" + packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + "</b>\n");
+
+    processDeviceData(packetData);
+    return;
+  } 
+
+/*
   var packetExp = new RegExp("^(.*TX:)(.*)('.*)$");
   var packetFound = packetExp.exec(msg);
   if ( packetFound && packetFound.length == 4 )
@@ -285,8 +316,19 @@ function onRx(msg)
     $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + packetFound[3] + "\n");
     return;
   } 
+*/
+  var packetExp = new RegExp("(TX: )(.*)$");
+  var packetFound = packetExp.exec(msg);
+  if ( packetFound && packetFound.length == 3 )
+  {
+    $("#console").prepend(packetFound[1] + "<a href='javascript:onParsePacket(\""+packetFound[2]+"\")'>" + packetFound[2] + '</a>' + "\n");
+    return;
+  } 
 
-  $("#console").prepend(msg + "\n");
+  if ( msg.indexOf("INFO: ") == -1 )
+    $("#console").prepend(msg + "\n");
+  else
+    $("#console").prepend("<font color='gray'>" + msg + "<font>\n");
 }
 
 // NodeJs handlers
@@ -375,16 +417,6 @@ var devices = [];
 function processDeviceData(packet, ext)
 {
   // crc=1,rssi=38,lqi=43
-  var rssi = -1, lqi = -1;
-
-  var extExp = new RegExp("(rssi=)(.*)(,lqi=)(.*)$");
-  var extFound = extExp.exec(ext);
-
-  if ( extFound && extFound.length == 5 )
-  {
-    rssi = parseInt(extFound[2]);
-    lqi = parseInt(extFound[4]);
-  } 
 
   if (!devices[packet.srcAddr])
   {
@@ -392,8 +424,22 @@ function processDeviceData(packet, ext)
   }
   var device = devices[packet.srcAddr];
 
-  device.rssi = rssi;
-  device.lqi = lqi;
+  if (ext)
+  {
+    var rssi = -1, lqi = -1;
+
+    var extExp = new RegExp("(rssi=)(.*)(,lqi=)(.*)$");
+    var extFound = extExp.exec(ext);
+
+    if ( extFound && extFound.length == 5 )
+    {
+      rssi = parseInt(extFound[2]);
+      lqi = parseInt(extFound[4]);
+    } 
+
+    device.rssi = rssi;
+    device.lqi = lqi;
+  }
 
   if (packet.regId == 0)
   {
@@ -413,6 +459,8 @@ function processDeviceData(packet, ext)
     scanProc.handler(packet);
 
   updateDevicesList();
+
+  updateTopology(packet, rssi, lqi);
 }
 
 function updateDevicesList()
@@ -427,11 +475,13 @@ function updateDevicesList()
       "<a href='javascript:onRequestProductCode("+device.addr+")'>request type</a>";
 
     var info = device.raw;
-    if ( typeof(info) == "object" && info.length > 0 && info[0] != 0xee)
-      info = "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
-    else
-      info = "sensor error";
-
+    if ( device.type != "modem" )
+    {
+      if ( typeof(info) == "object" && info.length > 0 && info[0] != 0xee)
+        info = "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
+      else
+        info = "sensor error";
+    }
     tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\"scanRegisters("+device.addr+")\">Scan</button></td><td>"+sendpacket.toHex(device.addr)+"</td><td>"+type+"</td><td>"+device.rssi + "/" + device.lqi +"</td><td>"+info+"</td></tr>\n";
   }
   $("#devices").html(tdata);
@@ -459,6 +509,104 @@ function onPacketSend()
 //  sendpacket.getBytes();
 }
 
+// topology
+
+var topology = [];
+var topologyLastMediator = 0;
+
+function addTopology(receiverAddr, senderAddr, rssi, lqi)
+{
+  console.log("Reception of "+sendpacket.toHex(senderAddr)+" from node "+sendpacket.toHex(receiverAddr)+" is "+rssi);
+  var key = sendpacket.toHex(receiverAddr)+"-"+sendpacket.toHex(senderAddr);
+  topology[key] = {rssi:rssi, lqi:lqi};
+}
+
+function updateTopology(packet, rssi, lqi)
+{
+  // dont be shy to listen to foreign comm
+  //if ( packet.dstAddr == localSwapAddress )
+    addTopology(packet.dstAddr, packet.srcAddr, rssi, lqi);
+
+  if ( packet.func == 6 /* forward_ack */ )
+  {
+    var paylength = packet.payload.length;
+    var prevFunc = packet.payload[paylength-3];
+    var prevRssi = packet.payload[paylength-2];
+    var prevLqi = packet.payload[paylength-1];
+    var origin = topologyLastMediator;
+//    var origin = (packet.payload[packet.payload.length-1]<<8) | packet.payload[packet.payload.length-2];
+console.log("forwarded:");
+    if ( origin != 0 )
+      addTopology(packet.srcAddr, origin, prevRssi, prevLqi);
+    topologyLastMediator = 0;
+  }
+
+// devices
+  var thead = "";
+  var tbody = "";
+  thead += "<tr><th>RSSI reception matrix</th>";
+
+  var mydevs = []; //[localSwapAddress];
+  for (var i in devices)
+    mydevs.push(parseInt(i));
+
+  for (var i in mydevs)
+  {
+    thead += "<th>device "+sendpacket.toHex(mydevs[i])+"</th>";
+    tbody += "<tr><td><b>seen by "+sendpacket.toHex(mydevs[i])+"</b></td>";
+    for (var j in mydevs)
+    {
+      var key = sendpacket.toHex(mydevs[i])+"-"+sendpacket.toHex(mydevs[j]);
+      var rssi = (i==j) ? "---" : "?";
+      var updateCmd = "topologyRequest(0x"+sendpacket.toHex(mydevs[i])+",0x"+sendpacket.toHex(mydevs[j])+")";
+      var btn = (i==j) ? "" : "<button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\""+updateCmd+"\">Get</button>&nbsp;";
+
+      if ( typeof(topology[key]) == "object" )
+      {
+        rssi = topology[key].rssi;
+      }
+      tbody += "<td>" + btn + rssi + "</td>";
+    }
+    tbody += "</tr>";
+  }
+  thead += "</tr>";
+
+  $("#topology-head").html(thead);
+  $("#topology-body").html(tbody);
+}
+
+////////////////////
+
+function topologyRequest(addrAsSeenBy, addrDevice)
+{
+//  if ( addrDevice == localSwapAddress )
+  {
+    var packet = sendpacket.parseData(sendpacket.dataFromString("B5,01,00,AB,01,B5,00"))
+    packet.dstAddr = addrDevice;
+    packet.regAddr = addrDevice;
+    packet.srcAddr =              localSwapAddress; //0xff; // imaginary address 
+    packet.func = 1; // query
+    packet.regId = 7; // nonce
+    packet.nonce = localSwapNonce++; 
+    packet.payload = [];
+
+    topologyLastMediator = packet.dstAddr; //addrAsSeenBy;
+
+    packet = sendpacket.mediate(packet, addrAsSeenBy);
+  
+    var raw = sendpacket.toHex(sendpacket.getBytes(packet));
+    connection.send("onTransmit('"+raw+"');\n");
+  }
+
+/*
+   Master -> Mediator: FORWARD_REQ{QUERY ProductCode}
+   Mediator -> Slave: QUERY ProductCode  
+   Slave -> Mediator: STATE ProductCode 
+   Mediator -> Master: FORWARD_ACK{STATE ProductCode, RSSI}
+*/
+}
+
+// scanner
 var scanProc = {registers:[], addr:0, index:0, handler:false};
 
 function scanRegisters(addr)
@@ -536,8 +684,7 @@ function requestRegister(addr, index)
 
       // update table
       updateRegistersTable();
-    }
-    
+    }  
   }
 
   scanRegisterSend();
@@ -657,8 +804,8 @@ var sendpacket = {
       document["sendpacket"]["dstaddr"].value = "00";
     if (type == "modem")            
     {
-      document["sendpacket"]["dstaddr"].value = "ff";
-      document["sendpacket"]["srcaddr"].value = "ff";
+      document["sendpacket"]["dstaddr"].value = this.toHex(localSwapAddress);
+      document["sendpacket"]["srcaddr"].value = this.toHex(localSwapAddress);
     }
   },
   update:function()
@@ -685,6 +832,16 @@ var sendpacket = {
     if ( typeof(packet.payload) == "object" && packet.payload.length > 0 )
       aux = aux.concat(packet.payload);
     return aux;
+  },
+  //
+  mediate:function(packet, mediatorAddr)
+  {
+    packet.payload.push(packet.func);
+    packet.payload.push(packet.dstAddr & 0xff);
+    packet.payload.push(packet.dstAddr >> 8);
+    packet.func = 5; // forward request
+    packet.dstAddr = mediatorAddr;
+    return packet;
   }
 };
 

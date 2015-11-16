@@ -88,6 +88,7 @@ class MEDIATOR : public PROCESSOR
       {
         // do register matching, or broadcasted ?
         // in case of broadcasted INQUIRY function, we forward first ours packet to the master
+          
         if ( (checkAddr == 0x00 && packet->srcAddr != masterAddr) || (packet->srcAddr == checkAddr && packet->regAddr == checkRegAddr && packet->regId == checkRegId) )
         {
           MediateAnswer(packet, masterAddr);
@@ -149,12 +150,15 @@ class MEDIATOR : public PROCESSOR
     {
       swPacket->value.data[swPacket->value.length++] = swPacket->function;
       swPacket->value.data[swPacket->value.length++] = swPacket->getPacket().rssi;
-      swPacket->value.data[swPacket->value.length++] = swPacket->getPacket().lqi;
+      swPacket->value.data[swPacket->value.length++] = swPacket->getPacket().lqi; 
+      // *1 should append origin addr ???
+
       swPacket->function = SWAPFUNCT_FORWARD_ACK;
       swPacket->destAddr = destAddr;
 //      swPacket->regAddr = swPacket->destAddr; // ?
-
-      swPacket->srcAddr = swap.devAddress;
+   
+      // here source addr is lost *1 or is present int regAddr
+      swPacket->srcAddr = swap.devAddress;        
       swPacket->hop = 0;
       swPacket->security = swap.security & 0x0F;
       swPacket->nonce = ++swap.nonce;

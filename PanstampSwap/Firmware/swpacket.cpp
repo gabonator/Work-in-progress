@@ -25,6 +25,9 @@
 #include "swpacket.h"
 #include "swap.h"
 #include "panstamp.h"
+#include "logger.h"
+
+extern LOGGER procLogger;
 
 /**
  * SWPACKET
@@ -172,6 +175,13 @@ SWPACKET* SWPACKET::prepare(void)
 
 bool SWPACKET::_send(void)
 {
+  // modem:
+  if ( procLogger.isEnabled() )
+  {
+    Serial.print("TX: ");
+    LOGGER::dumpPacket(ccPacket, false);
+  }
+  
   byte i = SWAP_NB_TX_TRIES;
   bool res;
   

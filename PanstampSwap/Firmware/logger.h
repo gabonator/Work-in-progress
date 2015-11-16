@@ -70,6 +70,11 @@ class LOGGER : public PROCESSOR
     {
       enabled = enable;
     }
+
+    bool isEnabled()
+    {
+      return enabled;
+    }
 };
 
 #endif

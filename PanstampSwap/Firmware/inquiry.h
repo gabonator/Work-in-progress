@@ -94,7 +94,7 @@ class INQUIRY : public PROCESSOR
 
       if ( eResponseType == Hello )
       {
-        Serial.print("INQ: Sending hello response\n");
+        //Serial.print("INQ: Sending hello response\n");
         uint16_t postpone = 100 + (panstamp.getRand() & 511);
 
         // wait 100 .. 600ms to prevent traffic conflicts
@@ -107,7 +107,7 @@ class INQUIRY : public PROCESSOR
       
       if ( eResponseType == Silent )
       {
-        Serial.print("INQ: Sending silent response\n");
+        //Serial.print("INQ: Sending silent response\n");
         onDeviceFound(nResponseAddr);
         
         SWPACKET ackPacket;
@@ -115,7 +115,7 @@ class INQUIRY : public PROCESSOR
         ackPacket.prepare()->_send();
       }
 
-      Serial.print("Done!\n");
+      //Serial.print("Done!\n");
 
       eResponseType = None;
     }
@@ -135,9 +135,18 @@ class INQUIRY : public PROCESSOR
         command = Scan;
       }
 
+      // Master handling 'hello' from slave
+      if ( command == Hello && packet->destAddr == swap.devAddress )
+      {
+        //Serial.print("INFO: master got hello\n");
+        // Thank you for indentifyng yourself, please do not respond to following Scan commands
+        nResponseAddr = packet->srcAddr;
+        eResponseType = Silent;
+        return false;
+      }
+
       if ( wasPaired )
         return false;
-
 
       // Broadcasted message by master
       if ( command == Scan )
@@ -151,14 +160,6 @@ class INQUIRY : public PROCESSOR
       {
         eResponseType = None;
         wasPaired = true;
-      }
-
-      // Master handling 'hello' from slave
-      if ( command == Hello && packet->destAddr == swap.devAddress )
-      {
-        // Thank you for indentifyng yourself, please do not respond to following Scan commands
-        nResponseAddr = packet->srcAddr;
-        eResponseType = Hello;
       }
 
       return false;

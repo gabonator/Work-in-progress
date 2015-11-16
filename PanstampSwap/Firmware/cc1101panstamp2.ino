@@ -5,8 +5,8 @@
 #include "logger.h"
 #include "swap.h"
 
-#define TXER
-//#define MODEM
+//#define TXER
+#define MODEM
 
 #ifdef MODEM
 char strCommand[80];
@@ -45,8 +45,21 @@ void eval(char* strCommand)
     }
 
     SWPACKET swPacket(&packet);
-    if ( swPacket.destAddr == 0xff && swPacket.srcAddr == 0xff )
+    if ( swPacket.destAddr == swap.devAddress /*0xff && swPacket.srcAddr == 0xff*/ )
     {
+      PROCESSOR* p = swap.processor;
+      while (p)
+      {
+        if ( !p->packetHandler(&swPacket) )
+        {
+          Serial.print("INFO: Packet propagation cancelled\n");
+          swPacket.function = -1;
+          break;
+        }
+
+        p = p->pNext;
+      }
+
       REGISTER* reg = NULL;
       switch(swPacket.function)
       {
@@ -87,6 +100,7 @@ void eval(char* strCommand)
       }  
     } else 
     {
+      // TODO: should be replaced with swPacket._send();
       Serial.print("TX: ");
       LOGGER::dumpPacket(packet, false);
 
@@ -146,6 +160,8 @@ void setup()
 
 void loop()
 {
+  swap.tick();
+  
   while (Serial.available())
   {
     char ch = Serial.read();

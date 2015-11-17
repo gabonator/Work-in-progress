@@ -226,7 +226,7 @@ void setup()
     ->updateData()
     ->getStatusPacket()
     ->prepare()
-    ->_send();
+    ->send();
 
   // Enter SYNC state
   swap.enterSystemState(SYSTATE_SYNC);
@@ -241,9 +241,7 @@ void setup()
 */
 
   // Transmit periodic Tx interval
-  swap.getRegister(regTxInterval.id)->updateData()->getStatusPacket()->prepare()->_send();
-  // Transmit power voltage
-  swap.getRegister(regVoltSupply.id)->updateData()->getStatusPacket()->prepare()->_send();
+  swap.getRegister(regTxInterval.id)->updateData()->getStatusPacket()->prepare()->send();
   // Switch to Rx OFF state
   swap.enterSystemState(SYSTATE_RXOFF); // RX on?
   Serial.print("setup end\n");
@@ -260,12 +258,14 @@ void loop()
   
   // Transmit sensor data
   bool bSuccess = swap.getRegister(regSensor.id)
-    ->updateData()
-    ->sendSwapStatusAck(regTargetAddr.value[0])
-    ->receivedAck();
+    ->updateData() 
+    ->getStatusPacket(regTargetAddr.value[0])
+    ->prepare()
+    ->mediate(regMediateAddr.value[0])
+    ->sendAck();
 
   Serial.print(bSuccess ? "Ok.\n" : "Error!\n");
-    
+
   // Sleep
   swap.goToSleep();
 }

@@ -115,6 +115,8 @@ struct SWDATA
 
 class SWPACKET
 {
+  friend class SWAP;
+  
   private:
     /**
      * Raw packet
@@ -225,9 +227,21 @@ class SWPACKET
      *  True if the transmission succeeds
      *  False otherwise
      */
-    bool _send(void);
+    bool send(void);
+    bool sendAck(void);
 
     CCPACKET& getPacket() { return ccPacket; }
+
+    SWPACKET* mediate(int16_t mediateAddr);
+
+  protected:
+//    REGISTER* sendSwapStatusAck(uint16_t targetAddr = SWAP_BCAST_ADDR);
+//    bool receivedAck(void);
+//    static void replySwapStatusAck(SWPACKET* pRcvdPacket);
+    static void handleSwapStatusAck(SWPACKET* pRcvdPacket);
+    static void replySwapStatusAck(SWPACKET* pRcvdPacket);
+    static uint16_t ackWaitingNonce;
+    bool receivedAck(void);
 };
 
 #endif

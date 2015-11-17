@@ -9,6 +9,9 @@
   <script src="lib/jquery.min.js"></script>
   <script src="lib/bootstrap/js/bootstrap.min.js"></script>
   <script src="lib/bootstrap/js/bootstrap-dialog.js"></script>
+
+  <!-- should be loaded dynamically -->
+  <script src="library.js"></script>
 </head>
 
 <body>
@@ -420,7 +423,7 @@ function processDeviceData(packet, ext)
 
   if (!devices[packet.srcAddr])
   {
-    devices[packet.srcAddr] = {addr:packet.srcAddr};
+    devices[packet.srcAddr] = {addr:packet.srcAddr, regs:[]};
   }
   var device = devices[packet.srcAddr];
 
@@ -446,14 +449,15 @@ function processDeviceData(packet, ext)
     device.manufactId = (packet.payload[0]<<24) | (packet.payload[1]<<16) | (packet.payload[2]<<8) | (packet.payload[3]<<0);
     device.productId =  (packet.payload[4]<<24) | (packet.payload[5]<<16) | (packet.payload[6]<<8) | (packet.payload[7]<<0);
 //    if ( packet.manufactId
-    device.type = "unknown";
-    var devId = device.manufactId + "." + device.productId;
-    if ( devId == "1.10" )
-      device.type = "DHT22";
+//    device.type = "unknown";
+//    var devId = device.manufactId + "." + device.productId;
+//    if ( devId == "1.10" )
+    device.type = libraryGetDeviceName(device.manufactId, device.productId); //"DHT22";
   }
 
-  if (/*device.type == "DHT22" &&*/ packet.regId == 12)
-    device.raw = packet.payload;
+//  if (/*device.type == "DHT22" &&*/ packet.regId == 12)
+//    device.raw = packet.payload;
+  device.regs[packet.regId] = packet.payload;
 
   if ( scanProc.handler )
     scanProc.handler(packet);
@@ -477,10 +481,10 @@ function updateDevicesList()
     var info = device.raw;
     if ( device.type != "modem" )
     {
-      if ( typeof(info) == "object" && info.length > 0 && info[0] != 0xee)
-        info = "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
-      else
-        info = "sensor error";
+//      if ( typeof(info) == "object" && info.length > 0 && info[0] != 0xee)
+      info = libraryGetDeviceData(device.manufactId, device.productId, 12, device.regs[12]);// "temp: "+((device.raw[0]<<8)|device.raw[1])/10+"&deg;C, hygro: "+((device.raw[2]<<8)|device.raw[3])/10+"%";
+//      else
+//        info = "sensor error";
     }
     tdata += "<tr><td><button type=\"button\" class=\"btn btn-primary btn-sm\" onClick=\"scanRegisters("+device.addr+")\">Scan</button></td><td>"+sendpacket.toHex(device.addr)+"</td><td>"+type+"</td><td>"+device.rssi + "/" + device.lqi +"</td><td>"+info+"</td></tr>\n";
   }
@@ -661,7 +665,13 @@ function updateRegistersTable()
     var buttons = "<button type=\"button\" class=\"btn btn-primary btn-xs\" onClick=\"requestRegister("+scanProc.addr+","+register.index+")\">Refresh</button>";
     buttons += "&nbsp;<button type=\"button\" class=\"btn btn-info btn-xs\" onClick=\"changeValue("+scanProc.addr+","+register.index+",'"+sendpacket.toHex(register.payload)+"')\">Change</button>";
 
-    tdata += "<tr><td>"+buttons+"</td><td>"+register.index+"</td><td>"+register.name+"</td><td>"+sendpacket.toHex(register.payload) +"</td><td>"+register.ping+" ms</td></tr>\n";
+    var value = "";
+    if ( register.name == "user1" && register.payload.length > 6 )
+      value = "\"" + sendpacket.toAscii(register.payload) + "\"";
+    else
+      value = sendpacket.toHex(register.payload);
+
+    tdata += "<tr><td>"+buttons+"</td><td>"+register.index+"</td><td>"+register.name+"</td><td>"+ value +"</td><td>"+register.ping+" ms</td></tr>\n";
   }
   $("#registers").html(tdata);
 }
@@ -718,6 +728,57 @@ function changeValueDo(addr, index)
   setTimeout( "requestRegister("+addr+", "+index+")", 300);
 
   $("#myModal").modal("hide");
+}
+
+
+// library
+function libraryGetDevice(manufactId, productId)
+{
+  if ( !manufactId || !productId )
+    return false;
+
+  for ( var i in library )
+  {
+//console.log("compare "+library[i].product.manufacturerId + " / " + library[i].product.productId + " = " + manufactId + "/" + productId ); 
+    if ( library[i].product.manufacturerId == manufactId && 
+         library[i].product.productId == productId )
+    {
+      return library[i];
+    }
+  }
+  return false;
+}
+
+function libraryGetDeviceName(manufactId, productId)
+{
+  return libraryGetDevice(manufactId, productId).description.short;
+}
+
+function libraryGetDeviceData(manufactId, productId, regId, raw)
+{
+  var dev = libraryGetDevice(manufactId, productId);
+
+  if ( !dev )
+    return sendpacket.toHex(raw);
+
+  var regName = dev.registers[regId];
+
+  if ( !regName || !dev.decoders[regName] )
+    return sendpacket.toHex(raw);
+
+  var decoded = dev.decoders[regName](raw);
+
+  if ( decoded.error || !decoded.data )
+    return decoded.error;
+
+  var result = "";
+  for (var i in decoded.data)
+  {
+    if ( result != "" )
+      result += ", ";
+    result += decoded.data[i].name + ": " + decoded.data[i].value + decoded.data[i].units;
+  }
+  return result;
 }
 
 // packet builder
@@ -791,6 +852,13 @@ var sendpacket = {
       return aux;
     }
     return ("0"+src.toString(16)).substr(-2);
+  }, 
+  toAscii:function(src)
+  {
+    var msg = "";
+    for (var i in src)
+      msg += String.fromCharCode(src[i]);
+    return msg;
   },
   updateDstType:function(val)
   {

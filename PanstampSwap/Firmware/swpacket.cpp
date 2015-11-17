@@ -26,8 +26,13 @@
 #include "swap.h"
 #include "panstamp.h"
 #include "logger.h"
+#include "mediator.h"
 
 extern LOGGER procLogger;
+extern MEDIATOR procMediator;
+extern REGISTER regSecuNonce;
+
+/*static*/ uint16_t SWPACKET::ackWaitingNonce = (uint16_t)-1;
 
 /**
  * SWPACKET
@@ -173,7 +178,7 @@ SWPACKET* SWPACKET::prepare(void)
   return this;
 }
 
-bool SWPACKET::_send(void)
+bool SWPACKET::send(void)
 {
   // modem:
   if ( procLogger.isEnabled() )
@@ -253,3 +258,104 @@ void SWPACKET::aesCrypto(void)
   CC430AES::ctrCrypto(ccPacket.data + 4, ccPacket.length - 4, initNonce);
 }
 #endif
+
+// Request/Ack
+// todo: move these to separate PROCESSOR
+/**
+ * sendSwapStatusAck
+ * 
+ * ...
+ */
+bool SWPACKET::sendAck() 
+{
+  function = SWAPFUNCT_REQ;
+
+  // retry 2 times if no response in half second
+  for ( uint8_t retry = 0; retry < 3; retry++)
+  {  
+    prepare();
+    send();
+
+    SWPACKET::ackWaitingNonce = nonce;
+
+    for ( uint8_t wait = 0; wait < 50; wait++)
+    {
+      delay(10); 
+
+      // waiting for packet.nonce match, usually takes 85-105ms
+      if ( receivedAck() ) 
+        return this;
+    }
+
+    nonce = ++swap.nonce;
+  }
+
+  return receivedAck();
+}
+
+/**
+ * receivedAck
+ * 
+ * ...
+ */
+bool SWPACKET::receivedAck(void)
+{
+  return SWPACKET::ackWaitingNonce == (uint16_t)-1; 
+}
+
+/**
+ * replySwapStatusAck
+ * 
+ * ...
+ */
+/*static*/ void SWPACKET::replySwapStatusAck(SWPACKET* pRcvdPacket)
+{
+  // acknowledge sender that we received his message
+  static uint8_t data;
+  data = pRcvdPacket->nonce;
+  
+  // get shared packet
+  SWPACKET* packet = regSecuNonce.getStatusPacket();
+  packet->regId = pRcvdPacket->regId;
+  packet->value.length = sizeof(data);
+  packet->value.data = &data;
+  packet->value.type = SWDTYPE_INTEGER;
+  packet->destAddr = pRcvdPacket->srcAddr;
+  packet->function = SWAPFUNCT_ACK;
+  packet->prepare()->send();
+}
+
+/**
+ * handleSwapStatusAck
+ * 
+ * ...
+ */
+/*static*/ void SWPACKET::handleSwapStatusAck(SWPACKET* pRcvdPacket)
+{
+  // Got some acknowledge message, does it match?
+
+  if ( pRcvdPacket->value.length == 1 )
+  {
+    uint8_t ackNonce = pRcvdPacket->value.data[0];
+
+    if ( ackNonce == SWPACKET::ackWaitingNonce )
+    {
+      // this is what we have been waiting for!
+      SWPACKET::ackWaitingNonce = (uint16_t)-1;
+    }
+  }
+}
+
+/**
+ * mediate
+ * 
+ * ...
+ */
+
+SWPACKET* SWPACKET::mediate(int16_t mediateAddr)
+{
+  if ( mediateAddr != SWAP_BCAST_ADDR )
+    MEDIATOR::MediateRequest(this, mediateAddr);
+
+  return this;
+}

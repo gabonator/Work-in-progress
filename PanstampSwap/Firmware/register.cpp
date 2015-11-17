@@ -27,7 +27,6 @@
 
 /*static*/ uint8_t REGISTER::regIndex = 0;
 /*static*/ REGISTER* REGISTER::pLast = NULL;
-/*static*/ uint16_t REGISTER::ackWaitingNonce = (uint16_t)-1;
 
 extern REGISTER regSecuNonce;
 
@@ -112,91 +111,6 @@ REGISTER *REGISTER::save()
     nvMem.write(value, eepromBank, eepromAddress, length);
   }
   return this;
-}
-
-// todo: move these to separate PROCESSOR
-/**
- * sendSwapStatusAck
- * 
- * ...
- */
-REGISTER *REGISTER::sendSwapStatusAck(uint16_t targetAddr /* = SWAP_BCAST_ADDR */) 
-{
-  SWPACKET* packet = getStatusPacket(targetAddr);
-  packet->function = SWAPFUNCT_REQ;
-
-  // retry 2 times if no response in half second
-  for ( uint8_t retry = 0; retry < 3; retry++)
-  {  
-    packet->prepare()->_send();
-    REGISTER::ackWaitingNonce = packet->nonce;
-
-    for ( uint8_t wait = 0; wait < 50; wait++)
-    {
-      delay(10); 
-
-      // waiting for packet.nonce match, usually takes 85-105ms
-      if ( receivedAck() ) 
-        return this;
-    }
-
-    packet->nonce = ++swap.nonce;
-  }
-
-  return this;
-}
-
-/**
- * receivedAck
- * 
- * ...
- */
-bool REGISTER::receivedAck(void)
-{
-  return REGISTER::ackWaitingNonce == (uint16_t)-1; 
-}
-
-/**
- * replySwapStatusAck
- * 
- * ...
- */
-/*static*/ void REGISTER::replySwapStatusAck(SWPACKET* pRcvdPacket)
-{
-  // acknowledge sender that we received his message
-  static uint8_t data;
-  data = pRcvdPacket->nonce;
-  
-  SWPACKET* packet = regSecuNonce.getStatusPacket();
-  packet->regId = pRcvdPacket->regId;
-  packet->value.length = sizeof(data);
-  packet->value.data = &data;
-  packet->value.type = SWDTYPE_INTEGER;
-  packet->destAddr = pRcvdPacket->srcAddr;
-  packet->function = SWAPFUNCT_ACK;
-  packet->prepare()->_send();
-}
-
-/**
- * handleSwapStatusAck
- * 
- * ...
- */
-/*static*/ void REGISTER::handleSwapStatusAck(SWPACKET* pRcvdPacket)
-{
-  // Got some acknowledge message, does it match?
-  //REGISTER* reg = getRegisterById(pRcvdPacket->regId);
-
-  if ( pRcvdPacket->value.length == 1 )
-  {
-    uint8_t ackNonce = pRcvdPacket->value.data[0];
-
-    if ( ackNonce == REGISTER::ackWaitingNonce )
-    {
-      // this is what we have been waiting for!
-      REGISTER::ackWaitingNonce = (uint16_t)-1;
-    }
-  }
 }
 
 /**

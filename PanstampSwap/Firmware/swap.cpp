@@ -112,7 +112,7 @@ LOGGER procLogger;
         {
           // Nonce missmatch. Transmit correct nonce.
           reg = swap.getRegister(regSecuNonce.id);
-          reg->getStatusPacket()->prepare()->_send();
+          reg->getStatusPacket()->prepare()->send();
           break;
         }
       }
@@ -123,10 +123,10 @@ LOGGER procLogger;
       {
         reg = reg->setData(swPacket.value.data);
         if (reg)
-          reg->save()->getStatusPacket()->prepare()->_send();
+          reg->save()->getStatusPacket()->prepare()->send();
       }
       else
-        reg->getStatusPacket()->prepare()->_send();
+        reg->getStatusPacket()->prepare()->send();
       break;
 
     case SWAPFUNCT_QRY:
@@ -150,7 +150,7 @@ LOGGER procLogger;
       // handle write protection reg->access == Public, Readonly
       reg = reg->updateData();
       if (reg)
-        reg->getStatusPacket(swPacket.srcAddr)->prepare()->_send();
+        reg->getStatusPacket(swPacket.srcAddr)->prepare()->send();
       break;
 
     case SWAPFUNCT_STA:
@@ -168,7 +168,7 @@ LOGGER procLogger;
         swap.statusReceived(&swPacket);
 
       // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
-      REGISTER::replySwapStatusAck(&swPacket); 
+      SWPACKET::replySwapStatusAck(&swPacket); 
       break;
 
     case SWAPFUNCT_ACK:
@@ -176,7 +176,7 @@ LOGGER procLogger;
         break;
 
       // receiver notifies us back about successfull reception
-      REGISTER::handleSwapStatusAck(&swPacket);
+      SWPACKET::handleSwapStatusAck(&swPacket);
       break;
 
     default:

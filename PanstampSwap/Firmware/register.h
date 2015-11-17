@@ -232,14 +232,6 @@ class REGISTER
     }
 
     SWPACKET* getStatusPacket(uint16_t destAddr = SWAP_BCAST_ADDR);
-
-  public:
-    // TODO: should be in separate class?
-    REGISTER* sendSwapStatusAck(uint16_t targetAddr = SWAP_BCAST_ADDR);
-    bool receivedAck(void);
-    static void replySwapStatusAck(SWPACKET* pRcvdPacket);
-    static void handleSwapStatusAck(SWPACKET* pRcvdPacket);
-    static uint16_t ackWaitingNonce;
 };
 
 #endif

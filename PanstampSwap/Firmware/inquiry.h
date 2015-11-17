@@ -102,7 +102,7 @@ class INQUIRY : public PROCESSOR
 
         SWPACKET ackPacket;
         INQUIRY::buildInquiryPacket(&ackPacket, Hello, nResponseAddr);
-        ackPacket.prepare()->_send();
+        ackPacket.prepare()->send();
       }
       
       if ( eResponseType == Silent )
@@ -112,7 +112,7 @@ class INQUIRY : public PROCESSOR
         
         SWPACKET ackPacket;
         INQUIRY::buildInquiryPacket(&ackPacket, Silent, nResponseAddr);
-        ackPacket.prepare()->_send();
+        ackPacket.prepare()->send();
       }
 
       //Serial.print("Done!\n");
@@ -212,7 +212,7 @@ class INQUIRYPROCESS : public INQUIRY
         m_nTryCount--;
 
         INQUIRY::buildInquiryPacket(&packet, ResetAndScan);
-        packet.prepare()->_send();
+        packet.prepare()->send();
         delay(2500);
 
       } while (m_nTryCount > 0);

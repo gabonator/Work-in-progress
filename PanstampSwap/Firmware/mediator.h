@@ -71,7 +71,7 @@ class MEDIATOR : public PROCESSOR
         checkRegAddr = packet->regAddr;
         checkRegId = packet->regId;
 
-        packet->prepare()->_send();
+        packet->prepare()->send();
         // do not proces this packet by swap
         return false;
       }
@@ -92,7 +92,7 @@ class MEDIATOR : public PROCESSOR
         if ( (checkAddr == 0x00 && packet->srcAddr != masterAddr) || (packet->srcAddr == checkAddr && packet->regAddr == checkRegAddr && packet->regId == checkRegId) )
         {
           MediateAnswer(packet, masterAddr);
-          packet->prepare()->_send();
+          packet->prepare()->send();
 
           waiting = false;
 

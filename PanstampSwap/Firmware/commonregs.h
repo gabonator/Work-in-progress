@@ -97,7 +97,7 @@ const bool setSysState(REGISTER* pRegister, uint8_t *state)
   {                                                         
     case SYSTATE_RESTART:                                  
       /* Send status message before restarting the mote */  
-      swap.getRegister(regSysState.id)->getStatusPacket()->prepare()->_send();    
+      swap.getRegister(regSysState.id)->getStatusPacket()->prepare()->send();    
       panstamp.reset();                                     
       break;                                                
     case SYSTATE_UPGRADE:                                   
@@ -126,7 +126,7 @@ const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel)
 
     SWPACKET* packet = pRegister->getStatusPacket();
     packet->value.data = channel;
-    packet->prepare()->_send();                                          
+    packet->prepare()->send();                                          
                                     
     /* Update register value */                             
     panstamp.radio.setChannel(channel[0]);                  
@@ -150,7 +150,7 @@ const bool setDevAddress(REGISTER* pRegister, uint8_t *addr)
   /* Send status before setting the new address */          
   SWPACKET* packet = pRegister->getStatusPacket();
   packet->value.data = addr;
-  packet->prepare()->_send();                                          
+  packet->prepare()->send();                                          
   
   /* Set new SWAP address. BE to LE conversion */           
   regDevAddress.setValueFromBeBuffer(addr);                 
@@ -175,7 +175,7 @@ const bool setNetworkId(REGISTER* pRegister, uint8_t *nId)
     /* Send status before taking the new network ID */      
     SWPACKET* packet = pRegister->getStatusPacket();
     packet->value.data = nId;
-    packet->prepare()->_send();                                          
+    packet->prepare()->send();                                          
     /* Update register value */                             
     panstamp.radio.setSyncWord(nId);                        
   }                                                         

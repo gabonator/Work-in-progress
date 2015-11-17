@@ -44,8 +44,8 @@ const bool updtSensor(REGISTER* pRegister);
  * Definition of custom registers
  */
 
-// Dummy register to maintain their order
-REGISTER regVoltSupply(NULL, 0, NULL, NULL, REGISTER::NoAccess);
+char strIdentify[] = "l.valky.eu/e";
+REGISTER regIdentify((byte*)strIdentify, sizeof(strIdentify)-1, NULL, NULL, REGISTER::ReadOnly);
 
 // Sensor value register
 byte dtSensor[4];
@@ -55,7 +55,7 @@ byte dtTargetAddr[1] = {0};
 REGISTER regTargetAddr(dtTargetAddr, sizeof(dtTargetAddr), NULL, NULL, REGISTER::Private, SWDTYPE_INTEGER, NVOLAT_FIRST_CUSTOM+0);
 
 byte dtMediateAddr[1] = {0};
-REGISTER regMediateAddr(dtMediateAddr, sizeof(dtMediateAddr), NULL, NULL, REGISTER::Private, SWDTYPE_INTEGER, NVOLAT_FIRST_CUSTOM+0);
+REGISTER regMediateAddr(dtMediateAddr, sizeof(dtMediateAddr), NULL, NULL, REGISTER::Private, SWDTYPE_INTEGER, NVOLAT_FIRST_CUSTOM+1);
 
 /**
  * Definition of custom getter/setter callback functions

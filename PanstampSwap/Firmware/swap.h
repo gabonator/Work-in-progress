@@ -160,7 +160,7 @@ class SWAP
         ->save()
         ->getStatusPacket()
         ->prepare()
-        ->_send();
+        ->send();
     }
     
     /**

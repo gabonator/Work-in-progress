@@ -99,7 +99,7 @@ this.Common = this.Common || {
       this.KEY_DOWN = 40;
       this.KEY_LEFT = 37;
       this.KEY_RIGHT = 39;
-      this.KEY_RETURN = 13;
+      this.KEY_ENTER = 13;
       this.KEY_CH_UP = 219;
       this.KEY_CH_DOWN = 221;
     }

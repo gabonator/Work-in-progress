@@ -11,6 +11,8 @@ sokoban =
   targetx:0,
   targety:0,
 
+  history:[],
+
   // public
   onLoad:function()
   {
@@ -41,42 +43,71 @@ sokoban =
 
   move:function(dx, dy)
   {
-    if (this.isTooFar())
-      return;
-
     var newobj = this.getmap(this.x + dx, this.y + dy);
     var advobj = this.getmap(this.x + dx*2, this.y + dy*2);
+
+    if ( newobj != "." && newobj != "O" && this.isTooFar() )
+      return;
+
+    var logmove = {};
     if ( (newobj == "*" || newobj == "0") && (advobj == "." || advobj == "O") )
     {
+      logmove = {player:{x:this.x, y:this.y}, moves:[{x:this.x+dx, y:this.y+dy, t:newobj}, {x:this.x+dx*2, y:this.y+dy*2, t:advobj}]};
       this.setBlock(this.x + dx, this.y + dy, newobj == "*" ? "." : "O");
       this.setBlock(this.x + dx*2, this.y + dy*2, advobj == 'O' ? '0' : '*');
       var newobj = this.getmap(this.x + dx, this.y + dy);
 
       if ( this.hasFinished() )
       {
-        this.nextLevel();
+        this.nextLevel(+1);
         return;
       }
-    }
+    } else
+      logmove = {player:{x:this.x, y:this.y}, moves:[]};
 
     if ( newobj != "." && newobj != "O" && newobj != "S" )
       return;
   
+    this.history.push(logmove);
     this.x += dx;
     this.y += dy;
     this.updatePosition();
   },
 
+  back:function()
+  {
+    if ( this.history.length == 0 )
+      return;
+
+    var logmove = this.history.pop();
+    this.x = logmove.player.x;
+    this.y = logmove.player.y;
+    this.updatePosition();
+ 
+    for (var i in logmove.moves)
+      this.setBlock(logmove.moves[i].x, logmove.moves[i].y, logmove.moves[i].t);
+  },
+
+  go:function(dir)
+  {
+    this.nextLevel(dir);
+  },
+
   // private
   isTooFar:function()
   {
-    return Math.abs(this.currentx - this.targetx) > 50 ||
-      Math.abs(this.currenty - this.targety) > 50;
+    return Math.abs(this.currentx - this.targetx) > 5 ||
+      Math.abs(this.currenty - this.targety) > 5;
   },
 
-  nextLevel:function()
+  nextLevel:function(dir)
   {
-    this.currentLevel++;
+    this.currentLevel += dir;
+    if ( this.currentLevel < 0 )
+      this.currentLevel = 0;
+    if ( this.currentLevel >= levels.length )
+      this.currentLevel = levels.length - 1;
+
     this.loadLevel();
     this.updatePosition();
     this.copyPosition();
@@ -87,6 +118,7 @@ sokoban =
     document.getElementById("welcome").innerHTML = "Sokoban, level " + (this.currentLevel+1); //navigator.userAgent;
     this.level = levels[this.currentLevel];
     this.surface.innerHTML = this.build();
+    this.history = [];
   },
 
   hasFinished:function()
@@ -112,7 +144,7 @@ sokoban =
   {
     var id = "blk_"+x+"_"+y+"_";
     var src = "free.gif";
-    var flat = t == "." || t == "O";
+    var flat = t == "." || t == "O" || t == "S";
     switch ( t )
     {
       case '.': src = "free.gif"; break;
@@ -178,6 +210,8 @@ sokoban =
         src = "block.gif";
       if ( t == 'O' )
         src = "dest.gif";
+      if ( t == '0' )
+        src = "block1.gif";
       if ( t == 'S' )
       {
         sokoban.x = x;
@@ -187,7 +221,7 @@ sokoban =
       var translate = 'scale(1, 0.5) rotate(-30deg) translate('+x*50+'px,'+y*50+'px)';
 
       var z = ((15-x)+y*16)*10;
-      var flat = t != "#" && t != "*";
+      var flat = t == "." || t == "O" || t == "S";
       var id = "blk_"+x+"_"+y+"_";
       var alpha = (0.4+y/16/2 - x/19/3).toFixed(2);
 

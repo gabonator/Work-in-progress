@@ -95,10 +95,13 @@ this.Common = this.Common || {
     	this.KEY_ZOOM1 = 1083;
 
     	// Browser codes
-      this.KEY_UP = 38 
-      this.KEY_DOWN = 40
-      this.KEY_LEFT = 37
-      this.KEY_RIGHT = 39
+      this.KEY_UP = 38; 
+      this.KEY_DOWN = 40;
+      this.KEY_LEFT = 37;
+      this.KEY_RIGHT = 39;
+      this.KEY_RETURN = 13;
+      this.KEY_CH_UP = 219;
+      this.KEY_CH_DOWN = 221;
     }
   }
 };

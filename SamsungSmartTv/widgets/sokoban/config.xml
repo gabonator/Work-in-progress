@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <widget xmlns="http://www.samsung.com/">  
+  <ThumbIcon>icon80.png</ThumbIcon>
+  <BigThumbIcon>icon96.png</BigThumbIcon>
+  <ListIcon>icon80.png</ListIcon>
+  <BigListIcon>icon96.png</BigListIcon>
+
   <cpname itemtype="string"/>  
   <cplogo itemtype="string"/>  
   <cpauthjs itemtype="string"/>  
-  <ThumbIcon itemtype="string"/>  
-  <BigThumbIcon itemtype="string"/>  
-  <ListIcon itemtype="string"/>  
-  <BigListIcon itemtype="string"/>  
   <category itemtype="string"/>  
   <autoUpdate itemtype="boolean">n</autoUpdate>  
   <ver itemtype="string">0.100</ver>  
@@ -23,10 +24,15 @@
   <description itemtype="string"/>  
   <width itemtype="string">960</width>  
   <height itemtype="string">540</height>  
-  <author itemtype="group"> 
-    <name itemtype="string"/>  
-    <email itemtype="string"/>  
-    <link itemtype="string"/>  
-    <organization itemtype="string"/> 
-  </author> 
+
+
+  <widgetname>Sokoban</widgetname>
+  <description>Puzzle game</description>
+
+  <author>
+    <name>Gabriel Valky</name>
+    <email>gabriel@valky.eu</email>
+    <link>http://valky.eu/</link>
+    <organization>Valky.eu</organization>
+  </author>
 </widget>

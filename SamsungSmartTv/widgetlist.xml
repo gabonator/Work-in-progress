@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rsp stat="ok">
+<list>
+<!-- command 'cd widgets/simple && zip -r ../simple.zip * -exclude=*@eaDir*'
+  adding: chicken.gif (deflated 22%)
+  adding: chicken.js (deflated 52%)
+  adding: config.xml (deflated 69%)
+  adding: emulator.js (deflated 72%)
+  adding: index.html (deflated 58%)
+  adding: main.css (deflated 44%)
+  adding: main.js (deflated 70%)
+-->
+   <widget id="simple">
+       <title>simple</title>
+       <compression size="12810" type="zip"/>
+       <description></description>
+       <download>http://192.168.1.2/widgets/simple.zip</download>
+   </widget>
+<!-- command 'cd widgets/test && zip -r ../test.zip * -exclude=*@eaDir*'
+  adding: app/ (stored 0%)
+  adding: app/javascript/ (stored 0%)
+  adding: app/javascript/Main.js (deflated 59%)
+  adding: app/stylesheets/ (stored 0%)
+  adding: app/stylesheets/Main.css (deflated 15%)
+  adding: config.xml (deflated 69%)
+  adding: index.html (deflated 54%)
+-->
+   <widget id="test">
+       <title>test</title>
+       <compression size="2359" type="zip"/>
+       <description></description>
+       <download>http://192.168.1.2/widgets/test.zip</download>
+   </widget>
+</list>
+</rsp>

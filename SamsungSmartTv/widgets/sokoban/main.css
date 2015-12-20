@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #009000;
+}
+
+#welcome {
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    width: 500px;
+    height: 80px;
+
+    background-color: #2020b0;
+    color: #ffff00;
+    font-size: 30px;
+    text-align: center;
+}

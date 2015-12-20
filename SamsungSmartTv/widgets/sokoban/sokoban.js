@@ -1,9 +1,11 @@
 sokoban = 
 {
-  div:null,
+  surface:null,
+  player:null,
   x:0,
   y:0,
 
+  currentLevel:0,
   currentx:0,
   currenty:0,
   targetx:0,
@@ -13,11 +15,11 @@ sokoban =
   onLoad:function()
   {
     var iDiv = document.createElement('div');
-    iDiv.innerHTML = this.build();
     iDiv.style.position = "absolute";
     iDiv.style.left = "-120px";
     iDiv.style.top = "220px";
     document.getElementsByTagName('body')[0].appendChild(iDiv);
+    this.surface = iDiv;
 
     var iDiv = document.createElement('div');
     iDiv.style.position = "absolute";
@@ -25,22 +27,23 @@ sokoban =
     iDiv.style.height = "84px";
     iDiv.style.background = "url(chicken.gif)";
     document.getElementsByTagName('body')[0].appendChild(iDiv);
-    this.div = iDiv;
+    this.player = iDiv;
  
+    this.loadLevel();
     this.updatePosition();
     this.copyPosition();
-
-    document.getElementById("welcome").innerHTML = "Sokoban, build 5"; //navigator.userAgent;
 
     setInterval(function()
     {
       sokoban.convergePosition();
-    }, 1000/30);
-     
+    }, 1000/30);   
   },
 
   move:function(dx, dy)
   {
+    if (this.isTooFar())
+      return;
+
     var newobj = this.getmap(this.x + dx, this.y + dy);
     var advobj = this.getmap(this.x + dx*2, this.y + dy*2);
     if ( (newobj == "*" || newobj == "0") && (advobj == "." || advobj == "O") )
@@ -48,6 +51,12 @@ sokoban =
       this.setBlock(this.x + dx, this.y + dy, newobj == "*" ? "." : "O");
       this.setBlock(this.x + dx*2, this.y + dy*2, advobj == 'O' ? '0' : '*');
       var newobj = this.getmap(this.x + dx, this.y + dy);
+
+      if ( this.hasFinished() )
+      {
+        this.nextLevel();
+        return;
+      }
     }
 
     if ( newobj != "." && newobj != "O" && newobj != "S" )
@@ -59,6 +68,32 @@ sokoban =
   },
 
   // private
+  isTooFar:function()
+  {
+    return Math.abs(this.currentx - this.targetx) > 50 ||
+      Math.abs(this.currenty - this.targety) > 50;
+  },
+
+  nextLevel:function()
+  {
+    this.currentLevel++;
+    this.loadLevel();
+    this.updatePosition();
+    this.copyPosition();
+  },
+
+  loadLevel:function()
+  {
+    document.getElementById("welcome").innerHTML = "Sokoban, level " + (this.currentLevel+1); //navigator.userAgent;
+    this.level = levels[this.currentLevel];
+    this.surface.innerHTML = this.build();
+  },
+
+  hasFinished:function()
+  {
+    return this.level.join(",").indexOf("*") == -1;
+  },
+
   copyPosition:function()
   {
     this.currentx = this.targetx;
@@ -69,8 +104,8 @@ sokoban =
   {
     this.currentx = this.currentx * 0.6 + this.targetx * 0.4;
     this.currenty = this.currenty * 0.6 + this.targety * 0.4;
-    this.div.style.left = this.currentx.toFixed(1) + "px";
-    this.div.style.top = this.currenty.toFixed(1) + "px";
+    this.player.style.left = this.currentx.toFixed(1) + "px";
+    this.player.style.top = this.currenty.toFixed(1) + "px";
   },
 
   setBlock:function(x, y, t)
@@ -115,7 +150,7 @@ sokoban =
 
 
     var z = ((15-x)+y*16)*10 + 9;
-    this.div.style.zIndex = z;
+    this.player.style.zIndex = z;
   },
 
   level: levels[0],

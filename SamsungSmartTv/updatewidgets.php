@@ -22,7 +22,8 @@ foreach (scandir($widgetPath) as $name)
 
   if ( is_dir($widgetPath."/".$name) )
   {
-    $arch = $name."_".rand(1000, 9999).".zip";
+    $apid = $name."_".rand(1000, 9999);
+    $arch = $apid.".zip";
     $cmd = 'cd '.$widgetPath.'/'.$name.' && zip -r ../'.$arch.' * --exclude=*@eaDir*';
     $report = shell_exec($cmd);
     $cmd = str_replace("--", "-", $cmd);
@@ -36,7 +37,7 @@ foreach (scandir($widgetPath) as $name)
     continue;
   }
 
-  $q.= '   <widget id="'.$name.'">'.$crlf;
+  $q.= '   <widget id="'.$apid.'">'.$crlf;
   $q.= '       <title>'.$name.'</title>'.$crlf;
   $q.= '       <compression size="'.filesize($widgetPath."/".$arch).'" type="zip"/>'.$crlf;
   $q.= '       <description></description>'.$crlf;

@@ -8,40 +8,39 @@ $q = '<?xml version="1.0" encoding="UTF-8"?>'.$crlf;
 $q.= '<rsp stat="ok">'.$crlf;
 $q.= '<list>'.$crlf;
 
-foreach (scandir($widgetPath) as $file)
+$cmd = "rm ".$widgetPath."/*.zip";
+$report = shell_exec($cmd);
+$q .= "<!-- command '".$cmd."' ".$report."-->\n";
+
+foreach (scandir($widgetPath) as $name)
 {
-  if ( substr($file, 0, 1) == "@" ) // synology
+  if ( substr($name, 0, 1) == "@" ) // synology
     continue; 
 
-  if ( $file == "." || $file == ".." )
+  if ( $name== "." || $name == ".." )
     continue;
 
-  if ( is_dir($widgetPath."/".$file) )
+  if ( is_dir($widgetPath."/".$name) )
   {
-    $cmd = 'cd '.$widgetPath.'/'.$file.' && zip -r ../'.$file.'.zip * --exclude=*@eaDir*';
+    $arch = $name."_".rand(1000, 9999).".zip";
+    $cmd = 'cd '.$widgetPath.'/'.$name.' && zip -r ../'.$arch.' * --exclude=*@eaDir*';
     $report = shell_exec($cmd);
     $cmd = str_replace("--", "-", $cmd);
     $q .= "<!-- command '".$cmd."'\n".$report."-->\n";
-    $file .= ".zip";
   } else
     continue;
 
-  if ( substr($file, -4) != ".zip" ) 
-    continue;
-
-  if ( !file_exists($widgetPath."/".$file) )
+  if ( !file_exists($widgetPath."/".$arch) )
   {
-    $q.= '  <!-- file "'.$file.'" not found! -->'.$crlf;
+    $q.= '  <!-- file "'.$arch.'" not found! -->'.$crlf;
     continue;
   }
 
-  $name = substr($file, 0, -4);
-
   $q.= '   <widget id="'.$name.'">'.$crlf;
   $q.= '       <title>'.$name.'</title>'.$crlf;
-  $q.= '       <compression size="'.filesize($widgetPath."/".$file).'" type="zip"/>'.$crlf;
+  $q.= '       <compression size="'.filesize($widgetPath."/".$arch).'" type="zip"/>'.$crlf;
   $q.= '       <description></description>'.$crlf;
-  $q.= '       <download>http://'.$_SERVER['HTTP_HOST'].'/'.$widgetPath.'/'.$file.'</download>'.$crlf;
+  $q.= '       <download>http://'.$_SERVER['HTTP_HOST'].'/'.$widgetPath.'/'.$arch.'</download>'.$crlf;
   $q.= '   </widget>'.$crlf;
 }
 

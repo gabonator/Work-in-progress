@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rsp stat="ok">
 <list>
-<!-- command 'cd widgets/simple && zip -r ../simple.zip * -exclude=*@eaDir*'
+<!-- command 'rm widgets/*.zip' -->
+<!-- command 'cd widgets/simple && zip -r ../simple_5497.zip * -exclude=*@eaDir*'
   adding: chicken.gif (deflated 22%)
   adding: chicken.js (deflated 52%)
   adding: config.xml (deflated 69%)
@@ -14,9 +15,31 @@
        <title>simple</title>
        <compression size="12810" type="zip"/>
        <description></description>
-       <download>http://192.168.1.2/widgets/simple.zip</download>
+       <download>http://192.168.1.2/widgets/simple_5497.zip</download>
    </widget>
-<!-- command 'cd widgets/test && zip -r ../test.zip * -exclude=*@eaDir*'
+<!-- command 'cd widgets/sokoban && zip -r ../sokoban_8834.zip * -exclude=*@eaDir*'
+  adding: agg (deflated 12%)
+  adding: block.gif (deflated 18%)
+  adding: block1.gif (deflated 18%)
+  adding: chicken.gif (deflated 22%)
+  adding: config.xml (deflated 69%)
+  adding: dest.gif (deflated 19%)
+  adding: emulator.js (deflated 72%)
+  adding: free.gif (deflated 23%)
+  adding: index.html (deflated 60%)
+  adding: levels.js (deflated 82%)
+  adding: main.css (deflated 44%)
+  adding: main.js (deflated 58%)
+  adding: sokoban.js (deflated 72%)
+  adding: wall.gif (deflated 18%)
+-->
+   <widget id="sokoban">
+       <title>sokoban</title>
+       <compression size="22239" type="zip"/>
+       <description></description>
+       <download>http://192.168.1.2/widgets/sokoban_8834.zip</download>
+   </widget>
+<!-- command 'cd widgets/test && zip -r ../test_4707.zip * -exclude=*@eaDir*'
   adding: app/ (stored 0%)
   adding: app/javascript/ (stored 0%)
   adding: app/javascript/Main.js (deflated 59%)
@@ -29,7 +52,7 @@
        <title>test</title>
        <compression size="2359" type="zip"/>
        <description></description>
-       <download>http://192.168.1.2/widgets/test.zip</download>
+       <download>http://192.168.1.2/widgets/test_4707.zip</download>
    </widget>
 </list>
 </rsp>

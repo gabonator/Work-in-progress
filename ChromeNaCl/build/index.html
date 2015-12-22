@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>Graphics 2D</title>
+  <script>
+    window.onload = function()
+    {
+      var moduleEl = document.createElement('embed');
+      moduleEl.setAttribute('name', 'nacl_module');
+      moduleEl.setAttribute('id', 'nacl_module');
+      moduleEl.setAttribute('width', "500");
+      moduleEl.setAttribute('height', "500");
+      moduleEl.setAttribute('path', "");
+      moduleEl.setAttribute('src', "graphics_2d.nmf");
+      moduleEl.setAttribute('type', 'application/x-pnacl');
+      var listenerDiv = document.getElementById('listener');
+      listenerDiv.appendChild(moduleEl);
+      moduleEl.offsetTop;
+    }
+  </script>
+</head>
+<body>
+  <h1>Graphics 2D</h1>
+  <p>The Graphics2D example demonstrates a simple flame effect.</p>
+  <p>Click and hold to add a flame.</p>
+  <div id="listener"></div>
+</body>
+</html>

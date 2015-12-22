@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>Cerviky v browseri</title>
+  <script>
+    window.onload = function()
+    {
+      var moduleEl = document.createElement('embed');
+      moduleEl.setAttribute('name', 'nacl_module');
+      moduleEl.setAttribute('id', 'nacl_module');
+      moduleEl.setAttribute('width', "1000");
+      moduleEl.setAttribute('height', "600");
+      moduleEl.setAttribute('path', "");
+      moduleEl.setAttribute('src', "cerviky.nmf");
+      moduleEl.setAttribute('type', 'application/x-pnacl');
+      var listenerDiv = document.getElementById('listener');
+      listenerDiv.appendChild(moduleEl);
+      moduleEl.offsetTop;
+    }
+  </script>
+</head>
+<body>
+  <h1>Cerviky Native Client / Pepper Plugin API</h1>
+  <div id="listener"></div>
+</body>
+</html>

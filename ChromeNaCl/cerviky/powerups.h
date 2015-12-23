@@ -99,6 +99,8 @@ public:
 		r1.top += center.y;
 		r1.bottom += center.y;
 
+    GfxPostDraw(r1, RGB(255, 255, 0));
+
 //TODO:
 //		FillRect(hdc, &r1, brush);
 //		DrawText(hdc, GetName(eType), -1, 

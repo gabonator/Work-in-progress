@@ -1,3 +1,4 @@
+#pragma once
 
 void GfxPutPixel(int x, int y, COLORREF c)
 {
@@ -39,3 +40,5 @@ void GfxClear(COLORREF c)
 	for (int i=0; i<g_dev.display.Width()*g_dev.display.Height(); i++, pBuf++)
 		*pBuf = c;
 }
+
+void GfxPostDraw(RECT r, COLORREF clr);

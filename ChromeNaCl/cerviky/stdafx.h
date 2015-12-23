@@ -15,7 +15,7 @@ typedef void* LPVOID;
 
 const int VK_LEFT = 37;
 const int VK_RIGHT = 39;
-const int VK_UP = 28;
+const int VK_UP = 38;
 const int VK_F1 = 49;
 const int VK_F2 = 50;
 const int VK_F3 = 51;

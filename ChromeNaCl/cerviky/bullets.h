@@ -1,3 +1,5 @@
+#include "gfx.h"
+
 class CBullets
 {
 	class CBullet
@@ -147,6 +149,7 @@ public:
 			rc.right = (int)pBullet->m_fX + 2;
 			rc.bottom = (int)pBullet->m_fY + 2;
 
+      GfxPostDraw(rc, RGB(255, 0, 0));
 //			FillRect(hdc, &rc, brush);
 		}
 	}

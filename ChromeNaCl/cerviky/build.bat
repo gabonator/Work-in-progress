@@ -3,6 +3,10 @@ setlocal enabledelayedexpansion
 
 set sdk=C:/Programs/Devel/NaCl/nacl_sdk/pepper_46
 set toolchain=%sdk%/toolchain/win_pnacl/bin
+
+rem set sdk=C:/Programs/Devel/NaCl/pepper_25
+rem set toolchain=%sdk%/toolchain/win_x86_pnacl/host_x86_32/bin
+
 set inc1=%sdk%/include/pnacl 
 set inc2=%sdk%/include
 set lib=%sdk%/lib/pnacl/Release

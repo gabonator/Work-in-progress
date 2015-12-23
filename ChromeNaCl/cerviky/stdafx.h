@@ -12,15 +12,15 @@ typedef DWORD COLORREF;
 typedef void* LPVOID;
 //#define NULL 0
 
-const int VK_LEFT = 1;
-const int VK_RIGHT = 2;
-const int VK_UP = 3;
-const int VK_F1 = 4;
-const int VK_F2 = 5;
-const int VK_F3 = 6;
-const int VK_F4 = 7;
-const int VK_F5 = 8;
-const int VK_SPACE = 9;
+const int VK_LEFT = 37;
+const int VK_RIGHT = 39;
+const int VK_UP = 28;
+const int VK_F1 = 49;
+const int VK_F2 = 50;
+const int VK_F3 = 51;
+const int VK_F4 = 52;
+const int VK_F5 = 53;
+const int VK_SPACE = 32;
 
 #define RGB(r, g, b) ((r)|((g)<<8)|((b)<<16))
 #define GetRValue(x) ((x)&0xff)

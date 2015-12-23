@@ -14,28 +14,32 @@ CDevice g_dev;
 float CCerv::g_fSpeedMultiply = 0.6f;
 CGame game;
 
-void gameProc(uint32_t* data, int width, int height)
+void mainInit(int nWidth, int nHeight)
 {
-  static bool bStarted = false;
-  if (!bStarted)
-  {
-    bStarted = true;
-    g_dev.display.SetDisplay(width, height);
-    game.Init();
-  }
-  game.Do();
+  g_dev.display.SetDisplay(nWidth, nHeight);
+  game.Init();
+}
 
+void mainProc(uint32_t *pPixels, int nWidth, int nHeight)
+{
+  game.Do();
+  
+  // blit
 	DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
-  int tx = min(width, g_dev.display.Width());
-  int ty = min(height, g_dev.display.Height());
+  int tx = min(nWidth, g_dev.display.Width());
+  int ty = min(nHeight, g_dev.display.Height());
   int isrc = 0, idst = 0;
+
   for (int y=0; y<ty; y++)
   {
     for (int x=0; x<tx; x++, isrc++, idst++)
-      data[idst] = pBuf[isrc] | 0xff000000; 
-    idst += width - tx;
+      pPixels[idst] = pBuf[isrc] | 0xff000000; 
+    idst += nWidth - tx;
     isrc += g_dev.display.Width() - tx;
   }
-
 }
 
+void mainKey(int nCode, int nState)
+{
+  nState ? g_dev.OnKeyDown(nCode) : g_dev.OnKeyUp(nCode);
+}

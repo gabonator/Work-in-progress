@@ -5,6 +5,7 @@
 #include <math.h>
 #include <vector>
 #include <time.h>
+#include <cassert>
 
 typedef uint32_t DWORD;
 typedef int32_t LONG;
@@ -43,7 +44,7 @@ template<class T> const T abs(T a)
 }
 
 #define COUNT(a) (sizeof(a)/sizeof(a[0]))
-#define _ASSERT(x) 
+#define _ASSERT assert
 
 
 template <class T>
@@ -92,7 +93,7 @@ public:
 
 #define GetTickCount() (clock()/64/16)
 #define _T
-
+#define ZeroMemory(p, len) std::memset(p, 0, len)
 
 struct RECT { int left; int top; int right; int bottom; };
 struct POINT { int x; int y; };

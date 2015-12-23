@@ -46,3 +46,4 @@ del %dest%\*.bc
 del %dest%\%program%_unstripped.pexe
 
 copy index.html %dest%\ > nul
+copy screenshot.jpg %dest%\ > nul

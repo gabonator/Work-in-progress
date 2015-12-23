@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <cmath>
 
 #include "ppapi/c/ppb_image_data.h"
 #include "ppapi/cpp/graphics_2d.h"
@@ -12,6 +13,7 @@
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/point.h"
+#include "ppapi/cpp/audio.h"
 #include "ppapi/utility/completion_callback_factory.h"
 
 #ifdef WIN32
@@ -20,16 +22,119 @@
 #pragma warning(disable : 4355)
 #endif
 
+void mainPlaySound(float freq, float vol);
 void mainInit(int nWidth, int nHeight);
 void mainProc(uint32_t *pPixels, int nWidth, int nHeight);
 void mainKey(int nCode, int nState);
 
 #include "glue.h"
 
-class Graphics2DInstance : public pp::Instance {
+class SoundGeneratorInstance : public pp::Instance
+{
+public:
+  static SoundGeneratorInstance* pThis;
+
+private:
+  pp::Audio audio;
+
+  float frequency;
+  float volume;
+  float theta;
+
+  uint32_t kSampleFrameCount;
+  uint32_t kChannels;
+  uint32_t sample_frame_count;
+
+
+public:
+  explicit SoundGeneratorInstance(PP_Instance instance) :
+    pp::Instance(instance)
+  {
+    pThis = this;
+
+    kSampleFrameCount = 4096u;
+    kChannels = 2;
+
+    frequency = 1000.0f;
+    volume = 0.0f;
+    theta = 0.0f;
+  }
+
+  virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]) 
+  {
+    sample_frame_count = pp::AudioConfig::RecommendSampleFrameCount(
+        this, PP_AUDIOSAMPLERATE_44100, kSampleFrameCount);
+    audio = pp::Audio(
+        this,
+        pp::AudioConfig(this, PP_AUDIOSAMPLERATE_44100, sample_frame_count),
+        _SineWaveCallback,
+        this);
+
+    audio.StartPlayback();
+    return true;
+  }
+
+  static void _SineWaveCallback(void* samples, uint32_t buffer_size, void* data) 
+  {
+    SoundGeneratorInstance* instance = reinterpret_cast<SoundGeneratorInstance*>(data);
+    instance->SineWaveCallback(samples, buffer_size, data);
+  }
+
+  void SineWaveCallback(void* samples, uint32_t buffer_size, void* data) 
+  {
+    const float kPi = 3.141592653589;
+    const float kTwoPi = 2.0 * kPi;
+
+    const float delta = kTwoPi * frequency / PP_AUDIOSAMPLERATE_44100;
+    const int16_t max_int16 = std::numeric_limits<int16_t>::max();
+
+    int16_t* buff = reinterpret_cast<int16_t*>(samples);
+
+    // Make sure we can't write outside the buffer.
+    assert(buffer_size >=
+           (sizeof(*buff) * kChannels * sample_frame_count));
+
+    for (size_t sample_i = 0; sample_i < sample_frame_count;
+         ++sample_i, theta += delta) 
+    {
+      // Keep theta_ from going beyond 2*Pi.
+      if (theta > kTwoPi)
+        theta -= kTwoPi;
+
+      float sin_value(std::sin(theta));
+      int16_t scaled_value = static_cast<int16_t>(sin_value * volume * max_int16);
+
+      for (size_t channel = 0; channel < kChannels; ++channel)
+        *buff++ = scaled_value;
+    }
+  }
+
+  void Play(float freq, float vol)
+  {
+    float prevVolume = volume;
+    frequency = freq; 
+    volume = vol;
+
+    if ( prevVolume == 0 && volume > 0 )
+      audio.StartPlayback();
+    if ( prevVolume > 0 && volume == 0 )
+      audio.StopPlayback();
+  }
+};
+
+SoundGeneratorInstance* SoundGeneratorInstance::pThis = NULL;
+
+void mainPlaySound(float freq, float vol)
+{
+  _ASSERT(SoundGeneratorInstance::pThis);
+  SoundGeneratorInstance::pThis->Play(freq, vol);
+}
+
+class Graphics2DInstance : public SoundGeneratorInstance
+{
  public:
   explicit Graphics2DInstance(PP_Instance instance)
-      : pp::Instance(instance),
+      : SoundGeneratorInstance(instance),
         callback_factory_(this),
         buffer_(NULL),
         device_scale_(1.0f) 
@@ -43,6 +148,8 @@ class Graphics2DInstance : public pp::Instance {
 
   virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]) 
   {
+    SoundGeneratorInstance::Init(argc, argn, argv);
+
     RequestInputEvents(PP_INPUTEVENT_CLASS_TOUCH);
     RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
 
@@ -192,3 +299,4 @@ namespace pp {
     return new Graphics2DModule(); 
   }
 }  // namespace pp
+

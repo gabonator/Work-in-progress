@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>win32app</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>win32app</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="device.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\gfx.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\game.h">
+      <Filter>source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="main.ico">
+      <Filter>win32app</Filter>
+    </None>
+    <None Include="small.ico">
+      <Filter>win32app</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{0a0d1a8a-a057-4e5a-9f57-c67cfdb4cf93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win32app">
+      <UniqueIdentifier>{95424356-de3e-4f1f-b6d9-26f14151808d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="main.rc">
+      <Filter>win32app</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

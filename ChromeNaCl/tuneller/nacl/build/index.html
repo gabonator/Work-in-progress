@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>Tuneller test</title>
+  <script>
+    window.onload = function()
+    {
+      var moduleEl = document.createElement('embed');
+      moduleEl.setAttribute('name', 'nacl_module');
+      moduleEl.setAttribute('id', 'nacl_module');
+      moduleEl.setAttribute('width', "500");
+      moduleEl.setAttribute('height', "500");
+      moduleEl.setAttribute('path', "");
+      moduleEl.setAttribute('src', "tuneller.nmf");
+      moduleEl.setAttribute('type', 'application/x-pnacl');
+      var listenerDiv = document.getElementById('listener');
+      listenerDiv.appendChild(moduleEl);
+      moduleEl.offsetTop;
+      moduleEl.focus();
+    }
+  </script>
+</head>
+<body>
+  <h1>Tuneller Native Client / Pepper Plugin API</h1>
+  <div id="listener"></div>
+</body>
+</html>

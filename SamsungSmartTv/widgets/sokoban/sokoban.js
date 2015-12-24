@@ -28,17 +28,19 @@ sokoban =
     iDiv.style.width = "83px";
     iDiv.style.height = "84px";
     iDiv.style.background = "url(chicken.gif)";
+    iDiv.style.display = "none";
     document.getElementsByTagName('body')[0].appendChild(iDiv);
     this.player = iDiv;
  
     this.loadLevel();
     this.updatePosition();
     this.copyPosition();
+    this.getTimestamp();
 
     setInterval(function()
     {
       sokoban.convergePosition();
-    }, 1000/30);   
+    }, 1000/30);
   },
 
   move:function(dx, dy)
@@ -50,20 +52,22 @@ sokoban =
       return;
 
     var logmove = {};
-    if ( (newobj == "*" || newobj == "0") && (advobj == "." || advobj == "O") )
+    if ( (newobj == "*" || newobj == "0") && (advobj == "." || advobj == "O" || advobj == "S") )
     {
-      logmove = {player:{x:this.x, y:this.y}, moves:[{x:this.x+dx, y:this.y+dy, t:newobj}, {x:this.x+dx*2, y:this.y+dy*2, t:advobj}]};
+      logmove = {action:(dx+2) + (dy+1)*3, ts:this.getTimestamp(), player:{x:this.x, y:this.y}, moves:[{x:this.x+dx, y:this.y+dy, t:newobj}, {x:this.x+dx*2, y:this.y+dy*2, t:advobj}]};
       this.setBlock(this.x + dx, this.y + dy, newobj == "*" ? "." : "O");
       this.setBlock(this.x + dx*2, this.y + dy*2, advobj == 'O' ? '0' : '*');
       var newobj = this.getmap(this.x + dx, this.y + dy);
 
       if ( this.hasFinished() )
       {
+        this.history.push(logmove);
+        this.report();
         this.nextLevel(+1);
         return;
       }
     } else
-      logmove = {player:{x:this.x, y:this.y}, moves:[]};
+      logmove = {action:(dx+2) + (dy+1)*3, ts:this.getTimestamp(), player:{x:this.x, y:this.y}, moves:[]};
 
     if ( newobj != "." && newobj != "O" && newobj != "S" )
       return;
@@ -86,6 +90,29 @@ sokoban =
  
     for (var i in logmove.moves)
       this.setBlock(logmove.moves[i].x, logmove.moves[i].y, logmove.moves[i].t);
+  },
+
+  getTimestamp:function()
+  {
+    if ( typeof(this.basetime) == "undefined" )
+      this.basetime = (new Date()).getTime();
+
+    return (new Date()).getTime() - this.basetime;
+  },
+
+  report:function()
+  {
+    var movelog = {file:"sokoban", level:this.currentLevel+1, nmoves:this.history.length, moves:[]};
+    for ( var i in this.history )
+    {
+      movelog.moves.push(this.history[i].action);
+      movelog.moves.push(this.history[i].ts);
+    }
+
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", "http://api.valky.eu/log/");
+    xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xmlHttp.send(JSON.stringify(movelog));
   },
 
   go:function(dir)
@@ -115,10 +142,12 @@ sokoban =
 
   loadLevel:function()
   {
+    this.player.style.display = "none";
     document.getElementById("welcome").innerHTML = "Sokoban, level " + (this.currentLevel+1); //navigator.userAgent;
     this.level = levels[this.currentLevel];
     this.surface.innerHTML = this.build();
     this.history = [];
+    this.player.style.display = "";
   },
 
   hasFinished:function()

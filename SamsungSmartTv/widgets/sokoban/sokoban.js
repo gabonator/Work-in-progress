@@ -36,6 +36,7 @@ sokoban =
     this.updatePosition();
     this.copyPosition();
     this.getTimestamp();
+    this.report();
 
     setInterval(function()
     {
@@ -110,7 +111,7 @@ sokoban =
     }
 
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", "http://api.valky.eu/log/");
+    xmlHttp.open("POST", "api.valky.eu/log/");
     xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xmlHttp.send(JSON.stringify(movelog));
   },

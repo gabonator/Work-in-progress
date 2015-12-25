@@ -103,17 +103,28 @@ sokoban =
 
   report:function()
   {
-    var movelog = {file:"sokoban", level:this.currentLevel+1, nmoves:this.history.length, moves:[]};
-    for ( var i in this.history )
+    var report = {
+      file:"sokoban", 
+      level:this.currentLevel+1, 
+      os:(navigator.platform ? navigator.platform: "") + "/" + (navigator.oscpu ? navigator.oscpu 	: ""), 
+      screen:screen.width+"x"+screen.height
+    };
+
+    if ( this.history.length > 0 )
     {
-      movelog.moves.push(this.history[i].action);
-      movelog.moves.push(this.history[i].ts);
+      report.nmoves = this.history.length;
+      report.moves = [];
+      for ( var i in this.history )
+      {
+        movelog.moves.push(this.history[i].action);
+        movelog.moves.push(this.history[i].ts);
+      }
     }
 
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", window.location.protocol + "//api.valky.eu/log/");
+    xmlHttp.open("POST", (window.location.protocol == "" ? "http:" : window.location.protocol) + "//api.valky.eu/log/");
     xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xmlHttp.send(JSON.stringify(movelog));
+    xmlHttp.send(JSON.stringify(report));
   },
 
   go:function(dir)

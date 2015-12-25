@@ -2,7 +2,18 @@
 <rsp stat="ok">
 <list>
 <!-- command 'rm widgets/*.zip' -->
-<!-- command 'cd widgets/simple && zip -r ../simple_5497.zip * -exclude=*@eaDir*'
+<!-- command 'cd widgets/extern && zip -r ../extern_9829.zip * -exclude=*@eaDir*'
+  adding: config.xml (deflated 69%)
+  adding: index.html (deflated 37%)
+  adding: load.html (deflated 58%)
+-->
+   <widget id="extern_9829">
+       <title>extern</title>
+       <compression size="2176" type="zip"/>
+       <description></description>
+       <download>http://192.168.1.2/widgets/extern_9829.zip</download>
+   </widget>
+<!-- command 'cd widgets/simple && zip -r ../simple_9051.zip * -exclude=*@eaDir*'
   adding: chicken.gif (deflated 22%)
   adding: chicken.js (deflated 52%)
   adding: config.xml (deflated 69%)
@@ -11,35 +22,37 @@
   adding: main.css (deflated 44%)
   adding: main.js (deflated 70%)
 -->
-   <widget id="simple">
+   <widget id="simple_9051">
        <title>simple</title>
        <compression size="12810" type="zip"/>
        <description></description>
-       <download>http://192.168.1.2/widgets/simple_5497.zip</download>
+       <download>http://192.168.1.2/widgets/simple_9051.zip</download>
    </widget>
-<!-- command 'cd widgets/sokoban && zip -r ../sokoban_8834.zip * -exclude=*@eaDir*'
-  adding: agg (deflated 12%)
+<!-- command 'cd widgets/sokoban && zip -r ../sokoban_2954.zip * -exclude=*@eaDir*'
   adding: block.gif (deflated 18%)
   adding: block1.gif (deflated 18%)
   adding: chicken.gif (deflated 22%)
-  adding: config.xml (deflated 69%)
+  adding: config.xml (deflated 64%)
   adding: dest.gif (deflated 19%)
   adding: emulator.js (deflated 72%)
   adding: free.gif (deflated 23%)
+  adding: icon80.png (stored 0%)
+  adding: icon96.png (stored 0%)
   adding: index.html (deflated 60%)
+  adding: index.php (deflated 55%)
   adding: levels.js (deflated 82%)
   adding: main.css (deflated 44%)
-  adding: main.js (deflated 58%)
+  adding: main.js (deflated 62%)
   adding: sokoban.js (deflated 72%)
   adding: wall.gif (deflated 18%)
 -->
-   <widget id="sokoban">
+   <widget id="sokoban_2954">
        <title>sokoban</title>
-       <compression size="22239" type="zip"/>
+       <compression size="61885" type="zip"/>
        <description></description>
-       <download>http://192.168.1.2/widgets/sokoban_8834.zip</download>
+       <download>http://192.168.1.2/widgets/sokoban_2954.zip</download>
    </widget>
-<!-- command 'cd widgets/test && zip -r ../test_4707.zip * -exclude=*@eaDir*'
+<!-- command 'cd widgets/test && zip -r ../test_9597.zip * -exclude=*@eaDir*'
   adding: app/ (stored 0%)
   adding: app/javascript/ (stored 0%)
   adding: app/javascript/Main.js (deflated 59%)
@@ -48,11 +61,11 @@
   adding: config.xml (deflated 69%)
   adding: index.html (deflated 54%)
 -->
-   <widget id="test">
+   <widget id="test_9597">
        <title>test</title>
        <compression size="2359" type="zip"/>
        <description></description>
-       <download>http://192.168.1.2/widgets/test_4707.zip</download>
+       <download>http://192.168.1.2/widgets/test_9597.zip</download>
    </widget>
 </list>
 </rsp>

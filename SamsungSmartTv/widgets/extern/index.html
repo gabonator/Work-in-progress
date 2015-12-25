@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>external app</title>
+
+		<script type="text/javascript" language="javascript" src="$MANAGER_WIDGET/Common/API/Widget.js"></script>
+
+    <style>
+      body {
+          margin: 0;
+          padding: 0;
+          background-color: transparent;
+      }
+    </style>
+	</head>
+
+	<body onLoad="(new Common.API.Widget()).sendReadyEvent()">
+    <iframe width="960" height="540" frameBorder="0" src="http://192.168.1.2/widgets/extern/load.html"></iframe>
+ 	</body>
+</html>

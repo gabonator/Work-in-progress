@@ -1,0 +1,64 @@
+<html>
+<head>
+<!--<meta http-equiv="refresh" content="20">-->
+
+<script type="text/javascript" language="javascript" src="$MANAGER_WIDGET/Common/API/Widget.js"></script>
+<script type="text/javascript" language="javascript" src="$MANAGER_WIDGET/Common/API/TVKeyValue.js"></script>
+
+<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER"></object>
+<object id="pluginAudio" border=0 classid="clsid:SAMSUNG-INFOLINK-AUDIO"></object>
+<object id="pluginTVMW" border=0 classid="clsid:SAMSUNG-INFOLINK-TVMW"></object>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  color: #ffffff;
+}
+</style>
+
+</head>
+<body>
+<a href='javascript:void(0);' id='anchor' onkeydown='document.onkeydown()'></a>
+<div id="test" style="width:300px; height:50px; z-index:99999; font-size:30px;">empty</div>
+
+<video width="320" height="240" autoplay style="background:#d0d0d0;">
+  <source src="http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<script language="javascript">
+
+function mlog(x)
+{
+  var el = document.getElementById("test");
+  el.innerHTML = x;
+}
+
+var tvKey = new Common.API.TVKeyValue();
+    
+var audio = document.getElementById("pluginAudio");
+audio.SetVolume(3);
+
+document.onkeydown = function() { if ( event.keyCode == tvKey.KEY_ENTER ) document.location.reload(); }
+window.onload = function() { document.getElementById("anchor").focus(); }
+
+var plugin = document.getElementById("pluginPlayer");
+
+plugin.SetDisplayArea(0, 0, 960, 540);
+
+var url = "http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4";
+
+plugin.OnCurrentPlayTime = function(x) { mlog(x/1000); }; //'log("Player.setCurTime")';
+plugin.OnStreamInfoReady = function() { mlog("Info Ready"); }; //'log("Player.setTotalTime")';
+plugin.OnBufferingStart = function() { mlog("buffering start"); }; //'log("Player.onBufferingStart")';
+plugin.OnBufferingProgress = function(x) { mlog("buffering "+x); }; //'log("Player.onBufferingProgress")';
+plugin.OnBufferingComplete = function() { mlog("buffering complete"); }; //'log("Player.onBufferingComplete")';
+
+plugin.SetInitialBuffer(128*1024);
+plugin.SetPendingBuffer(128*1024); 
+plugin.Play(url);
+
+</script>
+</body>
+</html>

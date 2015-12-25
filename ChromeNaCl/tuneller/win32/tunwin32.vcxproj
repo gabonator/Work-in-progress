@@ -78,6 +78,9 @@
   <ItemGroup>
     <ClInclude Include="..\source\game.h" />
     <ClInclude Include="..\source\gfx.h" />
+    <ClInclude Include="..\source\net.h" />
+    <ClInclude Include="..\source\noise.h" />
+    <ClInclude Include="easywsclient.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="device.h" />
     <ClInclude Include="Resource.h" />
@@ -85,6 +88,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="easywsclient.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

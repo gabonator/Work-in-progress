@@ -23,9 +23,80 @@ BOOL g_running = FALSE;
 HANDLE g_hDrawThread = NULL;
 HANDLE g_hAppThread = NULL;
 
+// network {{{
+#ifdef _WIN32
+#pragma comment( lib, "ws2_32" )
+#include <WinSock2.h>
+#endif
+#include "easywsclient.h"
+
+using easywsclient::WebSocket;
+WebSocket::pointer ws;
+#include "../source/net.h"
+
+class CNetWs : public CNet
+{
+public:
+	THandler m_handler;
+	WebSocket::pointer m_ws;
+
+public:
+	CNetWs()
+	{
+		INT rc;
+		WSADATA wsaData;
+
+		rc = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (rc) 
+		{
+			printf("WSAStartup Failed.\n");
+			_ASSERT(0);
+		}
+
+		m_ws = WebSocket::from_url("ws://localhost:1337/foo");
+		_ASSERT(m_ws);
+	}
+
+	~CNetWs()
+	{
+		if ( m_ws )
+			m_ws->close();
+		WSACleanup();
+		delete m_ws;
+	}
+
+	virtual void Do()
+	{
+		if (!m_ws)
+			return;
+
+		m_ws->poll();
+		m_ws->dispatch([&](const std::string & message) 
+		{
+			if ( m_handler)
+				m_handler(message);
+		});
+	}
+
+	virtual void SetReceiveHandler(THandler handler) 
+	{
+		m_handler = handler;
+	}
+
+	virtual void Send(std::string msg)
+	{
+		if (!m_ws)
+			return;
+		m_ws->send(msg);
+	}
+};
+//        ws->send("hello");
+        
+// }}} network
 
 #include "../source/game.h"
 
+CNetWs net;
 CGame game;
 bool bFullscreen = false;
 
@@ -108,10 +179,13 @@ DWORD WINAPI ThreadProcDraw(HANDLE handle)
 
 	ShowWindow( g_hwnd, SW_SHOW );
 	HDC hdc = GetDC( g_hwnd );
+
+	game.SetNetwork(&net);
 	game.Init();
 
 	while (g_running) 
 	{
+		net.Do();
 		game.Do();
 		g_dev.Blit( hdc );
 		Sleep( 10 );

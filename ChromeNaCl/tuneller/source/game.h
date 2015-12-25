@@ -4,6 +4,37 @@
 #include <algorithm>
 #include <vector>
 #include "noise.h"
+#include "net.h"
+
+// BGR for pixel buffer
+#ifdef RGB
+#undef RGB
+#endif
+#define RGB(r, g, b) ((b)|((g)<<8)|((r)<<16)|0xff000000)
+
+class CNetGame
+{
+	CNet* m_pNet;
+
+public:
+	CNetGame()
+	{
+		m_pNet = NULL;
+	}
+
+	void SetNetwork(CNet* pNet)
+	{
+		m_pNet = pNet;
+	}
+
+	void Send(std::string str)
+	{
+		if (!m_pNet)
+			return;
+//		_ASSERT(m_pNet);    
+		m_pNet->Send(str);
+	}
+};
 
 typedef int TTankBitmap[9][9];
 	
@@ -142,7 +173,7 @@ public:
 
 	static COLORREF GetColor(uint8_t pixel)
 	{
-		COLORREF clrPalette[16] = {
+		static const COLORREF clrPalette[16] = {
 			RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xb0), RGB(0x00, 0xb0, 0x00), RGB(0x00, 0xb0, 0xb0),
 		    RGB(0xb0, 0x00, 0x00), RGB(0xb0, 0x40, 0xb0), RGB(0xb0, 0xb0, 0x00), RGB(0xb0, 0xb0, 0xb0),
 		    RGB(0x80, 0x80, 0x80), RGB(0x00, 0x00, 0xff), RGB(0x00, 0xff, 0x00), RGB(0x00, 0xff, 0xff),
@@ -197,6 +228,12 @@ public:
 	{
 		pt.x = (pt.x + m_nWidth) % m_nWidth;
 		pt.y = (pt.y + m_nHeight) % m_nHeight;
+		_ASSERT(pt.x >= 0 && pt.y >= 0);
+	}
+
+	uint8_t* GetPixels()
+	{
+		return m_pMap;
 	}
 };
 
@@ -397,13 +434,16 @@ class CTank
 	};
 
 public:
+	CNetGame* m_pNetGame;
 	CWorld* m_pWorld;
 	POINT m_ptPosition;
 	int m_nDirection;
 
-	void Create(CWorld* pWorld)
+	void Create(CWorld* pWorld, CNetGame* pNetGame)
  	{
 		m_pWorld = pWorld;
+		m_pNetGame = pNetGame;
+
 		m_ptPosition.x = m_pWorld->m_nHeight / 2;
 		m_ptPosition.y = m_pWorld->m_nWidth / 2;
 		m_nDirection = 8;
@@ -556,6 +596,7 @@ public:
 				pt.x += x - 4;
 				pt.y += y - 4;
 				int nPixel = bitmap[y][x];
+				m_pWorld->FixPosition(pt);
 				int nMapPixel = m_pWorld->GetPixel(pt);
 				// (nMapPixel != CWorld::Ground && nMapPixel != CWorld::Track && nMapPixel != CWorld::Dirt )
 				if ( nPixel != 0 && !m_pWorld->CanWalk(nMapPixel) ) 
@@ -593,8 +634,22 @@ public:
 		d = temp;
 	}
 
+	void NetMovement(int nDir)
+	{
+		static int nPrevDir = -1;
+		if (nDir != nPrevDir)
+			nPrevDir = nDir;
+		else
+			return;
+
+		char msg[64];
+		sprintf(msg, "tank({id:%d, x:%d, y:%d, dir:%d}\n", 0, m_ptPosition.x, m_ptPosition.y, nDir);
+		m_pNetGame->Send(msg);
+	}
+
 	void Move(int nDir)
 	{
+		NetMovement(nDir);
 		if ( nDir == 5 )
 		{
 			Draw(true);
@@ -666,19 +721,19 @@ public:
 	}
 };
 
-class CGame 
+class CGame : public CNetGame
 {
 	CWorld m_world;
 	CTank m_tank;
 	std::vector<CBullet> m_arrBullets;
 	std::vector<CParticle> m_arrParticles;
-
+/*
 	CTexture m_texGround;
 	CTexture m_texDirt;
 	CTexture m_texTrack;
 	CTexture m_texStone;
 	CTexture m_texWater;
-
+*/
 	//COLORREF m_palette[256];
 
 	POINT m_ptViewPoint;
@@ -687,12 +742,13 @@ class CGame
 public:
 	void Init()
 	{
+/*
 		m_texGround.Create(0x005080, 0x0030a0);
 		m_texTrack.Create(0x202020, 0x404040);
 		m_texDirt.Create(0x404040, 0x606080);
 		m_texStone.Create(0xb0b0b0, 0xc0c0c0);
 		m_texWater.Create(0xff0000, 0xb00000);
-
+*/
 		m_ptViewPoint.x = 300;
 		m_ptViewPoint.y = 300;
 		m_nPixelScaling = 3;
@@ -706,7 +762,7 @@ public:
 		m_palette[12] = RGB(0xff, 0, 0);
 		m_palette[4] = RGB(0xb0, 0, 0);
 		*/
-		m_tank.Create(&m_world);
+		m_tank.Create(&m_world, this);
 		m_tank.DrawHome();
 		m_tank.Draw(true);
 	}
@@ -750,11 +806,11 @@ public:
 
 		m_tank.Move( m_tank.GetDirectionByDelta(ptVector.x, ptVector.y) );
 //		m_tank.Draw(true);
-
+		m_world.FixPosition(m_tank.m_ptPosition);
 		m_ptViewPoint = m_tank.m_ptPosition;
 
-		m_ptViewPoint.x = (m_ptViewPoint.x + m_world.m_nWidth) % m_world.m_nWidth;
-		m_ptViewPoint.y = (m_ptViewPoint.y + m_world.m_nHeight) % m_world.m_nHeight;
+		//m_ptViewPoint.x = (m_ptViewPoint.x + m_world.m_nWidth) % m_world.m_nWidth;
+		//m_ptViewPoint.y = (m_ptViewPoint.y + m_world.m_nHeight) % m_world.m_nHeight;
 
 		Blit();
 	}
@@ -778,40 +834,49 @@ public:
 		POINT ptBase;
 		ptBase.x = m_ptViewPoint.x - g_dev.display.WindowWidth() / m_nPixelScaling / 2;
 		ptBase.y = m_ptViewPoint.y - g_dev.display.WindowHeight() / m_nPixelScaling / 2;
+		m_world.FixPosition(ptBase);
+
 		long i = 0;
 
-		for (int y = 0; y < g_dev.display.WindowHeight(); y++)
+		uint8_t* pMap = m_world.GetPixels();
+		POINT ptCurrent;
+		int _windowWidth = g_dev.display.WindowWidth();
+		int _windowHeight = g_dev.display.WindowHeight();
+		int _displayWidth = g_dev.display.Width();
+		int _worldWidth = m_world.m_nWidth;
+		int _i = 0;
+
+		for (int y = 0, dy = 0; y < _windowHeight; y++)
 		{
-			i = y * g_dev.display.Width();
+			_i += _displayWidth;
+			i = _i;
 
 			if ( (y % m_nPixelScaling) != 0 )
 			{	
-				for (int x = 0; x < g_dev.display.WindowWidth(); x++, i++)
-					pBuf[i] = pBuf[i - g_dev.display.Width()];
+				for (int x = 0; x < _windowWidth; x++, i++)
+					pBuf[i] = pBuf[i - _displayWidth];
 				continue;
 			}
 
-			for (int x = 0, dx = 0; x < g_dev.display.WindowWidth(); x+=m_nPixelScaling)
-			{
-				POINT ptCurrent, ptSubPixel;
-				ptCurrent.x = ptBase.x + dx++;
-				ptCurrent.y = ptBase.y + y/m_nPixelScaling;
-				int nPixel = m_world.GetPixel(ptCurrent);
+			ptCurrent.x = ptBase.x;
+			ptCurrent.y = ptBase.y + dy++;
+			if (ptBase.y + dy >= m_world.m_nHeight)
+				dy -= m_world.m_nHeight;
 
-				ptSubPixel.x = ptCurrent.x & (CTexture::Width-1);
-				ptSubPixel.y = ptCurrent.y & (CTexture::Height-1);
+			int nOffsetBase = ptCurrent.y * _worldWidth;
+
+			for (int x = 0; x < _windowWidth; x+=m_nPixelScaling, ptCurrent.x++)
+			{
+				if (ptCurrent.x >= _worldWidth)
+					ptCurrent.x = 0;
+
+				int nPixel = pMap[nOffsetBase + ptCurrent.x];
 
 				COLORREF clr = CWorld::GetColor(nPixel); 
-				CWorld::Noise(clr, ptCurrent.x, ptCurrent.y);
 
 				for ( int q = 0; q < m_nPixelScaling; q++ )
-					pBuf[i++] = RGB2BGR(clr);
+					pBuf[i++] = clr;
 			}
 		}
-	}
-
-	uint32_t RGB2BGR(COLORREF c)
-	{
-		return (c&0x00ff00) | ((c&0xff)<<16) | (c>>16);
 	}
 };

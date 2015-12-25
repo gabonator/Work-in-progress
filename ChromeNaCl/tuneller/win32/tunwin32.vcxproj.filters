@@ -7,6 +7,9 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>win32app</Filter>
     </ClCompile>
+    <ClCompile Include="easywsclient.cpp">
+      <Filter>win32app</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="device.h">
@@ -28,6 +31,15 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\source\game.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\noise.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="easywsclient.h">
+      <Filter>win32app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\net.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

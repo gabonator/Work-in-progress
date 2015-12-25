@@ -116,8 +116,8 @@ sokoban =
       report.moves = [];
       for ( var i in this.history )
       {
-        movelog.moves.push(this.history[i].action);
-        movelog.moves.push(this.history[i].ts);
+        report.moves.push(this.history[i].action);
+        report.moves.push(this.history[i].ts);
       }
     }
 

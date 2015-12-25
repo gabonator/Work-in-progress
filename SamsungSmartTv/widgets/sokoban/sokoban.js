@@ -111,7 +111,7 @@ sokoban =
     }
 
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", "api.valky.eu/log/");
+    xmlHttp.open("POST", window.location.protocol + "//api.valky.eu/log/");
     xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xmlHttp.send(JSON.stringify(movelog));
   },

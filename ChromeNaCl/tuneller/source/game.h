@@ -3,6 +3,7 @@
 #include "gfx.h"
 #include <algorithm>
 #include <vector>
+#include "noise.h"
 
 typedef int TTankBitmap[9][9];
 	
@@ -91,36 +92,106 @@ class CWorld
 {
 public:
 	enum {
-		Ground = 0xf0,
-		Dirt = 0xf1,
-		Track = 0xf2,
-		Stone = 0xf4,
-		Water = 0xf5
+//		Ground = 0xf0,
+//		Dirt = 0xf1,
+//		Track = 0xf2,
+//		Stone = 0xf4,
+//		Water = 0xf5
+		SpecialBegin = 0x80,
+		SpecialEnd = 0xB1,
+
+		BaseWater = 0x80,  // 0x80-0x8f
+		BaseGround = 0x90, // 0x90-0x9f
+		BaseStone = 0xA0,  // 0xA0-0xAf
+
+		Ground = 0x98,
+		Dirt = 0xB0,
+		Track = 0xB1
 	};
 
 public:
-	uint8_t m_map[1024][1024];
+	uint8_t* m_pMap;
 	int m_nWidth;
 	int m_nHeight;
 
 	CWorld()
 	{
-		memset(m_map, Ground, sizeof(m_map));
 		m_nWidth = 1024;
 		m_nHeight = 1024;
+		m_pMap = (uint8_t*)malloc(m_nWidth * m_nHeight);
+		memset(m_pMap, Ground, m_nWidth * m_nHeight);
+		CWorldGenerator::Generate(m_pMap, m_nWidth, m_nHeight, BaseWater); // + 0x20
+	}
+
+	~CWorld()
+	{
+		free(m_pMap);
 	}
 
 	void SetPixel(POINT pt, uint8_t pixel)
 	{
 		FixPosition(pt);
-		m_map[pt.y][pt.x] = pixel;
+		m_pMap[pt.y * m_nWidth + pt.x] = pixel;
 	}
 
 	uint8_t GetPixel(POINT pt)
 	{
 		FixPosition(pt);
-		return m_map[pt.y][pt.x];
+		return m_pMap[pt.y * m_nWidth + pt.x];
 	}
+
+	static COLORREF GetColor(uint8_t pixel)
+	{
+		COLORREF clrPalette[16] = {
+			RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xb0), RGB(0x00, 0xb0, 0x00), RGB(0x00, 0xb0, 0xb0),
+		    RGB(0xb0, 0x00, 0x00), RGB(0xb0, 0x40, 0xb0), RGB(0xb0, 0xb0, 0x00), RGB(0xb0, 0xb0, 0xb0),
+		    RGB(0x80, 0x80, 0x80), RGB(0x00, 0x00, 0xff), RGB(0x00, 0xff, 0x00), RGB(0x00, 0xff, 0xff),
+		    RGB(0xff, 0x00, 0x00), RGB(0xff, 0x00, 0xff), RGB(0xff, 0xff, 0x00), RGB(0xff, 0xff, 0xff)};
+
+		if ( pixel < SpecialBegin || pixel > SpecialEnd )
+		{
+			_ASSERT( pixel <= 15 );
+			return clrPalette[pixel];
+		}
+		_ASSERT(pixel - SpecialBegin < 0x32);
+		return CWorldGenerator::GetPalette()[pixel - SpecialBegin];
+	}
+
+	static COLORREF Noise(COLORREF clr, int x, int y)
+	{
+		static bool bFirst = true;
+		static int arrNoise[32*32*4] = {0};
+		if ( bFirst )
+		{
+			bFirst = false;
+			for (int i=0; i<COUNT(arrNoise); i++)
+				arrNoise[i] = rand() % 64;
+		}
+	
+	    int i = ((x&31) + (y&31)*32)*4;
+		_ASSERT( i < COUNT(arrNoise) );
+		//clr &= 0xf0f0f0;
+		clr += (arrNoise[i] << 16);
+		clr += (arrNoise[i+1] << 8);
+		clr += (arrNoise[i+2] << 0);
+		return clr;
+	}
+
+	bool CanWalk(uint8_t p)
+	{
+		return IsGround(p) || IsWater(p) || IsDirt(p) || IsTrack(p);
+	}
+
+	bool CanFly(uint8_t p)
+	{
+		return IsGround(p) || IsDirt(p) || IsTrack(p);
+	}
+
+	bool IsGround(uint8_t p) { return (p&0xf0) == BaseGround; }
+	bool IsWater(uint8_t p) { return (p&0xf0) == BaseWater; }
+	bool IsStone(uint8_t p) { return (p&0xf0) == BaseStone; }
+	bool IsDirt(uint8_t p) { return p == Dirt; }
+	bool IsTrack(uint8_t p) { return p == Track; }
 
 	void FixPosition(POINT& pt)
 	{
@@ -158,8 +229,14 @@ public:
 			return false;
 
 		POINT ptTest = m_ptPosition;
-		if ( m_pWorld->GetPixel( ptTest ) != CWorld::Track )
- 			return true;
+		int nPixel = m_pWorld->GetPixel( ptTest );
+		if ( nPixel != CWorld::Track )
+		{
+			// when digging, explode in advance, not under tank
+			if ( m_nLive == 1 && nPixel == CWorld::Dirt )
+				return false;
+			return true;
+		}
 
 		if ( m_nLive == 1 )
 			return false;
@@ -284,7 +361,7 @@ public:
 	{
 		int nPixel = m_pWorld->GetPixel(GetPosition());
 
-		if ( nPixel == CWorld::Dirt || nPixel == CWorld::Track || nPixel == CWorld::Ground )
+		if ( m_pWorld->CanFly(nPixel) )
 			return false;
 
 		return true;
@@ -347,9 +424,9 @@ public:
 			{
 				m_pWorld->SetPixel(pt, CWorld::Track);
 				if ( pt.x == rc.left || pt.x == rc.right )
-					m_pWorld->SetPixel(pt, 1);
+					m_pWorld->SetPixel(pt, GetColor(2));
 				if ( (pt.y == rc.top || pt.y == rc.bottom) && abs(pt.x - m_ptPosition.x) > EntranceSize)
-					m_pWorld->SetPixel(pt, 1);
+					m_pWorld->SetPixel(pt, GetColor(2));
 			}
 	}
 
@@ -418,9 +495,13 @@ public:
 					pt.x += x - 4;
 					pt.y += y - 4;
 					int nPixel = mask[y][x];
+
+					if (m_pWorld->IsWater(m_pWorld->GetPixel(pt)))
+						continue;
+
 					if ( nPixel == 2 || nPixel == 1 ) 
 					{
-						if ( m_pWorld->GetPixel(pt) == CWorld::Ground )
+						if ( m_pWorld->IsGround(m_pWorld->GetPixel(pt)) )
 							m_pWorld->SetPixel(pt, CWorld::Dirt);
 					}
 					if ( nPixel == 3 ) 
@@ -436,6 +517,9 @@ public:
 				pt.y += y - 4;
 				int nPixel = bitmap[y][x];
 
+				if (m_pWorld->IsWater(m_pWorld->GetPixel(pt)))
+					continue;
+
 				if ( !bDrawOrErase )
 				{
 					if ( nPixel != 0 )
@@ -443,9 +527,21 @@ public:
 				} else 
 				{
 					if ( nPixel != 0 )
-						m_pWorld->SetPixel(pt, nPixel);
+						m_pWorld->SetPixel(pt, GetColor(nPixel));
 				}
 			}
+	}
+
+	uint8_t GetColor(uint8_t c)
+	{
+		if ( c==1 ) 
+			return 2;
+		if ( c==2 )
+			return 10;
+		if ( c==3 )
+			return 15;
+		_ASSERT(0);
+		return c;
 	}
 
 	bool CheckObstacle(POINT pt_, int nDirection)
@@ -461,7 +557,8 @@ public:
 				pt.y += y - 4;
 				int nPixel = bitmap[y][x];
 				int nMapPixel = m_pWorld->GetPixel(pt);
-				if ( nPixel != 0 && (nMapPixel != CWorld::Ground && nMapPixel != CWorld::Track && nMapPixel != CWorld::Dirt ) ) 
+				// (nMapPixel != CWorld::Ground && nMapPixel != CWorld::Track && nMapPixel != CWorld::Dirt )
+				if ( nPixel != 0 && !m_pWorld->CanWalk(nMapPixel) ) 
 				{
 					return false;
 				}
@@ -542,7 +639,7 @@ public:
 		static long lLastShoot = 0;
 		long lTick = GetTickCount();
 
-		if ( lTick - lLastShoot > 200 )
+		if ( lTick - lLastShoot > 150 )
 		{
 			lLastShoot = lTick;
 			return true;
@@ -582,7 +679,7 @@ class CGame
 	CTexture m_texStone;
 	CTexture m_texWater;
 
-	COLORREF m_palette[256];
+	//COLORREF m_palette[256];
 
 	POINT m_ptViewPoint;
 	int m_nPixelScaling;
@@ -599,7 +696,7 @@ public:
 		m_ptViewPoint.x = 300;
 		m_ptViewPoint.y = 300;
 		m_nPixelScaling = 3;
-
+		/*
 		for (int i=0; i<256; i++)
 			m_palette[i] = RGB(255, 0, 255);
 
@@ -608,7 +705,7 @@ public:
 		m_palette[3] = RGB(0xff, 0xff, 0xff);
 		m_palette[12] = RGB(0xff, 0, 0);
 		m_palette[4] = RGB(0xb0, 0, 0);
-
+		*/
 		m_tank.Create(&m_world);
 		m_tank.DrawHome();
 		m_tank.Draw(true);
@@ -677,19 +774,13 @@ public:
 		POINT ptMid;
 		ptMid.x = g_dev.display.WindowWidth()/2;
 		ptMid.y = g_dev.display.WindowHeight()/2;
-//		int nGap = g_dev.display.Width() - g_dev.display.WindowWidth();
-		//CTexture* pTexture = m_arrTextures[0];
-
-//		COLORREF palette[16] = {0, RGB(0, 0xff, 0), RGB(0, 0xb0, 0), RGB(0xff, 0xff, 0x00)};
 
 		POINT ptBase;
 		ptBase.x = m_ptViewPoint.x - g_dev.display.WindowWidth() / m_nPixelScaling / 2;
 		ptBase.y = m_ptViewPoint.y - g_dev.display.WindowHeight() / m_nPixelScaling / 2;
 		long i = 0;
-//			int dx = 0;
-		int dy = 0;
 
-		for (int y = 0; y < g_dev.display.WindowHeight(); y++, dy++)
+		for (int y = 0; y < g_dev.display.WindowHeight(); y++)
 		{
 			i = y * g_dev.display.Width();
 
@@ -699,6 +790,7 @@ public:
 					pBuf[i] = pBuf[i - g_dev.display.Width()];
 				continue;
 			}
+
 			for (int x = 0, dx = 0; x < g_dev.display.WindowWidth(); x+=m_nPixelScaling)
 			{
 				POINT ptCurrent, ptSubPixel;
@@ -709,64 +801,13 @@ public:
 				ptSubPixel.x = ptCurrent.x & (CTexture::Width-1);
 				ptSubPixel.y = ptCurrent.y & (CTexture::Height-1);
 
-				COLORREF clr = RGB(255, 0, 255);
-				CTexture* pTexture = NULL;
-				if ( (nPixel & 0xf0) == 0xf0 )
-				{
-					if ( nPixel == CWorld::Dirt )
-						pTexture = &m_texDirt;
-					if ( nPixel == CWorld::Track )
-						pTexture = &m_texTrack;
-					if ( nPixel == CWorld::Ground )
-						pTexture = &m_texGround;
-					if ( nPixel == CWorld::Water )
-						pTexture = &m_texWater;
-					if ( nPixel == CWorld::Stone )
-						pTexture = &m_texStone;
-				}
+				COLORREF clr = CWorld::GetColor(nPixel); 
+				CWorld::Noise(clr, ptCurrent.x, ptCurrent.y);
 
-				clr = RGB2BGR(pTexture ? pTexture->PixelAt(ptSubPixel) : m_palette[nPixel]);
 				for ( int q = 0; q < m_nPixelScaling; q++ )
-					pBuf[i++] = clr;
+					pBuf[i++] = RGB2BGR(clr);
 			}
 		}
-
-/*
-		int nZero = 500;
-		int nZeroMul = nZero*m_nPixelScaling;
-		long i = 0;
-		for (int y = 0; y < g_dev.display.WindowHeight(); y++, i += nGap)
-		{
-			for (int x = 0; x < g_dev.display.WindowWidth(); x++, i++)
-			{
-				POINT ptRealPixel;
-				ptRealPixel.x = m_ptViewPoint.x + (x - ptMid.x + nZeroMul) / m_nPixelScaling - nZero;
-				ptRealPixel.y = m_ptViewPoint.y + (y - ptMid.y + nZeroMul) / m_nPixelScaling - nZero;
-				ptRealPixel.x = (ptRealPixel.x + m_world.m_nWidth) % m_world.m_nWidth;
-				ptRealPixel.y = (ptRealPixel.y + m_world.m_nHeight) % m_world.m_nHeight;
-
-				POINT ptSubPixel;
-				ptSubPixel.x = ptRealPixel.x % CTexture::Width;
-				ptSubPixel.y = ptRealPixel.y % CTexture::Height;
-
-				int nPixel = m_world.m_map[ptRealPixel.y][ptRealPixel.x];
-
-				CTexture* pTexture = NULL;
-				if ( nPixel == CWorld::Dirt )
-					pTexture = &m_texDirt;
-				if ( nPixel == CWorld::Track )
-					pTexture = &m_texTrack;
-				if ( nPixel == CWorld::Ground )
-					pTexture = &m_texGround;
-				if ( nPixel == CWorld::Water )
-					pTexture = &m_texWater;
-				if ( nPixel == CWorld::Stone )
-					pTexture = &m_texStone;
-
-				pBuf[i] = RGB2BGR(pTexture ? pTexture->PixelAt(ptSubPixel) : m_palette[nPixel]);
-			}
-		}
-		*/
 	}
 
 	uint32_t RGB2BGR(COLORREF c)

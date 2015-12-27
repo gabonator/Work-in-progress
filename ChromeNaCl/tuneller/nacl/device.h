@@ -4,7 +4,7 @@
 class CFrameBuffer {
 private:
 
-	LPVOID m_pBuffer;
+	PVOID m_pBuffer;
 	LONG m_lWidth;
 	LONG m_lHeight;
 
@@ -23,7 +23,7 @@ public:
     m_pBuffer = (DWORD*)malloc(m_lWidth*m_lHeight*4);
 	}
 
-	LPVOID GetBuffer()
+	PVOID GetBuffer()
 	{
 		return m_pBuffer;
 	}

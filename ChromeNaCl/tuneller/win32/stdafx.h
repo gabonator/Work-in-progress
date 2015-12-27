@@ -24,6 +24,8 @@
 #include <math.h>
 
 #define COUNT(a) (sizeof(a)/sizeof(a[0]))
+typedef void* PVOID;
+#define _ASSERT_VALID(exp) {if(!(exp)) {_ASSERT(!!!#exp);}};
 
 
 // TODO: reference additional headers your program requires here

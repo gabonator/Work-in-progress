@@ -6,11 +6,12 @@
 #include <vector>
 #include <time.h>
 #include <cassert>
+#include <sys/time.h>
 
 typedef uint32_t DWORD;
 typedef int32_t LONG;
 typedef DWORD COLORREF;
-typedef void* LPVOID;
+typedef void* PVOID;
 //#define NULL 0
 
 const int VK_LEFT = 37;
@@ -24,7 +25,7 @@ const int VK_F4 = 52;
 const int VK_F5 = 53;
 const int VK_SPACE = 32;
 
-#define RGB(r, g, b) ((r)|((g)<<8)|((b)<<16))
+#define RGB(r, g, b) ((r)|((g)<<8)|((b)<<16)|0xff000000)
 #define GetRValue(x) ((x)&0xff)
 #define GetGValue(x) (((x)>>8)&0xff)
 #define GetBValue(x) (((x)>>16)&0xff)
@@ -46,7 +47,7 @@ template<class T> const T abs(T a)
 
 #define COUNT(a) (sizeof(a)/sizeof(a[0]))
 #define _ASSERT assert
-
+#define _ASSERT_VALID(exp) if (!(exp)) {assert(!!!#exp);}
 
 template <class T>
 class CArray : public std::vector<T>
@@ -92,7 +93,6 @@ public:
   }
 };
 
-#define GetTickCount() (clock()/64/16)
 #define _T
 #define ZeroMemory(p, len) std::memset(p, 0, len)
 
@@ -100,7 +100,19 @@ struct RECT { int left; int top; int right; int bottom; };
 struct POINT { int x; int y; };
 struct SIZE { int cx; int cy; };
 
-typedef const char* LPCTSTR;
-typedef LPVOID HDC;
-typedef LPVOID HBRUSH;
+unsigned long GetTickCount()
+{
+  static unsigned long lFirst = 0;
 
+  struct timeval tv;
+  if(gettimeofday(&tv, NULL) != 0)
+    return 0;
+
+  unsigned long lMs = tv.tv_usec / 1000;
+  lMs += tv.tv_sec * 1000;
+  if (lFirst == 0)
+    lFirst = lMs;
+  lMs -= lFirst;
+
+  return lMs;
+}

@@ -22,6 +22,8 @@
 #pragma warning(disable : 4355)
 #endif
 
+pp::Instance* g_pMainApp = NULL;
+
 #include "glue.h"
 
 class Graphics2DInstance : public pp::Instance
@@ -33,6 +35,7 @@ class Graphics2DInstance : public pp::Instance
         buffer_(NULL),
         device_scale_(1.0f) 
   {
+    g_pMainApp = this;
   }
 
   ~Graphics2DInstance() 

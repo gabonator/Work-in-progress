@@ -38,23 +38,25 @@ class CNetWs : public CNet
 {
 public:
 	THandler m_handler;
+	PVOID m_handlerData;
 	WebSocket::pointer m_ws;
 
 public:
 	CNetWs()
 	{
-		INT rc;
 		WSADATA wsaData;
 
-		rc = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		INT rc = WSAStartup(MAKEWORD(2, 2), &wsaData);
 		if (rc) 
 		{
 			printf("WSAStartup Failed.\n");
 			_ASSERT(0);
 		}
 
+		m_handler = NULL;
+		m_handlerData = NULL;
 		m_ws = WebSocket::from_url("ws://localhost:1337/foo");
-		_ASSERT(m_ws);
+		//_ASSERT(m_ws);
 	}
 
 	~CNetWs()
@@ -74,13 +76,14 @@ public:
 		m_ws->dispatch([&](const std::string & message) 
 		{
 			if ( m_handler)
-				m_handler(message);
+				m_handler(message, m_handlerData);
 		});
 	}
 
-	virtual void SetReceiveHandler(THandler handler) 
+	virtual void SetReceiveHandler(THandler handler, PVOID handlerData) 
 	{
 		m_handler = handler;
+		m_handlerData = handlerData;
 	}
 
 	virtual void Send(std::string msg)
@@ -89,8 +92,12 @@ public:
 			return;
 		m_ws->send(msg);
 	}
+
+	virtual EConnectionState GetState()
+	{
+		return m_ws ? CNet::Open : CNet::Closed;
+	}
 };
-//        ws->send("hello");
         
 // }}} network
 
@@ -180,15 +187,29 @@ DWORD WINAPI ThreadProcDraw(HANDLE handle)
 	ShowWindow( g_hwnd, SW_SHOW );
 	HDC hdc = GetDC( g_hwnd );
 
+	srand((unsigned int)time(NULL));
 	game.SetNetwork(&net);
 	game.Init();
+	
+	//const int nFps = 20;
+	//long lTick;
+	//long lNextTick;
 
 	while (g_running) 
 	{
+	//	lTick = GetTickCount();
+	//	lNextTick = lTick + 1000 / nFps;
+
 		net.Do();
 		game.Do();
 		g_dev.Blit( hdc );
-		Sleep( 10 );
+		/*
+		lTick = GetTickCount();
+		int nWait = lNextTick - lTick;
+		if ( nWait > 0 )
+			Sleep(nWait);
+			*/
+		Sleep(15);
 	}
 	OutputDebugString( _T("Main thread ended!\n") );
 	return 0;

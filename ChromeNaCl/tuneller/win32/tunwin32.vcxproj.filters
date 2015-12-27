@@ -42,6 +42,21 @@
     <ClInclude Include="..\source\net.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\bitmaps.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\bullet.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\particle.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\tank.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\world.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.ico">

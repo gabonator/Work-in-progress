@@ -56,6 +56,8 @@ public:
       gradP[i] = gradP[i + 256] = grad3[v % 12];
     }
   };
+
+
   // 2D simplex noise
   float simplex2(float xin, float yin) 
   {
@@ -129,11 +131,12 @@ public:
 class CWorldGenerator
 {
 public:
-	static void Generate(uint8_t* pWorld, int nWidth, int nHeight, uint8_t base)
+	static void Generate(uint8_t* pWorld, int nWidth, int nHeight, uint8_t base, int nSeed)
 	{
+		RandSeed() = nSeed;
 		CreatePalette();
 		CNoise noise;
-		noise.seed(rand()+2);
+		noise.seed(nSeed);
 
 		unsigned long i=0;
 		for (int y=0; y<nHeight; y++)
@@ -144,21 +147,34 @@ public:
 	static float wrap(float x)
 	{
       x = sin(x*3.1415f);
-	  return x * x * 3.0f;
+	  return x * x * 3.2f;
+	}
+
+	static uint32_t& RandSeed()
+	{
+		static uint32_t nSeed = 1;
+		return nSeed;
+	}
+
+	static uint16_t NextRand()
+	{
+		uint32_t& r = RandSeed();
+		r = 36969 * (r & 65535) + (r >> 16);
+		return (uint16_t)r;
 	}
 
 	static float Crusher(float fValue)
 	{
 		if ( fValue < -0.3f )
 		{
-			fValue += ((rand() % 100) / 50.0f - 1.0f) * 0.05f;
+			fValue += ((NextRand() % 100) / 50.0f - 1.0f) * 0.05f;
 			if ( fValue > -0.301f )
 				fValue = -0.301f;
 
 			return fValue;
 		}
 
-		fValue += ((rand() % 100) / 50.0f - 1.0f) * 0.05f;
+		fValue += ((NextRand() % 100) / 50.0f - 1.0f) * 0.05f;
 		if ( fValue < -0.30f )
 			fValue = -0.30f;
 
@@ -222,8 +238,8 @@ public:
 	static COLORREF* GetPalette()
 	{
 		static COLORREF arrPalette[0x32];
-		arrPalette[0x30] = RGB(0x30, 0x80, 0xb0);
-		arrPalette[0x31] = RGB(0x30, 0x30, 0x30);
+		arrPalette[0x30] = RGB(0x30, 0x60, 0xa0); // dirt
+		arrPalette[0x31] = RGB(0x30, 0x30, 0x30); // track
 		return arrPalette;
 	}
 };

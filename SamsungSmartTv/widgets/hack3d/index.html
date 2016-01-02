@@ -1,0 +1,70 @@
+<html>
+<head>
+
+<object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER"></object>
+<object id="pluginAudio" border=0 classid="clsid:SAMSUNG-INFOLINK-AUDIO"></object>
+<object id="pluginScreen" border=0 classid="clsid:SAMSUNG-INFOLINK-SCREEN"></object>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+/*  background-color: transparent; */
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.eye {
+  position:absolute; 
+  font-size:140px; 
+  overflow:none; 
+  width:960px; 
+  height:270px; 
+}
+
+.left {
+  left:0px; 
+  top:0px; 
+  background:#802020; 
+  color:gray;
+}
+
+.right {
+  left:0px; 
+  top:270px; 
+  background:#208020; 
+  color:gray;
+}
+</style>
+
+</head>
+<body onLoad="curWidget.setPreference('ready','true')">
+
+<div class="left eye">Left Left Left Left Left</div>
+<div class="right eye">Right Right Right Right</div>
+
+<script language="javascript">
+var audio = document.getElementById("pluginAudio");
+var player = document.getElementById("pluginPlayer");
+var screen = document.getElementById("pluginScreen");
+
+audio.SetVolume(0);
+
+player.OnCurrentPlayTime = function()
+{
+  player.OnCurrentPlayTime = function() {};
+  screen.Set3DEffectMode(1);
+  screen.Set3DEffectMode(3);
+  setTimeout(function()
+  {
+    player.Pause();
+  }, 0);
+};
+
+var url = "http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4";
+//var url = "http://192.168.1.2/big_buck_bunny.mp4";
+
+player.Play(url);
+</script>
+</body>
+</html>

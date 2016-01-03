@@ -1,7 +1,7 @@
 Samsung Smart TV widget experiments
 ==========
 
-Sokoban - Simple puzzle game in javascript, use arrow keys for moving, enter for step backward, channel up/down for switching levels
+Sokoban - Simple puzzle game in javascript, use arrow keys for moving, enter for step backward, channel up/down for switching levels, you can play this game even in your [browser](https://rawgit.com/gabonator/Work-in-progress/master/SamsungSmartTv/widgets/sokoban/)!
 ![](screenshots/img_9611.jpg)
 
 Stereoscopic hack - turns on the 3D viewing mode, so the widget app can draw it's own 3d enabled content!

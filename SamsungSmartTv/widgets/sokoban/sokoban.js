@@ -129,7 +129,7 @@ sokoban =
 */
     // ugly hack for samsung smart TV which allows using XMLHttpRequest on iframes, but not on main app!
     var query = encodeURIComponent(JSON.stringify(report));
-    var url = "http://api.valky.eu/log/?json="+query;
+    var url = (window.location.protocol == "" ? "http:" : window.location.protocol) + "//api.valky.eu/log/?json="+query;
     var script = document.createElement('script');
     script.setAttribute('src', url);
     document.head.appendChild(script);

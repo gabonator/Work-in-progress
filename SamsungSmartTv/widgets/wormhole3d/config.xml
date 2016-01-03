@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<widget xmlns="http://www.samsung.com/">  
+  <ThumbIcon>icon80.png</ThumbIcon>
+  <BigThumbIcon>icon96.png</BigThumbIcon>
+  <ListIcon>icon80.png</ListIcon>
+  <BigListIcon>icon96.png</BigListIcon>
+
+  <cpname itemtype="string"/>  
+  <cplogo itemtype="string"/>  
+  <cpauthjs itemtype="string"/>  
+  <category itemtype="string"/>  
+  <autoUpdate itemtype="boolean">n</autoUpdate>  
+  <ver itemtype="string">0.100</ver>  
+  <mgrver itemtype="string"/>  
+  <fullwidget itemtype="boolean">y</fullwidget>  
+  <type itemtype="string">user</type>  
+  <srcctl itemtype="boolean">y</srcctl>  
+  <ticker itemtype="boolean">n</ticker>  
+  <childlock itemtype="boolean">n</childlock>  
+  <videomute itemtype="boolean">n</videomute>  
+  <dcont itemtype="boolean">y</dcont>  
+  <widgetname itemtype="string">sokoban</widgetname>  
+  <description itemtype="string"/>  
+  <width itemtype="string">960</width>  
+  <height itemtype="string">540</height>  
+
+
+  <widgetname>Wormhole 3d</widgetname>
+  <description>Stereoscopic demo</description>
+
+  <author>
+    <name>Gabriel Valky</name>
+    <email>gabriel@valky.eu</email>
+    <link>http://valky.eu/</link>
+    <organization>Valky.eu</organization>
+  </author>
+</widget>

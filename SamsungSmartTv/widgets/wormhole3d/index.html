@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gabohole webgl demo</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <script src="sylvester.js" type="text/javascript"></script>
+  <script src="glutils.js" type="text/javascript"></script>
+  <script src="webgl-utils.js" type="text/javascript"></script>
+  <script src="webgl-demo.js" type="text/javascript"></script>
+
+  <object id="pluginPlayer" border=0 classid="clsid:SAMSUNG-INFOLINK-PLAYER"></object>
+  <object id="pluginAudio" border=0 classid="clsid:SAMSUNG-INFOLINK-AUDIO"></object>
+  <object id="pluginScreen" border=0 classid="clsid:SAMSUNG-INFOLINK-SCREEN"></object>
+</head>
+  
+<body onLoad="start();" style="background:black;">
+  <canvas id="glcanvas" width="960" height="540" style="position:absolute; left:0px; top:0px;"></canvas>
+</body>
+
+<script language="javascript">
+  var audio = document.getElementById("pluginAudio");
+  var player = document.getElementById("pluginPlayer");
+  var screen = document.getElementById("pluginScreen");
+
+  audio.SetVolume(0);
+
+  player.OnCurrentPlayTime = function()
+  {
+    player.OnCurrentPlayTime = function() {};
+    screen.Set3DEffectMode(1);
+    screen.Set3DEffectMode(3);
+    setTimeout(function()
+    {
+      player.Pause();
+    }, 0);
+  };
+
+  var url = "http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4";
+  //var url = "http://192.168.1.2/big_buck_bunny.mp4";
+
+  player.Play(url);
+  curWidget.setPreference('ready','true');
+
+</script>
+
+</html>

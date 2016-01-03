@@ -70,6 +70,13 @@ public:
 				&nTankId, &nFireTs, &nFireX, &nFireY, &nFireVectorX, &nFireVectorY) == 6);
 			NetFireTank(nTankId, nFireX, nFireY, nFireVectorX, nFireVectorY);
 		}
+		if ( message.substr(0, 10) == "notifyDead" )
+		{
+			int nTankId;
+			_ASSERT_VALID( sscanf(message.c_str(), "notifyDead({id:%d})", 
+				&nTankId) == 1);
+			NetKillTank(nTankId);
+		}
 	}
 		
 	bool IsConnected()
@@ -91,6 +98,7 @@ public:
 	virtual void NetMoveTank(int nId, int nX, int nY, int nDir) = 0;
 	virtual void NetInfoTank(int nId, int nX, int nY, int nHomeX, int nHomeY, int nDir) = 0;
 	virtual void NetFireTank(int nId, int nFireX, int nFireY, int nVectorX, int nVectorY) = 0;
+	virtual void NetKillTank(int nId) = 0;
 	virtual void NetRequestInfo() = 0;
 
 	// requests
@@ -259,6 +267,27 @@ public:
 		_ASSERT(0);
 	}
 
+	virtual void NetKillTank(int nId)
+	{
+		for (int i=0; i<(int)m_arrTanks.size(); i++)
+		{
+			CTank& t = m_arrTanks[i];
+			if ( t.m_nId == nId )
+			{
+				t.RemoveHome();
+				t.Draw(false);
+			
+				POINT ptVector = {0, 0};
+				CBullet bullet(&m_world, t.m_ptPosition, ptVector, 50, 40);
+				Explode(bullet);
+
+				m_arrTanks.erase(m_arrTanks.begin() + i);
+				return;
+			}
+		}
+		_ASSERT(0); // !!! should not happen, but it did!
+	}
+
 	virtual void NetInfoTank(int nId, int nX, int nY, int nHomeX, int nHomeY, int nDir)
 	{
 		for (int i=0; i<(int)m_arrTanks.size(); i++)
@@ -291,6 +320,7 @@ public:
 		CTank& t = m_arrTanks[0];
 
 		static int nPrevDir = -1;
+		static int nCounter = 0;
 		if ( nPrevDir == -1 )
 		{
 			// will be 5 (stay)
@@ -299,9 +329,21 @@ public:
 		}
 
 		if (nDir != nPrevDir)
+		{
 			nPrevDir = nDir;
+			nCounter = 0;
+		}
 		else
-			return;
+		{
+			if ( nDir == 5 )
+				return;
+
+			nCounter++;
+			if ( nCounter < 20 )
+				return;
+			else
+				nCounter = 0;
+		}
 
 		NotifyTankMoves(t.m_nId, t.m_ptPosition.x, t.m_ptPosition.y, nDir);
 	}
@@ -323,7 +365,7 @@ public:
 			CNetGame::StartRequestSet(CNetGame::EStartRequestReset);
 			NetCreateTank(0, m_ptViewPoint.x, m_ptViewPoint.y, m_ptViewPoint.x, m_ptViewPoint.y, 8);
 		}
-		
+
 		POINT ptVector = {0, 0};
 		if ( g_dev.GetKeys()[VK_LEFT] )
 			ptVector.x--;
@@ -342,6 +384,24 @@ public:
 				m_arrBullets.push_back( bullet );
 			}
 
+		static LONG lLastTick = 0;
+		long lTick = GetTickCount();
+		int nFps = 40;
+		long lInterval = 1000 / nFps;
+
+		if ( lLastTick == 0 )
+			lLastTick = lTick;
+
+		int nFramesPassed = (lTick - lLastTick) / lInterval;
+		for ( int i = 0; i < nFramesPassed; i++ )
+			SimulateStep(ptVector);
+		lLastTick += nFramesPassed * lInterval;
+
+		Blit();
+	}
+
+	void SimulateStep(POINT ptVector)
+	{
 		for (int i=0; i<(int)m_arrBullets.size(); i++)
 		{
 			m_arrBullets[i].Do();
@@ -367,12 +427,16 @@ public:
 			CTank& t = m_arrTanks[i];
 			if ( i == 0 )
 			{
-				NetMovement(t.GetDirectionByDelta(ptVector.x, ptVector.y));
-				t.Move( t.GetDirectionByDelta(ptVector.x, ptVector.y) );
+				// user tank
+				int nDirection = t.GetDirectionByDelta(ptVector.x, ptVector.y);
+				bool bMoved = t.Move( nDirection );
+				NetMovement(bMoved ? nDirection : 5);
+
 				m_world.FixPosition(t.m_ptPosition);
 				m_ptViewPoint = t.m_ptPosition;					
 			} else
 			{
+				// remote tank
 				if ( t.m_nNetworkKey == 0 )
 					t.Draw(true);
 				else
@@ -382,15 +446,21 @@ public:
 				}
 			}
 		}
-
-		Blit();
 	}
 
 	void Explode(CBullet& bullet)
 	{
-		for (int i=0; i<10; i++)
+		for (int i=0; i<bullet.GetParticles(); i++)
 		{
-			m_arrParticles.push_back( CParticle(&m_world, bullet.GetPosition()) );
+			int nPower = bullet.GetParticlePower();
+			float fSpeed = 1.0f;
+			if ( nPower > 20 )
+			{
+				nPower = (nPower / 2) + rand() % (nPower / 2);  // 50% .. 100%
+				fSpeed = 0.2f + (rand() % 1000) * 0.8f / 1000.0f;
+			}
+
+			m_arrParticles.push_back( CParticle(&m_world, bullet.GetPosition(), nPower, fSpeed) );
 		}
 	}
 

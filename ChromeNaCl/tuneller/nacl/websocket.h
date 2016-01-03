@@ -19,7 +19,9 @@ public:
 
   bool Create()
   {
-    std::string url = "ws://192.168.1.140:1337/test";
+//    std::string url = "ws://192.168.1.140:1337/test";
+    std::string url = "ws://91.230.44.236:1337/test";
+//    std::string url = "ws://localhost:1337/test";
 
     m_pWebsocket = new pp::WebSocket(g_pMainApp);
     _ASSERT( m_pWebsocket );

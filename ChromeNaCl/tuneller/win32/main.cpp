@@ -19,9 +19,6 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 CDevice g_dev;
 HWND g_hwnd = NULL;
-BOOL g_running = FALSE;
-HANDLE g_hDrawThread = NULL;
-HANDLE g_hAppThread = NULL;
 
 // network {{{
 #ifdef _WIN32
@@ -42,6 +39,11 @@ public:
 	WebSocket::pointer m_ws;
 
 public:
+	std::string GetServerUrl()
+	{
+		//return "ws://localhost:1337/foo";
+		return "ws://91.230.44.236:1337/test";
+	}
 	CNetWs()
 	{
 		WSADATA wsaData;
@@ -55,7 +57,7 @@ public:
 
 		m_handler = NULL;
 		m_handlerData = NULL;
-		m_ws = WebSocket::from_url("ws://localhost:1337/foo");
+		m_ws = WebSocket::from_url(GetServerUrl());
 		//_ASSERT(m_ws);
 	}
 
@@ -105,116 +107,45 @@ public:
 
 CNetWs net;
 CGame game;
-bool bFullscreen = false;
 
-void SetFullscreen( HWND hwnd, bool enable )
+int nFps = 0;
+void DoFrame()
 {
-	long style = enable ? WS_POPUP : WS_OVERLAPPEDWINDOW;
-	static DWORD dwStyle = 0;
-	static HMENU hMenu = NULL;
-	static RECT windowRect = {};
-	static bool needRect = true;
+	static long lTime = 0;
+	static int nFrames = 0;
 
-	if (needRect)
+	long lCurrent = GetTickCount();
+	if ( lCurrent >= lTime+1000)
 	{
-		dwStyle = ::GetWindowLong(hwnd, GWL_STYLE);
-		GetWindowRect(hwnd,&windowRect);
-		hMenu = ::GetMenu(hwnd);
-		needRect = false;
-	}
+		lTime = lCurrent;
+		nFps = nFrames;
+		nFrames = 0;
 
-	SetWindowLong(hwnd,GWL_STYLE,style);
-
-	if ( enable )
-	{
-		::LockWindowUpdate(hwnd); 
-		::SetMenu(hwnd, NULL);
-		::LockWindowUpdate(NULL); 
-
-		SetWindowPos(hwnd, HWND_TOPMOST,
-			0,0,
-			GetSystemMetrics(SM_CXSCREEN),
-			GetSystemMetrics(SM_CYSCREEN),
-			SWP_SHOWWINDOW);
-
-		g_dev.display.SetDisplay(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	}
-	else
-	{
-		::LockWindowUpdate(hwnd); // prevent intermediate redrawing
-		::SetMenu(hwnd, hMenu);
-		//::SetWindowLong(m_hWnd, GWL_STYLE, dwStyle & ~dwRemove);
-		//HDC hDC = ::GetWindowDC(NULL);
-		::LockWindowUpdate(NULL); // allow redrawing
-
-		SetWindowPos(hwnd, 0,
-			windowRect.left,windowRect.top,
-			windowRect.right - windowRect.left,
-			windowRect.bottom - windowRect.top,
-			SWP_SHOWWINDOW);
-
-		g_dev.display.SetDisplay(windowRect.right - windowRect.left-16, windowRect.bottom - windowRect.top-62);
+		CHAR msg[128] = {0};
+		sprintf(msg, "fps: %d\n", nFps);
+		OutputDebugStringA(msg);
 
 	}
+	nFrames++;
 
+	//HDC hdc = GetDC(g_hwnd);
 	/*
-DWORD dwRemove = WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-// This should be kept for reverse operation
-DWORD dwStyle = ::GetWindowLong(m_hWnd, GWL_STYLE);
-HMENU hMenu = ::GetMenu(m_hWnd);
-WINDOWPLACEMENT wp = {sizeof WINDOWPLACEMENT};
-::GetWindowPlacement(m_hWnd, &wp);
- 
-// Hide the menu bar, change styles and position and redraw
-::LockWindowUpdate(m_hWnd); // prevent intermediate redrawing
-::SetMenu(m_hWnd, NULL);
-::SetWindowLong(m_hWnd, GWL_STYLE, dwStyle & ~dwRemove);
-HDC hDC = ::GetWindowDC(NULL);
-::LockWindowUpdate(NULL); // allow redrawing
-::SetWindowPos(m_hWnd, NULL, 0, 0, GetDeviceCaps(hDC, HORZRES), GetDeviceCaps(hDC, VERTRES), SWP_FRAMECHANGED);
-	*/
-	bFullscreen = enable;
+		RECT rc;
+		rc.left = 20;
+		rc.top = 20;
+		rc.right = 400;
+		rc.bottom = 80;
+		sprintf(msg, "fps: %d", nFps);
+		SetBkMode( hdc, TRANSPARENT );
+		SetTextColor( hdc, RGB(255, 0, 0) );
+		DrawTextA(hdc, msg, -1, &rc, DT_TOP | DT_LEFT);
+
+		SetTextColor( hdc, 0xff00ff );
+		rc.left++;
+		rc.top++;
+		DrawTextA(hdc, msg, -1, &rc, DT_TOP | DT_LEFT);
+		*/
 }
-
-DWORD WINAPI ThreadProcDraw(HANDLE handle) 
-{
-	OutputDebugString( _T("Main thread started!\n") );
-	while ( !g_hwnd )
-		Sleep( 10 );
-
-	srand( (unsigned)time( NULL ) );
-
-	ShowWindow( g_hwnd, SW_SHOW );
-	HDC hdc = GetDC( g_hwnd );
-
-	srand((unsigned int)time(NULL));
-	game.SetNetwork(&net);
-	game.Init();
-	
-	//const int nFps = 20;
-	//long lTick;
-	//long lNextTick;
-
-	while (g_running) 
-	{
-	//	lTick = GetTickCount();
-	//	lNextTick = lTick + 1000 / nFps;
-
-		net.Do();
-		game.Do();
-		g_dev.Blit( hdc );
-		/*
-		lTick = GetTickCount();
-		int nWait = lNextTick - lTick;
-		if ( nWait > 0 )
-			Sleep(nWait);
-			*/
-		Sleep(15);
-	}
-	OutputDebugString( _T("Main thread ended!\n") );
-	return 0;
-}
-
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -241,14 +172,41 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CERV1));
 
-	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
+	bool bRunning = true;
+
+	RECT rcClient;
+	GetClientRect(g_hwnd, &rcClient);
+	g_dev.display.SetDisplay(rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+
+	srand((unsigned int)time(NULL));
+	game.SetNetwork(&net);
+	game.Init();
+	HDC hdc = GetDC( g_hwnd );
+
+	while ( bRunning )
 	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{	
+			if (msg.message == WM_QUIT || 
+				msg.message == WM_DESTROY || 
+				msg.message == WM_CLOSE)
+			{
+				bRunning = false;
+				break;
+			}
+
+			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		}
+		
+		DoFrame();
+		net.Do();
+		game.Do();
+		g_dev.Blit( hdc );
+		Sleep(8);
 	}
 
 	return (int) msg.wParam;
@@ -309,8 +267,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 
 	  0, 
-	  400, 
-	  400, 
+	  800, 
+	  800, 
 	  NULL, NULL, hInstance, NULL);
 
    if (!hWnd)
@@ -361,18 +319,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_CHAR:
-		if (wParam == 'f')
-		{
-			SetFullscreen( g_hwnd, !bFullscreen );
-			//SetMenu(g_hwnd, bFullscreen ? NULL : AKEINTRESOURCE(IDC_CERV1));
-		}
-		
 		if (wParam == VK_ESCAPE)
 		{
-			g_running = FALSE;
-			Sleep(10);
-			OutputDebugString( _T("Quit!\n") );
-	
 			PostQuitMessage(0);
 		}
 		break;
@@ -387,29 +335,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	{
-		SetFullscreen(hWnd, false);
-		g_running = TRUE;
-		g_hDrawThread = CreateThread( NULL, NULL, &ThreadProcDraw, NULL, NULL, NULL );
+//		SetFullscreen(hWnd, false);
+		//g_running = TRUE;
+		//g_hDrawThread = CreateThread( NULL, NULL, &ThreadProcDraw, NULL, NULL, NULL );
 		//SetThreadPriority( g_hDrawThread, THREAD_PRIORITY_ABOVE_NORMAL );
 		//SetThreadPriority( g_hDrawThread, THREAD_PRIORITY_HIGHEST );
 		//hAppThread = CreateThread( NULL, NULL, &ThreadProcApp, NULL, NULL, NULL );
 		break;
 	}
 	case WM_CLOSE:
-		g_running = FALSE;
-		Sleep(10);
-		OutputDebugString( _T("Window destroyed!\n") );
 		DestroyWindow(hWnd);
 		break;
 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		g_dev.Blit( hdc );
+		//g_dev.Blit( hdc );
 		EndPaint(hWnd, &ps);
 		break;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}

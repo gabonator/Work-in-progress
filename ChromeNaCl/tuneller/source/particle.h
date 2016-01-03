@@ -15,7 +15,7 @@ public:
 	{
 	}
 
-	CParticle(CWorld* pWorld, POINT ptCenter)
+	CParticle(CWorld* pWorld, POINT ptCenter, int nPower = 4, float fSpeed = 1.0f)
 	{
 		m_pWorld = pWorld;
 		m_fX = (float)ptCenter.x;
@@ -23,9 +23,9 @@ public:
 
 		float fAngle = (rand()%360) * 3.141596f / 180.0f;
 //		float fSpeed = ((rand()%80) +20) /100*0.5f;
-		m_fDx = cos(fAngle);
-		m_fDy = sin(fAngle);
-		m_nCount = 4;
+		m_fDx = cos(fAngle) * fSpeed;
+		m_fDy = sin(fAngle) * fSpeed;
+		m_nCount = nPower;
 		m_bCollision = false; //CheckCollision();
 	}
 
@@ -62,7 +62,8 @@ public:
 	{
 		int nPixel = m_pWorld->GetPixel(GetPosition());
 
-		if ( m_pWorld->CanFly(nPixel) )
+		// TODO: consider this approach: 1. hide all particles, 2. move all particles/check for collision, 3. show all particles
+		if ( nPixel == 12 || m_pWorld->CanFly(nPixel) )
 			return false;
 
 		return true;

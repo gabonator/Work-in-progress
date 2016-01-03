@@ -6,12 +6,16 @@ class CBullet
 	bool m_bShouldExplode;
 	int m_nLive;
 
+	//
+	int m_nParticles;
+	int m_nParticlePower;
+
 public:
 	CBullet()
 	{
 	}
 
-	CBullet(CWorld* pWorld, POINT ptOrigin, POINT ptVector)
+	CBullet(CWorld* pWorld, POINT ptOrigin, POINT ptVector, int nParticles = 10, int nParticlePower = 4 )
 	{
 		m_pWorld = pWorld;
 		m_ptPosition = ptOrigin;
@@ -19,6 +23,9 @@ public:
 		m_bShouldExplode = false;
 		m_nLive = 0;
 		m_bShouldExplode = CheckCollision();
+		//
+		m_nParticles = nParticles;
+		m_nParticlePower = nParticlePower;
 	}
 
 	bool CheckCollision()
@@ -97,5 +104,16 @@ public:
 	bool ShouldExplode()
 	{
 		return m_bShouldExplode;
+	}
+
+	//
+	int GetParticles()
+	{
+		return m_nParticles;
+	}
+
+	int GetParticlePower()
+	{
+		return m_nParticlePower;
 	}
 };

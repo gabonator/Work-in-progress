@@ -35,7 +35,7 @@ public:
 	void Create(int nSeed)
 	{
 		if ( nSeed == 0 )
-			nSeed = GetTickCount();
+			nSeed = GetTickCount()|1;
 		CWorldGenerator::Generate(m_pMap, m_nWidth, m_nHeight, BaseWater, nSeed); // + 0x20
 	}
 

@@ -54,8 +54,28 @@ public:
 				m_pWorld->SetPixel(pt, CWorld::Track);
 				if ( pt.x == rc.left || pt.x == rc.right )
 					m_pWorld->SetPixel(pt, GetColor(2));
-				if ( (pt.y == rc.top || pt.y == rc.bottom) && abs(pt.x - m_ptPosition.x) > EntranceSize)
+				if ( (pt.y == rc.top || pt.y == rc.bottom) && abs(pt.x - m_ptHome.x) > EntranceSize)
 					m_pWorld->SetPixel(pt, GetColor(2));
+			}
+	}
+
+	void RemoveHome()
+	{
+		POINT pt;
+		RECT rc;
+		
+		rc.top = m_ptHome.y - HomeSize/2;
+		rc.bottom = m_ptHome.y + HomeSize/2;
+		rc.left = m_ptHome.x - HomeSize/2;
+		rc.right = m_ptHome.x + HomeSize/2;
+
+		for (pt.y=rc.top; pt.y <= rc.bottom; pt.y++)
+			for (pt.x=rc.left; pt.x <= rc.right; pt.x++)
+			{
+				if ( pt.x == rc.left || pt.x == rc.right )
+					m_pWorld->SetPixel(pt, CWorld::Dirt);
+				if ( (pt.y == rc.top || pt.y == rc.bottom) )
+					m_pWorld->SetPixel(pt, CWorld::Dirt);
 			}
 	}
 
@@ -220,35 +240,40 @@ public:
 		d = temp;
 	}
 
-	void Move(int nDir)
+	bool Move(int nDir)
 	{
 		if ( nDir == 5 )
 		{
 			Draw(true);
-			return;
+			return false;
 		}
 
 		Draw(false);
 
-		POINT vDirection = GetDeltaByDirection(nDir);
-
-		POINT ptForward = m_ptPosition;
-		ptForward.x += vDirection.x;
-		ptForward.y += vDirection.y;
-
-		if ( CheckObstacle(ptForward, nDir) )
+		if ( nDir != m_nDirection && CheckObstacle( m_ptPosition, nDir ) )
 		{
-			m_ptPosition = ptForward;
 			m_nDirection = nDir;
-		} else
+		} else 
 		{
-			if ( nDir != m_nDirection && CheckObstacle(m_ptPosition, nDir) )
+			POINT vDirection = GetDeltaByDirection(nDir);
+
+			POINT ptForward = m_ptPosition;
+			ptForward.x += vDirection.x;
+			ptForward.y += vDirection.y;
+
+			if ( CheckObstacle(ptForward, nDir) )
 			{
+				m_ptPosition = ptForward;
 				m_nDirection = nDir;
+			} else 
+			{
+				Draw(true);
+				return false; // no movement
 			}
 		}
 
 		Draw(true);
+		return true; // tank moves
 	}
 
 	POINT GetDeltaByDirection(int nDir)

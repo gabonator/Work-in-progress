@@ -106,7 +106,8 @@ sokoban =
     var report = {
       file:"sokoban", 
       level:this.currentLevel+1, 
-      os:(navigator.platform ? navigator.platform: "") + "/" + (navigator.oscpu ? navigator.oscpu 	: ""), 
+      os:(navigator.platform ? navigator.platform: "") + "/" + (navigator.oscpu ? navigator.oscpu : ""), 
+      agent:navigator.userAgent,
       screen:screen.width+"x"+screen.height
     };
 
@@ -120,11 +121,18 @@ sokoban =
         report.moves.push(this.history[i].ts);
       }
     }
-
+/*
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", (window.location.protocol == "" ? "http:" : window.location.protocol) + "//api.valky.eu/log/");
     xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xmlHttp.send(JSON.stringify(report));
+*/
+    // ugly hack for samsung smart TV which allows using XMLHttpRequest on iframes, but not on main app!
+    var query = encodeURIComponent(JSON.stringify(report));
+    var url = (window.location.protocol == "" ? "http:" : window.location.protocol) + "//api.valky.eu/log/?json="+query;
+    var script = document.createElement('script');
+    script.setAttribute('src', url);
+    document.head.appendChild(script);
   },
 
   go:function(dir)

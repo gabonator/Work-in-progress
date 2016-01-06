@@ -31,6 +31,9 @@ using easywsclient::WebSocket;
 WebSocket::pointer ws;
 #include "../source/net.h"
 
+
+std::vector<std::pair<std::string, std::string> > g_arrMainArgs;
+
 class CNetWs : public CNet
 {
 public:
@@ -46,6 +49,8 @@ public:
 	}
 	CNetWs()
 	{
+		g_arrMainArgs.push_back(std::pair<std::string, std::string>("kluc", "hodnota"));
+		g_arrMainArgs.push_back(std::pair<std::string, std::string>("A", "B"));
 		WSADATA wsaData;
 
 		INT rc = WSAStartup(MAKEWORD(2, 2), &wsaData);

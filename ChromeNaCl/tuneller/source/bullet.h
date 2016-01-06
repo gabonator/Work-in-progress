@@ -7,6 +7,7 @@ class CBullet
 	int m_nLive;
 
 	//
+	int m_nOwnerId;
 	int m_nParticles;
 	int m_nParticlePower;
 
@@ -15,9 +16,10 @@ public:
 	{
 	}
 
-	CBullet(CWorld* pWorld, POINT ptOrigin, POINT ptVector, int nParticles = 10, int nParticlePower = 4 )
+	CBullet(CWorld* pWorld, int nOwnerId, POINT ptOrigin, POINT ptVector, int nParticles = 10, int nParticlePower = 4 )
 	{
 		m_pWorld = pWorld;
+		m_nOwnerId = nOwnerId;
 		m_ptPosition = ptOrigin;
 		m_ptVector = ptVector;
 		m_bShouldExplode = false;
@@ -115,5 +117,15 @@ public:
 	int GetParticlePower()
 	{
 		return m_nParticlePower;
+	}
+
+	int GetOwnerId()
+	{
+		return m_nOwnerId;
+	}
+
+	bool IsFriendly()
+	{
+		return m_nLive < 5;
 	}
 };

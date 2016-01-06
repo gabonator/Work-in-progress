@@ -14,6 +14,7 @@
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/point.h"
 #include "ppapi/cpp/audio.h"
+#include "ppapi/cpp/var.h"
 #include "ppapi/utility/completion_callback_factory.h"
 
 #ifdef WIN32
@@ -25,6 +26,8 @@
 pp::Instance* g_pMainApp = NULL;
 
 #include "glue.h"
+
+std::vector<std::pair<std::string, std::string> > g_arrMainArgs;
 
 class Graphics2DInstance : public pp::Instance
 {
@@ -47,6 +50,9 @@ class Graphics2DInstance : public pp::Instance
   {
     RequestInputEvents(PP_INPUTEVENT_CLASS_TOUCH);
     RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
+
+    for (int i=0; i<argc; i++)
+      g_arrMainArgs.push_back( std::pair<std::string, std::string>(argn[i], argv[i]) );
 
     return true;
   }
@@ -85,6 +91,11 @@ class Graphics2DInstance : public pp::Instance
       mainKey(key_event.GetKeyCode(), 0);
     }
     return true;
+  }
+
+  virtual void HandleMessage(const pp::Var& var_message) 
+  {
+    CApi::OnMessage(var_message);
   }
 
  private:

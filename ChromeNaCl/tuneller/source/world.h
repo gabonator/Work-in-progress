@@ -21,8 +21,8 @@ public:
 
 	CWorld()
 	{
-		m_nWidth = 1024*1;
-		m_nHeight = 1024*1;
+		m_nWidth = 1024*1; //1024/8;
+		m_nHeight = 1024*1; //1024/8;
 		m_pMap = (uint8_t*)malloc(m_nWidth * m_nHeight);
 		memset(m_pMap, Ground, m_nWidth * m_nHeight);
 	}
@@ -106,13 +106,27 @@ public:
 
 	void FixPosition(POINT& pt)
 	{
-		pt.x = (pt.x + m_nWidth) % m_nWidth;
-		pt.y = (pt.y + m_nHeight) % m_nHeight;
+		pt.x = (pt.x + m_nWidth*2) % m_nWidth;
+		pt.y = (pt.y + m_nHeight*2) % m_nHeight;
 		_ASSERT(pt.x >= 0 && pt.y >= 0);
 	}
 
 	uint8_t* GetPixels()
 	{
 		return m_pMap;
+	}
+
+	POINT GetOffset(POINT ptA, POINT ptB)
+	{
+ 		ptB.x -= ptA.x;
+		ptB.y -= ptA.y;
+		FixPosition(ptB);
+
+		if ( ptB.x > m_nWidth/2 )
+			ptB.x -= m_nWidth;
+		if ( ptB.y > m_nHeight/2 )
+			ptB.y -= m_nHeight;
+
+		return ptB;
 	}
 };

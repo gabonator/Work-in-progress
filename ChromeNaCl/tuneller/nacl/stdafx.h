@@ -102,6 +102,7 @@ struct SIZE { int cx; int cy; };
 
 unsigned long GetTickCount()
 {
+  // pp::Module::Get()->core()->GetTimeTicks()
   static unsigned long lFirst = 0;
 
   struct timeval tv;

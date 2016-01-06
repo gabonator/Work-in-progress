@@ -13,12 +13,16 @@
       moduleEl.setAttribute('width', "500");
       moduleEl.setAttribute('height', "500");
       moduleEl.setAttribute('path', "");
-      moduleEl.setAttribute('src', "tuneller.nmf");
+      moduleEl.setAttribute('src', "tuneller4.nmf");
       moduleEl.setAttribute('type', 'application/x-pnacl');
+      moduleEl.setAttribute('server', 'ws://localhost:1337/novy');
       var listenerDiv = document.getElementById('listener');
       listenerDiv.appendChild(moduleEl);
       moduleEl.offsetTop;
       moduleEl.focus();
+ 
+      listenerDiv.addEventListener('message', function(msg){console.log(msg.data.content);}, true);
+
     }
   </script>
 </head>

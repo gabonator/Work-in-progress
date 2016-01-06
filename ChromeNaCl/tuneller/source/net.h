@@ -21,4 +21,5 @@ public:
 	virtual void Do() = 0;
 	virtual void Send(std::string str) = 0;
 	virtual void SetReceiveHandler(THandler handler, PVOID data) = 0;
+	virtual std::string GetServerUrl() = 0;
 };

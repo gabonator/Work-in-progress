@@ -57,6 +57,15 @@
     <ClInclude Include="..\source\world.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\debug\font.h">
+      <Filter>source\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\debug\debug.h">
+      <Filter>source\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\netgame.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.ico">
@@ -72,6 +81,9 @@
     </Filter>
     <Filter Include="win32app">
       <UniqueIdentifier>{95424356-de3e-4f1f-b6d9-26f14151808d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\debug">
+      <UniqueIdentifier>{9ba1116e-c804-46ba-90da-81c64a92582d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

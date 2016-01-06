@@ -147,7 +147,7 @@ public:
 	static float wrap(float x)
 	{
       x = sin(x*3.1415f);
-	  return x * x * 3.2f;
+	  return x * x * 2.3f;
 	}
 
 	static uint32_t& RandSeed()

@@ -10,14 +10,20 @@ class CParticle
 	int m_nCount;
 	bool m_bCollision;
 
+	//
+	int m_nOwnerId;
+	bool m_bFriendly;
+
 public:
 	CParticle()
 	{
 	}
 
-	CParticle(CWorld* pWorld, POINT ptCenter, int nPower = 4, float fSpeed = 1.0f)
+	CParticle(CWorld* pWorld, int nOwnerId, bool bFriendly, POINT ptCenter, int nPower = 4, float fSpeed = 1.0f)
 	{
 		m_pWorld = pWorld;
+		m_nOwnerId = nOwnerId;
+		m_bFriendly = bFriendly;
 		m_fX = (float)ptCenter.x;
 		m_fY = (float)ptCenter.y;
 
@@ -77,5 +83,15 @@ public:
 	bool ShouldDie()
 	{
 		return m_nCount <= 0 || m_bCollision;
+	}
+
+	bool IsFriendly(int nTankId)
+	{
+		return m_bFriendly && m_nOwnerId == nTankId;
+	}
+
+	int GetOwnerId()
+	{
+		return m_nOwnerId;
 	}
 };

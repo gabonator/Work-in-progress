@@ -1,6 +1,46 @@
 "use strict";
 process.title = 'Tuneller server';
 
+var os = require( 'os' );
+console.log( "  - Network interfaces: \n" + os.networkInterfaces( ) );
+// Web server ==============================================================
+
+var http = require('http');
+var url = require('url');
+var fs = require('fs');
+var webbase = "../nacl/build";
+//var index = fs.readFileSync('../nacl/build/index.html');
+
+console.log("  - Webserver at localhost running ");
+
+http.createServer(function (request, response) {
+  var uri = url.parse(request.url).pathname
+  if ( uri == "/" )
+    uri = "/index.html";
+
+  var file = webbase + uri;
+  fs.exists( file, function(exists)
+  { 
+    if(!exists) 
+    {
+      response.writeHead(404, {"Content-Type": "text/plain"});
+      response.write("404 Not Found\n");
+      response.end();
+      return;
+    }
+
+    if ( file.substr(-5) == ".html" )
+      response.writeHead(200, {'Content-Type': 'text/html'}); 
+    else
+      response.writeHead(200, {'Content-Type': 'text/plain'}); 
+
+    response.end(fs.readFileSync(file));
+  });
+}).listen(80);
+
+
+// Websocket server ==============================================================
+
 // User globals
 var globalMessage = null;
 var globalWorldId = null;

@@ -78,9 +78,12 @@
   <ItemGroup>
     <ClInclude Include="..\source\bitmaps.h" />
     <ClInclude Include="..\source\bullet.h" />
+    <ClInclude Include="..\source\debug\debug.h" />
+    <ClInclude Include="..\source\debug\font.h" />
     <ClInclude Include="..\source\game.h" />
     <ClInclude Include="..\source\gfx.h" />
     <ClInclude Include="..\source\net.h" />
+    <ClInclude Include="..\source\netgame.h" />
     <ClInclude Include="..\source\noise.h" />
     <ClInclude Include="..\source\particle.h" />
     <ClInclude Include="..\source\tank.h" />

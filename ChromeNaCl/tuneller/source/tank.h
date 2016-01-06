@@ -17,25 +17,35 @@ class CTank
 	};
 
 public:
-	CNetGame* m_pNetGame;
+//	CNetGame* m_pNetGame;
 	CWorld* m_pWorld;
 	POINT m_ptPosition;
 	POINT m_ptHome;
 	int m_nDirection;	
 	int m_nId;
 	int m_nNetworkKey;
+	float m_fEnergy;
+	int m_nDirt;
+	
+	int m_nKilled;
+	int m_nDied;
 
-	void Create(CWorld* pWorld, CNetGame* pNetGame)
+	void Create(CWorld* pWorld/*, CNetGame* pNetGame*/)
  	{
 		m_nNetworkKey = 0;
 		m_nId = 0;
 		m_pWorld = pWorld;
-		m_pNetGame = pNetGame;
+		//m_pNetGame = pNetGame;
 
 		m_ptHome.x = rand() % m_pWorld->m_nHeight;
 		m_ptHome.y = rand() % m_pWorld->m_nWidth;
 		m_ptPosition = m_ptHome;
 		m_nDirection = 8;
+		m_fEnergy = 1000;
+		m_nDirt = 0;
+		
+		m_nKilled = 0;
+		m_nDied = 0;
 	}
 
 	void DrawHome()
@@ -74,7 +84,7 @@ public:
 			{
 				if ( pt.x == rc.left || pt.x == rc.right )
 					m_pWorld->SetPixel(pt, CWorld::Dirt);
-				if ( (pt.y == rc.top || pt.y == rc.bottom) )
+				if ( (pt.y == rc.top || pt.y == rc.bottom) && abs(pt.x - m_ptHome.x) > EntranceSize )
 					m_pWorld->SetPixel(pt, CWorld::Dirt);
 			}
 	}
@@ -190,8 +200,10 @@ public:
 		return arrPalette[nIndex][c];
 	}
 
-	bool CheckObstacle(POINT pt_, int nDirection)
+	bool CheckObstacle(POINT pt_, int nDirection, int& nDirt)
 	{
+		nDirt = 0;
+
 		TTankBitmap bitmap;
 		Transform(bitmap, bmpTankAligned, bmpTankDiagonal, nDirection);
 				
@@ -204,8 +216,15 @@ public:
 				int nPixel = bitmap[y][x];
 				m_pWorld->FixPosition(pt);
 				int nMapPixel = m_pWorld->GetPixel(pt);
+				
 				// (nMapPixel != CWorld::Ground && nMapPixel != CWorld::Track && nMapPixel != CWorld::Dirt )
-				if ( nPixel != 0 && !m_pWorld->CanWalk(nMapPixel) ) 
+				if ( nPixel == 0 )
+					continue;
+				
+				if ( m_pWorld->IsGround( nMapPixel ) || m_pWorld->IsDirt( nMapPixel ) )
+					nDirt++;
+
+				if ( !m_pWorld->CanWalk(nMapPixel) ) 
 				{
 					return false;
 				}
@@ -242,6 +261,14 @@ public:
 
 	bool Move(int nDir)
 	{
+		m_nDirt = max(m_nDirt-2, 0);
+		if ( m_nDirt > 0 )
+    {
+      Draw(true);
+			nDir = 5;
+      return true; // otherwise it would send too many net messages
+    }
+
 		if ( nDir == 5 )
 		{
 			Draw(true);
@@ -250,8 +277,11 @@ public:
 
 		Draw(false);
 
-		if ( nDir != m_nDirection && CheckObstacle( m_ptPosition, nDir ) )
+		int nDirt = 0;
+
+		if ( nDir != m_nDirection && CheckObstacle( m_ptPosition, nDir, nDirt ) )
 		{
+			m_nDirt += nDirt;
 			m_nDirection = nDir;
 		} else 
 		{
@@ -261,8 +291,9 @@ public:
 			ptForward.x += vDirection.x;
 			ptForward.y += vDirection.y;
 
-			if ( CheckObstacle(ptForward, nDir) )
+			if ( CheckObstacle(ptForward, nDir, nDirt) )
 			{
+				m_nDirt += nDirt;
 				m_ptPosition = ptForward;
 				m_nDirection = nDir;
 			} else 
@@ -320,6 +351,76 @@ public:
 			ptOrigin.y += ptVector.y * 3;
 		}
 
-		return CBullet(m_pWorld, ptOrigin, ptVector);
+		return CBullet(m_pWorld, m_nId, ptOrigin, ptVector);
+	}
+
+	// energy
+	bool HitTest(POINT pt)
+	{
+		POINT ptOffset = m_pWorld->GetOffset(m_ptPosition, pt);
+		ptOffset.x += 4;
+		ptOffset.y += 4;
+
+		if ( ptOffset.x < 0 || ptOffset.x > 9 || ptOffset.y < 0 || ptOffset.y > 9 )
+			return false;
+
+		TTankBitmap bitmap;
+		Transform(bitmap, bmpTankAligned, bmpTankDiagonal, m_nDirection);
+		
+		return ( bitmap[ptOffset.y][ptOffset.x] != 0 );
+	}
+
+	void Charge(int nEnergy)
+	{
+		m_fEnergy += (float)nEnergy;
+	}
+
+	int GetEnergy()
+	{
+		return (int)m_fEnergy;
+	}
+
+  void SetEnergy(int nEnergy)
+  {
+    m_fEnergy = (float)nEnergy;
+  }
+
+	void GoHome()
+	{
+		m_fEnergy = 1000.0f;
+		m_ptPosition = m_ptHome;
+	}
+
+	void Do()
+	{
+		POINT ptOffset = m_pWorld->GetOffset(m_ptPosition, m_ptHome);
+		if ( abs(ptOffset.x) < HomeSize/2 && abs(ptOffset.y) < HomeSize/2 )
+		{
+			m_fEnergy += 1.0f;
+			if ( m_fEnergy > 1000.0f )
+				m_fEnergy = 1000.0f;
+		}
+		else
+			m_fEnergy -= 0.1f;
+	}
+
+	void AddKilled()
+	{
+		m_nKilled++;
+	}
+
+	void AddDied()
+	{
+		m_nDied++;
+	}
+
+	int GetKilled()
+	{
+		return m_nKilled;
+	}
+
+	int GetDied()
+	{
+		return m_nDied;
 	}
 };

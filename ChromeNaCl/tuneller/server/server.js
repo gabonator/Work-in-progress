@@ -147,7 +147,7 @@ function removeClientById(id)
     }
 }
 // user
-
+var startupTs = (new Date()).getTime();
 var tanks = [];
 
 function getUniqueId()
@@ -199,10 +199,15 @@ function sendClient(client, msg)
 
 function getTs()
 {
-  return (new Date()).getTime() - (new Date(2015, 0, 1)).getTime();
+  return (new Date()).getTime() - startupTs;
 }
 
 // handlers
+
+function requestTime(json)
+{
+  sendClient(globalClient, "replyTime({n:"+json.n+", ts:"+getTs()+"});");
+}
 
 function requestStart()
 {

@@ -19,22 +19,12 @@
 #include "bitmaps.h"
 #include "tank.h"
 #include "debug/debug.h"
+#include "entity.h"
+#include "gamecommon.h"
+#include "powerups.h"
+#include "netgame.h"
 
 extern std::vector<std::pair<std::string, std::string> > g_arrMainArgs;
-
-class CGameCommon
-{
-protected:
-	CWorld m_world;
-	std::vector<CTank> m_arrTanks;
-	std::vector<CBullet> m_arrBullets;
-	std::vector<CParticle> m_arrParticles;
-
-	POINT m_ptViewPoint;
-	int m_nPixelScaling;
-};
-
-#include "netgame.h"
 
 class CGame : public CNetGame
 {
@@ -47,6 +37,20 @@ public:
 
 		m_world.Create(0);
 		CNetGame::Init();
+
+		//NetCreateTank(0, m_ptViewPoint.x, m_ptViewPoint.y, m_ptViewPoint.x, m_ptViewPoint.y, 8);
+/*
+		m_arrEntities.push_back(std::shared_ptr<CEntity>(new CDrone(this)));
+		CDrone* p = (CDrone*)m_arrEntities[0].get();
+		p->m_ptPosition.x = m_ptViewPoint.x + 50;
+		p->m_ptPosition.y = m_ptViewPoint.y + 50;
+
+
+		m_arrEntities.push_back(std::shared_ptr<CEntity>(new CSideShot(this)));
+		CSideShot* ps = (CSideShot*)m_arrEntities[1].get();
+		ps->m_ptPosition.x = m_ptViewPoint.x + 30;
+		ps->m_ptPosition.y = m_ptViewPoint.y + 30;
+*/
 	}
 
 	void Do()
@@ -69,6 +73,17 @@ public:
 				CBullet bullet = m_arrTanks[0].GetBullet();
 				NetFire(bullet.GetPosition(), bullet.GetVector());
 				m_arrBullets.push_back( bullet );
+
+				std::vector<CBullet> arrExtraBullets;
+				for (int i=0; i<(int)m_arrEntities.size(); i++)
+					m_arrEntities[i]->OnTankFires(m_arrTanks[0], arrExtraBullets);
+
+				for (int i=0; i<(int)arrExtraBullets.size(); i++)
+				{
+					CBullet& bullet = arrExtraBullets[i];
+					NetFire(bullet.GetPosition(), bullet.GetVector());
+					m_arrBullets.push_back( bullet );
+				}
 			}
 
 		static LONG lLastTick = 0;
@@ -89,6 +104,9 @@ public:
 
 	void SimulateStep(POINT ptVector)
 	{
+		for (int i=0; i<(int)m_arrEntities.size(); i++)
+			m_arrEntities[i]->Draw(false);
+
 		for (int i=0; i<(int)m_arrBullets.size(); i++)
 		{
 			m_arrBullets[i].Do();
@@ -117,7 +135,7 @@ public:
 
 			if ( t.GetEnergy() < 0 )
 			{
-        CApi::SendMessage( (char*)"Umrel si!" );
+				CApi::SendMessage( (char*)"Umrel si!" );
 				t.AddDied();
 				NetDies();
 
@@ -150,6 +168,13 @@ public:
 				}
 			}
 		}
+
+		for (int i=0; i<(int)m_arrEntities.size(); i++)
+		{
+			m_arrEntities[i]->Do();
+			m_arrEntities[i]->Draw(true);
+		}
+
 	}
 
 	void CheckHit(CParticle& particle)
@@ -169,7 +194,7 @@ public:
 					if ( bWasAlive && !bIsAlive )
 					{
 						GetTankById( particle.GetOwnerId() ).AddKilled();
-            CApi::SendMessage( (char*)"Nejaky tank umrel!" );
+						CApi::SendMessage( (char*)"Nejaky tank umrel!" );
 					}
 
 				}
@@ -192,16 +217,6 @@ public:
 			m_arrParticles.push_back( CParticle(&m_world, bullet.GetOwnerId(), bullet.IsFriendly(), 
 				bullet.GetPosition(), nPower, fSpeed) );
 		}
-	}
-
-	CTank& GetTankById(int nId)
-	{
-		for (int i = 0; i < (int)m_arrTanks.size(); i++ )
-			if ( m_arrTanks[i].m_nId == nId )
-				return m_arrTanks[i];
-
-		static CTank dummyTank;
-		return dummyTank;
 	}
 
 	void Blit()
@@ -256,19 +271,22 @@ public:
 			}
 		}
 
-		CDebug::Print(0, 0, "server: %s [%d, %d] ", m_pNet->GetServerUrl().c_str(), m_ptViewPoint.x, m_ptViewPoint.y);
+		char *strNetMode = "?";
+		switch(m_pNet->GetState())
+		{
+			case CNet::Connecting: strNetMode = "Connecting"; break;
+			case CNet::Open: strNetMode = "Open"; break;
+			case CNet::Closed: strNetMode = "Closed"; break;
+			case CNet::Error: strNetMode = "Error"; break;
+			default: break;
+		}
+
+		CDebug::Print(0, 0, "%s (%s) [%d, %d] ", m_pNet->GetServerUrl().c_str(), strNetMode, m_ptViewPoint.x, m_ptViewPoint.y);
 		for ( int i = 0; i < (int)m_arrTanks.size(); i++ )
 		{
 			CTank& t = m_arrTanks[i];
 			CDebug::Print(0, 14 + i*14, "Tank %d: Energy = %3d%% Kills =%2d, Deaths =%2d", 
 				t.m_nId, t.GetEnergy()/10, t.GetKilled(), t.GetDied());
 		}
-/*
-		for ( int i = 0; i < (int)g_arrMainArgs.size(); i++ )
-		{
-			std::string str = g_arrMainArgs[i].first + "=" + g_arrMainArgs[i].second;
-			CDebug::Print(0, 100 + i*14, str.c_str()); 
-		}
-*/
 	}
 };

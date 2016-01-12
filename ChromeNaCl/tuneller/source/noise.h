@@ -165,25 +165,25 @@ public:
 
 	static float Crusher(float fValue)
 	{
-		if ( fValue < -0.3f )
+		if ( fValue < -0.5f )
 		{
 			fValue += ((NextRand() % 100) / 50.0f - 1.0f) * 0.05f;
-			if ( fValue > -0.301f )
-				fValue = -0.301f;
+			if ( fValue > -0.501f )
+				fValue = -0.501f;
 
 			return fValue;
 		}
 
 		fValue += ((NextRand() % 100) / 50.0f - 1.0f) * 0.05f;
-		if ( fValue < -0.30f )
-			fValue = -0.30f;
+		if ( fValue < -0.40f )
+			fValue = -0.40f;
 
 		return fValue;
 	}
 
 	static int Mapper(float fValue)
 	{
-		const float fWaterThresh = -0.3f;
+		const float fWaterThresh = -0.5f;
 		const float fMountainThresh = 0.6f;
 		const float fMin = -0.8f;
 		const float fMax = 1.0f;

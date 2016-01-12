@@ -30,6 +30,11 @@ public:
 	int m_nKilled;
 	int m_nDied;
 
+	CTank()
+	{
+		m_nId = -1;
+	}
+
 	void Create(CWorld* pWorld/*, CNetGame* pNetGame*/)
  	{
 		m_nNetworkKey = 0;
@@ -89,7 +94,7 @@ public:
 			}
 	}
 
-	void Transform(TTankBitmap& result, const TTankBitmap& sourceStraight, const TTankBitmap& sourceDiagonal, int nDirection)
+	static void Transform(TTankBitmap& result, const TTankBitmap& sourceStraight, const TTankBitmap& sourceDiagonal, int nDirection)
 	{
 		switch (nDirection)
 		{
@@ -233,7 +238,7 @@ public:
 		return true;
 	}
 
-	void _FlipVertical(TTankBitmap& bitmap)
+	static void _FlipVertical(TTankBitmap& bitmap)
 	{
 		for (int y=0; y<9/2; y++)
 			for( int x=0; x<9; x++)
@@ -242,7 +247,7 @@ public:
 			}
 	}
 
-	void _Rotate90(TTankBitmap& bitmap)
+	static void _Rotate90(TTankBitmap& bitmap)
 	{
 		int n = 9;
 		for(int y=0; y<n/2; y++)
@@ -250,7 +255,7 @@ public:
 				_cyclic_roll(bitmap[y][x], bitmap[n-1-x][y], bitmap[n-1-y][n-1-x], bitmap[x][n-1-y]);
 	}
 
-	void _cyclic_roll(int &a, int &b, int &c, int &d)
+	static void _cyclic_roll(int &a, int &b, int &c, int &d)
 	{
 		int temp = a;
 		a = b;
@@ -263,11 +268,11 @@ public:
 	{
 		m_nDirt = max(m_nDirt-2, 0);
 		if ( m_nDirt > 0 )
-    {
-      Draw(true);
+		{
+			Draw(true);
 			nDir = 5;
-      return true; // otherwise it would send too many net messages
-    }
+			return true; // otherwise it would send too many net messages
+		}
 
 		if ( nDir == 5 )
 		{
@@ -307,7 +312,7 @@ public:
 		return true; // tank moves
 	}
 
-	POINT GetDeltaByDirection(int nDir)
+	static POINT GetDeltaByDirection(int nDir)
 	{
 		POINT arrPos[10] = {{0, 0}, 
 		{-1, +1}, {0, +1}, {+1, +1},
@@ -380,10 +385,10 @@ public:
 		return (int)m_fEnergy;
 	}
 
-  void SetEnergy(int nEnergy)
-  {
-    m_fEnergy = (float)nEnergy;
-  }
+	void SetEnergy(int nEnergy)
+	{
+		m_fEnergy = (float)nEnergy + 0.9f;
+	}
 
 	void GoHome()
 	{
@@ -422,5 +427,10 @@ public:
 	int GetDied()
 	{
 		return m_nDied;
+	}
+
+	bool IsValid()
+	{
+		return m_nId != -1;
 	}
 };

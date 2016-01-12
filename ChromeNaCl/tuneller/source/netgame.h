@@ -21,7 +21,7 @@ public:
 		m_nStartRequestState = m_pNet ? EStartRequestConnecting : EStartRequestFailed;
 	}
 
-private:
+protected:
 	static void _ReceiveHandler(std::string message, PVOID data)
 	{
 		CNetGame* pThis = static_cast<CNetGame*>(data);
@@ -229,7 +229,7 @@ private:
 				t.m_ptPosition.x = nX;
 				t.m_ptPosition.y = nY;
 				t.m_nNetworkKey = nDir;
-        t.SetEnergy( nEnergy );
+				t.SetEnergy( nEnergy );
 				t.Draw(true);
 				return;
 			}

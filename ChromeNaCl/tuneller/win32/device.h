@@ -44,7 +44,7 @@ public:
 		FillMemory(m_pBuffer, sizeof(DWORD)*Width()*Height(), 0xb0);
 	}
 
-	LPVOID GetBuffer()
+	LPVOID& GetBuffer()
 	{
 		return m_pBuffer;
 	}

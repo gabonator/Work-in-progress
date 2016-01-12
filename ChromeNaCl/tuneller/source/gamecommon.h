@@ -9,7 +9,7 @@ protected:
 	std::vector<CTank> m_arrTanks;
 	std::vector<CBullet> m_arrBullets;
 	std::vector<CParticle> m_arrParticles;
-	std::vector<std::shared_ptr<CEntity>> m_arrEntities;
+	std::vector<std::shared_ptr<CEntity> > m_arrEntities;
 
 	POINT m_ptViewPoint;
 	int m_nPixelScaling;

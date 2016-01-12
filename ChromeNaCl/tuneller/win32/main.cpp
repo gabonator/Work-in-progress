@@ -40,12 +40,14 @@ public:
 	THandler m_handler;
 	PVOID m_handlerData;
 	WebSocket::pointer m_ws;
+	HANDLE m_hThread;
+	bool m_bRunning;
 
 public:
 	std::string GetServerUrl()
 	{
-		//return "ws://localhost:1337/foo";
-		return "ws://91.230.44.236:1337/test";
+		return "ws://localhost:1337/tuneller";
+		//return "ws://91.230.44.236:1337/test";
 	}
 	CNetWs()
 	{
@@ -64,14 +66,50 @@ public:
 		m_handlerData = NULL;
 		m_ws = WebSocket::from_url(GetServerUrl());
 		//_ASSERT(m_ws);
+
+		m_bRunning = false;
+/*
+		if ( m_ws )
+		{
+			m_hThread = CreateThread( NULL, NULL, &_ThreadProc, this, NULL, NULL );
+		}
+*/
 	}
 
 	~CNetWs()
 	{
+		if ( m_bRunning )
+		{
+			m_bRunning = false;
+			Sleep(100);
+			CloseHandle(m_hThread);
+		}
 		if ( m_ws )
 			m_ws->close();
 		WSACleanup();
 		delete m_ws;
+	}
+
+	static DWORD WINAPI _ThreadProc(HANDLE handle) 
+	{	
+		CNetWs* pThis = static_cast<CNetWs*>(handle);
+		return pThis->ThreadProc();
+	}
+
+	DWORD ThreadProc()
+	{
+		//TODO: Not acceptable!!! Round trip 16ms on localhost!!!
+		m_bRunning = true;
+		while (m_bRunning)
+		{
+			m_ws->poll(1);
+			m_ws->dispatch([&](const std::string & message) 
+			{
+				if ( m_handler)
+					m_handler(message, m_handlerData);
+			});
+		}
+		return 1;
 	}
 
 	virtual void Do()
@@ -132,24 +170,6 @@ void DoFrame()
 
 	}
 	nFrames++;
-
-	//HDC hdc = GetDC(g_hwnd);
-	/*
-		RECT rc;
-		rc.left = 20;
-		rc.top = 20;
-		rc.right = 400;
-		rc.bottom = 80;
-		sprintf(msg, "fps: %d", nFps);
-		SetBkMode( hdc, TRANSPARENT );
-		SetTextColor( hdc, RGB(255, 0, 0) );
-		DrawTextA(hdc, msg, -1, &rc, DT_TOP | DT_LEFT);
-
-		SetTextColor( hdc, 0xff00ff );
-		rc.left++;
-		rc.top++;
-		DrawTextA(hdc, msg, -1, &rc, DT_TOP | DT_LEFT);
-		*/
 }
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -211,7 +231,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		net.Do();
 		game.Do();
 		g_dev.Blit( hdc );
+		net.Do();
 		Sleep(8);
+		net.Do();
 	}
 
 	return (int) msg.wParam;

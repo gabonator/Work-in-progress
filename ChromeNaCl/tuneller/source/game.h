@@ -39,22 +39,36 @@ public:
 		CNetGame::Init();
 
 		//NetCreateTank(0, m_ptViewPoint.x, m_ptViewPoint.y, m_ptViewPoint.x, m_ptViewPoint.y, 8);
-/*
+
+	}
+
+	void CheckExtras()
+	{
+		static bool bExtrasCreated = false;
+		if ( bExtrasCreated )
+			return;
+
+		if ( GetTanks().size() == 0 )
+			return;
+
+		bExtrasCreated = true;
+
+		POINT pt = GetTanks()[0].m_ptPosition;
+
 		m_arrEntities.push_back(std::shared_ptr<CEntity>(new CDrone(this)));
 		CDrone* p = (CDrone*)m_arrEntities[0].get();
-		p->m_ptPosition.x = m_ptViewPoint.x + 50;
-		p->m_ptPosition.y = m_ptViewPoint.y + 50;
-
+		p->m_ptPosition.x = pt.x + 50;
+		p->m_ptPosition.y = pt.y + 50;
 
 		m_arrEntities.push_back(std::shared_ptr<CEntity>(new CSideShot(this)));
 		CSideShot* ps = (CSideShot*)m_arrEntities[1].get();
-		ps->m_ptPosition.x = m_ptViewPoint.x + 30;
-		ps->m_ptPosition.y = m_ptViewPoint.y + 30;
-*/
-	}
+		ps->m_ptPosition.x = pt.x + 30;
+		ps->m_ptPosition.y = pt.y + 30;
 
+	}
 	void Do()
 	{
+		CheckExtras();
 		CNetGame::Do();
 
 		POINT ptVector = {0, 0};
@@ -271,22 +285,31 @@ public:
 			}
 		}
 
-		char *strNetMode = "?";
+		char *strNetMode = (char*)"?";
 		switch(m_pNet->GetState())
 		{
-			case CNet::Connecting: strNetMode = "Connecting"; break;
-			case CNet::Open: strNetMode = "Open"; break;
-			case CNet::Closed: strNetMode = "Closed"; break;
-			case CNet::Error: strNetMode = "Error"; break;
+			case CNet::Connecting: strNetMode = (char*)"Connecting"; break;
+			case CNet::Open: strNetMode = (char*)"Open"; break;
+			case CNet::Closed: strNetMode = (char*)"Closed"; break;
+			case CNet::Error: strNetMode = (char*)"Error"; break;
 			default: break;
 		}
 
-		CDebug::Print(0, 0, "%s (%s) [%d, %d] ", m_pNet->GetServerUrl().c_str(), strNetMode, m_ptViewPoint.x, m_ptViewPoint.y);
+		const char *msg = TsValid() ? (((GetTs() % 1000) < 250) ? "###" : ":::") : "---"; 
+		CDebug::Print(0, 0, "%s (%s) [%d, %d] %s", m_pNet->GetServerUrl().c_str(), strNetMode, m_ptViewPoint.x, m_ptViewPoint.y, msg);
 		for ( int i = 0; i < (int)m_arrTanks.size(); i++ )
 		{
 			CTank& t = m_arrTanks[i];
 			CDebug::Print(0, 14 + i*14, "Tank %d: Energy = %3d%% Kills =%2d, Deaths =%2d", 
 				t.m_nId, t.GetEnergy()/10, t.GetKilled(), t.GetDied());
 		}
+
+/*
+		if ( (GetTs() % 1000) < 250 )
+		{
+			CDebug::Bar(20, 20, 200, 200, RGB(255, 0, 0));
+		}
+*/
+
 	}
 };

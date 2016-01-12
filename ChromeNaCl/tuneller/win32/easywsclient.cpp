@@ -193,7 +193,7 @@ class _RealWebSocket : public easywsclient::WebSocket
         if (timeout != 0) {
             fd_set rfds;
             fd_set wfds;
-            timeval tv = { timeout/1000, (timeout%1000) * 1000 };
+			timeval tv = { 0, 1};// (timeout%1000) * 1000 };
             FD_ZERO(&rfds);
             FD_ZERO(&wfds);
             FD_SET(sockfd, &rfds);
@@ -220,6 +220,7 @@ class _RealWebSocket : public easywsclient::WebSocket
             }
             else {
                 rxbuf.resize(N + ret);
+				break;
             }
         }
         while (txbuf.size()) {

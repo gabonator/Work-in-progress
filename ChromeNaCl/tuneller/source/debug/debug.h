@@ -2,6 +2,10 @@ namespace CDebugFont {
 #include "font.h"
 }
 
+//DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
+
+#define PIXEL(x, y) ((DWORD*)g_dev.display.GetBuffer())[(y)*g_dev.display.Width()+x]
+
 class CDebug
 {
 public:
@@ -26,20 +30,27 @@ public:
 		_Print(x, y, buff, RGB(0xff, 0xff, 0xff));
 	}
 
+	static void Bar(int x1, int y1, int x2, int y2, COLORREF clr)
+	{
+		clr |= 0xff000000;
+		for (int y=y1; y<y2; y++)
+			for (int x=x1; x<x2; x++)
+			{
+				PIXEL(x, y) = clr;
+			}
+	}
+
 private:
 	static void _Print(int x, int y, char* text, COLORREF clr)
 	{
-    clr |= 0xff000000;
+	    clr |= 0xff000000;
 		while (*text)
 			x += _DrawChar(x, y, clr, *text++);
 	}
 
 	static int _DrawChar(int x, int y, COLORREF clr, char ch)
 	{
-		DWORD *pBuf = (DWORD*)g_dev.display.GetBuffer();
 		const unsigned char *pFont = CDebugFont::GetFont(ch);
-
-		#define PIXEL(x, y) pBuf[(y)*g_dev.display.Width()+x]
 
 		for (int _y=0; _y<14; _y++)
 		{
@@ -52,8 +63,9 @@ private:
 //					PIXEL(x+_x, y+_y) &= 0x7f7f7f; //clrFore;
 		}
 
-		#undef PIXEL
-
 		return 8;
 	}
+
 };
+
+#undef PIXEL

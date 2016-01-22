@@ -1,14 +1,26 @@
-'use strict';
-var query = "/xkf17YX8/frankenweenie-2012-1080p-bluray-x264-sparks-mkv";
+'option strict';
 
+module.exports = {getDownloadLink:getDownloadLink};
 
 var request = require("request");
-var mainurl = "http://ulozto.cz" + query; 
+var mainurl;
 var captchaurl = "http://ulozto.cz/reloadXapca.php?rnd=" + (new Date).getTime();
-
 var form = {};
 var keepCookie = "";
-var stdin;
+var onSuccess;
+var processCaptcha;
+
+function getDownloadLink(lnk, captcha, handler)
+{
+  onSuccess = handler;
+  processCaptcha = captcha;
+  mainurl = "http://ulozto.cz" + lnk; 
+
+  doMainRequest(function()
+  {
+    doCaptcha();
+  });
+}
 
 function myDownload(url, filename)
 {
@@ -74,7 +86,7 @@ function doMainRequest(onFinish)
   })
 }             
 
-function doCaptcha(onFinish)
+function doCaptcha()
 {
   myRequest(captchaurl, function(data)
   {
@@ -83,24 +95,12 @@ function doCaptcha(onFinish)
     form.timestamp = json.timestamp;
     form.hash = json.hash;
     form.salt = json.salt;
-    myDownload("http:" + json.image, "captcha.gif");
-    onFinish();
+    processCaptcha({image:"http:"+json.image, sound:"http:"+json.sound}, tryCaptcha);
   })
 }
 
-function requestCaptcha()
+function tryCaptcha(code)
 {
-  console.log("Enter captcha: ");
-  
-  stdin = process.openStdin();
-  stdin.addListener("data", function(d) {
-    finishCaptcha(d.toString().trim());
-  });
-}
-
-function finishCaptcha(code)
-{
-//  stdin.destroy();
   form.captcha_value = code;
   requestDownload(processResponse);
 }
@@ -130,17 +130,11 @@ function processResponse(data)
     form.salt = json.new_form_values.xapca_salt;
     form.timestamp = json.new_form_values.xapca_timestamp;
     
-    myDownload("http:"+json.new_captcha_data.image, "captcha.gif");
-    requestCaptcha();
+    processCaptcha({image:"http:"+json.new_captcha_data.image, sound:"http:"+json.new_captcha_data.sound}, tryCaptcha);
   }
 
   if ( json.status == "ok" )
   {
-    console.log("\n\nGot LINK !!!!\n" + json.url)
+    onSuccess(json.url);
   }
 }
-
-doMainRequest(function()
-{
-  doCaptcha(requestCaptcha);
-});

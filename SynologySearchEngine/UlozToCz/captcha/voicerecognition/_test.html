@@ -1,0 +1,188 @@
+<html>
+<canvas id="canvas" width="10000" height="300" style="border:solid 1px #000000">
+</canvas>
+
+<script>module = {};</script>
+<script src="transcribe.js"></script><script>for (var i in module.exports) module[i] = module.exports[i];</script>
+<script src="matcher.js"></script><script>for (var i in module.exports) module[i] = module.exports[i];</script>
+<script src="_learn.js"></script><script>for (var i in module.exports) module[i] = module.exports[i];</script>
+	
+<script src="_testset/wave.js"></script>
+
+<script language="javascript">
+var tts = module;
+
+if (0 /* optimize data set after adding fixes*/ )
+{
+  tts.setLearnData(tts.getAiData());
+  tts.optimizeLearnData();
+  console.log(tts.getLearnData());
+  die();
+}
+
+if (1){
+// verify and learn new symbols
+if ( 1 )
+{
+  for (var i in wave)
+  {
+    console.log("pushing " + i);
+    tts.pushLearnData(wave[i], i.substr(0, 4));
+  }
+}
+
+//console.log(tts.getLearnData());
+
+if (0)
+{
+// TEST
+for (var i in wave)
+{
+  console.log("transcoding " + i);
+  console.log(tts.matcher(tts.transcribe(wave[i], {origin:i})));
+}
+console.log(tts.getLearnData());
+}
+
+//tts.reduceLearnData();
+//console.log(tts.getLearnData());
+//tts.setAiData(tts.getLearnRawData());
+//tts.setLearnData(tts.getLearnRawData());
+}
+
+console.log("----------");
+//console.log(tts.getLearnRawData()); // pozor duplicity!!!
+
+var errors = [];
+var learnData = tts.getLearnRawData();
+
+for (i in wave) 
+{
+  wavename = i;
+
+  var srcwave = wave[wavename];
+
+  //srcwave = wave['jrkp.wav'] ; //wave['hizo.wav'] + wave['bogs.wav'];
+  //var prefix = "";
+  //for (var i=0; i<1000; i++)
+  //  prefix += "7f";
+  //srcwave = prefix + srcwave;
+    
+  //var srcwave = wave['dfgf.wav'] + wave['bopk.wav'] + wave['zrsj.wav'];
+  var debug = {};
+  var result = tts.transcribe(srcwave, debug);
+  var matched = tts.matcher(result, debug);
+
+  var q = wavename + ": ";
+  for ( var i in debug.matchedIntervals )
+    q += debug.matchedIntervals[i].char + " (" +Math.floor(debug.matchedIntervals[i].confidence)+"%), ";
+  if (matched == wavename.substr(0, 4))
+    q += "OK!";
+  else
+  {
+    q += "ERROR!";
+
+    for ( var i in debug.matchedIntervals )
+    {
+      var corrected = {};
+
+      for ( var l in learnData )
+        if ( learnData[l].char == wavename.charAt(i))
+        {
+          corrected = learnData[l];
+          break;
+        }
+
+      if ( debug.matchedIntervals[i].char != wavename.charAt(i) )
+        errors.push({real:wavename.charAt(i), matched:debug.matchedIntervals[i].char, wave:wavename, index:i, origin:debug.matchedIntervals[i].origin,
+          matchData:debug.matchedIntervals[i], measData:result[i], correctData:corrected});
+    }
+  }
+  console.log(q);
+}
+console.log("Errors: " + errors.length);
+console.log(JSON.stringify(errors));
+
+var extraData = [];
+for ( var i in errors)
+{
+  var extra = errors[i].measData;
+  extra.char = errors[i].real;
+  extraData.push(extra);
+}
+
+console.log("extended set fixing previous errors:");
+console.log(JSON.stringify(extraData));
+
+//w0 = errors[0].origin;
+//wavename = errors[0].origin + '/' + errors[0].wave;
+//srcwave = wave[errors[0].origin + '.wav'] + wave[errors[0].wave];
+
+wavename = errors.length > 0 ? errors[0].wave : null;
+if ( !wavename )
+{
+  for (var i in wave) 
+  {
+    wavename = i;
+    break;
+  }
+}
+
+srcwave = wave[wavename];
+var result = tts.transcribe(srcwave, debug);
+
+
+ctx = document.getElementById("canvas").getContext("2d");
+ctx.fillStyle = "#000";
+ctx.font = "bold 40px Arial";
+ctx.fillText(wavename, 20, 40);
+
+draw(debug.waveSource, "#888", 1, 1/32);          
+//draw(debug.waveHp, "rgba(255, 0, 0, 1)");
+//draw(debug.source, "rgba(128, 128, 128, 0.6)");
+
+draw(debug.envelopeLp, "rgba(128, 12, 255, 0.8)", 2);
+draw(debug.triggerLp, "rgba(0, 0, 255, 0.5)", 3);
+
+draw(debug.envelopeHp, "rgba(255, 128, 128, 0.8)", 2);
+draw(debug.triggerHp, "rgba(255, 0, 0, 0.5)", 3);
+draw(debug.trigger, "rgba(0, 0, 0, 0.5)", 3);
+draw(debug.triggerRe, "rgba(255, 255, 0, 1)", 1);
+
+draw(debug.fun, "rgba(0, 128, 0, 0.8)", 2);
+
+//draw(debug.envelopeHp, "rgba(255, 0, 0, 1.0)", 3);
+
+//draw(debug.waveTrigger, "#000");
+//draw(debug.waveThreshold, "#000");
+
+
+drawconst(+0.3 * debug.signalMax, "#88f");
+drawconst(-0.3 * debug.signalMax, "#88f");
+
+function draw(arr, c, w, s)
+{
+  ctx.lineWidth = w ? w : 1;
+	ctx.strokeStyle = c;
+	ctx.beginPath();
+	for (var i=0; i<arr.length; i++)
+	{
+		var x = i*3 * (s ? s : 1);
+		var y = -arr[i]*100+150;
+		i==0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+	}
+	ctx.stroke();
+}
+function drawconst(v, c)
+{
+	ctx.strokeStyle = c;
+  ctx.lineWidth = 1; //w ? w : 1;
+	ctx.beginPath();
+  var y = -v*100+150;
+  ctx.moveTo(0, y)
+  ctx.lineTo(10000, y);
+	ctx.stroke();
+}
+</script>                                                                     
+
+</html>

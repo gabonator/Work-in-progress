@@ -1,10 +1,13 @@
 'option strict';
 
-module.exports = {getDownloadLink:getDownloadLink};
+module.exports = {getDownloadLink:getDownloadLink, getSuggestions:getSuggestions, getSearchResults:getSearchResults};
 
 var request = require("request");
+
+// download link
+
 var mainurl;
-var captchaurl = "http://ulozto.cz/reloadXapca.php?rnd=" + (new Date).getTime();
+var captchaurl = "http://ulozto.cz/reloadXapca.php?rnd=";
 var form = {};
 var keepCookie = "";
 var onSuccess;
@@ -88,7 +91,7 @@ function doMainRequest(onFinish)
 
 function doCaptcha()
 {
-  myRequest(captchaurl, function(data)
+  myRequest(captchaurl + (new Date).getTime(), function(data)
   {
     var json = JSON.parse(data);
     var image = json.image;
@@ -138,3 +141,72 @@ function processResponse(data)
     onSuccess(json.url);
   }
 }
+
+// suggestions
+function getSuggestions(term, onResponse)
+{
+  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=" + term;
+
+  request(suggestUrl, function(error, response, body) {
+    onResponse(body);
+  });
+}
+
+// search result
+var decoderClass = require('./decoder.js').kapp;
+
+function getSearchResults(term, onResponse)
+{
+  var searchUrl = "http://ulozto.cz/hledej?q=" + term;
+
+  var trim = function (str)
+  {
+    while ( str.length > 1 && str.charCodeAt(str.length-1) == 0 )
+      str = str.substr(0, str.length-1);
+    return str;
+  }
+
+  var decode = function(data, key)
+  {
+  	var decoder = new decoderClass(key); 
+    var result = [];
+    var subdata = [];
+
+  	var index = 0;
+    for (var i in data)
+    {
+     subdata[index % 7] = trim(decoder.decrypt(data[i]));
+     if ( index % 7 == 6 )
+     {
+       var url = subdata[0];
+       var mainInfo = subdata[6].split("\n").join("");
+       var img = mainInfo.match("\\<img src=\\\"(.*?)\\\"");
+       img = ( img && img.length > 1 ) ? "<img src='"+img[1]+"'>" : "";
+       var rating = mainInfo.match("fileRating.*?em>(.*?)<");
+       rating = ( rating && rating.length > 1 ) ? rating[1] : "";
+       var name = mainInfo.match("class=\"name.*?\">(.*?)<");
+       name = ( name && name.length > 1 ) ? name[1] : "";
+       var size = mainInfo.match("fileSize\">(.*?)<");
+       size = ( size && size.length > 1 ) ? size[1] : "";
+       var time = mainInfo.match("fileTime\">(.*?)<");
+       time = ( time && time.length > 1 ) ? time[1] : "";
+
+       result.push({url:url, img:img, rating:rating, name:name, size:size, time:time, data:subdata});
+     }
+     index++;
+    }
+    return result;
+  }
+
+  request({
+    url: searchUrl,
+    method: "GET",
+    headers: {"X-Requested-With": "XMLHttpRequest"}
+  }, function(error, response, body) {
+    var data = JSON.parse(body.match("var kn = (\\{.*?\\});")[1]);
+    var key = body.match("kapp\\(kn\\[\\\"(.*)\\\"")[1];
+    var result = decode(data, data[key]);
+    onResponse(result);
+  });
+}
+

@@ -51,82 +51,32 @@ http.createServer(function (request, response) {
 
 
 // search api
-var decoderClass = require('./engine/decoder.js').kapp;
-var getDownloadLink = require('./engine/loader.js').getDownloadLink;
-var transcribe = require('./captcha/voicerecognition/transcribe.js').transcribe;
-var matcher = require('./captcha/voicerecognition/matcher.js').matcher;
+var api = require('./engine/api.js');
+//var imageCaptcha = require('./captcha/ocr/ocr.js').captchaByImageHash;
+var voiceCaptcha = require('./captcha/voicerecognition/voice.js').captchaByVoice;
 
 function getSuggestion(term)
 {
   var safeResponse = currentResponse;
-  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=";
-
-  request(suggestUrl + term, function(error, response, body) {
-    safeResponse.end(body);
+  api.getSuggestions(term, function(data)
+  { 
+    safeResponse.end(data);
   });
-
 }
 
 function doSearch(term)
 {
   var safeResponse = currentResponse;
-  var searchUrl = "http://ulozto.cz/hledej?q=";
-
-  var trim = function (str)
+  api.getSearchResults(term, function(json)
   {
-    while ( str.length > 1 && str.charCodeAt(str.length-1) == 0 )
-      str = str.substr(0, str.length-1);
-    return str;
-  }
-
-  var decode = function(data, key)
-  {
-  	var decoder = new decoderClass(key); 
-    var result = [];
-    var subdata = [];
-
-  	var index = 0;
-    for (var i in data)
-    {
-     subdata[index % 7] = trim(decoder.decrypt(data[i]));
-     if ( index % 7 == 6 )
-     {
-       var url = subdata[0];
-       var mainInfo = subdata[6].split("\n").join("");
-       var img = mainInfo.match("\\<img src=\\\"(.*?)\\\"");
-       img = ( img && img.length > 1 ) ? "<img src='"+img[1]+"'>" : "";
-       var rating = mainInfo.match("fileRating.*?em>(.*?)<");
-       rating = ( rating && rating.length > 1 ) ? rating[1] : "";
-       var name = mainInfo.match("class=\"name.*?\">(.*?)<");
-       name = ( name && name.length > 1 ) ? name[1] : "";
-       var size = mainInfo.match("fileSize\">(.*?)<");
-       size = ( size && size.length > 1 ) ? size[1] : "";
-       var time = mainInfo.match("fileTime\">(.*?)<");
-       time = ( time && time.length > 1 ) ? time[1] : "";
-
-       result.push({url:url, img:img, rating:rating, name:name, size:size, time:time, data:subdata});
-     }
-     index++;
-    }
-    return result;
-  }
-
-  request({
-    url: searchUrl + term,
-    method: "GET",
-    headers: {"X-Requested-With": "XMLHttpRequest"}
-  }, function(error, response, body) {
-    var data = JSON.parse(body.match("var kn = (\\{.*?\\});")[1]);
-    var key = body.match("kapp\\(kn\\[\\\"(.*)\\\"")[1];
-    var result = decode(data, data[key]);
-    safeResponse.end( JSON.stringify(result) );
+    safeResponse.end( JSON.stringify(json) );
   });
 }
 
 function getLink(lnk)
 {
   var safeResponse = currentResponse;
-  getDownloadLink(lnk, captchaHelper, function(url)
+  api.getDownloadLink(lnk, captchaHelper, function(url)
   {
     safeResponse.end( "{\"url\":\""+url+"\"}" );
   });
@@ -134,18 +84,32 @@ function getLink(lnk)
 
 function captchaHelper(json, onResult)
 {
-  // json.sound. json.image
-
-  console.log("Cracking captcha: "+json.sound);
+  console.log("Cracking voice captcha: "+json.sound);
   request({
       url : json.sound,
       encoding : "binary"
   }, function(error, response, body) {
-    var q = (new Buffer(body, 'binary')).toString('hex');
-    q = q.substr(48*2, (body.length-48-4)*2);
-
-    var result = matcher(transcribe(q, {}));
+    var result = voiceCaptcha(body);
     console.log("Found captcha: "+result);
     onResult(result);
   }); 
+
+/*
+  console.log("Cracking visual captcha: "+json.image);
+  request({
+      url : json.image,
+      encoding : "binary"
+  }, function(error, response, body) {
+
+var crypto = require('crypto');
+    var md5sum = crypto.createHash('md5');
+    md5sum.update(body.substr(body, body.length-16));
+    var hash = md5sum.digest('hex');
+    console.log("hash: " +hash);
+
+    var result = imageCaptcha(hash);
+    console.log("Found captcha: "+result);
+    onResult(result);
+  }); 
+*/
 }

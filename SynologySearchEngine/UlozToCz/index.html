@@ -1,8 +1,11 @@
 <html>
-<script src="http://releases.flowplayer.org/js/flowplayer-3.2.13.min.js"></script>
+<head>
+<title>ulozto.cz fast downloader</title>
+<meta charset="UTF-8">
+</head>
+
 <input type="text" id="search" size=80>
-<div id="playerContainer">
-</div>
+
 <div id="suggestions"></div>
 <div id="results"></div>
 
@@ -71,8 +74,8 @@ function processSearch(json)
     q += "<table><tr><td colspan='2'><b>"+json[i].name+"</b></td></tr>";
     q += "<td valign='top'>"+json[i].img+"</td>";
     q += "<td valign='top'>rating: "+json[i].rating+"<br>size: "+json[i].size+"<br>time: "+json[i].time+
-         "<br><input type=\"button\" value=\"Download\" onClick=\"requestDownload('"+json[i].url+"')\"><br>"+
-         "<br><input type=\"button\" value=\"Play\" onClick=\"requestDownload('"+json[i].url+"', processPlayVideo)\"></td>";
+         "<br><input type=\"button\" value=\"Download\" onClick=\"requestDownload('"+json[i].url+"')\">"+
+         "<br><input type=\"button\" value=\"Play in VLC\" onClick=\"requestDownload('"+json[i].url+"', processVlc)\"></td>";
     q += "</tr></table><br><br>";
   }
   $("results").innerHTML = q;
@@ -92,24 +95,15 @@ function requestDownload(lnk, process)
   xmlHttp.send();
 }
 
+function processVlc(json)
+{
+  document.location.href = "?getVlcLink('"+json.url+"')";
+}
+
 function processDownload(json)
 {
   document.location.href = json.url;
 }
 
-function processPlayVideo(json)
-{
-/*
-  if (typeof("flowplayer")=="undefined")
-  {
-    var script = document.createElement('script');
-    script.src = "http://releases.flowplayer.org/js/flowplayer-3.2.13.min.js";
-  }
-*/
-//  json = {url:"http://freecache26-free.uloz.to/Ps;Hs;fid=92574990;cid=841293016;rid=550309762;up=0;uip=91.230.44.135;tm=1453765238;ut=f;aff=ulozto.cz;did=ulozto-cz;He;ch=ae2d6a80e37b6aac9847927af13226e9;Pe/xekAMXow/krtek-a-weekend-anim-1995-irisa-avi?bD&c=841293016&De&redirs=0"};
-  $("playerContainer").innerHTML = '<a href="'+json.url+'"'+
-    ' style="display:block;width:425px;height:300px;" id="player">';
-  flowplayer("player", "http://releases.flowplayer.org/swf/flowplayer-3.2.18.swf");
-}
 </script>
 </html>                                            

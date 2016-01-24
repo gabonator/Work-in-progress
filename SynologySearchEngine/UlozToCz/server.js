@@ -77,9 +77,29 @@ function getLink(lnk)
 {
   var safeResponse = currentResponse;
   api.getDownloadLink(lnk, captchaHelper, function(url)
-  {
+  { 
+    var ind = url.lastIndexOf("-");
+    if ( ind != -1 )
+      url = url.substr(0, ind) + '.' + url.substr(ind+1);
+
     safeResponse.end( "{\"url\":\""+url+"\"}" );
   });
+}
+
+function getVlcLink(url)
+{
+  var name = url.match(".*/(.*?)\\?")[1]
+  var ind = name.lastIndexOf("-");
+  if ( ind != -1 )
+    name = name.substr(0, ind) + '.' + name.substr(ind+1);
+
+  currentResponse.setHeader('Content-disposition', 'attachment; filename=' + name + ".m3u");
+  currentResponse.setHeader('Content-type', "text/plain");
+  currentResponse.end(
+    '#EXTM3U\n' +
+    '#EXTINF:-1,' + name + '\n' +
+    url
+  );
 }
 
 function captchaHelper(json, onResult)

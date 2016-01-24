@@ -145,7 +145,7 @@ function processResponse(data)
 // suggestions
 function getSuggestions(term, onResponse)
 {
-  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=" + term;
+  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=" + escape(term);
 
   request(suggestUrl, function(error, response, body) {
     onResponse(body);
@@ -153,17 +153,17 @@ function getSuggestions(term, onResponse)
 }
 
 // search result
-var decoderClass = require('./decoder.js').kapp;
+var decoderClass = require('./blowfish.js').blowfish;
 
 function getSearchResults(term, onResponse)
 {
-  var searchUrl = "http://ulozto.cz/hledej?q=" + term;
+  var searchUrl = "http://ulozto.cz/hledej?q=" + escape(term);
 
   var trim = function (str)
   {
     while ( str.length > 1 && str.charCodeAt(str.length-1) == 0 )
       str = str.substr(0, str.length-1);
-    return str;
+    return new Buffer(str, "binary").toString("utf8");
   }
 
   var decode = function(data, key)

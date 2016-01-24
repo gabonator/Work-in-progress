@@ -27,7 +27,7 @@ Interesting details about this API/ulozto.cz:
   - Instead of calculating FFT I decited to give it a try with calculating signal characteristics in time domain. From downloaded wave I separated low frequency signals, high frequency signals, calculated lp, hp, energy envelopes, measured their average value and variance and this set of information were used to numerically represent the recording
   - I initially feeded the learning algorithm with 20 recordings, then tried to crack 10 other captchas. Incorrectly cracked ones were added to the learning database and this procedure was repeated until it could convert 80% of random captchas
   - Learning algorithm refused to learn some captchas, then I realized they have wrong pairs of audio/image captcha in their database. For example one captcha had image 'HegJ' but in recording it was said 'htgj'. Many times the recording inccorectly contained 't' letter instead of 'e'... 
-![](screenshots/htgj.wav)
+![](screenshots/htgj.gif)
   - Currently the algorithm shows 80% success on cracking audio captchas. When it fails, it just tries to crack another captcha...
 
 ![](screenshots/analysis.jpg)

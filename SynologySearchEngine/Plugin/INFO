@@ -1,0 +1,10 @@
+{
+"name": "uloztosk",
+"displayname": "UlozTo.sk",
+"description": "UlozTo.sk search engine",
+"version": "2.0",
+"site": "http://ulozto.sk",
+"module": "search.php",
+"type": "search",
+"class": "SynoDLMSearchUloztoSk"
+}

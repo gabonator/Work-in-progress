@@ -75,6 +75,7 @@ function processSearch(json)
     q += "<td valign='top'>"+json[i].img+"</td>";
     q += "<td valign='top'>rating: "+json[i].rating+"<br>size: "+json[i].size+"<br>time: "+json[i].time+
          "<br><input type=\"button\" value=\"Download\" onClick=\"requestDownload('"+json[i].url+"')\">"+
+         "<br><input type=\"button\" value=\"GetUrl\" onClick=\"requestDownload('"+json[i].url+"', processUrl)\">"+
          "<br><input type=\"button\" value=\"Play in VLC\" onClick=\"requestDownload('"+json[i].url+"', processVlc)\"></td>";
     q += "</tr></table><br><br>";
   }
@@ -98,6 +99,11 @@ function requestDownload(lnk, process)
 function processVlc(json)
 {
   document.location.href = "?getVlcLink('"+json.url+"')";
+}
+
+function processUrl(json)
+{
+  prompt("Here is your download link:", json.url);
 }
 
 function processDownload(json)

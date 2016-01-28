@@ -1,1 +1,1 @@
-tar zcf ulozto.dlm INFO search.php
+tar zcf ulozto.dlm INFO search.php blowfish.php

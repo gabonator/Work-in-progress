@@ -44,7 +44,7 @@ class SynoDLMSearchUlozto
     $entries = 0;
     foreach ($data as $row)
     {
-      $subdata[] = $this->blowfish->decrypt($row);
+      $subdata[] = self::trim($this->blowfish->decrypt($row));
 
       if ( count($subdata) == 7 )
       {
@@ -78,26 +78,28 @@ class SynoDLMSearchUlozto
 
     $rating = self::match($mainInfo, "fileRating.*?em>(.*?)<");
     $name = self::match($mainInfo, "class=\"name.*?\">(.*?)<");
-    $size = self::match($mainInfo, "fileSize\">(.*?) (B|MB|GB|KB)<");
+    $size = self::match($mainInfo, "fileSize\">(.*?) (B|MB|GB|kB)<");
     $time = self::match($mainInfo, "fileTime\">(.*?)<");
 
     $size = self::calculateSize($size[0], $size[1]);
 
     $hash = md5($url);
-    $seeds = $rating*100;
+    $seeds = $rating*10+100; // 100 -> 0 votes, 110 -> 1 vote, 90 -> -1 vote
     $leechs = 0;
 
     $year = self::match($name, "\\b((19|20)\\d{2})\\b");
     $year = count($year) == 2 ? $year[0] : "2016";
 
-    $plugin->addResult($name, "http://ulozto.cz".$url, $size, $year."-04-15", "http://ulozto.cz".$url, $hash, $seeds, $leechs, "Unknown category");
+    $url = "http://ulozto.cz".$url;
+
+    $plugin->addResult($name, $url, $size, $year."-04-15", "http://ulozto.cz".$url, $hash, $seeds, $leechs, "Unknown category");
   }
 
   private function calculateSize($number, $units)
   {
     $number = floatval($number);
     $mul = 1.0;
-    if ( $units == "KB" )
+    if ( $units == "kB" )
       $mul = 1024.0;
     if ( $units == "MB" )
       $mul = 1024.0*1024.0;
@@ -107,6 +109,14 @@ class SynoDLMSearchUlozto
     $aux = floor($number * $mul);
 
     return $aux;
+  }
+
+  private function trim($str)
+  {
+    while ( strlen($str) > 0 && ord(substr($str, strlen($str)-1, 1)) == 0 )
+      $str = substr($str, 0, strlen($str)-1);
+      
+    return $str;
   }
 }
 ?>

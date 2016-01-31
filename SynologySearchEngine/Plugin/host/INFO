@@ -1,0 +1,10 @@
+{
+"name": "ulozto",
+"hostprefix": "ulozto.cz",
+"displayname": "ulozto.cz",
+"version": "2.0",
+"authentication": "no",
+"module": "host.php",
+"class": "SynoDLMHostUlozto",
+"description": "Ulozto file sharing service by valky.eu"
+}

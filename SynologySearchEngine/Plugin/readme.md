@@ -7,6 +7,7 @@ This plugin allows you to directly download movies from ulozto.cz database from 
 
 Requirements:
   - node js (can be downloaded in Synology Package Center)
+  - request package "npm install request"
 
 Installation:
   - Download Station -> Settings -> Searching BT -> Add service -> ulozto.dlm

@@ -1,6 +1,6 @@
 #include "hal.h"
 #include "cc1101.h"
-#include <avr/interrupt.h>
+#include "commonregs.h"
 #include <avr/interrupt.h>
 
 void myIsr()
@@ -10,6 +10,7 @@ void myIsr()
 
 int main(void)
 {
+	HAL::TIME::Init();
 	HAL::IO::Configure(HAL::IO::A0, HAL::IO::Output);
 	HAL::IO::Configure(HAL::IO::A1, HAL::IO::Output);
 	HAL::IO::Configure(HAL::IO::A2, HAL::IO::Output);
@@ -38,10 +39,9 @@ int main(void)
 	
     while (1) 
     {
-		HAL::IO::Write(HAL::IO::A3, 0);
-			
+		HAL::IO::Write(HAL::IO::A3, HAL::TIME::GetTick() & 1);
 		HAL_TIME_DelayMs(1);
-			HAL::IO::Write(HAL::IO::A3, 1);
+		HAL::IO::Write(HAL::IO::A3, 1);
 		HAL_TIME_DelayMs(499);
 		
 		//HAL::IO::Write(HAL::IO::A, HAL::IO::Read(HAL::IO::A) >> 4);

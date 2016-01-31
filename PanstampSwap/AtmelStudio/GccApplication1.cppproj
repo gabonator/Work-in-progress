@@ -170,13 +170,64 @@
     <Compile Include="common.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="config.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="hal.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="inquiry.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="logger.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="mediator.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="panstamp.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="panstamp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="processor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="register.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="register.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="repeater.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="repeater.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="storage.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="storage.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swpacket.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swpacket.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

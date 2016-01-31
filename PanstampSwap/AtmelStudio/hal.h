@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 
+#define F_CPU 4000000
 #include <util/delay.h>
 
 // Delay functions require compile time known argument, backward compatibility and nicer interface would result in less precise timing
@@ -50,8 +51,10 @@ public:
 	class TIME
 	{
 	public:
+		static void Init();
 		static void DelayMs(int nMs);
 		static void DelayUs(int nUs);
+		static uint32_t GetTick();
 	};
 	
 	class INT

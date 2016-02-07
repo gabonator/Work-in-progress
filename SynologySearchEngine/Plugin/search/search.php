@@ -42,17 +42,26 @@ class SynoDLMSearchUlozto
     $this->blowfish->init($data[$key]);
     $subdata = array();
     $entries = 0;
+    $skipFirst = true;
+
     foreach ($data as $row)
     {
       $subdata[] = self::trim($this->blowfish->decrypt($row));
 
       if ( count($subdata) == 7 )
       {
-        $this->pushEntry($plugin, $subdata);
-        $entries++;
+        if ( $skipFirst )
+          $skipFirst = false;
+        else
+        {
+          $this->pushEntry($plugin, $subdata);
+          $entries++;
+        }
+
         $subdata = array();
       }
     }
+
     return $entries;
   }
  
@@ -87,12 +96,13 @@ class SynoDLMSearchUlozto
     $seeds = $rating*10+100; // 100 -> 0 votes, 110 -> 1 vote, 90 -> -1 vote
     $leechs = 0;
 
-    $year = self::match($name, "\\b((19|20)\\d{2})\\b");
-    $year = count($year) == 2 ? $year[0] : "2016";
+    $year = self::match($name, ".*\\b((19|20)\\d{2})\\b");
+    $year = count($year) == 2 ? $year[0] : date("Y");
 
     $url = "http://ulozto.cz".$url;
 
-    $plugin->addResult($name, $url, $size, $year."-04-15", "http://ulozto.cz".$url, $hash, $seeds, $leechs, "Unknown category");
+    $category = self::getCategoryByName($name);
+    $plugin->addResult($name, $url, $size, $year."-04-01", $url, $hash, $seeds, $leechs, $category);
   }
 
   private function calculateSize($number, $units)
@@ -117,6 +127,48 @@ class SynoDLMSearchUlozto
       $str = substr($str, 0, strlen($str)-1);
       
     return $str;
+  }
+
+  private function getCategoryByName($name)
+  {
+    $fileTypes = array(
+      ".torrent" 	=> "Torrent",
+
+      ".rar" 			=> "Compressed archive",
+      ".zip" 			=> "Compressed archive",
+      ".7z" 			=> "Compressed archive",
+      
+
+      ".pdf" 			=> "Document",
+      ".txt" 			=> "Document",
+
+      ".srt"			=> "Subtitles",
+
+      ".avi"			=> "Video",
+      ".mpg"			=> "Video",
+      ".mkv"			=> "Video",
+      ".mp4"			=> "Video",
+      ".wmv"			=> "Video",
+      ".mov"			=> "Video",
+
+      ".mp3"			=> "Audio",
+    
+      ".gif"			=> "Image",
+      ".jpg"			=> "Image",
+      ".jpeg"			=> "Image",
+
+      ".apk"			=> "Android application",
+
+      ".iso"			=> "ISO Image"
+    );
+
+    foreach ($fileTypes as $ext => $fileType) 
+    {
+      if ( strstr($name, $ext) !== false )
+        return $fileType;
+    }
+
+    return "Unknown category";
   }
 }
 ?>

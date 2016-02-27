@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init(evt)" onmousemove="msMove(evt)">
+<g transform="translate(0,0) scale(1,1)" stroke-width="1">
+  <path stroke="white" fill="black" stroke-width="2" d="M0,0 H640 V480 H0 V0"/>
+  <g transform="translate(320,240) scale(64,60)">
+    <path stroke="white" stroke-width="0.01" d="M-5,-3 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-5,-2 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-5,-1 H5"/>
+    <path stroke="white" stroke-width="0.02" d="M-5,0 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-5,1 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-5,2 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-5,3 H5"/>
+    <path stroke="white" stroke-width="0.01" d="M-4,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M-3,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M-2,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M-1,-4 V4"/>
+    <path stroke="white" stroke-width="0.02" d="M0,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M1,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M2,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M3,-4 V4"/>
+    <path stroke="white" stroke-width="0.01" d="M4,-4 V4"/>
+  </g>
+  <text font-family="Arial" font-weight="bold" x="2" y="22" fill="white" font-size="20" text-anchor="start">Owon PDS5022S  : beat_wave</text>
+<path stroke="yellow" transform="translate(0,240) scale(1.28,-2.4)" fill="none" stroke-width="3" d="M0,10 L1,5 L2,-7 L3,-12 L4,-5 L5,5 L6,11 L7,5 L8,-5 L9,-7 L10,-1 L11,3 L12,1 L13,-3 L14,-3 L15,0 L16,3 L17,5 L18,3 L19,-2 L20,-3 L21,-1 L22,1 L23,0 L24,-3 L25,-3 L26,1 L27,3 L28,3 L29,1 L30,-1 L31,-3 L32,-2 L33,2 L34,2 L35,-1 L36,-3 L37,-2 L38,0 L39,5 L40,7 L41,3 L42,-2 L43,-6 L44,-8 L45,-5 L46,-1 L47,0 L48,3 L49,5 
+L50,3 L51,2 L52,0 L53,1 L54,1 L55,-1 L56,0 L57,2 L58,-3 L59,-3 L60,-2 L61,-2 L62,0 L63,-2 L64,-1 L65,3 L66,-1 L67,-1 L68,3 L69,1 L70,-3 L71,1 L72,1 L73,-1 L74,-1 L75,0 L76,3 L77,1 L78,-2 L79,1 L80,1 L81,-3 L82,-1 L83,1 L84,0 L85,1 L86,1 L87,2 L88,1 L89,0 L90,-3 L91,1 L92,-1 L93,-3 L94,1 L95,1 L96,1 L97,1 L98,0 L99,2 L100,0 L101,-3 L102,-1 L103,1 L104,-1 L105,1 L106,1 L107,1 L108,1 L109,-1 L110,-1 L111,1 L112,-2 L113,-3 L114,1 L115,-1 L116,-1 L117,1 L118,2 L119,0 L120,-1 L121,-2 L122,0 L123,-1 L124,-1 L125,0 L126,1 L127,1 L128,1 L129,-1 L130,-1 L131,-1 L132,-1 L133,0 L134,1 L135,1 L136,1 L137,1 L138,1 L139,-1 L140,-1 L141,-2 L142,-1 L143,-1 L144,0 L145,1 L146,1 L147,1 L148,0 L149,-1 
+L150,-1 L151,-1 L152,-2 L153,-1 L154,1 L155,-1 L156,1 L157,-3 L158,-3 L159,3 L160,5 L161,6 L162,1 L163,-1 L164,5 L165,3 L166,-8 L167,-19 L168,-25 L169,-22 L170,-7 L171,25 L172,46 L173,41 L174,21 L175,1 L176,-17 L177,-33 L178,-49 L179,-47 L180,-22 L181,21 L182,47 L183,46 L184,24 L185,-3 L186,-17 L187,-15 L188,-11 L189,-14 L190,-23 L191,-24 L192,-5 L193,33 L194,63 L195,65 L196,27 L197,-31 L198,-77 L199,-87 L200,-55 L201,3 L202,61 L203,89 L204,77 L205,29 L206,-32 L207,-79 L208,-87 L209,-59 L210,-6 L211,46 L212,75 L213,72 L214,43 L215,2 L216,-39 L217,-64 L218,-59 L219,-33 L220,0 L221,28 L222,42 L223,41 L224,28 L225,9 L226,-14 L227,-31 L228,-35 L229,-23 L230,-7 L231,6 L232,17 L233,19 L234,16 L235,9 L236,1 L237,-7 L238,-11 L239,-7 L240,-5 L241,-4 L242,-3 L243,0 L244,1 L245,4 L246,5 L247,5 L248,1 L249,0 
+L250,-3 L251,-5 L252,-7 L253,-5 L254,-1 L255,5 L256,8 L257,8 L258,3 L259,-3 L260,-7 L261,-8 L262,-7 L263,-3 L264,3 L265,9 L266,9 L267,6 L268,1 L269,-5 L270,-7 L271,-9 L272,-5 L273,1 L274,5 L275,8 L276,7 L277,2 L278,-3 L279,-7 L280,-8 L281,-6 L282,-2 L283,3 L284,5 L285,5 L286,3 L287,1 L288,-3 L289,-4 L290,-5 L291,-5 L292,-2 L293,1 L294,3 L295,4 L296,3 L297,1 L298,-2 L299,-3 L300,-3 L301,-3 L302,-1 L303,1 L304,2 L305,2 L306,1 L307,0 L308,0 L309,-1 L310,-2 L311,-2 L312,-1 L313,-1 L314,1 L315,1 L316,0 L317,0 L318,0 L319,-26 L320,-1 L321,25 L322,41 L323,45 L324,39 L325,23 L326,-1 L327,-30 L328,-49 L329,-49 L330,-34 L331,-13 L332,11 L333,33 L334,45 L335,43 L336,29 L337,7 L338,-19 L339,-39 L340,-43 L341,-30 L342,-10 L343,8 L344,21 L345,27 L346,25 L347,16 L348,3 L349,-11 
+L350,-21 L351,-24 L352,-17 L353,-3 L354,9 L355,15 L356,17 L357,13 L358,6 L359,-3 L360,-11 L361,-15 L362,-15 L363,-11 L364,-1 L365,9 L366,13 L367,13 L368,9 L369,4 L370,-3 L371,-8 L372,-9 L373,-12 L374,-7 L375,-1 L376,5 L377,8 L378,9 L379,7 L380,1 L381,-3 L382,-4 L383,-4 L384,-5 L385,-3 L386,1 L387,3 L388,2 L389,1 L390,1 L391,-1 L392,-3 L393,-1 L394,0 L395,-1 L396,-1 L397,1 L398,2 L399,0 L400,-1 L401,1 L402,-1 L403,-2 L404,-1 L405,0 L406,-1 L407,0 L408,3 L409,1 L410,1 L411,-1 L412,-1 L413,-1 L414,-1 L415,0 L416,1 L417,1 L418,1 L419,1 L420,0 L421,-2 L422,-5 L423,-6 L424,1 L425,15 L426,22 L427,9 L428,-17 L429,-33 L430,-25 L431,1 L432,21 L433,21 L434,5 L435,-10 L436,-5 L437,11 L438,19 L439,7 L440,-12 L441,-20 L442,-9 L443,5 L444,10 L445,3 L446,-11 L447,-13 L448,-1 L449,13 
+L450,13 L451,-2 L452,-14 L453,-9 L454,5 L455,13 L456,10 L457,-3 L458,-13 L459,-7 L460,7 L461,15 L462,3 L463,-13 L464,-16 L465,-3 L466,9 L467,13 L468,4 L469,-8 L470,-11 L471,1 L472,13 L473,9 L474,-7 L475,-15 L476,-6 L477,9 L478,15 L479,9 L480,-7 L481,-15 L482,-7 L483,7 L484,13 L485,2 L486,-13 L487,-13 L488,1 L489,13 L490,12 L491,0 L492,-13 L493,-11 L494,1 L495,11 L496,11 L497,-3 L498,-13 L499,-6 "/>
+  <text font-family="Arial" x="638" y="478" fill="yellow" font-size="20" text-anchor="end">CH2: 1000mV/div 100ms/div</text>
+  <text font-family="Arial" x="2" y="478" fill="yellow" font-size="20" text-anchor="start" id="CH2"> </text>
+<script type="text/ecmascript"><![CDATA[
+function init(evt) { if ( window.svgDocument == null ) svgDocument = evt.target.ownerDocument; }
+function fmtT(val, div) {
+  if (div > 100) return Math.floor((val-320)*div/64) + " ms";
+  if (div > 0.025) return Math.floor((val-320)*div*1000/64)/1000 + " ms";
+  return Math.floor((val-320)*div*1000*1000/64)/1000 + " us";
+}
+function fmtU(val, div, shift) { shift *= -60/25; return Math.floor((240-val+shift)*div/60) + " mV"; }
+function msMove (evt)
+{
+	var x = evt.clientX;
+	var y = evt.clientY;
+	if (x < 0 || y < 0 || x >= 640 || y >= 480)
+		return;
+	svgDocument.getElementById("CH2").firstChild.data = fmtU(y, 1000, 0) + " " + fmtT(x, 100);
+}
+]]></script>
+</g></svg>

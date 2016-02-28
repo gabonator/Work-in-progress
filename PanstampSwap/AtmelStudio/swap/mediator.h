@@ -55,7 +55,7 @@ class MEDIATOR : public PROCESSOR
     virtual bool packetHandler(SWPACKET *packet) 
     {
       // from master
-      if (packet->destAddr != swap.devAddress)
+      if (packet->destAddr != panstamp.m_swap.devAddress)
         return true;
 
       // master to mediator
@@ -116,10 +116,10 @@ class MEDIATOR : public PROCESSOR
     static void MediateRequest(SWPACKET* swPacket, uint16_t mediatorAddr)
     {
       // todo check packet size!
-      swPacket->srcAddr = swap.devAddress;
+      swPacket->srcAddr = panstamp.m_swap.devAddress;
       swPacket->hop = 0;
-      swPacket->security = swap.security & 0x0F;
-      swPacket->nonce = ++swap.nonce;
+      swPacket->security = panstamp.m_swap.security & 0x0F;
+      swPacket->nonce = ++panstamp.m_swap.nonce;
 
       swPacket->value.data[swPacket->value.length++] = swPacket->function;
       swPacket->value.data[swPacket->value.length++] = swPacket->destAddr & 0xff;
@@ -137,10 +137,10 @@ class MEDIATOR : public PROCESSOR
       swPacket->value.length -= 3;
 
       swPacket->destAddr = pMediatorHead[-2] | (pMediatorHead[-1] << 8);
-      swPacket->srcAddr = swap.devAddress;
+      swPacket->srcAddr = panstamp.m_swap.devAddress;
       swPacket->hop = 0;
-      swPacket->security = swap.security & 0x0F;
-      swPacket->nonce = ++swap.nonce;
+      swPacket->security = panstamp.m_swap.security & 0x0F;
+      swPacket->nonce = ++panstamp.m_swap.nonce;
       swPacket->regAddr = swPacket->destAddr;
 
       swPacket->function = pMediatorHead[-3];
@@ -158,10 +158,10 @@ class MEDIATOR : public PROCESSOR
 //      swPacket->regAddr = swPacket->destAddr; // ?
    
       // here source addr is lost *1 or is present int regAddr
-      swPacket->srcAddr = swap.devAddress;        
+      swPacket->srcAddr = panstamp.m_swap.devAddress;        
       swPacket->hop = 0;
-      swPacket->security = swap.security & 0x0F;
-      swPacket->nonce = ++swap.nonce;
+      swPacket->security = panstamp.m_swap.security & 0x0F;
+      swPacket->nonce = ++panstamp.m_swap.nonce;
     }
 
     static void UnmediateAnswer(SWPACKET* packet)

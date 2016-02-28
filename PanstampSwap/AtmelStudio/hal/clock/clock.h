@@ -1,5 +1,5 @@
 #include "../compiler.h"
-#include "../conf_clock.h"
+#include "../conf/conf_clock.h"
 #include "ccp.h"
 //#include <avr/io.h>
 #include <stddef.h>

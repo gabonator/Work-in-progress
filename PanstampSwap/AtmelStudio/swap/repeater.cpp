@@ -23,9 +23,7 @@
  */
 
 #include "repeater.h"
-//#include "panstamp.h"
-//#include "Arduino.h"
-#include "swap.h"
+#include "../panstamp/panstamp.h"
 
 /**
  * init
@@ -63,7 +61,7 @@ bool REPEATER::packetHandler(SWPACKET *packet)
     return true;
 
   // Don't repeat packets addressed to our device
-  if (packet->destAddr != swap.devAddress)
+  if (packet->destAddr != panstamp.m_swap.devAddress)
     return true;
 
   // Don't repeat beyond the maximum hop count
@@ -99,7 +97,7 @@ bool REPEATER::packetHandler(SWPACKET *packet)
   // Repeat packet?
   if (repeatPacket)
   {
-    packet->srcAddr = swap.devAddress;              // Modify source address
+    packet->srcAddr = panstamp.m_swap.devAddress;              // Modify source address
     packet->hop++;                                  // Increment hop counter
 	for ( uint8_t t = SWAP_TX_DELAY; t--; )
 		HAL_TIME_DelayMs(1);                           // Delay before sending

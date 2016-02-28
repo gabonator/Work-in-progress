@@ -1,9 +1,8 @@
-#include "hal.h"
+#include "hal/hal.h"
 
 #include "app/modem.h"
 #include "app/dummysender.h"
 #include "app/leds.h"
-#include "app/apppanstamp.h"
 #include "app/loopback.h"
 
 int main(void)

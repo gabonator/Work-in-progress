@@ -1,5 +1,5 @@
 #pragma once
-#include "common.h"
+#include "../common.h"
 
 #define F_CPU 12000000
 #include <util/delay.h>

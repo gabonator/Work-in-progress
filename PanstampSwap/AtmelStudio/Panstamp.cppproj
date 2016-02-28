@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>GccApplication1</AssemblyName>
-    <Name>GccApplication1</Name>
-    <RootNamespace>GccApplication1</RootNamespace>
+    <AssemblyName>Panstamp</AssemblyName>
+    <Name>Panstamp</Name>
+    <RootNamespace>Panstamp</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -161,12 +161,6 @@
     <Compile Include="app\app.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="app\apppanstamp.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="app\apppanstamp.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="app\dummysender.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -194,12 +188,6 @@
     <Compile Include="common.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="hal.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="hal.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="hal\clock\ccp.h">
       <SubType>compile</SubType>
     </Compile>
@@ -215,10 +203,16 @@
     <Compile Include="hal\compiler.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="hal\conf_clock.h">
+    <Compile Include="hal\conf\conf_clock.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="hal\conf_usb.h">
+    <Compile Include="hal\conf\conf_usb.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\hal.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\hal.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal\usb\class\cdc\device\udi_cdc.c">
@@ -264,6 +258,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="panstamp\panstamp.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="panstamp\panstamp.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="swap\cc1101.cpp">
@@ -339,6 +339,7 @@
   <ItemGroup>
     <Folder Include="hal" />
     <Folder Include="hal\clock" />
+    <Folder Include="hal\conf" />
     <Folder Include="hal\usb" />
     <Folder Include="hal\usb\class" />
     <Folder Include="hal\usb\class\cdc" />
@@ -346,6 +347,7 @@
     <Folder Include="hal\usb\device" />
     <Folder Include="hal\usb\udc" />
     <Folder Include="app" />
+    <Folder Include="panstamp" />
     <Folder Include="utils" />
     <Folder Include="swap" />
   </ItemGroup>

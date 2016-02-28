@@ -28,7 +28,7 @@
 #include "nvolat.h"
 #include "register.h"
 #include "swap.h"
-#include "../app/apppanstamp.h"
+#include "../panstamp/panstamp.h"
 //#include "config.h"
 
 const bool setSysState(REGISTER* pRegister, uint8_t *state);
@@ -53,13 +53,13 @@ static uint8_t dtFwVersion[4] = {};
 REGISTER regFwVersion(dtFwVersion, sizeof(dtFwVersion), NULL, NULL, REGISTER::Public);
 
 /* System state */                                                                                                           
-REGISTER regSysState(&swap.systemState, sizeof(swap.systemState), NULL, &setSysState, REGISTER::Public);
+REGISTER regSysState(&panstamp.m_swap.systemState, sizeof(panstamp.m_swap.systemState), NULL, &setSysState, REGISTER::Public);
 
 /* Frequency channel */                                                                                                      
 REGISTER regFreqChannel(&panstamp.m_radio.channel, sizeof(panstamp.m_radio.channel), NULL, &setFreqChannel, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_FREQ_CHANNEL);  
 
 /* Security option */                                                                                                        
-REGISTER regSecuOption(&swap.security, sizeof(swap.security), NULL, NULL, REGISTER::Private);
+REGISTER regSecuOption(&panstamp.m_swap.security, sizeof(panstamp.m_swap.security), NULL, NULL, REGISTER::Private);
 
 /* Security password (not implemented yet) */                                                                                
 static uint8_t dtPassword[1];                                                                                                   
@@ -67,16 +67,16 @@ static uint8_t dtPassword[1];
 REGISTER regPassword(dtPassword, sizeof(dtPassword), NULL, NULL, REGISTER::Private);
 
 /* Security nonce */                                                                                                         
-REGISTER regSecuNonce(&swap.nonce, sizeof(swap.nonce), NULL, NULL, REGISTER::Private);
+REGISTER regSecuNonce(&panstamp.m_swap.nonce, sizeof(panstamp.m_swap.nonce), NULL, NULL, REGISTER::Private);
 
 /* Network Id */                                                                                                             
 REGISTER regNetworkId(panstamp.m_radio.syncWord, sizeof(panstamp.m_radio.syncWord), NULL, &setNetworkId, REGISTER::ReadOnly, SWDTYPE_OTHER, NVOLAT_SYNC_WORD);  
 
 /* Device address */                                                                                                         
-REGISTER regDevAddress((uint8_t*)&swap.devAddress, sizeof(swap.devAddress), NULL, &setDevAddress, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_DEVICE_ADDRESS);  
+REGISTER regDevAddress((uint8_t*)&panstamp.m_swap.devAddress, sizeof(panstamp.m_swap.devAddress), NULL, &setDevAddress, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_DEVICE_ADDRESS);  
 
 /* Periodic Tx interval */                                                                                                   
-REGISTER regTxInterval((uint8_t*)&swap.txInterval, sizeof(swap.txInterval), NULL, &setTxInterval, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_TX_INTERVAL);
+REGISTER regTxInterval((uint8_t*)&panstamp.m_swap.txInterval, sizeof(panstamp.m_swap.txInterval), NULL, &setTxInterval, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_TX_INTERVAL);
 
 /**
  * Macros for the declaration of global table of registers
@@ -92,12 +92,12 @@ REGISTER regTxInterval((uint8_t*)&swap.txInterval, sizeof(swap.txInterval), NULL
  */                                                         
 const bool setSysState(REGISTER* pRegister, uint8_t *state)       
 {                                                           
-  swap.systemState = state[0];                              
+  panstamp.m_swap.systemState = state[0];                              
   switch(state[0])                                         
   {                                                         
     case SYSTATE_RESTART:                                  
       /* Send status message before restarting the mote */  
-      swap.getRegister(regSysState.id)->getStatusPacket()->prepare()->send();    
+      panstamp.m_swap.getRegister(regSysState.id)->getStatusPacket()->prepare()->send();    
       panstamp.reset();
       break;                      
 	                            

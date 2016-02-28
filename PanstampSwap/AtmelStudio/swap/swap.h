@@ -25,15 +25,11 @@
 #pragma once 
 
 #include "register.h"
-//#include "config.h"
-//#include "repeater.h"
 #include "processor.h"
 
 #ifdef PANSTAMP_NRG
 #include "cc430aes.h"
 #endif
-
-extern REGISTER regSysState;
 
 /**
  * Macros
@@ -154,14 +150,7 @@ class SWAP
      *
      * @param state New system state
      */
-    void __inline__ enterSystemState(SYSTATE state)
-    {
-      regSysState.setData((uint8_t *) &state)
-        ->save()
-        ->getStatusPacket()
-        ->prepare()
-        ->send();
-    }
+    void enterSystemState(SYSTATE state);
     
     /**
      * goToSleep
@@ -241,5 +230,3 @@ class SWAP
 
     static void tick();
 };
-
-extern SWAP swap;

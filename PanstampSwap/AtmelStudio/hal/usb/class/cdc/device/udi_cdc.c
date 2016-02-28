@@ -45,7 +45,7 @@
  */
 
 #include "../../../../compiler.h"
-#include "../../../../conf_usb.h"
+#include "../../../../conf/conf_usb.h"
 #include "../../../usb_protocol.h"
 #include "../usb_protocol_cdc.h"
 #include "../../../udc/udd.h"

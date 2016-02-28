@@ -47,7 +47,7 @@
 #ifndef _CONF_USB_H_
 #define _CONF_USB_H_
 
-#include "compiler.h"
+#include "../compiler.h"
 
 //#warning You must refill the following definitions with a correct values
 
@@ -189,6 +189,6 @@ void usb_callback_cdc_disable(void);
 //@}
 
 //! The includes of classes and other headers must be done at the end of this file to avoid compile error
-#include "usb/class/cdc/device/udi_cdc_conf.h"
+#include "../usb/class/cdc/device/udi_cdc_conf.h"
 
 #endif // _CONF_USB_H_

@@ -1,15 +1,16 @@
 #pragma once
-#include "app.h"
+#include "../common.h"
 #include "../swap/cc1101.h"
-//#include "../swap/swap.h"
+#include "../swap/swap.h"
 
-#define panstamp CAppPanstamp::m_appPanstamp
+#define panstamp CPanstamp::m_Panstamp
 
-class CAppPanstamp : public CApp
+class CPanstamp
 {
 public:
-	static CAppPanstamp m_appPanstamp;
+	static CPanstamp m_Panstamp;
 	CC1101 m_radio;
+	SWAP m_swap;
 
 private:
 	void (*m_ccPacketReceived)(CCPACKET *packet);
@@ -23,7 +24,7 @@ public:
 	bool InitRadio();
 	void randomDelay(int nMsMin, int nMsMax);
 	void setAddressCheck(bool bEnable);
-	uint8_t  sendPacket(CCPACKET& packet);
+	uint8_t sendPacket(CCPACKET& packet);
 		
 // obsolete:
 	void reset() {}

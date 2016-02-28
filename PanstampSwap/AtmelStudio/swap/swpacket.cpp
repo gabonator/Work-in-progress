@@ -221,16 +221,16 @@ void SWPACKET::smartEncrypt(bool decrypt)
   static uint8_t newData[CCPACKET::CCPACKET_DATA_LEN];
 
   if (decrypt)
-    nonce ^= swap.encryptPwd[9];
+    nonce ^= panstamp.m_swap.encryptPwd[9];
 
-  function ^= swap.encryptPwd[11] ^ nonce;
-  srcAddr ^= swap.encryptPwd[10] ^ nonce;
-  regAddr ^= swap.encryptPwd[8] ^ nonce;
-  regId ^= swap.encryptPwd[7] ^ nonce;
+  function ^= panstamp.m_swap.encryptPwd[11] ^ nonce;
+  srcAddr ^= panstamp.m_swap.encryptPwd[10] ^ nonce;
+  regAddr ^= panstamp.m_swap.encryptPwd[8] ^ nonce;
+  regId ^= panstamp.m_swap.encryptPwd[7] ^ nonce;
 
   for(i=0 ; i<value.length ; i++)
   {
-    newData[i] = value.data[i] ^ swap.encryptPwd[j] ^ nonce;
+    newData[i] = value.data[i] ^ panstamp.m_swap.encryptPwd[j] ^ nonce;
     j++;
     if (j == 11)  // Don't re-use last byte from password
       j = 0;
@@ -239,7 +239,7 @@ void SWPACKET::smartEncrypt(bool decrypt)
     value.data = newData;
 
   if (!decrypt)
-    nonce ^= swap.encryptPwd[9];
+    nonce ^= panstamp.m_swap.encryptPwd[9];
 }
 #endif
 
@@ -295,7 +295,7 @@ bool SWPACKET::sendAck()
         return this;
     }
 
-    nonce = ++swap.nonce;
+    nonce = ++panstamp.m_swap.nonce;
   }
 
   return receivedAck();

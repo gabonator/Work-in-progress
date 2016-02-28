@@ -48,7 +48,7 @@
 #define _UDI_CDC_CONF_H_
 
 #include "../usb_protocol_cdc.h"
-#include "../../../../conf_usb.h"
+#include "../../../../conf/conf_usb.h"
 
 #ifndef  UDI_CDC_PORT_NB
 # define  UDI_CDC_PORT_NB 1

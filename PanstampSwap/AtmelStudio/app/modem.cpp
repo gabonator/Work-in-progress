@@ -36,9 +36,9 @@ void CModem::eval(char* strCommand)
 		}
 
 		SWPACKET swPacket(&packet);
-		if ( swPacket.destAddr == swap.devAddress /*0xff && swPacket.srcAddr == 0xff*/ )
+		if ( swPacket.destAddr == panstamp.m_swap.devAddress /*0xff && swPacket.srcAddr == 0xff*/ )
 		{
-			PROCESSOR* p = swap.processor;
+			PROCESSOR* p = panstamp.m_swap.processor;
 			while (p)
 			{
 				if ( !p->packetHandler(&swPacket) )
@@ -56,7 +56,7 @@ void CModem::eval(char* strCommand)
 			{
 				case SWAPFUNCT_CMD:
 				// Valid register?
-				if ((reg = swap.getRegister(swPacket.regId)) == NULL)
+				if ((reg = panstamp.m_swap.getRegister(swPacket.regId)) == NULL)
 				break;
 				
 				// Filter incorrect data lengths
@@ -77,7 +77,7 @@ void CModem::eval(char* strCommand)
 				
 				case SWAPFUNCT_QRY:
 				// Valid register?
-				if ((reg = swap.getRegister(swPacket.regId)) == NULL)
+				if ((reg = panstamp.m_swap.getRegister(swPacket.regId)) == NULL)
 				break;
 				
 				// handle write protection reg->access == Public, Readonly
@@ -116,7 +116,7 @@ void CModem::Init()
 
 	panstamp.setAddressCheck(false);
 
-	swap.enterSystemState(SYSTATE_RXON);
+	panstamp.m_swap.enterSystemState(SYSTATE_RXON);
 
 	Serial.print("INFO: Ready\r\n");
 	Serial.print("INFO: network address/sync word=");
@@ -134,7 +134,7 @@ void CModem::Loop()
 {
 	PORTA.OUT = (HAL::TIME::GetTick() / 1000);
 
-	swap.tick();
+	panstamp.m_swap.tick();
 		
 	while (Serial.available())
 	{

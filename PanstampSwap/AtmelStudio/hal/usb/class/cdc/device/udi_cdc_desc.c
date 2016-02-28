@@ -44,7 +44,7 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
-#include "../../../../conf_usb.h"
+#include "../../../../conf/conf_usb.h"
 #include "../../../udc/udd.h"
 #include "../../../udc/udc_desc.h"
 #include "udi_cdc.h"

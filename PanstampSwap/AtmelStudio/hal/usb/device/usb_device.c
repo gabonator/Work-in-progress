@@ -46,7 +46,7 @@
  */
 
 #include "../../compiler.h"
-#include "../../conf_usb.h"
+#include "../../conf/conf_usb.h"
 
 // Read Modify Write opcode is implemented after IAR AVR 5.51
 #ifdef __ICCAVR__

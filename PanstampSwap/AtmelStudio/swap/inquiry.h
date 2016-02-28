@@ -133,7 +133,7 @@ class INQUIRY : public PROCESSOR
       }
 
       // Master handling 'hello' from slave
-      if ( command == Hello && packet->destAddr == swap.devAddress )
+      if ( command == Hello && packet->destAddr == panstamp.m_swap.devAddress )
       {
         //Serial.print("INFO: master got hello\n");
         // Thank you for indentifyng yourself, please do not respond to following Scan commands
@@ -153,7 +153,7 @@ class INQUIRY : public PROCESSOR
       }
 
       // Addressed ack from master to slave
-      if ( command == Silent && packet->destAddr == swap.devAddress )
+      if ( command == Silent && packet->destAddr == panstamp.m_swap.devAddress )
       {
         eResponseType = None;
         wasPaired = true;
@@ -165,12 +165,12 @@ class INQUIRY : public PROCESSOR
     static void buildInquiryPacket(SWPACKET* swPacket, ECommand command, uint16_t masterAddr = SWAP_BCAST_ADDR)
     {
       swPacket->destAddr = masterAddr;
-      swPacket->srcAddr = swap.devAddress;
+      swPacket->srcAddr = panstamp.m_swap.devAddress;
       swPacket->hop = 0;
-      swPacket->security = swap.security & 0x0F;
-      swPacket->nonce = ++swap.nonce;
+      swPacket->security = panstamp.m_swap.security & 0x0F;
+      swPacket->nonce = ++panstamp.m_swap.nonce;
       swPacket->function = SWAPFUNCT_INQUIRY;
-      swPacket->regAddr = swap.devAddress;
+      swPacket->regAddr = panstamp.m_swap.devAddress;
       swPacket->regId = command; // shared id
       swPacket->value.length = 0;
       swPacket->value.data = NULL;

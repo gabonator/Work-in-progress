@@ -4,10 +4,10 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-#include "hal/clock/clock.h"
-#include "hal/usb/udc/udc.h"
-#include "hal/usb/udc/udi.h"
-#include "hal/usb/class/cdc/device/udi_cdc.h"
+#include "clock/clock.h"
+#include "usb/udc/udc.h"
+#include "usb/udc/udi.h"
+#include "usb/class/cdc/device/udi_cdc.h"
 
 // internal {{{
 HAL::INT::THandlerFunction hPortCIsrHandler = nullptr;

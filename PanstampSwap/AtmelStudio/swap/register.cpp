@@ -24,6 +24,7 @@
 
 #include "register.h"
 #include "swap.h"
+#include "../panstamp/panstamp.h"
 
 /*static*/ uint8_t REGISTER::regIndex = 0;
 /*static*/ REGISTER* REGISTER::pLast = NULL;
@@ -132,12 +133,12 @@ void REGISTER::setValueFromBeBuffer(unsigned char* beBuffer)
 SWPACKET* REGISTER::getStatusPacket(uint16_t destAddr /*= SWAP_BCAST_ADDR*/)
 {
   commonPacket.destAddr = destAddr;
-  commonPacket.srcAddr = swap.devAddress;
+  commonPacket.srcAddr = panstamp.m_swap.devAddress;
   commonPacket.hop = 0;
-  commonPacket.security = swap.security & 0x0F;
-  commonPacket.nonce = ++swap.nonce;
+  commonPacket.security = panstamp.m_swap.security & 0x0F;
+  commonPacket.nonce = ++panstamp.m_swap.nonce;
   commonPacket.function = SWAPFUNCT_STA;
-  commonPacket.regAddr = swap.devAddress;
+  commonPacket.regAddr = panstamp.m_swap.devAddress;
   commonPacket.regId = id;
   commonPacket.value.length = length;
   commonPacket.value.data = value;

@@ -1,7 +1,8 @@
-#include "apppanstamp.h"
+#include "../panstamp/panstamp.h"
 #include "../swap/swap.h"
+#include "../swap/register.h"
 
-/*static*/ CAppPanstamp CAppPanstamp::m_appPanstamp;
+/*static*/ CPanstamp CPanstamp::m_Panstamp;
 
 extern REGISTER regProductCode;
 extern REGISTER regHwVersion;
@@ -16,7 +17,7 @@ enum PRODUCT {
 	FIRMWARE_VERSION = 0x00000101UL,
 };
 
-void CAppPanstamp::SetupIds()
+void CPanstamp::SetupIds()
 {
 	uint8_t arrProductCode[8] = {
 		(uint8_t)((uint32_t)SWAP_MANUFACT_ID >> 24),
@@ -52,9 +53,9 @@ void CAppPanstamp::SetupIds()
 };
 
 
-void CAppPanstamp::radioISR(void)
+void CPanstamp::radioISR(void)
 {
-	CAppPanstamp *pThis = &panstamp;
+	CPanstamp *pThis = &panstamp;
 	
 	if (pThis->m_radio.rfState == RFSTATE_RX)
 	{
@@ -73,21 +74,21 @@ void CAppPanstamp::radioISR(void)
 	}
 }
 
-void CAppPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
+void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
 {
 	m_ccPacketReceived = funct;
 }
 
-/*virtual*/ void CAppPanstamp::Init()
+/*virtual*/ void CPanstamp::Init()
 {
 }
 
-uint8_t CAppPanstamp::getDefaultAddress()
+uint8_t CPanstamp::getDefaultAddress()
 {
 	return rand();
 }
 
-bool CAppPanstamp::InitRadio()
+bool CPanstamp::InitRadio()
 {
 	SetupIds();
 
@@ -96,7 +97,7 @@ bool CAppPanstamp::InitRadio()
 	if (!m_radio.init(FREQUENCY, 0))
 		return false;
 
-	if (!swap.init())
+	if (!m_swap.init())
 		return false;
 
 	// Attach callback function for GDO0 (INT0)
@@ -110,11 +111,11 @@ bool CAppPanstamp::InitRadio()
 	return true;
 }
 
-/*virtual*/ void CAppPanstamp::Loop()
+/*virtual*/ void CPanstamp::Loop()
 {
 }
 
-void CAppPanstamp::randomDelay(int nMsMin, int nMsMax)
+void CPanstamp::randomDelay(int nMsMin, int nMsMax)
 {
 	// TODO!
 	uint16_t postpone = 100 + (rand() & 511);
@@ -124,7 +125,7 @@ void CAppPanstamp::randomDelay(int nMsMin, int nMsMax)
 		HAL_TIME_DelayMs(1);
 }
 
-uint8_t CAppPanstamp::sendPacket(CCPACKET& packet)
+uint8_t CPanstamp::sendPacket(CCPACKET& packet)
 {		
 	uint8_t i = SWAP_NB_TX_TRIES;
 	uint8_t res;
@@ -143,7 +144,7 @@ uint8_t CAppPanstamp::sendPacket(CCPACKET& packet)
 	return res;
 }
 
-void CAppPanstamp::setAddressCheck(bool bEnable)
+void CPanstamp::setAddressCheck(bool bEnable)
 {
 	if ( bEnable )
 		m_radio.writeReg(CC1101_PKTCTRL1, 0x06);

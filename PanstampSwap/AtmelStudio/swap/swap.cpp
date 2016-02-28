@@ -22,7 +22,7 @@
  * Creation date: 06/03/2013
  */
 
-#include "../app/apppanstamp.h"
+#include "../panstamp/panstamp.h"
 #include "swap.h"
 #include "swpacket.h"
 #include "nvolat.h"
@@ -33,6 +33,7 @@
 
 extern REGISTER regSecuNonce;
 extern REGISTER regProductCode;
+extern REGISTER regSysState;
 
 INQUIRY procInquiry;
 MEDIATOR procMediator;
@@ -42,7 +43,7 @@ REPEATER procRepeater;
 /*static*/ void SWAP::tick()
 {
   // Repeater enabled?
-  PROCESSOR* p = swap.processor;
+  PROCESSOR* p = panstamp.m_swap.processor;
   while (p)
   {
     p->tick();
@@ -74,7 +75,7 @@ REPEATER procRepeater;
   #endif
   
   // Repeater enabled?
-  PROCESSOR* p = swap.processor;
+  PROCESSOR* p = panstamp.m_swap.processor;
   while (p)
   {
     if ( !p->packetHandler(&swPacket) )
@@ -84,7 +85,7 @@ REPEATER procRepeater;
   }
 
   // Smart encryption locally enabled?
-  if (swap.security & 0x02)
+  if (panstamp.m_swap.security & 0x02)
   {
     // OK, then incoming packets must be encrypted too
     if (!(swPacket.security & 0x02))
@@ -96,23 +97,23 @@ REPEATER procRepeater;
   {
     case SWAPFUNCT_CMD:
       // Command not addressed to us?
-      if (swPacket.destAddr != swap.devAddress)
+      if (swPacket.destAddr != panstamp.m_swap.devAddress)
         break;
       // Current version does not support data recording mode
       // so destination address and register address must be the same
       if (swPacket.destAddr != swPacket.regAddr)
         break;
       // Valid register?
-      if ((reg = swap.getRegister(swPacket.regId)) == NULL)
+      if ((reg = panstamp.m_swap.getRegister(swPacket.regId)) == NULL)
         break;
       // Anti-playback security enabled?
-      if (swap.security & 0x01)
+      if (panstamp.m_swap.security & 0x01)
       {
         // Check received nonce
-        if (swap.nonce != swPacket.nonce)
+        if (panstamp.m_swap.nonce != swPacket.nonce)
         {
           // Nonce missmatch. Transmit correct nonce.
-          reg = swap.getRegister(regSecuNonce.id);
+          reg = panstamp.m_swap.getRegister(regSecuNonce.id);
           reg->getStatusPacket()->prepare()->send();
           break;
         }
@@ -138,14 +139,14 @@ REPEATER procRepeater;
           break;
       }
       // Query not addressed to us?
-      else if (swPacket.destAddr != swap.devAddress)
+      else if (swPacket.destAddr != panstamp.m_swap.devAddress)
         break;
       // Current version does not support data recording mode
       // so destination address and register address must be the same
       if (swPacket.destAddr != swPacket.regAddr)
         break;
       // Valid register?
-      if ((reg = swap.getRegister(swPacket.regId)) == NULL)
+      if ((reg = panstamp.m_swap.getRegister(swPacket.regId)) == NULL)
         break;
       
       // handle write protection reg->access == Public, Readonly
@@ -156,24 +157,24 @@ REPEATER procRepeater;
 
     case SWAPFUNCT_STA:
       // User callback function declared?
-      if (swap.statusReceived != NULL)
-        swap.statusReceived(&swPacket);
+      if (panstamp.m_swap.statusReceived != NULL)
+        panstamp.m_swap.statusReceived(&swPacket);
       break;
 
 // todo: move into separate processor!
     case SWAPFUNCT_REQ:
-      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != swap.devAddress )
+      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != panstamp.m_swap.devAddress )
         break;
 
-      if (swap.statusReceived != NULL)
-        swap.statusReceived(&swPacket);
+      if (panstamp.m_swap.statusReceived != NULL)
+        panstamp.m_swap.statusReceived(&swPacket);
 
       // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
       SWPACKET::replySwapStatusAck(&swPacket); 
       break;
 
     case SWAPFUNCT_ACK:
-      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != swap.devAddress )
+      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != panstamp.m_swap.devAddress )
         break;
 
       // receiver notifies us back about successfull reception
@@ -321,6 +322,15 @@ void SWAP::goToSleep(void)
   */
 }
 
+void SWAP::enterSystemState(SYSTATE state)
+{
+	regSysState.setData((uint8_t *) &state)
+		->save()
+		->getStatusPacket()
+		->prepare()
+		->send();
+}
+
 /**
  * nvolatToFactoryDefaults
  * 
@@ -352,5 +362,3 @@ void SWAP::nvolatToFactoryDefaults(void)
   uint8_t txInt[] = {15, 0};
   nvMem.write(txInt, DEFAULT_NVOLAT_SECTION, NVOLAT_TX_INTERVAL, sizeof(txInt));
 }
-
-SWAP swap;

@@ -316,7 +316,7 @@ enum RFSTATE
  * CC1101 interface
  */
 class CC1101
-{
+{	
   private:
     /**
      * writeBurstReg

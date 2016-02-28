@@ -30,7 +30,7 @@
 // Deselect (SPI) CC1101
 #define cc1101_Deselect()  HAL::IO::Write(HAL::IO::C4, 1)
 // Wait until SPI MISO line goes low
-#define wait_Miso() HAL::IO::Read(HAL::IO::C6)
+#define wait_Miso() while(HAL::IO::Read(HAL::IO::C6))
 // Get GDO0 pin state
 #define getGDO0state()  HAL::IO::Read(HAL::IO::D4)
 //bitRead(PORT_GDO0, BIT_GDO0)
@@ -180,6 +180,7 @@ void CC1101::readBurstReg(byte * buffer, byte regAddr, byte len)
  */
 bool CC1101::reset(void) 
 {
+
   cc1101_Deselect();                    // Deselect CC1101
   delayMicroseconds(5);
   cc1101_Select();                      // Select CC1101
@@ -501,7 +502,9 @@ byte CC1101::receiveData(CCPACKET * packet)
     packet->length = readConfigReg(CC1101_RXFIFO);
     // If packet is too long
     if (packet->length > CCPACKET::CCPACKET_DATA_LEN)
+	{
       packet->length = 0;   // Discard packet
+	}
     else
     {
       // Read data packet
@@ -515,7 +518,9 @@ byte CC1101::receiveData(CCPACKET * packet)
     }
   }
   else
+  {
     packet->length = 0;
+  }
 
   setIdleState();       // Enter IDLE state
   flushRxFifo();        // Flush Rx FIFO

@@ -25,7 +25,7 @@
 #ifndef _CC1101_H
 #define _CC1101_H
 
-#include "common.h"
+#include "../common.h"
 #include "ccpacket.h"
 
 /**

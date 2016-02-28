@@ -34,7 +34,7 @@ class LOGGER : public PROCESSOR
 
       CCPACKET& ccPacket = packet->getPacket();
 
-      //Serial.print("RX: ");
+      Serial.print("RX: ");
       dumpPacket(ccPacket);
 
       return true;
@@ -42,7 +42,6 @@ class LOGGER : public PROCESSOR
 
     static void dumpPacket(CCPACKET& ccPacket, bool bExtra = true)
     {
-		/*
       for ( uint8_t i = 0; i < ccPacket.length; i++ )
       {
         uint8_t data = ccPacket.data[i];
@@ -51,20 +50,20 @@ class LOGGER : public PROCESSOR
 
         if ( data < 0x10 )
           Serial.print('0');
-        Serial.print(data, HEX);
+        Serial.print(data, CSerial::HEX);
       }
 
       if ( bExtra )
       {
         Serial.print(" crc=");
-        Serial.print(ccPacket.crc_ok);
+        Serial.print(ccPacket.crc_ok, CSerial::DEC);
         Serial.print(",rssi=");
-        Serial.print(ccPacket.rssi);
+        Serial.print(ccPacket.rssi, CSerial::DEC);
         Serial.print(",lqi=");
-        Serial.print(ccPacket.lqi);
+        Serial.print(ccPacket.lqi, CSerial::DEC);
       }
       
-      Serial.print('\n');*/
+      Serial.print("\r\n");
     }
 
     void setEnabled(bool enable)

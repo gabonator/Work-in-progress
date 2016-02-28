@@ -25,7 +25,7 @@
 #ifndef STORAGE_h
 #define STORAGE_h
 
-#include "common.h"
+#include "../common.h"
 
 #define DEFAULT_NVOLAT_SECTION  0
 

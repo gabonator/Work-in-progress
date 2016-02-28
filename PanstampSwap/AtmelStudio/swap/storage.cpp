@@ -23,7 +23,7 @@
  */
 
 #include <avr/eeprom.h>
-#include "common.h"
+#include "../common.h"
 #include "storage.h"
 
 /**
@@ -47,7 +47,7 @@ uint8_t STORAGE::read(uint8_t *buffer, uint8_t section, uint8_t position, uint8_
 	HAL::INT::Disable();
     //cli();
     for (i=0 ; i<length ; i++)
-      buffer[i] = eeprom_read_byte((uint8_t *) position+i);
+      buffer[i] = eeprom_read_byte((const uint8_t *) (i+position));
     //sei();
 	HAL::INT::Enable();
   }
@@ -75,7 +75,14 @@ uint8_t STORAGE::write(uint8_t *buffer, uint8_t section, uint8_t position, uint8
   {
 	HAL::INT::Disable();
     for (i=0 ; i<length ; i++)
-      eeprom_write_byte((uint8_t *) position+i, buffer[i]);
+	{
+      eeprom_write_byte((uint8_t *) (i + position), buffer[i]);
+	  if ( eeprom_read_byte((uint8_t *) (i + position)) != buffer[i] )
+	  {
+		  
+		  Serial.print("eeprom no match!");
+	  }
+	}
 	HAL::INT::Enable();
   }
   

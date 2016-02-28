@@ -1,7 +1,7 @@
 #ifndef _PANSTAMP
 #define _PANSTAMP
 
-#include "common.h"
+#include "../common.h"
 #include "cc1101.h"
 #include "ccpacket.h"
 
@@ -10,7 +10,7 @@ class CPanstamp
 {
 public:
   CC1101 radio;
-  void init(uint8_t freq, uint8_t mode);
+  bool init(uint8_t freq, uint8_t mode);
 
   void reset();
   void goToWirelessBoot();

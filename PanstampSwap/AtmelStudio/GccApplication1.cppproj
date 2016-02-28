@@ -158,19 +158,7 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="cc1101.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cc1101.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="ccpacket.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="common.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="config.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hal.cpp">
@@ -179,57 +167,149 @@
     <Compile Include="hal.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="inquiry.h">
+    <Compile Include="hal\clock\ccp.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="logger.h">
+    <Compile Include="hal\clock\ccp.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\clock\clock.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\clock\nvm_asm.s">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\compiler.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\conf_clock.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\conf_usb.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\class\cdc\device\udi_cdc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\class\cdc\device\udi_cdc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\class\cdc\device\udi_cdc_conf.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\class\cdc\device\udi_cdc_desc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\class\cdc\usb_protocol_cdc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\device\usb_device.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\device\usb_device.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\udc\udc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\udc\udc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\udc\udc_desc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\udc\udd.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\udc\udi.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\usb_atmel.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hal\usb\usb_protocol.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="mediator.h">
+    <Compile Include="swap\cc1101.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="panstamp.cpp">
+    <Compile Include="swap\cc1101.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="panstamp.h">
+    <Compile Include="swap\ccpacket.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="processor.h">
+    <Compile Include="swap\commonregs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="register.cpp">
+    <Compile Include="swap\config.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="register.h">
+    <Compile Include="swap\inquiry.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="repeater.cpp">
+    <Compile Include="swap\logger.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="repeater.h">
+    <Compile Include="swap\mediator.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="storage.cpp">
+    <Compile Include="swap\nvolat.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="storage.h">
+    <Compile Include="swap\panstamp.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="swap.cpp">
+    <Compile Include="swap\panstamp.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="swap.h">
+    <Compile Include="swap\processor.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="swpacket.cpp">
+    <Compile Include="swap\register.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="swpacket.h">
+    <Compile Include="swap\register.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="swap\repeater.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\repeater.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\storage.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\storage.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\swap.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\swap.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\swpacket.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="swap\swpacket.h">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="hal" />
+    <Folder Include="hal\clock" />
+    <Folder Include="hal\usb" />
+    <Folder Include="hal\usb\class" />
+    <Folder Include="hal\usb\class\cdc" />
+    <Folder Include="hal\usb\class\cdc\device" />
+    <Folder Include="hal\usb\device" />
+    <Folder Include="hal\usb\udc" />
+    <Folder Include="swap" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

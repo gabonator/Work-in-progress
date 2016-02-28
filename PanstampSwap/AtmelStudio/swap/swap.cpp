@@ -203,9 +203,8 @@ SWAP::SWAP(void)
  *
  * Initialize SWAP registers and stack
  */
-void SWAP::init(void)
+bool SWAP::init(void)
 {
-  uint8_t i;
   STORAGE nvMem;
 
   // Read signature from info/eeprom memory
@@ -214,7 +213,15 @@ void SWAP::init(void)
 
   // Correct signature in non-volatile memory?
   if ((signature[0] != NVOLAT_SIGNATURE_HIGH) || (signature[1] != NVOLAT_SIGNATURE_LOW))
+  {
+	  Serial.print("resetting to defaults\n");
     nvolatToFactoryDefaults(); // Copy default settings in non-volatile memory  
+  } else
+  {
+	  Serial.print("nvram ok\n");
+	  
+	  
+  }
 
   // Intialize registers
   REGISTER::initAll();
@@ -230,6 +237,7 @@ void SWAP::init(void)
   addProcessor(&procMediator);
   addProcessor(&procInquiry);
   addProcessor(&procLogger);
+  return true;
 }
 
 /**
@@ -342,7 +350,7 @@ void SWAP::nvolatToFactoryDefaults(void)
 
   // SWAP address (pseudo-random number)
   uint16_t random = panstamp.getRand();
-  uint8_t addr[] = {(random >> 8) & 0xFF, random & 0xFF};
+  uint8_t addr[] = {(uint8_t)(random >> 8), (uint8_t) random};
   nvMem.write(addr, DEFAULT_NVOLAT_SECTION, NVOLAT_DEVICE_ADDR, sizeof(addr));
   
   // TX interval: 15 seconds

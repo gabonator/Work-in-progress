@@ -1,5 +1,5 @@
 #include "panstamp.h"
-#include "hal.h"
+#include "../hal.h"
 
 //HAL::IO::Read(HAL::IO::D4)
 #define enableIRQ_GDO0()          HAL::INT::Attach(HAL::IO::D4, radioISR); // ::attachInterrupt(0, radioISR, FALLING);
@@ -15,8 +15,7 @@ CPanstamp panstamp;
 void radioISR(void)
 {
   // Disable interrupt
-  disableIRQ_GDO0();
-
+  //disableIRQ_GDO0();
   if (panstamp.radio.rfState == RFSTATE_RX)
   {
     static CCPACKET ccPacket;
@@ -32,9 +31,8 @@ void radioISR(void)
       }
     }
   }
-  
   // Enable interrupt
-  enableIRQ_GDO0();
+  //enableIRQ_GDO0();
 }
 
 void CPanstamp::reset()
@@ -60,7 +58,7 @@ void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
 
 //attachInterrupt(0, cc1101signalsInterrupt, FALLING);
 
-void CPanstamp::init(uint8_t freq, uint8_t mode)
+bool CPanstamp::init(uint8_t freq, uint8_t mode)
 {
 	// TODO: srand!
   //srand(analogRead(0) ^ OSCCAL);
@@ -68,7 +66,8 @@ void CPanstamp::init(uint8_t freq, uint8_t mode)
 //  rcOscCalibrate();
 
   // Setup CC1101
-  radio.init(freq, mode);
+  if ( !radio.init(freq, mode) )
+	return false;
 
   HAL_TIME_DelayUs(50);  
 
@@ -76,10 +75,12 @@ void CPanstamp::init(uint8_t freq, uint8_t mode)
   radio.setRxState();
 
   // Attach callback function for GDO0 (INT0)
+  HAL::IO::Configure(HAL::IO::D4, HAL::IO::InputPullUp);  
   enableIRQ_GDO0();
 
   // Default values
 //  state = RXON;
+	return true;
 }
 
 void CPanstamp::sleepSec(int n) 

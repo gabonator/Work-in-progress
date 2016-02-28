@@ -147,7 +147,7 @@ class SWAP
      *
      * Initialize SWAP registers
      */
-    void init(void);
+    bool init(void);
 
     /**
      * enterSystemState

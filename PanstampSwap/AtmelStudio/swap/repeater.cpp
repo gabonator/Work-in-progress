@@ -106,6 +106,7 @@ bool REPEATER::packetHandler(SWPACKET *packet)
     if (packet->prepare()->send())                 // Repeat packet
       saveTransaction(packet);                      // Save transaction
   }
+  return true;
 }
 
 /**

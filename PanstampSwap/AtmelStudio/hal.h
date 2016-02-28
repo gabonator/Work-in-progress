@@ -1,7 +1,7 @@
 #pragma once
 #include "common.h"
 
-#define F_CPU 4000000
+#define F_CPU 12000000
 #include <util/delay.h>
 
 // Delay functions require compile time known argument, backward compatibility and nicer interface would result in less precise timing
@@ -66,5 +66,15 @@ public:
 		static void Attach(IO::EPin ePin, THandlerFunction pHandler);
 		static void Enable();
 		static void Disable();
+	};
+	
+	class COM
+	{
+	public:
+		static void Init();
+		static uint8_t Ready();
+		static uint8_t Available();
+		static uint8_t Get();
+		static void Put(uint8_t ch);			
 	};
 };

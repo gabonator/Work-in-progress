@@ -184,8 +184,8 @@ bool SWPACKET::send(void)
   
   if ( procLogger.isEnabled() )
   {
-    //Serial.print("TX: ");
-    //LOGGER::dumpPacket(ccPacket, false);
+    Serial.print("TX: ");
+    LOGGER::dumpPacket(ccPacket, false);
   }
   
   byte i = SWAP_NB_TX_TRIES;
@@ -193,10 +193,19 @@ bool SWPACKET::send(void)
   
   while(!(res = panstamp.radio.sendData(ccPacket)) && i>1)
   {
+	  Serial.print("send retry\r\n");
+
     i--;
 	//TODO: pseudo random delay
 	for ( uint8_t j=SWAP_TX_DELAY; j--; )
 		HAL_TIME_DelayMs(1);
+  }
+
+  if (!res)
+  {
+	  // in case of failure
+	  Serial.print("send fail\r\n");
+    panstamp.radio.setRxState();
   }
 
   return res;

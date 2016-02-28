@@ -22,8 +22,7 @@
  * Creation date: 07/10/2014
  */
 
-#ifndef _SWAP_H
-#define _SWAP_H
+#pragma once 
 
 #include "register.h"
 //#include "config.h"
@@ -40,11 +39,8 @@ extern REGISTER regSysState;
  * Macros
  */
 #define eepromToFactoryDefaults()   swap.nvolatToFactoryDefaults()
-
 #define enableAntiPlayback()    security |= 0x01
-
 #define swapNetworkId    radio.syncWord
-
 #define setSwapStatusCallBack(ptrFunc)     statusReceived = ptrFunc
 
 /**
@@ -75,6 +71,7 @@ enum {
  * Description:
  * SWAP protocol class
  */
+
 class SWAP
 {   
   public:
@@ -245,10 +242,4 @@ class SWAP
     static void tick();
 };
 
-/**
- * Global SWAP object
- */
 extern SWAP swap;
-
-#endif
-

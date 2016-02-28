@@ -179,35 +179,32 @@ SWPACKET* SWPACKET::prepare(void)
 
 bool SWPACKET::send(void)
 {
-  // modem:
-  
-  if ( procLogger.isEnabled() )
-  {
-    Serial.print("TX: ");
-    LOGGER::dumpPacket(ccPacket, false);
-  }
-  
-  byte i = SWAP_NB_TX_TRIES;
-  bool res;
-  
-  while(!(res = panstamp.radio.sendData(ccPacket)) && i>1)
-  {
-	  Serial.print("send retry\r\n");
+	// panstamp::SendPacket duplicity ?
+	if ( procLogger.isEnabled() )
+	{
+		Serial.print("TX: ");
+		LOGGER::dumpPacket(ccPacket, false);
+	}
+	
+	byte i = SWAP_NB_TX_TRIES;
+	bool res;
+	
+	while(!(res = panstamp.m_radio.sendData(ccPacket)) && i>1)
+	{
+		i--;
+		//TODO: pseudo random delay
+		for ( uint8_t j=SWAP_TX_DELAY; j--; )
+			HAL_TIME_DelayMs(1);
+	}
 
-    i--;
-	//TODO: pseudo random delay
-	for ( uint8_t j=SWAP_TX_DELAY; j--; )
-		HAL_TIME_DelayMs(1);
-  }
+	if (!res)
+	{
+		// in case of failure
+		Serial.print("send fail\r\n");
+		panstamp.m_radio.setRxState();
+	}
 
-  if (!res)
-  {
-	  // in case of failure
-	  Serial.print("send fail\r\n");
-    panstamp.radio.setRxState();
-  }
-
-  return res;
+	return res;
 }
 
 /**

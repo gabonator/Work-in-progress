@@ -14,7 +14,6 @@ HAL::INT::THandlerFunction hPortCIsrHandler = nullptr;
 
 ISR(PORTD_INT0_vect)
 {
-	Serial.print('*');
 	if ( hPortCIsrHandler )
 		hPortCIsrHandler();
 

@@ -54,18 +54,20 @@ void CAppPanstamp::SetupIds()
 
 void CAppPanstamp::radioISR(void)
 {
-	if (panstamp.radio.rfState == RFSTATE_RX)
+	CAppPanstamp *pThis = &panstamp;
+	
+	if (pThis->m_radio.rfState == RFSTATE_RX)
 	{
 		static CCPACKET ccPacket;
 
 		// Any packet waiting to be read?
-		if (panstamp.radio.receiveData(&ccPacket) > 0)
+		if (pThis->m_radio.receiveData(&ccPacket) > 0)
 		{
 			// Is CRC OK?
 			//if (ccPacket.crc_ok)
 			{
-				if (panstamp.m_ccPacketReceived != nullptr)
-				panstamp.m_ccPacketReceived(&ccPacket);
+				if (pThis->m_ccPacketReceived != nullptr)
+					pThis->m_ccPacketReceived(&ccPacket);
 			}
 		}
 	}
@@ -91,7 +93,7 @@ bool CAppPanstamp::InitRadio()
 
 	HAL::IO::Configure(HAL::IO::D4, HAL::IO::InputPullUp);
 
-	if (!radio.init(FREQUENCY, 0))
+	if (!m_radio.init(FREQUENCY, 0))
 		return false;
 
 	if (!swap.init())
@@ -103,7 +105,7 @@ bool CAppPanstamp::InitRadio()
 	HAL_TIME_DelayUs(50);
 
 	// Enter RX state
-	radio.setRxState();
+	m_radio.setRxState();
 
 	return true;
 }
@@ -121,113 +123,30 @@ void CAppPanstamp::randomDelay(int nMsMin, int nMsMax)
 	for (; postpone--; )
 		HAL_TIME_DelayMs(1);
 }
-#if 0
 
-
-#include "panstamp.h"
-#include "../hal.h"
-
-//HAL::IO::Read(HAL::IO::D4)
-#define enableIRQ_GDO0()          HAL::INT::Attach(HAL::IO::D4, radioISR); // ::attachInterrupt(0, radioISR, FALLING);
-#define disableIRQ_GDO0()         HAL::INT::Attach(HAL::IO::D4, nullptr); //::detachInterrupt(0);
-
-CPanstamp panstamp;
-
-/**
-* radioISR
-*
-* Radio interrupt routine
-*/
-void radioISR(void)
-{
-	// Disable interrupt
-	//disableIRQ_GDO0();
-	if (panstamp.radio.rfState == RFSTATE_RX)
+uint8_t CAppPanstamp::sendPacket(CCPACKET& packet)
+{		
+	uint8_t i = SWAP_NB_TX_TRIES;
+	uint8_t res;
+	while(!(res = m_radio.sendData(packet)) && i>1)
 	{
-		static CCPACKET ccPacket;
-
-		// Any packet waiting to be read?
-		if (panstamp.radio.receiveData(&ccPacket) > 0)
-		{
-			// Is CRC OK?
-			//if (ccPacket.crc_ok)
-			{
-				if (panstamp.ccPacketReceived != nullptr)
-				panstamp.ccPacketReceived(&ccPacket);
-			}
-		}
+		i--;
+		for ( uint8_t t = SWAP_TX_DELAY; t--; )
+			HAL_TIME_DelayMs(1);                           // Delay before sending
 	}
-	// Enable interrupt
-	//enableIRQ_GDO0();
+		
+	if ( !res )
+	{
+		panstamp.m_radio.setRxState();			
+	}
+		
+	return res;
 }
 
-void CPanstamp::reset()
+void CAppPanstamp::setAddressCheck(bool bEnable)
 {
-	//wdt_disable();
-	//wdt_enable(WDTO_15MS);
-	//while (1) {}
-	//Serial.begin(9600);
-	//while (1)
-	//    Serial.print("Reboot!\n");
+	if ( bEnable )
+		m_radio.writeReg(CC1101_PKTCTRL1, 0x06);
+	else
+		m_radio.writeReg(CC1101_PKTCTRL1, 0x04);
 }
-
-void CPanstamp::goToWirelessBoot()
-{
-	
-}
-
-void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
-{
-	ccPacketReceived = funct;
-}
-
-
-//attachInterrupt(0, cc1101signalsInterrupt, FALLING);
-
-bool CPanstamp::init(uint8_t freq, uint8_t mode)
-{
-	// TODO: srand!
-	//srand(analogRead(0) ^ OSCCAL);
-	// Calibrate internal RC oscillator
-	//  rcOscCalibrate();
-
-	// Setup CC1101
-	if ( !radio.init(freq, mode) )
-		return false;
-
-	HAL_TIME_DelayUs(50);
-
-	// Enter RX state
-	radio.setRxState();
-
-	// Attach callback function for GDO0 (INT0)
-	HAL::IO::Configure(HAL::IO::D4, HAL::IO::InputPullUp);
-	enableIRQ_GDO0();
-
-	// Default values
-	//  state = RXON;
-	return true;
-}
-
-void CPanstamp::sleepSec(int n)
-{
-	if ( n < 0 || n > 180 )
-		n = 5;
-
-	//Serial.print("Sleeping for ");
-	//Serial.print(n);
-	//Serial.print(" seconds...\n");
-
-	while (n--)
-		HAL_TIME_DelayMs(1000);
-}
-
-uint16_t CPanstamp::getRand(void)
-{
-	// todo: init, or custom PRNG
-	return rand();
-}
-
-
-
-#endif

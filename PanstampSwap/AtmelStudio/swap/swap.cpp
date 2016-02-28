@@ -221,8 +221,8 @@ bool SWAP::init(void)
   REGISTER::initAll();
   
   // Config radio settings, devAddress set through register
-  panstamp.radio.devAddress = devAddress & 0xFF; 
-  panstamp.radio.setCCregs();
+  panstamp.m_radio.devAddress = devAddress & 0xFF; 
+  panstamp.m_radio.setCCregs();
   
   // Attach RF ISR
   panstamp.attachInterrupt(SWAP::onPacketReceived);  
@@ -353,7 +353,4 @@ void SWAP::nvolatToFactoryDefaults(void)
   nvMem.write(txInt, DEFAULT_NVOLAT_SECTION, NVOLAT_TX_INTERVAL, sizeof(txInt));
 }
 
-/**
- * Pre-instantiate SWAP object
- */
 SWAP swap;

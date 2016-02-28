@@ -1,9 +1,9 @@
 #pragma once
 #include "app.h"
 #include "../swap/cc1101.h"
+//#include "../swap/swap.h"
 
 #define panstamp CAppPanstamp::m_appPanstamp
-#define radio panstamp.m_radio
 
 class CAppPanstamp : public CApp
 {
@@ -22,7 +22,9 @@ public:
 	uint8_t getDefaultAddress();
 	bool InitRadio();
 	void randomDelay(int nMsMin, int nMsMax);
-
+	void setAddressCheck(bool bEnable);
+	uint8_t  sendPacket(CCPACKET& packet);
+		
 // obsolete:
 	void reset() {}
 	void goToWirelessBoot() {}
@@ -30,5 +32,4 @@ public:
 public:
 	static void radioISR(void);
 	void attachInterrupt(void (*funct)(CCPACKET*));
-	
 };

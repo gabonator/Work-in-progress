@@ -56,7 +56,7 @@ REGISTER regFwVersion(dtFwVersion, sizeof(dtFwVersion), NULL, NULL, REGISTER::Pu
 REGISTER regSysState(&swap.systemState, sizeof(swap.systemState), NULL, &setSysState, REGISTER::Public);
 
 /* Frequency channel */                                                                                                      
-REGISTER regFreqChannel(&panstamp.radio.channel, sizeof(panstamp.radio.channel), NULL, &setFreqChannel, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_FREQ_CHANNEL);  
+REGISTER regFreqChannel(&panstamp.m_radio.channel, sizeof(panstamp.m_radio.channel), NULL, &setFreqChannel, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_FREQ_CHANNEL);  
 
 /* Security option */                                                                                                        
 REGISTER regSecuOption(&swap.security, sizeof(swap.security), NULL, NULL, REGISTER::Private);
@@ -70,7 +70,7 @@ REGISTER regPassword(dtPassword, sizeof(dtPassword), NULL, NULL, REGISTER::Priva
 REGISTER regSecuNonce(&swap.nonce, sizeof(swap.nonce), NULL, NULL, REGISTER::Private);
 
 /* Network Id */                                                                                                             
-REGISTER regNetworkId(panstamp.radio.syncWord, sizeof(panstamp.radio.syncWord), NULL, &setNetworkId, REGISTER::ReadOnly, SWDTYPE_OTHER, NVOLAT_SYNC_WORD);  
+REGISTER regNetworkId(panstamp.m_radio.syncWord, sizeof(panstamp.m_radio.syncWord), NULL, &setNetworkId, REGISTER::ReadOnly, SWDTYPE_OTHER, NVOLAT_SYNC_WORD);  
 
 /* Device address */                                                                                                         
 REGISTER regDevAddress((uint8_t*)&swap.devAddress, sizeof(swap.devAddress), NULL, &setDevAddress, REGISTER::ReadOnly, SWDTYPE_INTEGER, NVOLAT_DEVICE_ADDRESS);  
@@ -130,7 +130,7 @@ const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel)
     packet->prepare()->send();                                          
                                     
     /* Update register value */                             
-    panstamp.radio.setChannel(channel[0]);                  
+    panstamp.m_radio.setChannel(channel[0]);                  
     /* Restart device */                                    
     panstamp.reset();                                       
   }       
@@ -156,7 +156,7 @@ const bool setDevAddress(REGISTER* pRegister, uint8_t *addr)
   /* Set new SWAP address. BE to LE conversion */           
   regDevAddress.setValueFromBeBuffer(addr);                 
   /* Update register value */                               
-  panstamp.radio.setDevAddress(addr[regDevAddress.length-1]); 
+  panstamp.m_radio.setDevAddress(addr[regDevAddress.length-1]); 
   return true;
 }                                                           
                                                             
@@ -178,7 +178,7 @@ const bool setNetworkId(REGISTER* pRegister, uint8_t *nId)
     packet->value.data = nId;
     packet->prepare()->send();                                          
     /* Update register value */                             
-    panstamp.radio.setSyncWord(nId);                        
+    panstamp.m_radio.setSyncWord(nId);                        
   }                                                         
   return true;
 }                                                           

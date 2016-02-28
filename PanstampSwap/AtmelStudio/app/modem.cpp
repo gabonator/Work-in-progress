@@ -94,18 +94,10 @@ void CModem::eval(char* strCommand)
 			// TODO: should be replaced with swPacket._send();
 			Serial.print("TX: ");
 			LOGGER::dumpPacket(packet, false);
-
-			uint8_t i = SWAP_NB_TX_TRIES;
-			uint8_t res;
-			while(!(res = panstamp.radio.sendData(packet)) && i>1)
-			{
-				i--;
-				for ( uint8_t t = SWAP_TX_DELAY; t--; )
-				HAL_TIME_DelayMs(1);                           // Delay before sending
-			}
+			uint8_t res = panstamp.sendPacket(packet);
 			
 			if (!res)
-			Serial.print("INFO: TX error\r\n");
+				Serial.print("INFO: TX error\r\n");
 		}
 	}
 }
@@ -122,19 +114,19 @@ void CModem::Init()
 		Serial.print("radio init failed!\r\n");
 	}
 
-	radio.disableAddressCheck();
+	panstamp.setAddressCheck(false);
 
 	swap.enterSystemState(SYSTATE_RXON);
 
 	Serial.print("INFO: Ready\r\n");
 	Serial.print("INFO: network address/sync word=");
-	Serial.print(panstamp.radio.syncWord[0], CSerial::HEX);
+	Serial.print(panstamp.m_radio.syncWord[0], CSerial::HEX);
 	Serial.print(",");
-	Serial.print(panstamp.radio.syncWord[1], CSerial::HEX);
+	Serial.print(panstamp.m_radio.syncWord[1], CSerial::HEX);
 	Serial.print("\r\n");
 
 	Serial.print("INFO: modem address=");
-	Serial.print(panstamp.radio.devAddress, CSerial::HEX);
+	Serial.print(panstamp.m_radio.devAddress, CSerial::HEX);
 	Serial.print("\r\n");
 }
 

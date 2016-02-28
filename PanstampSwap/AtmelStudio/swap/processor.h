@@ -1,5 +1,4 @@
-#ifndef _PROCESSOR_H
-#define _PROCESSOR_H
+#pragma once
 
 #include "swpacket.h"
 
@@ -16,5 +15,3 @@ public:
   virtual bool packetHandler(SWPACKET *packet) = 0;
   virtual void tick() {}
 };
-
-#endif

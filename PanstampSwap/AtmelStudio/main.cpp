@@ -9,25 +9,23 @@ int main(void)
 {
 	HAL::TIME::Init();
 	HAL::COM::Init();
-	
-	while ( !HAL::COM::Ready() || !HAL::COM::Available());
 
-	//panstamp.Init();
+	while ( !HAL::COM::Ready() || !HAL::COM::Available());
 
 	CAppLeds leds;
 	CModem app;
-	//CAppSender sender;
+	CAppSender sender;
 	//CAppLoopback loopback;
 	
 	//loopback.Init();
 	leds.Init();
 	app.Init();
-	//sender.Init();
+	sender.Init();
 	while (1)
 	{
 		//loopback.Loop();
 		app.Loop();
-		//sender.Loop();
+		sender.Loop();
 	}
 }
 

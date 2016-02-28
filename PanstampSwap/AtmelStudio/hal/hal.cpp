@@ -1,4 +1,3 @@
-//#define F_CPU 4000000
 #include <avr/io.h>
 #include "hal.h"
 #include <avr/interrupt.h>
@@ -42,6 +41,51 @@ void usb_callback_cdc_disable(void)
 }
 
 // }}} internal
+
+/*static*/ void HAL::DEV::GetId(char* strCode)
+{
+	for (uint8_t i = 0; i < 6; i++)
+		strCode[i] = nvm_read_production_signature_row(
+			nvm_get_production_signature_row_offset(LOTNUM0)+i);
+	strCode[6] = 0;
+	strCode[7] = 0;
+}
+
+/*static*/ uint32_t HAL::SEC::CalcCrc32(uint32_t crc, uint8_t data)
+{
+	static uint32_t HAL_SEC_CrcTable[16] = {
+		0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+		0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+		0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+		0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+	};
+
+	byte tbl_idx;
+	tbl_idx = crc ^ (data >> (0 * 4));
+    crc = HAL_SEC_CrcTable[tbl_idx & 0x0f] ^ ((crc >> 4) & 0x0fffffff);
+	tbl_idx = crc ^ (data >> (1 * 4));
+    crc = HAL_SEC_CrcTable[tbl_idx & 0x0f] ^ ((crc >> 4) & 0x0fffffff);
+	return crc;
+}
+
+/*static*/ uint16_t HAL::SEC::GetRand()
+{
+	static bool bInit = false;
+	if ( !bInit )
+	{		
+		bInit = true;
+		
+		char strCode[8];
+		HAL::DEV::GetId(strCode);
+		
+		uint32_t hash = ~0;
+		for (uint8_t i=0; i<sizeof(strCode); i++)
+			hash = CalcCrc32(hash, strCode[i]);
+				
+		srand( ~hash );
+	}	
+	return rand();
+}
 
 /*static*/ void HAL::SPI::Init()
 {

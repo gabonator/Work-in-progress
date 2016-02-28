@@ -11,6 +11,19 @@
 class HAL
 {
 public:
+	class DEV
+	{
+	public:
+		static void GetId(char* arrCode);		
+	};
+	
+	class SEC
+	{
+	public:
+		static uint32_t CalcCrc32(uint32_t crc, uint8_t data);
+		static uint16_t GetRand();
+	};
+	
 	class SPI
 	{
 	public:

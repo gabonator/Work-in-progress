@@ -342,10 +342,6 @@ void SWAP::nvolatToFactoryDefaults(void)
 
   // TODO: Call panstamp.setDefaults();
 
-  // Signature
-  uint8_t signature[] = {NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW};
-  nvMem.write(signature, DEFAULT_NVOLAT_SECTION, NVOLAT_SIGNATURE, sizeof(signature));
-  
   // Frequency channel
   uint8_t channel[] = {CCDEF_CHANNR};
   nvMem.write(channel, DEFAULT_NVOLAT_SECTION, NVOLAT_FREQ_CHANNEL, sizeof(channel));
@@ -355,10 +351,15 @@ void SWAP::nvolatToFactoryDefaults(void)
   nvMem.write(syncW, DEFAULT_NVOLAT_SECTION, NVOLAT_SYNC_WORD, sizeof(syncW));
 
   // SWAP address
-  uint8_t addr[] = {panstamp.getDefaultAddress(), 0};
+  uint32_t randomAddr = panstamp.getDefaultAddress();
+  uint8_t addr[] = {(uint8_t)randomAddr, (uint8_t)(randomAddr>>8)};
   nvMem.write(addr, DEFAULT_NVOLAT_SECTION, NVOLAT_DEVICE_ADDR, sizeof(addr));
   
   // TX interval: 15 seconds
   uint8_t txInt[] = {15, 0};
   nvMem.write(txInt, DEFAULT_NVOLAT_SECTION, NVOLAT_TX_INTERVAL, sizeof(txInt));
+  
+  // Signature
+  uint8_t signature[] = {NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW};
+  nvMem.write(signature, DEFAULT_NVOLAT_SECTION, NVOLAT_SIGNATURE, sizeof(signature));
 }

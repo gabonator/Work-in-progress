@@ -1,5 +1,5 @@
 #include "dummysender.h"
-#include "../swap/swap.h"
+#include "../panstamp/panstamp.h"
 
 const bool updateUserValue(REGISTER* pRegister);
 
@@ -46,6 +46,7 @@ void CAppSender::OnSecond()
 
 /*virtual*/ void CAppSender::Init() 
 {
+	m_nInterval = 5000 + panstamp.m_swap.devAddress * 20;
 }
 
 /*virtual*/ void CAppSender::Loop()
@@ -55,7 +56,7 @@ void CAppSender::OnSecond()
   if ( m_nLastSend == 0 )
     m_nLastSend = nTick;
 
-  if ( nTick - m_nLastSend > Interval )
+  if ( nTick - m_nLastSend > m_nInterval )
   {
     m_nLastSend = nTick;
     OnSecond();

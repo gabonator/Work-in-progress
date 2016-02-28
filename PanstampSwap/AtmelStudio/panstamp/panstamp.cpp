@@ -83,9 +83,9 @@ void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
 {
 }
 
-uint8_t CPanstamp::getDefaultAddress()
+uint16_t CPanstamp::getDefaultAddress()
 {
-	return rand();
+	return HAL::SEC::GetRand();
 }
 
 bool CPanstamp::InitRadio()
@@ -118,7 +118,7 @@ bool CPanstamp::InitRadio()
 void CPanstamp::randomDelay(int nMsMin, int nMsMax)
 {
 	// TODO!
-	uint16_t postpone = 100 + (rand() & 511);
+	uint16_t postpone = 100 + (HAL::SEC::GetRand() & 511);
 
 	// wait 100 .. 600ms to prevent traffic conflicts
 	for (; postpone--; )

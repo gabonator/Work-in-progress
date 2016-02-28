@@ -20,7 +20,7 @@ public:
 	virtual void Loop();
 
 	void SetupIds();
-	uint8_t getDefaultAddress();
+	uint16_t getDefaultAddress();
 	bool InitRadio();
 	void randomDelay(int nMsMin, int nMsMax);
 	void setAddressCheck(bool bEnable);

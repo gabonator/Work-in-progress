@@ -2,11 +2,8 @@
 
 class CAppSender : public CApp
 {
-  enum {
-    Interval = 1000
-  };
-
   uint32_t m_nLastSend;
+  uint32_t m_nInterval;
 
 public:
   CAppSender();

@@ -25,10 +25,23 @@
 #ifndef _REPEATER_H
 #define _REPEATER_H
 
-#include "panstamp.h"
+//#include "panstamp.h"
 #include "swpacket.h"
-#include "config.h"
+//#include "config.h"
 #include "processor.h"
+
+enum CONFIG {
+/**
+ * Repeater options
+ */
+
+  // Amount of transactions to be saved for evaluation before repeating a packet
+  // Maximum depth = 255
+  REPEATER_TABLE_DEPTH = 20,
+
+  // Expiration time (in ms) for any transaction
+  REPEATER_EXPIRATION_TIME = 2000
+};
 
 /**
  * Class declaration

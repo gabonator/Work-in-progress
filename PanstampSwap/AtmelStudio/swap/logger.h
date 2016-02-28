@@ -1,9 +1,9 @@
 #ifndef _LOGGER_H
 #define _LOGGER_H
 
-#include "panstamp.h"
+#include "../app/apppanstamp.h"
 #include "swpacket.h"
-#include "config.h"
+//#include "config.h"
 #include "processor.h"
 
 /**

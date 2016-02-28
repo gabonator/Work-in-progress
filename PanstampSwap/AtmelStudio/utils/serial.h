@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../common.h"
+
 #define Serial CSerial::m_Instance
 
 class CSerial

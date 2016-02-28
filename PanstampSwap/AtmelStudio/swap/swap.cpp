@@ -22,7 +22,7 @@
  * Creation date: 06/03/2013
  */
 
-#include "panstamp.h"
+#include "../app/apppanstamp.h"
 #include "swap.h"
 #include "swpacket.h"
 #include "nvolat.h"
@@ -214,19 +214,13 @@ bool SWAP::init(void)
   // Correct signature in non-volatile memory?
   if ((signature[0] != NVOLAT_SIGNATURE_HIGH) || (signature[1] != NVOLAT_SIGNATURE_LOW))
   {
-	  Serial.print("resetting to defaults\n");
     nvolatToFactoryDefaults(); // Copy default settings in non-volatile memory  
-  } else
-  {
-	  Serial.print("nvram ok\n");
-	  
-	  
   }
 
   // Intialize registers
   REGISTER::initAll();
   
-  // Config radio settings
+  // Config radio settings, devAddress set through register
   panstamp.radio.devAddress = devAddress & 0xFF; 
   panstamp.radio.setCCregs();
   
@@ -336,6 +330,8 @@ void SWAP::nvolatToFactoryDefaults(void)
 {
   STORAGE nvMem;
 
+  // TODO: Call panstamp.setDefaults();
+
   // Signature
   uint8_t signature[] = {NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW};
   nvMem.write(signature, DEFAULT_NVOLAT_SECTION, NVOLAT_SIGNATURE, sizeof(signature));
@@ -348,9 +344,8 @@ void SWAP::nvolatToFactoryDefaults(void)
   uint8_t syncW[] = {CCDEF_SYNC1, CCDEF_SYNC0};
   nvMem.write(syncW, DEFAULT_NVOLAT_SECTION, NVOLAT_SYNC_WORD, sizeof(syncW));
 
-  // SWAP address (pseudo-random number)
-  uint16_t random = panstamp.getRand();
-  uint8_t addr[] = {(uint8_t)(random >> 8), (uint8_t) random};
+  // SWAP address
+  uint8_t addr[] = {panstamp.getDefaultAddress(), 0};
   nvMem.write(addr, DEFAULT_NVOLAT_SECTION, NVOLAT_DEVICE_ADDR, sizeof(addr));
   
   // TX interval: 15 seconds

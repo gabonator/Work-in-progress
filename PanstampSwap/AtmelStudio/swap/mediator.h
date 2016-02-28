@@ -1,9 +1,9 @@
 #ifndef _MEDIATOR_H
 #define _MEDIATOR_H
 
-#include "panstamp.h"
+//#include "panstamp.h"
 #include "swpacket.h"
-#include "config.h"
+//#include "config.h"
 
 /**
  This processor allows master to communicate with distant nodes without repeater.

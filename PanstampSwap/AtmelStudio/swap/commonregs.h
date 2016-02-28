@@ -28,7 +28,8 @@
 #include "nvolat.h"
 #include "register.h"
 #include "swap.h"
-#include "config.h"
+#include "../app/apppanstamp.h"
+//#include "config.h"
 
 const bool setSysState(REGISTER* pRegister, uint8_t *state);
 const bool setFreqChannel(REGISTER* pRegister, uint8_t *channel);
@@ -40,16 +41,15 @@ const bool setTxInterval(REGISTER* pRegister, uint8_t *interval);
  * Macro for the definition of registers common to all SWAP devices
  */
 /* Product code */                                                                                                           
-static uint8_t dtProductCode[8] = {(uint8_t)((uint32_t)SWAP_MANUFACT_ID >> 24), (uint8_t)((uint32_t)SWAP_MANUFACT_ID >> 16) , (uint8_t)((uint32_t)SWAP_MANUFACT_ID >> 8), (uint8_t)(SWAP_MANUFACT_ID),    
-        (uint8_t)((uint32_t)SWAP_PRODUCT_ID >> 24), (uint8_t)((uint32_t)SWAP_PRODUCT_ID >> 16) , (uint8_t)((uint32_t)SWAP_PRODUCT_ID >> 8), (uint8_t)(SWAP_PRODUCT_ID)};                
+static uint8_t dtProductCode[8] = {};
 REGISTER regProductCode(dtProductCode, sizeof(dtProductCode), NULL, NULL, REGISTER::Public);
 
 /* Hardware version */                                                                                                       
-static uint8_t dtHwVersion[4] = {(uint8_t)((uint32_t)HARDWARE_VERSION >> 24), (uint8_t)((uint32_t)HARDWARE_VERSION >> 16) , (uint8_t)((uint32_t)HARDWARE_VERSION >> 8), (uint8_t)(HARDWARE_VERSION)};     
+static uint8_t dtHwVersion[4] = {};
 REGISTER regHwVersion(dtHwVersion, sizeof(dtHwVersion), NULL, NULL, REGISTER::Public);
 
 /* Firmware version */                                                                                                       
-static uint8_t dtFwVersion[4] = {(uint8_t)((uint32_t)FIRMWARE_VERSION >> 24), (uint8_t)((uint32_t)FIRMWARE_VERSION >> 16) , (uint8_t)((uint32_t)FIRMWARE_VERSION >> 8), (uint8_t)(FIRMWARE_VERSION)};     
+static uint8_t dtFwVersion[4] = {}; 
 REGISTER regFwVersion(dtFwVersion, sizeof(dtFwVersion), NULL, NULL, REGISTER::Public);
 
 /* System state */                                                                                                           
@@ -98,8 +98,9 @@ const bool setSysState(REGISTER* pRegister, uint8_t *state)
     case SYSTATE_RESTART:                                  
       /* Send status message before restarting the mote */  
       swap.getRegister(regSysState.id)->getStatusPacket()->prepare()->send();    
-      panstamp.reset();                                     
-      break;                                                
+      panstamp.reset();
+      break;                      
+	                            
     case SYSTATE_UPGRADE:                                   
       panstamp.goToWirelessBoot();                          
       break;                                                

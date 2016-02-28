@@ -23,7 +23,7 @@
  */
 
 #include "repeater.h"
-#include "panstamp.h"
+//#include "panstamp.h"
 //#include "Arduino.h"
 #include "swap.h"
 

@@ -25,6 +25,8 @@
 #include "cc1101.h"
 #define delayMicroseconds(us) HAL_TIME_DelayUs(us)
 
+// TODO: pin configuration
+
 // Select (SPI) CC1101
 #define cc1101_Select() HAL::IO::Write(HAL::IO::C4, 0)
 // Deselect (SPI) CC1101

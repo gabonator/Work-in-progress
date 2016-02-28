@@ -25,7 +25,7 @@
 #ifndef _NVOLAT_H
 #define _NVOLAT_H
 
-#include "config.h"
+//#include "config.h"
 
 /**
  * EEPROM/Infomem addresses

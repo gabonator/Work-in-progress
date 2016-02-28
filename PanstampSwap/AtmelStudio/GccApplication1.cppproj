@@ -158,6 +158,39 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\app.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\apppanstamp.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\apppanstamp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\dummysender.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\dummysender.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\leds.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\leds.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\loopback.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\loopback.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\modem.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\modem.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="common.h">
       <SubType>compile</SubType>
     </Compile>
@@ -245,9 +278,6 @@
     <Compile Include="swap\commonregs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="swap\config.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="swap\inquiry.h">
       <SubType>compile</SubType>
     </Compile>
@@ -258,12 +288,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="swap\nvolat.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="swap\panstamp.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="swap\panstamp.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="swap\processor.h">
@@ -299,6 +323,18 @@
     <Compile Include="swap\swpacket.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="utils\serial.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\serial.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\utils.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\utils.h">
+      <SubType>compile</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="hal" />
@@ -309,6 +345,8 @@
     <Folder Include="hal\usb\class\cdc\device" />
     <Folder Include="hal\usb\device" />
     <Folder Include="hal\usb\udc" />
+    <Folder Include="app" />
+    <Folder Include="utils" />
     <Folder Include="swap" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

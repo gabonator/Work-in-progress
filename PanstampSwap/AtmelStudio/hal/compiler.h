@@ -1,4 +1,7 @@
 #pragma once
+
+// files in this folder are migrated from ASF, compiler.h builds environment for these files
+
 #  include <avr/io.h>
 #  include <avr/builtins.h>
 #  include <avr/interrupt.h>

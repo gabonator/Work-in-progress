@@ -1,9 +1,9 @@
 #ifndef _INQUIRY_H
 #define _INQUIRY_H
 
-#include "panstamp.h"
+//#include "panstamp.h"
 #include "swpacket.h"
-#include "config.h"
+//#include "config.h"
 #include "processor.h"
 
 /**
@@ -95,11 +95,7 @@ class INQUIRY : public PROCESSOR
       if ( eResponseType == Hello )
       {
         //Serial.print("INQ: Sending hello response\n");
-        uint16_t postpone = 100 + (panstamp.getRand() & 511);
-
-        // wait 100 .. 600ms to prevent traffic conflicts
-		for (; postpone--; )
-			HAL_TIME_DelayMs(1);
+		panstamp.randomDelay(100, 600);
 
         SWPACKET ackPacket;
         INQUIRY::buildInquiryPacket(&ackPacket, Hello, nResponseAddr);

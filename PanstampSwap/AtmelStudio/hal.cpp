@@ -14,9 +14,7 @@ HAL::INT::THandlerFunction hPortCIsrHandler = nullptr;
 
 ISR(PORTD_INT0_vect)
 {
-	//Serial.print('!');
-	
-
+	Serial.print('*');
 	if ( hPortCIsrHandler )
 		hPortCIsrHandler();
 
@@ -153,14 +151,18 @@ void usb_callback_cdc_disable(void)
 	PORT_t* pPort = arrPorts[nPortIndex];
 	register8_t& regCtrl = (&pPort->PIN0CTRL)[nPortPin];
 
+	Assert( pPort == &PORTD );
+
 	if ( pHandler )	
 	{
+		Assert( !hPortCIsrHandler );
 		pPort->INTCTRL = PORT_INT0LVL0_bm;
 		pPort->INT0MASK |= nPortMask;
 		pPort->INTFLAGS = PORT_INT0IF_bm;
 		regCtrl |= PORT_ISC_FALLING_gc;
 		PMIC.CTRL |= PMIC_LOLVLEN_bm;
 		
+//TODO
 		pPort->INTFLAGS = 0xff; //PIN1_bm; -> clear
 	} else {
 		pPort->INT0MASK &= ~nPortMask;

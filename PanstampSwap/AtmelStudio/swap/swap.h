@@ -26,7 +26,7 @@
 #define _SWAP_H
 
 #include "register.h"
-#include "config.h"
+//#include "config.h"
 //#include "repeater.h"
 #include "processor.h"
 
@@ -90,6 +90,7 @@ class SWAP
     /**
      * SWAP address
      */
+
     #ifdef SWAP_EXTENDED_ADDRESS
     uint16_t devAddress;
     #else

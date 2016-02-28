@@ -24,7 +24,6 @@
 
 #include "swpacket.h"
 #include "swap.h"
-#include "panstamp.h"
 #include "logger.h"
 #include "mediator.h"
 

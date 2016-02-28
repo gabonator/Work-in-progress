@@ -3,9 +3,10 @@
 <input type="button" value="Decode to fields" onClick="onDecode()"><br><br>
 <div id="output"></div>
 
-<script language="javascript" src="lzma.js"></script>
-<script language="javascript" src="paybysquare.js"></script>
-<script language="javascript" src="qrcode.js"></script>
+<script language="javascript">window.module = {};</script>
+<script language="javascript" src="engine/lzma.js"></script>
+<script language="javascript" src="engine/paybysquare.js"></script>
+<script language="javascript" src="extras/qrcode.js"></script>
 
 <script language="javascript">
 var codec = new PayBySquare();
@@ -44,7 +45,7 @@ function onDecode()
   var sequence = document.getElementById('input').value;
   var fields = codec.decode(sequence);
   document.getElementById("output").innerHTML = buildTable(fields);
-  showQr(sequence);
+  //showQr(sequence);
 }
 
 function onEncode()
@@ -70,12 +71,8 @@ function showQr(sequence)
   });
 }
 
-/*
-generator: http://svr.bysquare.com/qr.php?type=pay&amount=63.99&cc=EUR&dd=2013-04-08&vs=123456789&cs=308&ss=&note=&iban=SK7111000000001234567890&bic=TATRSKBX
-decoder: http://webqr.com/index.html
+seqSource = "0005A00010UASS6F8PTOU04BN1GD05T2H1QLH02GQKG005B08TBPJCUCV67BFF2N6R72KJFKT7GRKUSJ8NT7IC172A14QGAEBJJEK429C1UNAF0BN77N40OOSPFU73O";
 
-0004S000EM7JROM9A000OF2NF598N8LOKF5B8MVF9D9HEHOD0KH1FNA4NPQMIRGO43NEAUDGLQBBUIEDALCLQKR4OSU1Q3SDLNB72R18M73FCV7P00
-00058000A4413HN0KBRQ70ECTA49B5ACUQM1E69CRTM61DCS4E9BBMKN6OS08832S6F8RL1C2P29CP19ANU19NTQNVU40F8UEF73RLHSTQL4GEM918TJGFDP00
-0005E0004QITFGL09C97PA0JTVKA02VR5AU8C048IOBJNKKM5JA3A1457UVDH6Q4GMI0L1PG1I5FEK6HLFJ1VM57KHRV8R74VCV0C8VV5HLPQ19H1LLFVS2RIMNIG00
-*/
+seqNew = codec.encode(codec.decode(seqSource));
+console.log(seqNew == seqSource ? "Test passed" : "Error!");
 </script>

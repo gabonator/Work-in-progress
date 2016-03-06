@@ -90,6 +90,8 @@ class SynoDLMSearchUlozto
     $size = self::match($mainInfo, "fileSize\">(.*?) (B|MB|GB|kB)<");
     $time = self::match($mainInfo, "fileTime\">(.*?)<");
 
+    $image = self::match($mainInfo, "\\<img src=\\\"(.*?)\\\"");
+
     $size = self::calculateSize($size[0], $size[1]);
 
     $hash = md5($url);
@@ -99,10 +101,11 @@ class SynoDLMSearchUlozto
     $year = self::match($name, ".*\\b((19|20)\\d{2})\\b");
     $year = count($year) == 2 ? $year[0] : date("Y");
 
-    $url = "http://ulozto.cz".$url;
+    $download = "http://ulozto.cz".$url;
+    $about = "http://ulozto.cz".$url."?g_rating=".$rating."&g_img=".str_replace("http://", "", $image)."&g_time=".$time;
 
     $category = self::getCategoryByName($name);
-    $plugin->addResult($name, $url, $size, $year."-04-01", $url, $hash, $seeds, $leechs, $category);
+    $plugin->addResult($name, $download, $size, $year."-04-01", $about, $hash, $seeds, $leechs, $category);
   }
 
   private function calculateSize($number, $units)

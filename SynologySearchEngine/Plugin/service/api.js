@@ -16,6 +16,7 @@ var processCaptcha;
 var currentRequest = "";
 var lastRequest = "";
 var lastResponse = "";
+
 function getDownloadLink(lnk, captcha, handler)
 {
   if ( lnk == lastRequest )
@@ -97,7 +98,7 @@ function doMainRequest(onFinish)
     return "?";
   }
 
-  console.log("*********DOMAINREQUEST***********");
+  //console.log("*********DOMAINREQUEST***********");
   myRequest(mainurl, function(body) {
 
     body = body.split("\n").join("");
@@ -134,7 +135,7 @@ function doMainRequest(onFinish)
 
 function doCaptcha()
 {
-console.log("*********DOCAPTCHA***********");
+  //console.log("*********DOCAPTCHA***********");
 
   myRequest(captchaurl + (new Date).getTime(), function(data)
   {
@@ -156,7 +157,7 @@ function tryCaptcha(code)
 
 function requestDownload(onResponse)
 {
-console.log("*********REQUESTDOWNLOAD***********");
+  //console.log("*********REQUESTDOWNLOAD***********");
 
   myRequest(mainurl, function(data)
   {
@@ -168,7 +169,7 @@ console.log("*********REQUESTDOWNLOAD***********");
 function processResponse(data)
 {
   var json = JSON.parse(data);
-  console.log("Got response status:"+json.status);
+  //console.log("Got response status:"+json.status);
 
   if ( json.status == "error" )
   {

@@ -1,0 +1,302 @@
+search:<input id="search" type="text"><input id="searchBtn" type="button" value="search" onClick="doSearch(document.getElementById('search').value)">
+<div id="suggestions"></div>
+
+<div id="downloads"></div><br>
+<div id="list"></div><br>
+
+<script>
+var userLogin = "******";
+var userPassword = "*****";
+
+//var url = "webapi/query.cgi?api=SYNO.API.Info&version=1&method=query&query=all";
+var urlLogin = "/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account="+userLogin+"&passwd="+userPassword+"&session=DownloadStation&format=sid";
+//var urlLogin = "/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=uzivatel&passwd=hocikto&session=DownloadStation&format=sid";
+var urlLogout = "/webapi/auth.cgi?api=SYNO.API.Auth&version=1&method=logout&session=DownloadStation";
+var urlList = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=transfer,detail";
+var urlGetSearchModules ="/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=getModule"
+var urlStartSearch = "/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=start&module=Ulozto"
+//var urlGetSearch = "/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=list&offset=0&limit=100&sort_by=seeds&filter_category=&filter_title=&sort_direction=DESC"
+var urlGetSearch = "/webapi/DownloadStation/btsearch.cgi?api=SYNO.DownloadStation.BTSearch&version=1&method=list"
+var urlDoDownload = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1"; // id=
+var urlPauseDownload = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=pause"; // id=
+var urlResumeDownload = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=resume"; // id=
+var urlDeleteDownload = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=resume"; // id=
+var urlNewDownload = "/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=create"; // uri=
+
+var cookieSid;
+var searchTaskId;
+
+var searchInterval;
+var updateInterval;
+var delayedChangeTimeout;	
+
+$ = function(id) { return document.getElementById(id); }
+
+$("search").addEventListener("keypress", function(e) {
+  if (e.keyCode == 13)
+  {
+    doSearch($("search").value);
+    return;
+  }
+
+  if ( delayedChangeTimeout )
+    clearTimeout(delayedChangeTimeout);
+  delayedChangeTimeout = setTimeout(delayedChange, 200);
+});
+
+function delayedChange()
+{
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.open("GET", "?getSuggestion('"+$("search").value+"')");
+  xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+  xmlHttp.addEventListener("load", function()
+  {
+    processSuggestions(JSON.parse(this.responseText));   
+  });
+  xmlHttp.send();
+}
+
+function processSuggestions(list)
+{
+  var suggestions = "";
+  for (var i in list)
+    suggestions += "<a href='javascript:doSearch(\""+escape(list[i])+"\")'>"+list[i]+"</a>&nbsp;";
+
+  $("suggestions").innerHTML = suggestions != "" ? suggestions + "<br><br>" : "";
+}
+
+function doSearch(searchTerm)
+{
+  $("searchBtn").disabled = true;
+
+  request(urlStartSearch + "&keyword=" + escape(searchTerm) + "&_sid="+cookieSid, function(resp)
+  {
+    searchTaskId = resp.data.taskid;
+
+    if ( searchInterval )
+    {
+      clearInterval(searchInterval);
+    }
+
+    searchInterval = setInterval(updateSearchTable, 500);
+  });
+}
+
+function formatSize(bytes)
+{
+   var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+
+   var i = parseInt(Math.floor(Math.log(Math.max(1, bytes)) / Math.log(1024)));
+   if (i == 0)
+     return bytes + ' ' + sizes[i];
+   return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+}
+
+function buildSearchTable(jsonSearch)
+{
+  var items = [];
+  for (var i in jsonSearch.data.items)
+  {
+    var item = jsonSearch.data.items[i];
+    var userData = item.external_link.match("(.*?)\\?g_rating=(.*?)&g_img=(.*?)&g_time=(.*?)$"); //\\&g_img=(.*?)^");
+    var rating = 0;
+    var img = "";
+    var time = "";
+    var external = item.external_link;
+    if (userData.length == 5)
+    {
+      rating = parseInt(userData[2]);
+      img = "http://" + userData[3];
+      time = userData[4];
+      external = userData[0];
+    }
+    items.push({title:item.title, size:item.size, external_link:external, download_uri:item.download_uri, img:img, rating:rating, time:time});
+  }
+
+
+  items.sort( function(a, b) { return b.rating - a.rating; } );
+
+  var t = "<table>"
+  for (var i in items)
+  {
+    var item = items[i];
+     
+    var images = "";
+    if ( item.img != "" )
+    {
+      images = "<img src=\""+item.img+"\">";
+
+      var imageTemplate = item.img.match("^(.*)\\.\\d\\.jpg$");
+      if ( imageTemplate != null && imageTemplate.length == 2 )
+      {
+        images = "";
+        for (var j=0; j<8; j++)                      
+          images += "<img src='"+imageTemplate[1]+"."+j+".jpg'>";
+      }
+    }  
+
+    var searchLink = item.title;
+    searchLink = searchLink.replace(".avi", "");
+    searchLink = searchLink.replace(".mpg", "");
+    searchLink = searchLink.replace(".mp4", "");
+    searchLink = searchLink.replace(".mkv", "");
+    searchLink = searchLink.replace("dabing", "");
+    searchLink = searchLink.replace(new RegExp("[\\.\\-\\,_\\(\\)]", "g"), " ");
+    searchLink = searchLink.replace(" cz ", " ");
+
+    var year = (searchLink+" ").match(".*\\b((19|20)\\d{2})\\b");
+
+    if ( year && year.length >= 2 )
+      year = year[1];
+    else
+      year = "";
+
+    var episode = searchLink.match("^(.*)\\b[sS]\\d\\d[eE]\\d\\d\\b");
+    if ( episode && episode.length == 2 )
+      searchLink = episode[1];
+
+    var delim = searchLink.match(new RegExp("^(.*?)\\bcz\\b", "i"));
+    if ( delim && delim.length == 2 )
+      searchLink = delim[1];
+
+    searchLink = "csfd " + searchLink;
+
+    if ( year != "" && searchLink.indexOf(year) == -1 )
+      searchLink += " " + year;
+
+    searchLink = searchLink.replace(new RegExp("  ", "g"), " ");
+
+    var uloztoLink = "<a target='_new' href='"+item.external_link+"'>Ulozto</a>";
+    var csfdLink = "<a target='_new' href='http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q="+encodeURIComponent(searchLink)+"'>CSFD</a>";
+    var downloadLink = "<a href='javascript:onNewDownload(\""+item.download_uri+"\")'>download</a>";
+
+    t += "<tr><td>"+item.title+"</td><td>"+formatSize(item.size)+"</td><td>Rating:"+item.rating+"</td><td>Time: "+item.time+"</td><td>"+uloztoLink + " " + csfdLink+" " + downloadLink + "</td></tr>";
+    t += "<tr><td colspan=5>"+images+"</td></tr>";
+  }
+  t += "</table>";
+
+  $("list").innerHTML = t;
+}
+
+function onGetCsfdLink(name)
+{
+  document.location.href = "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q="+name;
+}
+
+function onNewDownload(uri)
+{
+  request(urlNewDownload+ "&uri=" + uri + "&_sid="+cookieSid, function(resp)
+  {
+  });
+}
+
+function updateSearchTable()
+{
+  request(urlGetSearch + "&taskid=" + searchTaskId + "&_sid="+cookieSid, function(resp)
+  {
+//    console.log(resp.data.items.length + " " + resp.data.finished);
+
+    buildSearchTable(resp);
+
+    if ( resp.data.finished )
+    {
+      $("searchBtn").disabled = false;
+      clearInterval(searchInterval);
+      searchInterval = null;
+    }
+  });
+}
+
+function buildDownloadsTable(jsonDownloads)
+{
+  var t = "<table>"
+  for (var i in jsonDownloads.data.tasks)
+  {
+    var task = jsonDownloads.data.tasks[i];
+    var taskOper = "";
+
+    var partialId = task.id.replace("dbid_", "");
+    var partialFile = task.title;
+
+    if ( task.status == "downloading" || task.status == "paused" )
+      taskOper += " <a href=\"?getLocalVlcLink('http://diskstation/data/Partial/"+partialId+"/"+partialFile+"')\">URL</a>";
+
+    if ( task.status == "finished" )
+      taskOper += " <a href=\"?getLocalVlcLink('http://diskstation/"+task.additional.detail.destination+"/"+partialFile+"')\">URL</a>";
+
+    if ( task.status == "paused" || task.status == "error" )
+      taskOper += " <a href='javascript:doDownloadTask(\"resume\", \""+task.id+"\")'>resume</a>"
+
+    if ( task.status == "downloading" )
+      taskOper += " <a href='javascript:doDownloadTask(\"pause\", \""+task.id+"\")'>pause</a>"
+
+    taskOper += " <a href='javascript:doDownloadTask(\"delete\", \""+task.id+"\")'>delete</a>"
+
+    var additional = "";
+
+//if ( task.title.indexOf("rick") != -1) console.log(task);
+    additional = task.size == 0 ? "" : (parseFloat(task.additional.transfer.size_downloaded) * 100 / parseFloat(task.size)).toFixed(1) + "%";
+
+    t += "<tr><td>"+task.status+ taskOper+"</td><td>"+task.title+"</td><td>"+additional+"</td></tr>";
+  }
+  t += "</table>";
+
+  $("downloads").innerHTML = t;
+}
+
+function doDownloadTask(method, id)
+{
+  request(urlResumeDownload + "&method=" + method + "&id=" + escape(id) + "&_sid="+cookieSid, function(resp)
+  {
+//    updateDownloadsTable();
+  });
+}
+
+function updateDownloadsTable(handler)
+{
+  request(urlList + "&_sid="+cookieSid, function(resp)
+  {
+    buildDownloadsTable(resp);
+    if ( handler )
+      handler();
+  });
+}
+
+function request(url, handler)
+{
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        var json = JSON.parse(xmlhttp.responseText);
+//        console.log(xmlhttp.responseText);
+        Assert(json.success === true);
+        if ( json.success == true )
+          handler(json);
+    }
+  };
+  xmlhttp.open("GET", url, true);
+  xmlhttp.send();
+}
+
+function Assert(cond)
+{
+  if (!cond) 
+    throw("assert");
+}
+
+
+request(urlLogin, function(resp)
+{
+  cookieSid = resp.data.sid;
+
+  updateDownloadsTable();
+  updateInterval = setInterval(updateDownloadsTable, 5000);
+
+/*
+  request(urlLogout + "&_sid="+cookieSid, function(resp)
+  {
+  });
+*/
+});
+
+</script>

@@ -1,0 +1,84 @@
+<div id="cameras"></div>
+
+<input type=button value="left" onClick="left()">
+<input type=button value="right" onClick="right()">
+<input type=button value="up" onClick="up()">
+<input type=button value="down" onClick="down()">
+
+<script>
+var userLogin = "*****";
+var userPassword = "*****";
+
+var url = "webapi/query.cgi?api=SYNO.API.Info&version=1&method=query&query=all";
+var urlLogin = "/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account="+userLogin+"&passwd="+userPassword+"&session=SurveillanceStation&format=sid";
+var urlLogout = "/webapi/auth.cgi?api=SYNO.API.Auth&version=1&method=logout&session=DownloadStation";
+
+var cookieSid = false;
+
+$ = function(id) { return document.getElementById(id); }
+
+function request(url, handler)
+{
+  if ( cookieSid )
+    url += "&_sid="+cookieSid;
+
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        var json = JSON.parse(xmlhttp.responseText);
+        console.log(xmlhttp.responseText);
+        Assert(json.success === true);
+        if ( json.success == true && handler)
+          handler(json);
+    }
+  };
+  xmlhttp.open("GET", url, true);
+  xmlhttp.send();
+}
+
+function Assert(cond)
+{
+  if (!cond) 
+    throw("assert");
+}
+
+function processCameraList(resp)
+{
+  for (var i in resp.data.cameras)
+  {
+    var camera = resp.data.cameras[i];
+    var urlStream = "/webapi/SurveillanceStation/streaming.cgi?api=SYNO.SurveillanceStation.Streaming&method=LiveStream&version=2&cameraId="+camera.id;
+
+	  urlStream = "http://192.168.1.3:5000"+urlStream+ "&_sid="+cookieSid;
+
+	  $("cameras").innerHTML += "<img src='"+urlStream+"'>";
+  }
+}
+
+function disconnect()
+{
+  request(urlLogout, function(resp)
+  {
+  });
+}
+
+var left  = function() { request("webapi/entry.cgi?api=SYNO.SurveillanceStation.PTZ&method=Move&version=1&cameraId=2&direction=left&speed=1&moveType=Start"); }
+var right = function() { request("webapi/entry.cgi?api=SYNO.SurveillanceStation.PTZ&method=Move&version=1&cameraId=2&direction=right&speed=1&moveType=Start"); }
+var up    = function() { request("webapi/entry.cgi?api=SYNO.SurveillanceStation.PTZ&method=Move&version=1&cameraId=2&direction=up&speed=1&moveType=Start"); }
+var down  = function() { request("webapi/entry.cgi?api=SYNO.SurveillanceStation.PTZ&method=Move&version=1&cameraId=2&direction=down&speed=1&moveType=Start"); }
+
+
+//request(url);
+request(urlLogin, function(resp)
+{
+  cookieSid = resp.data.sid;
+
+  var urlCamList = "/webapi/entry.cgi?privCamType=3&version=8&blIncludeDeletedCam=true&streamInfo=true&blPrivilege=false&start=0&api=SYNO.SurveillanceStation.Camera&limit=10&basic=true&blFromCamList=true&camStm=1&method=List";
+
+  request(urlCamList, function(resp)
+  {
+    processCameraList(resp);
+  });
+
+});
+</script>

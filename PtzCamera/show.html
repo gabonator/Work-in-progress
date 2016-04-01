@@ -1,0 +1,24 @@
+<script>
+var q = "<nobr>";
+
+for ( var folder in {"day":0, "night":0} )
+{
+  for ( var y = 20; y <= 80; y+=20)
+  {
+    for ( var x = 250; x >= 50; x-=20)
+    {
+      var path = folder + "/img"+tri(x)+"_"+tri(y)+".jpg";
+      q += "<img width=320 src='"+path+"'>";
+    }
+    q += "<nobr><br>";
+  }
+  q += "<hr>";
+}
+
+function tri(num)
+{
+  return ("000" + num.toString(10)).substr(-3);
+}
+
+document.write(q);
+</script>

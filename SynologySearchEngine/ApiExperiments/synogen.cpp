@@ -6,8 +6,11 @@
 // install gcc on synology machine:
 //   ipkg install crosstool-native optware-devel
 //
-// compile on synology machine by calling:
+// compile by calling:
 //   g++ synogen.cpp -ldl -o synogen
+//
+// run:
+//   ./synogen
 // 
 // Do not misuse this tool, use it only for testing purposes and then delete the 
 // key from your machine.
@@ -26,8 +29,8 @@
 // which takes two numbers (camera count and unique id) and generates the string with license key.
 // This is pretty funny fail from synology side, so instead of reverse engineering all the
 // bit manipulation done in VerifyKey function, we just call GenerateKey(8, random number, strCode)
-// to get valid activation code. The GenerateKey function is not exported and cannot be loaded 
-// using dlsym, but due to benefits of ELF shared objects and wrong linker configuration
+// to get valid activation code for 8 cameras. The GenerateKey function is not exported and cannot 
+// be loaded using dlsym, but due to benefits of ELF shared objects and wrong linker configuration
 // we can determine the function's offset by calling nm -D command. This code was tested on
 // PowerPc based diskstations, but I have found function with the same name also on x86 synology 
 // machine.

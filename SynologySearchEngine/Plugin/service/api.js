@@ -7,7 +7,7 @@ var request = require("request");
 // download link
 
 var mainurl;
-var captchaurl = "http://ulozto.cz/reloadXapca.php?rnd=";
+var captchaurl = "https://ulozto.cz/reloadXapca.php?rnd=";
 var form = {};
 var keepCookie = "";
 var onSuccess;
@@ -29,7 +29,7 @@ function getDownloadLink(lnk, captcha, handler)
   currentRequest = lnk;
   onSuccess = handler;
   processCaptcha = captcha;
-  mainurl = "http://ulozto.cz" + lnk; 
+  mainurl = "https://ulozto.cz" + lnk;
 
   doMainRequest(function()
   {
@@ -46,7 +46,7 @@ function myDownload(url, filename)
 }
 
 function myRequest(url, handler, data)
-{ 
+{
   var args = [url, "-s", "-D", "-"];
   if ( keepCookie != "" )
   {
@@ -70,7 +70,7 @@ function myRequest(url, handler, data)
 
   console.log("spawn: "+args.join(' | '));
 
-  const spawn = require('child_process').spawn;  
+  const spawn = require('child_process').spawn;
   const proc = spawn('curl', args);
   var response = "";
 
@@ -131,7 +131,7 @@ function doMainRequest(onFinish)
 
     onFinish();
   })
-}             
+}
 
 function doCaptcha()
 {
@@ -176,14 +176,14 @@ function processResponse(data)
     console.log(json.errors);
 
     form.ts = json.new_form_values.ts;
-    form.cid = json.new_form_values.cid; 
+    form.cid = json.new_form_values.cid;
     form.sign = json.new_form_values.sign;
     form._token_ = json.new_form_values._token_;
 
     form.hash = json.new_form_values.xapca_hash;
     form.salt = json.new_form_values.xapca_salt;
     form.timestamp = json.new_form_values.xapca_timestamp;
-    
+
     processCaptcha({image:"http:"+json.new_captcha_data.image, sound:"http:"+json.new_captcha_data.sound}, tryCaptcha);
   }
 
@@ -198,7 +198,7 @@ function processResponse(data)
 // suggestions
 function getSuggestions(term, onResponse)
 {
-  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=" + escape(term);
+  var suggestUrl = "https://ulozto.cz/searchSuggest.php?term=" + escape(term);
 
   request(suggestUrl, function(error, response, body) {
     onResponse(body);
@@ -210,7 +210,7 @@ var decoderClass = require('./blowfish.js').blowfish;
 
 function getSearchResults(term, onResponse)
 {
-  var searchUrl = "http://ulozto.cz/hledej?q=" + escape(term);
+  var searchUrl = "https://ulozto.cz/hledej?q=" + escape(term);
 
   var trim = function (str)
   {
@@ -221,7 +221,7 @@ function getSearchResults(term, onResponse)
 
   var decode = function(data, key)
   {
-  	var decoder = new decoderClass(key); 
+  	var decoder = new decoderClass(key);
     var result = [];
     var subdata = [];
 
@@ -262,4 +262,3 @@ function getSearchResults(term, onResponse)
     onResponse(result);
   });
 }
-

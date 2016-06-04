@@ -37,6 +37,39 @@ function getDownloadLink(lnk, captcha, handler)
   });
 }
 
+function mySpawn(command, args, handler)
+{
+  var cmdline = command;
+  for (var i = 0; i < args.length; i++)
+  {
+    if ( args[i].indexOf(' ') != -1 || args[i].indexOf('?') != -1 || args[i].indexOf('&') != -1 )
+      cmdline += " \"" + args[i] + "\"";
+    else
+      cmdline += " " + args[i];
+  }
+
+  console.log("spawn: " + cmdline);
+
+  const spawn = require('child_process').spawn;
+  const proc = spawn('curl', args);
+
+  var response = "";
+
+  proc.stdout.on('data', function(data) {
+    response += data;
+  });
+
+  proc.stderr.on('data', function (data) {
+    console.log('stderr: ' + data);
+  });
+
+  proc.on('close', function(code) {
+    handler(response);
+  });
+
+  return proc;
+}
+
 function myDownload(url, filename)
 {
   request({url:url, encoding:"binary"}, function(error, response, body) {
@@ -68,23 +101,7 @@ function myRequest(url, handler, data)
     args.push(q);
   }
 
-  console.log("spawn: "+args.join(' | '));
-
-  const spawn = require('child_process').spawn;
-  const proc = spawn('curl', args);
-  var response = "";
-
-  proc.stdout.on('data', function(data) {
-    response += data;
-  });
-
-  proc.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
-  });
-
-  proc.on('close', function(code) {
-    handler(response);
-  });
+  mySpawn('curl', args, handler);
 }
 
 function doMainRequest(onFinish)

@@ -8,7 +8,9 @@ var url = require('url');
 var fs = require('fs');
 var webbase = ".";
 
-console.log("  - Webserver at localhost running ");
+var port = 8034;
+
+console.log("Ulozto.cz interface webserver running at localhost:" + port);
 
 var currentResponse;
 
@@ -47,11 +49,12 @@ http.createServer(function (request, response) {
     eval(query);
     currentResponse = null;
   }
-}).listen(8034);
+}).listen(port);
 
 
 // search api
 var api = require('./api.js');
+//var imageCaptcha = require('./captcha/ocr/ocr.js').captchaByImageHash;
 var voiceCaptcha = require('./voice.js').captchaByVoice;
 
 function getSuggestion(term)
@@ -117,6 +120,26 @@ function getVlcLink(url)
   );
 }
 
+function getLocalVlcLink(url)
+{
+  var name = url.match(".*/(.*?)$")[1]
+
+  url = url.replace("http://", "\\\\");
+  url = url.replace(new RegExp("/", 'g'), '\\');
+
+  var ind = name.lastIndexOf("-");
+  if ( ind != -1 )
+    name = name.substr(0, ind) + '.' + name.substr(ind+1);
+
+  currentResponse.setHeader('Content-disposition', 'attachment; filename=' + name + ".m3u");
+  currentResponse.setHeader('Content-type', "text/plain");
+  currentResponse.end(
+    '#EXTM3U\n' +
+    '#EXTINF:-1,' + name + '\n' +
+    url
+  );
+}
+
 function captchaHelper(json, onResult)
 {
   console.log("Cracking voice captcha: "+json.sound);
@@ -128,4 +151,23 @@ function captchaHelper(json, onResult)
     console.log("Found captcha: "+result);
     onResult(result);
   }); 
+
+/*
+  console.log("Cracking visual captcha: "+json.image);
+  request({
+      url : json.image,
+      encoding : "binary"
+  }, function(error, response, body) {
+
+var crypto = require('crypto');
+    var md5sum = crypto.createHash('md5');
+    md5sum.update(body.substr(body, body.length-16));
+    var hash = md5sum.digest('hex');
+    console.log("hash: " +hash);
+
+    var result = imageCaptcha(hash);
+    console.log("Found captcha: "+result);
+    onResult(result);
+  }); 
+*/
 }

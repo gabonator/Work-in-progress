@@ -42,5 +42,7 @@ Mozne problemy:
   - Nemoznost pridat vyhladavaci plugin do download station - ak je subor ulozto.dlm alebo ulozto.host zle stiahnuty, download station ho odmietne nainstalovat. Skontroluj podla bodu 1
   - Ak download station stahuje podozrivo male, cca 40 kilobajtove subory, znamena to ze nebezi servis. Skontroluj podla bodu 5 a 6
 
-Beta testing: 
+Contributors:
+  - Milos Vasek (svasek) 
   - Meenya
+

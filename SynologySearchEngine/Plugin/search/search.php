@@ -102,6 +102,16 @@ class SynoDLMSearchUlozto
     $year = count($year) == 2 ? $year[0] : date("Y");
 
     $download = "http://ulozto.cz".$url;
+
+    if ( is_null($image) || is_array($image) )
+      $image = "";
+
+    if ( is_null($time) || is_array($time) )
+      $time = "";
+
+    if ( is_null($rating) || is_array($rating) )
+      $rating = "";
+
     $about = "http://ulozto.cz".$url."?g_rating=".$rating."&g_img=".str_replace("http://", "", $image)."&g_time=".$time;
 
     $category = self::getCategoryByName($name);
@@ -153,8 +163,11 @@ class SynoDLMSearchUlozto
       ".mp4"			=> "Video",
       ".wmv"			=> "Video",
       ".mov"			=> "Video",
+      ".vob"			=> "Video",
 
       ".mp3"			=> "Audio",
+      ".flac"			=> "Audio",
+      ".wav"			=> "Audio",
     
       ".gif"			=> "Image",
       ".jpg"			=> "Image",

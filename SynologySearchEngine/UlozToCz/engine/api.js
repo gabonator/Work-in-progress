@@ -7,22 +7,67 @@ var request = require("request");
 // download link
 
 var mainurl;
-var captchaurl = "http://ulozto.cz/reloadXapca.php?rnd=";
+var captchaurl = "https://ulozto.cz/reloadXapca.php?rnd=";
 var form = {};
 var keepCookie = "";
 var onSuccess;
 var processCaptcha;
 
+var currentRequest = "";
+var lastRequest = "";
+var lastResponse = "";
+
 function getDownloadLink(lnk, captcha, handler)
 {
+  if ( lnk == lastRequest )
+  {
+    handler(lastResponse);
+    return;
+  }
+
+  keepCookie = ""; // TODO!!!
+  currentRequest = lnk;
   onSuccess = handler;
   processCaptcha = captcha;
-  mainurl = "http://ulozto.cz" + lnk; 
+  mainurl = "https://ulozto.cz" + lnk;
 
   doMainRequest(function()
   {
     doCaptcha();
   });
+}
+
+function mySpawn(command, args, handler)
+{
+  var cmdline = command;
+  for (var i = 0; i < args.length; i++)
+  {
+    if ( args[i].indexOf(' ') != -1 || args[i].indexOf('?') != -1 || args[i].indexOf('&') != -1 )
+      cmdline += " \"" + args[i] + "\"";
+    else
+      cmdline += " " + args[i];
+  }
+
+  console.log("spawn: " + cmdline);
+
+  const spawn = require('child_process').spawn;
+  const proc = spawn('curl', args);
+
+  var response = "";
+
+  proc.stdout.on('data', function(data) {
+    response += data;
+  });
+
+  proc.stderr.on('data', function (data) {
+    console.log('stderr: ' + data);
+  });
+
+  proc.on('close', function(code) {
+    handler(response);
+  });
+
+  return proc;
 }
 
 function myDownload(url, filename)
@@ -34,8 +79,15 @@ function myDownload(url, filename)
 }
 
 function myRequest(url, handler, data)
-{ 
-  var syscall = 'curl "'+url+'" -H "Cookie: '+keepCookie+'; uloztoid='+form.cid+'" -H "X-Requested-With: XMLHttpRequest"';
+{
+  var args = [url, "-s", "-D", "-"];
+  if ( keepCookie != "" )
+  {
+    args.push("-H");
+    args.push("Cookie: "+keepCookie+"; uloztoid="+form.cid);
+    args.push("-H");
+    args.push("X-Requested-With: XMLHttpRequest");
+  }
 
   if ( typeof(data) != "undefined" )
   {
@@ -45,17 +97,11 @@ function myRequest(url, handler, data)
       if ( q != "" ) q += "&"
       q += i + "="+ encodeURIComponent(form[i]);
     }
-
-    q = q.split('%').join('"%"');
-    q = '--data "'+q+'"'
-    syscall += " " + q;
+    args.push("--data");
+    args.push(q);
   }
 
-  var exec = require('child_process').exec;
-                                            
-  exec(syscall, function(error, stdout, stderr) {
-    handler(stdout);
-  });
+  mySpawn('curl', args, handler);
 }
 
 function doMainRequest(onFinish)
@@ -69,12 +115,27 @@ function doMainRequest(onFinish)
     return "?";
   }
 
-  request(mainurl, function(error, response, body) {
-    var cookies = response.headers["set-cookie"].join(";");
-    keepCookie = cookies.match("(ULOSESSID=.*?);")[1];
+  //console.log("*********DOMAINREQUEST***********");
+  myRequest(mainurl, function(body) {
 
     body = body.split("\n").join("");
-    var formhtml = body.match("id=\"frm-downloadDialog-freeDownloadForm\"(.*)</form>")[1];
+
+    var keepCookieMatch = body.match("(ULOSESSID=.*?);");
+    if ( !keepCookieMatch || keepCookieMatch.length != 2 )
+    {
+      console.log("ERROR: ULOSESSID not found: <<<"+body+">>>");
+      return;
+    }
+    keepCookie = keepCookieMatch[1];
+
+    var formhtmlMatch = body.match("id=\"frm-downloadDialog-freeDownloadForm\"(.*)</form>");
+    if ( !formhtmlMatch || formhtmlMatch.length != 2 )
+    {
+      console.log("ERROR: FORM DATA not found: <<<"+body+">>>");
+      return;
+    }
+
+    var formhtml = formhtmlMatch[1];
 
     form._token_ = getvar(formhtml, "_token_");
     form.ts = getvar(formhtml, "ts");
@@ -87,12 +148,15 @@ function doMainRequest(onFinish)
 
     onFinish();
   })
-}             
+}
 
 function doCaptcha()
 {
+  //console.log("*********DOCAPTCHA***********");
+
   myRequest(captchaurl + (new Date).getTime(), function(data)
   {
+    data = data.substr(data.indexOf("\r\n\r\n")+4);
     var json = JSON.parse(data);
     var image = json.image;
     form.timestamp = json.timestamp;
@@ -110,8 +174,11 @@ function tryCaptcha(code)
 
 function requestDownload(onResponse)
 {
+  //console.log("*********REQUESTDOWNLOAD***********");
+
   myRequest(mainurl, function(data)
   {
+    data = data.substr(data.indexOf("\r\n\r\n")+4);
     onResponse(data);
   }, form);
 }
@@ -119,25 +186,28 @@ function requestDownload(onResponse)
 function processResponse(data)
 {
   var json = JSON.parse(data);
+  //console.log("Got response status:"+json.status);
 
   if ( json.status == "error" )
   {
     console.log(json.errors);
 
     form.ts = json.new_form_values.ts;
-    form.cid = json.new_form_values.cid; 
+    form.cid = json.new_form_values.cid;
     form.sign = json.new_form_values.sign;
     form._token_ = json.new_form_values._token_;
 
     form.hash = json.new_form_values.xapca_hash;
     form.salt = json.new_form_values.xapca_salt;
     form.timestamp = json.new_form_values.xapca_timestamp;
-    
+
     processCaptcha({image:"http:"+json.new_captcha_data.image, sound:"http:"+json.new_captcha_data.sound}, tryCaptcha);
   }
 
   if ( json.status == "ok" )
   {
+    lastRequest = currentRequest;
+    lastResponse = json.url;
     onSuccess(json.url);
   }
 }
@@ -145,7 +215,7 @@ function processResponse(data)
 // suggestions
 function getSuggestions(term, onResponse)
 {
-  var suggestUrl = "http://ulozto.cz/searchSuggest.php?term=" + escape(term);
+  var suggestUrl = "https://ulozto.cz/searchSuggest.php?term=" + escape(term);
 
   request(suggestUrl, function(error, response, body) {
     onResponse(body);
@@ -157,7 +227,7 @@ var decoderClass = require('./blowfish.js').blowfish;
 
 function getSearchResults(term, onResponse)
 {
-  var searchUrl = "http://ulozto.cz/hledej?q=" + escape(term);
+  var searchUrl = "https://ulozto.cz/hledej?q=" + escape(term);
 
   var trim = function (str)
   {
@@ -168,7 +238,7 @@ function getSearchResults(term, onResponse)
 
   var decode = function(data, key)
   {
-  	var decoder = new decoderClass(key); 
+  	var decoder = new decoderClass(key);
     var result = [];
     var subdata = [];
 
@@ -209,4 +279,3 @@ function getSearchResults(term, onResponse)
     onResponse(result);
   });
 }
-

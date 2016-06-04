@@ -8,7 +8,9 @@ var url = require('url');
 var fs = require('fs');
 var webbase = ".";
 
-console.log("  - Webserver at localhost running ");
+var port = 8034;
+
+console.log("Ulozto.cz interface webserver running at localhost:" + port);
 
 var currentResponse;
 
@@ -47,13 +49,13 @@ http.createServer(function (request, response) {
     eval(query);
     currentResponse = null;
   }
-}).listen(80);
+}).listen(port);
 
 
 // search api
-var api = require('./engine/api.js');
+var api = require('./api.js');
 //var imageCaptcha = require('./captcha/ocr/ocr.js').captchaByImageHash;
-var voiceCaptcha = require('./captcha/voicerecognition/voice.js').captchaByVoice;
+var voiceCaptcha = require('./voice.js').captchaByVoice;
 
 function getSuggestion(term)
 {
@@ -73,6 +75,22 @@ function doSearch(term)
   });
 }
 
+function getDownload(lnk)
+{
+  lnk = lnk.replace("http://ulozto.cz", "");
+  lnk = lnk.replace("http://ulozto.sk", "");
+
+  var safeResponse = currentResponse;
+  api.getDownloadLink(lnk, captchaHelper, function(url)
+  { 
+    var ind = url.lastIndexOf("-");
+    if ( ind != -1 )
+      url = url.substr(0, ind) + '.' + url.substr(ind+1);
+
+    safeResponse.end(url);
+  });
+}
+
 function getLink(lnk)
 {
   var safeResponse = currentResponse;
@@ -89,6 +107,26 @@ function getLink(lnk)
 function getVlcLink(url)
 {
   var name = url.match(".*/(.*?)\\?")[1]
+  var ind = name.lastIndexOf("-");
+  if ( ind != -1 )
+    name = name.substr(0, ind) + '.' + name.substr(ind+1);
+
+  currentResponse.setHeader('Content-disposition', 'attachment; filename=' + name + ".m3u");
+  currentResponse.setHeader('Content-type', "text/plain");
+  currentResponse.end(
+    '#EXTM3U\n' +
+    '#EXTINF:-1,' + name + '\n' +
+    url
+  );
+}
+
+function getLocalVlcLink(url)
+{
+  var name = url.match(".*/(.*?)$")[1]
+
+  url = url.replace("http://", "\\\\");
+  url = url.replace(new RegExp("/", 'g'), '\\');
+
   var ind = name.lastIndexOf("-");
   if ( ind != -1 )
     name = name.substr(0, ind) + '.' + name.substr(ind+1);

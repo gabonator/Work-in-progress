@@ -29,7 +29,7 @@ case "$1" in
 		sleep 1
 		StartService
 		;;
-	status)	
+	status)
 		if [ ! -f ${PIDFILE} ]; then exit 1; fi
 		ps -o stat -p `cat ${PIDFILE}` &>/dev/null
 		exit $?
@@ -44,4 +44,3 @@ case "$1" in
 esac
 
 exit 0
-

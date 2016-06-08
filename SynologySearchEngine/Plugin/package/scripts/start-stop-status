@@ -1,0 +1,47 @@
+#!/bin/sh
+
+ULOZTO_HOME="/var/packages/Ulozto"
+LOGFILE="${ULOZTO_HOME}/ulozto.log"
+PIDFILE="${ULOZTO_HOME}/ulozto.pid"
+UloztoTarget="${ULOZTO_HOME}/target"
+DESKTOP="/usr/syno/synoman/webman/3rdparty/Ulozto"
+DSM_INDEX_ADD="/usr/syno/bin/pkgindexer_add"
+DSM_INDEX_DEL="/usr/syno/bin/pkgindexer_del"
+
+StartService() {
+	cd ${UloztoTarget} && nohup node server.js &> ${LOGFILE} &
+	ps ax | grep Ulozto | grep -v grep | awk '{print $1}' > ${PIDFILE}
+}
+
+StopService() {
+	kill `cat ${PIDFILE}` && rm -f ${PIDFILE}
+}
+
+case "$1" in
+	start)
+		StartService
+		;;
+	stop)
+		StopService
+		;;
+	restart)
+		StopService
+		sleep 1
+		StartService
+		;;
+	status)	
+		if [ ! -f ${PIDFILE} ]; then exit 1; fi
+		ps -o stat -p `cat ${PIDFILE}` &>/dev/null
+		exit $?
+		;;
+	log)
+		echo "${LOGFILE}"
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|status|log}" >&2
+		exit 1
+		;;
+esac
+
+exit 0
+

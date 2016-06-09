@@ -1,38 +1,83 @@
 #!/bin/sh
 
-ULOZTO_HOME="/var/packages/Ulozto"
-LOGFILE="${ULOZTO_HOME}/ulozto.log"
-PIDFILE="${ULOZTO_HOME}/ulozto.pid"
-UloztoTarget="${ULOZTO_HOME}/target"
-DESKTOP="/usr/syno/synoman/webman/3rdparty/Ulozto"
-DSM_INDEX_ADD="/usr/syno/bin/pkgindexer_add"
-DSM_INDEX_DEL="/usr/syno/bin/pkgindexer_del"
+PACKAGE_DIR="/var/packages/${SYNOPKG_PKGNAME}"
+LOGFILE="${PACKAGE_DIR}/ulozto.log"
+PIDFILE="${PACKAGE_DIR}/ulozto.pid"
+TARGET_DIR="${PACKAGE_DIR}/target"
+FILE_ENABLE="${PACKAGE_DIR}/enabled"
+
+. /etc.defaults/rc.subr
+
+ServiceStatus() {
+	if [ -f "$PIDFILE" ]; then
+		PID=$(cat "$PIDFILE")
+
+		if [ -n "$(ps | grep -e $PID)" ]; then
+			echo "${SYNOPKG_PKGNAME} service is running ..."
+			return 1  # is running
+		else
+			echo "${SYNOPKG_PKGNAME} service is NOT running ..."
+			rm -f ${PIDFILE}  # Remove Invalid PID
+			return 0  # is NOT running
+		fi
+	else
+		echo "${SYNOPKG_PKGNAME} service is NOT running ...."
+		return 0  # is NOT running
+	fi
+}
 
 StartService() {
-	cd ${UloztoTarget} && nohup node server.js &> ${LOGFILE} &
-	ps ax | grep Ulozto | grep -v grep | awk '{print $1}' > ${PIDFILE}
+	ServiceStatus
+	if [ $? == 0 ]; then
+		logger -t ${SYNOPKG_PKGNAME} -p warning "Service stoping"
+		echo "Starting ${SYNOPKG_PKGNAME} service."
+		cd ${TARGET_DIR} && nohup node server.js > ${LOGFILE} 2>&1&
+		sleep 3
+		#echo $! > "$PIDFILE"
+		ps -e | grep 'Ulozto.cz' | awk '{print $1}' > ${PIDFILE}
+  else
+		echo "${SYNOPKG_PKGNAME} service already running."
+  fi
 }
 
 StopService() {
-	kill `cat ${PIDFILE}` && rm -f ${PIDFILE}
+	ServiceStatus
+  if [ $? == 1 ]; then
+		logger -t ${SYNOPKG_PKGNAME} -p warning "Service starting"
+		echo "Stopping ${SYNOPKG_PKGNAME} service."
+  	kill -15 $(cat "$PIDFILE") 1>&2> /dev/null ;
+		echo "${SYNOPKG_PKGNAME} service stopped"
+		rm -f "${LOGFILE}"
+		sleep 1
+	else
+		echo "${SYNOPKG_PKGNAME} service could not be stopped"
+	fi
 }
 
 case "$1" in
 	start)
 		StartService
+		sleep 1
+		ServiceStatus
+		exit $(( ! $? ))  # [ $? == 1 ] && exit 0 || exit 1  # this if statement flips the boolean outcome.
 		;;
 	stop)
 		StopService
+		sleep 1
+		ServiceStatus
+		exit $?
 		;;
 	restart)
 		StopService
 		sleep 1
 		StartService
+		sleep 1
+		ServiceStatus
+		exit $(( ! $? ))  # this if statement flips the boolean outcome.
 		;;
 	status)
-		if [ ! -f ${PIDFILE} ]; then exit 1; fi
-		ps -o stat -p `cat ${PIDFILE}` &>/dev/null
-		exit $?
+		ServiceStatus
+		exit $(( ! $? ))  # this if statement flips the boolean outcome.
 		;;
 	log)
 		echo "${LOGFILE}"

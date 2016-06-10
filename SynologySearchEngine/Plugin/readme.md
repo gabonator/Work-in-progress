@@ -43,6 +43,6 @@ Mozne problemy:
   - Ak download station stahuje podozrivo male, cca 40 kilobajtove subory, znamena to ze nebezi servis. Skontroluj podla bodu 5 a 6
 
 Contributors:
-  - Milos Vasek (svasek) 
+  - Milos Svasek (svasek) 
   - Meenya
 

@@ -1,1 +1,0 @@
-tar zcf ../ulozto.host INFO host.php

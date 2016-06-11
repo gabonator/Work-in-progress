@@ -1,6 +1,0 @@
-#!/bin/sh
-
-#cd /var/packages/Ulozto/target
-#rm -rf /var/packages/Ulozto/target/node_modules
-#npm install request
-exit 0

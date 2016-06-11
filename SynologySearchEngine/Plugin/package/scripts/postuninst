@@ -1,5 +1,0 @@
-#!/bin/sh
-
-rm -rf /var/packages/Ulozto/target
-
-exit 0

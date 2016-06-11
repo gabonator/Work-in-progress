@@ -26,5 +26,17 @@ void CAppLeds::Show(uint8_t n)
 
 uint8_t CAppLeds::GetButtons()
 {
-	return HAL::IO::Read(HAL::IO::A) >> 4;
+	uint8_t nPortA = ~HAL::IO::Read(HAL::IO::A);
+	uint8_t nButtons = 0;
+
+	if ( nPortA & 16 )
+		nButtons |= 8;
+	if ( nPortA & 32 )
+		nButtons |= 4;
+	if ( nPortA & 64 )
+		nButtons |= 2;
+	if ( nPortA & 128 )
+		nButtons |= 1;
+		
+	return nButtons;
 }

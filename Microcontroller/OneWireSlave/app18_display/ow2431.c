@@ -70,6 +70,32 @@ byte Emulate2431(byte ow_buffer)
     unsigned char len = 0;
     byte i = 0;
 
+// 0x01 - buffer acquired, ready to process
+// 0x02 - incorrect buffer length
+// 0x04 - ow transmission error
+// 0x08 - crc mismatch
+// 0x10 - buffer not processed, overwritten with another
+// 0x40 - ow transmission during lcd upload, buffer ignored
+// 0x80 - internal - lcd upload in progress
+
+    if ( OW_2431_scratchpad_status & 0x80 )
+    {
+      // lcd transfer interrupted!
+      OW_2431_scratchpad_status |= 0x40;
+
+      // skip all
+      OW_read_byte();
+      len = OW_read_byte();
+
+      do {
+        OW_read_byte();
+      } while (++i < len && !ow_error);
+
+      OW_read_byte();
+      OW_read_byte();
+      return TRUE;
+    }
+
     if ( OW_2431_scratchpad_status & 0x01 ) // already valid received buffer, but not processed yet
       OW_2431_scratchpad_status |= 0x10;
 

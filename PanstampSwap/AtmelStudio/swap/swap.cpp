@@ -42,13 +42,22 @@ REPEATER procRepeater;
 
 /*static*/ void SWAP::tick()
 {
-  // Repeater enabled?
-  PROCESSOR* p = panstamp.m_swap.processor;
-  while (p)
-  {
-    p->tick();
-    p = p->pNext;
-  }
+	// TODO: RecoIver lost interrupt?
+	
+	/*
+	if ( !HAL::IO::Read(HAL::IO::D4) )
+	{
+		Serial.print("Recovering ISR\r\n");
+		panstamp.radioISR();
+	}*/
+	
+	// Repeater enabled?
+	PROCESSOR* p = panstamp.m_swap.processor;
+	while (p)
+	{
+		p->tick();
+		p = p->pNext;
+	}
 }
 
 /**
@@ -124,6 +133,7 @@ REPEATER procRepeater;
       if (swPacket.value.length == reg->length)
       {
         reg = reg->setData(swPacket.value.data);
+// not neccesary
         if (reg)
           reg->save()->getStatusPacket()->prepare()->send();
       }
@@ -152,7 +162,7 @@ REPEATER procRepeater;
       // handle write protection reg->access == Public, Readonly
       reg = reg->updateData();
       if (reg)
-        reg->getStatusPacket(swPacket.srcAddr)->prepare()->send();
+        reg->getStatusPacket()->setDestAddr(swPacket.srcAddr)->prepare()->send();
       break;
 
     case SWAPFUNCT_STA:
@@ -162,12 +172,26 @@ REPEATER procRepeater;
       break;
 
 // todo: move into separate processor!
-    case SWAPFUNCT_REQ:
+    case SWAPFUNCT_REQ | SWAPFUNCT_STA:
       if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != panstamp.m_swap.devAddress )
         break;
 
       if (panstamp.m_swap.statusReceived != NULL)
         panstamp.m_swap.statusReceived(&swPacket);
+
+      // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
+      SWPACKET::replySwapStatusAck(&swPacket); 
+      break;
+
+    case SWAPFUNCT_REQ | SWAPFUNCT_CMD:
+      if (swPacket.destAddr != SWAP_BCAST_ADDR && swPacket.destAddr != panstamp.m_swap.devAddress )
+        break;
+
+      if ((reg = panstamp.m_swap.getRegister(swPacket.regId)) == NULL)
+        break;
+
+      if (swPacket.value.length == reg->length)
+        reg = reg->setData(swPacket.value.data);
 
       // Behaves same as SWAPFUNC_STA but requests the receiver to acknowledge reception
       SWPACKET::replySwapStatusAck(&swPacket); 

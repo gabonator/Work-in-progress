@@ -1,5 +1,5 @@
 #include "websocket.h"
-
+/*
 class CExample0
 {
 public:
@@ -29,6 +29,7 @@ public:
 	}
 
 } m_Instance0;
+
 class CExampleMinimal
 {
 public:
@@ -140,7 +141,7 @@ private:
 };
 
 CExample CExample::m_Instance;
-
+*/
 class CGameCommon : public CGameCommon_
 {
 	CWebSockets m_ws;

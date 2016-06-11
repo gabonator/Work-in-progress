@@ -62,17 +62,17 @@ typedef enum SWDTYPE // : unsigned char
  */
 enum SWAPFUNCT
 {
-  SWAPFUNCT_STA = 0x00,
-  SWAPFUNCT_QRY,
-  SWAPFUNCT_CMD,
+  SWAPFUNCT_STA = 0,
+  SWAPFUNCT_QRY = 1,
+  SWAPFUNCT_CMD = 2,
 
-  SWAPFUNCT_REQ, // same as QRY, but requests the receiver to notify sender about successfull reception
-  SWAPFUNCT_ACK,  // receiver notifies sender that packet was received
+  SWAPFUNCT_REQ = 0x10,  // mask // same as QRY, but requests the receiver to notify sender about successfull reception
+  SWAPFUNCT_ACK = 0x20,          // receiver notifies sender that packet was received
 
-  SWAPFUNCT_FORWARD_REQ,
-  SWAPFUNCT_FORWARD_ACK,
+  SWAPFUNCT_FORWARD_REQ = 3,
+  SWAPFUNCT_FORWARD_ACK = 4,
 
-  SWAPFUNCT_INQUIRY
+  SWAPFUNCT_INQUIRY = 5
 };
 
 /**
@@ -231,7 +231,8 @@ class SWPACKET
 
     CCPACKET& getPacket() { return ccPacket; }
 
-    SWPACKET* mediate(int16_t mediateAddr);
+    SWPACKET* mediate(uint16_t mediateAddr);
+    SWPACKET* setDestAddr(uint16_t destAddr = SWAP_BCAST_ADDR);
 
   protected:
 //    REGISTER* sendSwapStatusAck(uint16_t targetAddr = SWAP_BCAST_ADDR);

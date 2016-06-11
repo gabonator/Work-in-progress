@@ -78,7 +78,7 @@ static inline void osc_user_calibration(uint8_t id, uint16_t calib)
 		#endif
 
 		default:
-		Assert(false);
+			Assert(false);
 		break;
 	}
 }

@@ -79,6 +79,7 @@ public:
 		static void Attach(IO::EPin ePin, THandlerFunction pHandler);
 		static void Enable();
 		static void Disable();
+		static bool IsMainThread();
 	};
 	
 	class COM
@@ -86,6 +87,7 @@ public:
 	public:
 		static void Init();
 		static uint8_t Ready();
+		static uint8_t ReadyTx();
 		static uint8_t Available();
 		static uint8_t Get();
 		static void Put(uint8_t ch);			

@@ -236,8 +236,8 @@ DWORD WINAPI ThreadProcDraw(HANDLE handle)
 		game.Do();
 		g_dev.Blit( tempBuffer.GetDc() );
 		game.Blit( tempBuffer.GetDc() );
-		Blur(tempBuffer, blurRect1);
-		Blur(tempBuffer, blurRect2);
+		//Blur(tempBuffer, blurRect1);
+		//Blur(tempBuffer, blurRect2);
 		tempBuffer.Blit(hdc);
 		Sleep( 10 );
 	}

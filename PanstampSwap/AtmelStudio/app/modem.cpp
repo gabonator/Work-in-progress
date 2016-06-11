@@ -2,6 +2,7 @@
 #include <avr/io.h>
 
 #include "modem.h"
+#include "leds.h"
 #include "../common.h"
 #include "../utils/utils.h"
 #include "../swap/commonregs.h"
@@ -131,9 +132,18 @@ void CModem::Init()
 }
 
 void CModem::Loop()
-{
-	PORTA.OUT = (HAL::TIME::GetTick() / 1000);
-
+{	
+	/*
+	static uint8_t nLeds = 0;
+	uint8_t nNewLeds = HAL::TIME::GetTick() / 1000;
+	
+	if ( nLeds != nNewLeds )
+	{
+		nLeds = nNewLeds;
+		HAL::IO::Write(HAL::IO::A, HAL::IO::Read(HAL::IO::A) ^ 1);
+		//CAppLeds::Show(nNewLeds);
+	}
+*/
 	panstamp.m_swap.tick();
 		
 	while (Serial.available())

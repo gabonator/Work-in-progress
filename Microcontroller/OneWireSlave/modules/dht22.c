@@ -10,15 +10,6 @@ signed int DHT_humidity = 0;
 signed int DHT_temperature = 0;
 unsigned char bits[5];
 
-#define OUTPUT 0
-#define INPUT 1
-#define LOW 0
-#define HIGH 1
-
-#define pinMode(pin, tris) TRISIO1 = tris
-#define digitalWrite(pin, logic) GPIO1 = logic
-#define digitalRead(pin) GPIO1
-
 #define delayMicroseconds DelayUs
 #define delay DelayMs
 #define word(a, b) (((a)<<8)|(b))
@@ -33,9 +24,9 @@ unsigned char bits[5];
 // 100uS -> (x*5/8)|1 = 62, but reading a IO pin takes some time
 #define DHTLIB_TIMEOUT 40
 
-byte DHT_readSensor(void);
+byte DHT_readSensor(byte pin);
 
-byte DHT_read(void)
+byte DHT_read(byte pin)
 {
     byte sum, rv;
 
@@ -62,7 +53,7 @@ byte DHT_read(void)
     return DHTLIB_OK;
 }
 
-byte DHT_readSensor(void)
+byte DHT_readSensor(byte pin)
 {
     // INIT BUFFERVAR TO RECEIVE DATA
     byte i;

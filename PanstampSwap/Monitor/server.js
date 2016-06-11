@@ -119,11 +119,13 @@ function onOpenPort(portName)
   serialPort.on("open", function () 
   {
     console.log('open serial communication');
+    serialPort.write("hello\n");
+
           // Listens to incoming data
     serialPort.on('data', function(data) 
     {
       buffer += new String(data);
-      var lines = buffer.split("\n");
+      var lines = buffer.split("\r\n");
       while ( lines.length > 1 )
         onSerial( "onRx('"+replaceAll(lines.shift(), "'", "\\\'") +"');\n" );
       buffer = lines.join("\n");

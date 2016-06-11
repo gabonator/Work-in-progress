@@ -57,6 +57,9 @@ void CPanstamp::radioISR(void)
 {
 	CPanstamp *pThis = &panstamp;
 	
+	Serial.print('{');
+	Serial.print(HAL::IO::Read(HAL::IO::D4) ? '1' : '0');
+
 	if (pThis->m_radio.rfState == RFSTATE_RX)
 	{
 		static CCPACKET ccPacket;
@@ -72,6 +75,8 @@ void CPanstamp::radioISR(void)
 			}
 		}
 	}
+	Serial.print(HAL::IO::Read(HAL::IO::D4) ? '1' : '0');
+	Serial.print('}');	
 }
 
 void CPanstamp::attachInterrupt(void (*funct)(CCPACKET*))
@@ -129,17 +134,25 @@ uint8_t CPanstamp::sendPacket(CCPACKET& packet)
 {		
 	uint8_t i = SWAP_NB_TX_TRIES;
 	uint8_t res;
+	HAL::INT::Disable();
+
 	while(!(res = m_radio.sendData(packet)) && i>1)
 	{
 		i--;
+		HAL::INT::Enable();
+
 		for ( uint8_t t = SWAP_TX_DELAY; t--; )
 			HAL_TIME_DelayMs(1);                           // Delay before sending
+		
+		HAL::INT::Disable();
 	}
 		
 	if ( !res )
 	{
 		panstamp.m_radio.setRxState();			
 	}
+
+	HAL::INT::Enable();
 		
 	return res;
 }

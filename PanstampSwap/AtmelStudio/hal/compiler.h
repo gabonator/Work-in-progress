@@ -2,9 +2,9 @@
 
 // files in this folder are migrated from ASF, compiler.h builds environment for these files
 
-#  include <avr/io.h>
-#  include <avr/builtins.h>
-#  include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/builtins.h>
+#include <avr/interrupt.h>
 #include <stddef.h>
 
 #define XMEGA_AU 1
@@ -32,7 +32,6 @@ typedef uint8_t bool;
 #define true 1
 
 #define XMEGA 1
-#define Assert(expr) { if (!(expr)) while (1); }
 
 #define COMPILER_ALIGNED(a)    __attribute__((__aligned__(a)))
 
@@ -113,7 +112,13 @@ extern "C" {
 void sysclk_disable_usb(void);
 void sysclk_enable_usb(uint8_t frequency);
 void ccp_write_io(void *addr, uint8_t value);
+void ReportError(const char* strFile, int nLine, const char* strFunction, const char* strExp);
 
 #ifdef __cplusplus
 }
-	#endif
+#endif
+
+#ifndef Assert
+#define Assert(expr) { if (!(expr)) { ReportError( __FILE__, __LINE__, __FUNCTION__, #expr); while (1); } }
+#endif
+

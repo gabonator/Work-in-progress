@@ -1,6 +1,6 @@
 var PayBySquare = function() 
 {
-  this.LZMA = typeof LZMA != "undefined" ? LZMA : require("./LZMA.js").LZMA;
+  this.LZMA = typeof LZMA != "undefined" ? LZMA : require("./lzma_worker.js").LZMA;
   this.LZMA.disableEndMark = 1;
 
   this.char32Table = "0123456789ABCDEFGHIJKLMNOPQRSTUV";

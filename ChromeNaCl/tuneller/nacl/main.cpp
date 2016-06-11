@@ -16,6 +16,7 @@
 #include "ppapi/cpp/audio.h"
 #include "ppapi/cpp/var.h"
 #include "ppapi/utility/completion_callback_factory.h"
+#include "sdk_util/thread_safe_queue.h"
 
 #ifdef WIN32
 #undef PostMessage

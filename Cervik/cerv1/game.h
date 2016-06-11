@@ -44,8 +44,8 @@ public:
 		arrPlayer.Add( new CPlayer(0) );
 		arrPlayer.Add( new CPlayer(1) );
 		arrPlayer.Add( new CPlayer(2) );
-		arrPlayer.Add( new CPlayer(3) );
-		arrPlayer.Add( new CPlayer(4) );
+		//arrPlayer.Add( new CPlayer(3) );
+		//arrPlayer.Add( new CPlayer(4) );
 		NextRound();
 	}
 

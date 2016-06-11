@@ -46,8 +46,8 @@ public:
 public:
 	std::string GetServerUrl()
 	{
-		return "ws://localhost:1337/tuneller";
-		//return "ws://91.230.44.236:1337/test";
+		//return "ws://localhost:1337/tuneller";
+		return "ws://91.230.44.236:1337/test";
 	}
 	CNetWs()
 	{
@@ -231,15 +231,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		net.Do();
 		game.Do();
 		g_dev.Blit( hdc );
-		net.Do();
-		Sleep(8);
-		net.Do();
+		//net.Do();
+		Sleep(16);
+	//	net.Do();
 	}
 
 	return (int) msg.wParam;
 }
-
-
 
 //
 //  FUNCTION: MyRegisterClass()

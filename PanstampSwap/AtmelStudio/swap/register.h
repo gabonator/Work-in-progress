@@ -236,7 +236,8 @@ public:
       }
     }
 
-    SWPACKET* getStatusPacket(uint16_t destAddr = SWAP_BCAST_ADDR);
+    SWPACKET* getStatusPacket();
+	SWPACKET* getCommandPacket();
 };
 
 #endif

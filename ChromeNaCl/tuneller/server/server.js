@@ -225,3 +225,4 @@ function requestStart()
 var notifyMove = forward;
 var notifyInfo = forward;
 var notifyFire = forward;
+var notifyKilled = forward;

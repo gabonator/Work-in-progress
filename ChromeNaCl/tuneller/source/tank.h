@@ -1,3 +1,20 @@
+struct R0 { static void Rotate(int& x, int& y) {} };
+struct R90 { static void Rotate(int& x, int& y) {int t = y; y = 8-x; x = t;} };
+struct R180 { static void Rotate(int& x, int& y) {x = 8-x; y = 8-y;} };
+struct R270 { static void Rotate(int& x, int& y) {int t = x; x = 8-y; y = t;} };
+
+template <class C>
+void Rotate(TTankBitmap& dest, const TTankBitmap& source)
+{
+	for ( int y=0; y<9; y++)
+		for ( int x=0; x<9; x++)
+		{
+			int _x = x, _y = y;
+			C::Rotate(_x, _y);
+			dest[y][x] = source[_y][_x];
+		}
+}
+
 class CTank
 {
 	enum {
@@ -16,6 +33,14 @@ class CTank
 		DownRight = 3
 	};
 
+	struct TTankPoint
+	{
+		int nX;
+		int nY;
+		int nDir;
+		int nFrames;
+	};
+
 public:
 //	CNetGame* m_pNetGame;
 	CWorld* m_pWorld;
@@ -23,16 +48,24 @@ public:
 	POINT m_ptHome;
 	int m_nDirection;	
 	int m_nId;
+	
 	int m_nNetworkKey;
+	int m_nNetworkTsStart;
+	int m_nNetworkTsStop;
+
 	float m_fEnergy;
 	int m_nDirt;
 	
 	int m_nKilled;
 	int m_nDied;
+	int m_nKilledBy;
+
+	std::vector<TTankPoint> m_arrPointQueue;
 
 	CTank()
 	{
 		m_nId = -1;
+		m_nKilledBy = -1;
 	}
 
 	void Create(CWorld* pWorld/*, CNetGame* pNetGame*/)
@@ -99,43 +132,35 @@ public:
 		switch (nDirection)
 		{
 		case Up:
-			memcpy(result, sourceStraight, sizeof(TTankBitmap));
+			Rotate<R0>(result, sourceStraight);
 			break;
 
 		case Down:
-			memcpy(result, sourceStraight, sizeof(TTankBitmap));
-			_FlipVertical(result);
+			Rotate<R180>(result, sourceStraight );
 			break;
 
 		case Right:
-			memcpy(result, sourceStraight, sizeof(TTankBitmap));
-			_Rotate90(result);
+			Rotate<R90>(result, sourceStraight );
 			break;
 
 		case Left:
-			memcpy(result, sourceStraight, sizeof(TTankBitmap));
-			_FlipVertical(result);
-			_Rotate90(result);
+			Rotate<R270>(result, sourceStraight );
 			break;
 
 		case DownRight:
-			memcpy(result, sourceDiagonal, sizeof(TTankBitmap));
+			Rotate<R0>(result, sourceDiagonal );
 			break;
 
 		case UpRight:
-			memcpy(result, sourceDiagonal, sizeof(TTankBitmap));
-			_FlipVertical(result);
+			Rotate<R270>(result, sourceDiagonal );
 			break;
 
 		case UpLeft:
-			memcpy(result, sourceDiagonal, sizeof(TTankBitmap));
-			_Rotate90(result);
-			_FlipVertical(result);
+			Rotate<R180>(result, sourceDiagonal );
 			break;
 
 		case DownLeft:
-			memcpy(result, sourceDiagonal, sizeof(TTankBitmap));
-			_Rotate90(result);
+			Rotate<R90>(result, sourceDiagonal );
 			break;
 
 		default:
@@ -238,6 +263,7 @@ public:
 		return true;
 	}
 
+	/*
 	static void _FlipVertical(TTankBitmap& bitmap)
 	{
 		for (int y=0; y<9/2; y++)
@@ -262,7 +288,7 @@ public:
 		b = c;
 		c = d;
 		d = temp;
-	}
+	}*/
 
 	bool Move(int nDir)
 	{
@@ -432,5 +458,69 @@ public:
 	bool IsValid()
 	{
 		return m_nId != -1;
+	}
+
+	void AddPointQueue(int nX, int nY, int nDir, int nFrames)
+	{
+		TTankPoint point;
+		point.nX = nX;
+		point.nY = nY;
+		point.nDir = nDir;
+		point.nFrames = nFrames;
+		_ASSERT( nFrames < 50 );
+		m_arrPointQueue.push_back(point);
+	}
+
+	bool FlushPointQueue()
+	{
+		if ( !m_arrPointQueue.size() )
+			return false;
+
+		for ( int i = 0; i < (int)m_arrPointQueue.size(); i++)
+		{		
+			TTankPoint& point = m_arrPointQueue[i];
+			Draw(false);			
+
+			// finish movement from m_ptPosition to point
+			POINT ptTemp;
+			ptTemp.x = point.nX;
+			ptTemp.y = point.nY;
+
+			POINT ptDiff = m_pWorld->GetOffset( m_ptPosition, ptTemp );
+
+			// can be ptDiff divided by current movement vector?
+			POINT ptMovement = GetDeltaByDirection(m_nDirection);
+			int nMaxVector = max(abs(ptMovement.x), abs(ptMovement.y));
+			if ( ptDiff.x != 0 || ptDiff.y != 0 )
+			{
+				CDebug::Print("Missing move %d, %d by vector %d, %d -> ", ptDiff.x, ptDiff.y, ptMovement.x, ptMovement.y);
+				if ( nMaxVector > 0 )
+				{
+					int nMoves = abs(ptDiff.x) > abs(ptDiff.y) ? ptDiff.x / nMaxVector : ptDiff.y / nMaxVector;
+					if ( nMoves * ptMovement.x == ptDiff.x && nMoves * ptMovement.y == ptDiff.y )
+					{
+						CDebug::Print("Fixing by %d moves!!!\n", nMoves);
+						// finish junction
+						for ( int j = 0; j < nMoves; j++ )
+							Move( point.nDir );
+					} else
+					{
+						CDebug::Print("Unable to fix :(\n", nMoves);
+					}
+				}
+			}
+			
+			m_ptPosition.x = point.nX;
+			m_ptPosition.y = point.nY;
+			Draw(true);
+			CDebug::Print("Flusing queue %d/%d -> %d frames\n", i, m_arrPointQueue.size(), point.nFrames);
+			for ( int j = 0; j < point.nFrames; j++)
+			{
+				Move( point.nDir );
+				m_pWorld->FixPosition( m_ptPosition );
+			}
+		}
+		m_arrPointQueue.clear(); // last command should remain in queue, so we know what direction is he heading
+		return true;
 	}
 };

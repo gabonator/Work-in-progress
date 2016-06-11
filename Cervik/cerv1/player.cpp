@@ -107,6 +107,6 @@ bool CPlayer::IsAlive()
 void CPlayer::Randomize()
 {
 	m_fSteering = 4.0f;
-	m_fSpeed = CTools::RandRange(0.8f, 1.3f); //*0.5f;
+	m_fSpeed = CTools::RandRange(0.8f, 1.3f) * 0.5f;
 	m_fSteering = CTools::RandRange(2.0f, 5.0f) * m_fSpeed;
 }

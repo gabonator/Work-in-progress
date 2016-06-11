@@ -130,9 +130,9 @@ void REGISTER::setValueFromBeBuffer(unsigned char* beBuffer)
     value[i] = beBuffer[length-1-i];
 }
 
-SWPACKET* REGISTER::getStatusPacket(uint16_t destAddr /*= SWAP_BCAST_ADDR*/)
+SWPACKET* REGISTER::getStatusPacket()
 {
-  commonPacket.destAddr = destAddr;
+  commonPacket.destAddr = SWAP_BCAST_ADDR;
   commonPacket.srcAddr = panstamp.m_swap.devAddress;
   commonPacket.hop = 0;
   commonPacket.security = panstamp.m_swap.security & 0x0F;
@@ -147,4 +147,21 @@ SWPACKET* REGISTER::getStatusPacket(uint16_t destAddr /*= SWAP_BCAST_ADDR*/)
   return &commonPacket;
 }
 
+
+SWPACKET* REGISTER::getCommandPacket()
+{
+	commonPacket.destAddr = SWAP_BCAST_ADDR;
+	commonPacket.srcAddr = panstamp.m_swap.devAddress;
+	commonPacket.hop = 0;
+	commonPacket.security = panstamp.m_swap.security & 0x0F;
+	commonPacket.nonce = ++panstamp.m_swap.nonce;
+	commonPacket.function = SWAPFUNCT_CMD;
+	commonPacket.regAddr = panstamp.m_swap.devAddress;
+	commonPacket.regId = id;
+	commonPacket.value.length = length;
+	commonPacket.value.data = value;
+	commonPacket.value.type = type;
+
+	return &commonPacket;
+}
 

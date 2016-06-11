@@ -139,13 +139,15 @@ void OW_loop()
   if ( timeout ) 
   { 
     byte i;
-    byte prevTimeout = timeout;
+    byte prevTimeout;
 
     timeout--;
+    prevTimeout = timeout;
+
     CLRWDT();
 
     // wait 10 ms or until a request was made
-    for (i=40; i-- && (timeout == prevTimeout); )
+    for (i=40; i && (timeout == prevTimeout); i--)
       DelayUs(250);
 
     return;

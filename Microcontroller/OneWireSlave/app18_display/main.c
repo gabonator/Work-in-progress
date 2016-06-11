@@ -7,7 +7,21 @@
 
 __CONFIG(DEBUGDIS & BORDIS & UNPROTECT & MCLRDIS & PWRTDIS & WDTDIS & INTIO & LVPDIS);
 
-//__CONFIG(BORDIS & UNPROTECT & MCLRDIS & PWRTEN & WDTEN & INTIO);
+/*
+  PIC16F88
+
+  RB0 - one wire bus
+  RB1 - HD44780.strobe
+  RB2 - HD44780.rs
+  RB3 - sleep indicator
+
+  RB4 - HD44780.d4
+  RB5 - HD44780.d5
+  RB6 - HD44780.d6
+  RB7 - HD44780.d7
+
+  (HD44780: 1,5: GND, 2: 5V, 3: contrast, 10k pot)
+*/
 
 // PIC12F683 pinout:
 //
@@ -96,6 +110,7 @@ void ProcessScratchpad(void)
   unsigned char i;
   if ( (OW_2431_scratchpad_status & 0x0f) == 0x01 )
   {
+    OW_2431_scratchpad_status |= 0x80; // mark processing
     if ( OW_2431_scratchpad_addr == 0xF0 )
     {
       for (i = 0; i < OW_2431_scratchpad_len; i++)
@@ -132,10 +147,11 @@ void ProcessScratchpad(void)
     if ( OW_2431_scratchpad_addr == 0xF4 )
     {
       __LCD_SEND(OW_2431_scratchpad[0], 0);
-      _ASSUME( OW_2431_scratchpad_len == 8+1 );
+      //_ASSUME( OW_2431_scratchpad_len == 8+1 );
       for (i = 1; i < OW_2431_scratchpad_len; i++)
         __LCD_SEND( OW_2431_scratchpad[i], 1 );
     }
+    OW_2431_scratchpad_status &= ~0x80;
   }
 
   report_status |= OW_2431_scratchpad_status;

@@ -22,6 +22,7 @@
 #include <crtdbg.h>
 #include <afxtempl.h>
 #include <math.h>
+#include <list>
 
 #define COUNT(a) (sizeof(a)/sizeof(a[0]))
 typedef void* PVOID;

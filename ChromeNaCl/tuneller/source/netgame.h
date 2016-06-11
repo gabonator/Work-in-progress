@@ -4,7 +4,14 @@ int s_nRequestedAt = 0;
 int s_nRequestedSequence = 0;
 int s_nRepliedSequence = 0;
 
-class CNetTimer 
+void CNetCommand::Send()
+{
+	s_pGame->Send( ToString() );
+}
+
+#include "netcommands.h"
+
+class CNetTimer : public CGameCommon
 {
 private:
 	struct TResponse 
@@ -35,11 +42,12 @@ public:
 	// exports
 	virtual void NetOnReplyTime(int nSequence, int nTs)
 	{
+		TResponse& response = m_arrResponses[nSequence];
 		_ASSERT( nSequence >= 0 && nSequence < 20 );
-		m_arrResponses[nSequence].lRepliedTimestamp = GetTickCount();
-		m_arrResponses[nSequence].lServerTimestamp = nTs;
-		m_arrResponses[nSequence].lTrip = m_arrResponses[nSequence].lRepliedTimestamp - m_arrResponses[nSequence].lRequestedTimestamp;
-		m_arrResponses[nSequence].lConstant = m_arrResponses[nSequence].lServerTimestamp - m_arrResponses[nSequence].lRequestedTimestamp;
+		response.lRepliedTimestamp = GetTickCount();
+		response.lServerTimestamp = nTs;
+		response.lTrip = response.lRepliedTimestamp - response.lRequestedTimestamp;
+		response.lConstant = response.lServerTimestamp - response.lRequestedTimestamp;
 	}
 
 public:
@@ -68,7 +76,7 @@ public:
 		// wait at least 1000 ms since game start, for everything to settle down
 		if ( (long)GetTickCount() < m_lFirstConnectionTime + 1000 )
 			return;
-		
+
 		if ( m_nSkipFrames > 0 )
 		{
 			m_nSkipFrames--;
@@ -87,25 +95,37 @@ public:
 		if ( m_nFrame == 20 )
 		{
 			// qsort by trip and choose average of first 5 constants
-			long lConstantSum = 0;
+			long long lConstantSum = 0;
 			int nConstants = 0;
 
-			for ( int i=0; i<10; i++ )
+			char strDebug[512] = "Round trip times: ";
+			for ( int i=0; i<20; i++ )
 			{
+				char strSingle[32];
+				sprintf(strSingle, "%d, ", m_arrResponses[i].lTrip);
+				strcat(strDebug, strSingle);
+
 				lConstantSum += m_arrResponses[i].lConstant;
 				nConstants ++;
 			}
+		
+			OutputDebugStringA(strDebug);
 
-			m_lConstant = lConstantSum / nConstants;
+			m_lConstant = (long)(lConstantSum / nConstants);
 			m_bConstantValid = true;
 			m_nFrame++;
 		}
 	}
 
 public:
-	long GetTs()
+	virtual long GetTs()
 	{
 		return GetTickCount() + m_lConstant;
+	}
+
+	virtual long GetTsOffset()
+	{
+		return m_lConstant;
 	}
 
 	bool TsValid()
@@ -114,11 +134,12 @@ public:
 	}
 };
 
-class CNetGame : public CGameCommon, public CNetTimer
+class CNetGame : public CNetTimer
 {
 protected:
 	CNet* m_pNet;
 	long m_nTimeOffset;
+	std::list<std::string> m_lstRawCommands;  // THREAD SAFE!
 
 public:
 	CNetGame()
@@ -126,6 +147,8 @@ public:
 		m_nTimeOffset = 0;
 		m_pNet = NULL;
 		m_nStartRequestState = EStartRequestFailed;
+
+		CNetCommand::s_pGame = this;
 	}
 
 	void SetNetwork(CNet* pNet)
@@ -146,55 +169,32 @@ protected:
 
 	void ReceiveHandler(std::string message)
 	{
-		if ( message.substr(0, 10) == "replyStart" )
+		m_lstRawCommands.push_back(message);
+	}
+
+	void ProcessMessages()
+	{
+		while ( m_lstRawCommands.size() )
 		{
-			_ASSERT_VALID(StartRequestHandler(message));
+			m_lstCommands.push_back(CNetCommandFactory::FromString(m_lstRawCommands.front()));
+			m_lstRawCommands.pop_front();
 		}
-		if ( message.substr(0, 11) == "requestInfo" )
+
+		while ( m_lstCommands.size() )
 		{
-			NetRequestInfo();
-		}
-		if ( message.substr(0, 10) == "notifyMove" )
-		{
-			int nTankId, nTankTs, nTankX, nTankY, nDir, nEnergy;
-			_ASSERT_VALID( sscanf(message.c_str(), "notifyMove({id:%d, ts:%d, x:%d, y:%d, dir:%d, e:%d})", &nTankId, &nTankTs, &nTankX, &nTankY, &nDir, &nEnergy) == 6);
-			NetMoveTank(nTankId, nTankX, nTankY, nDir, nEnergy, nTankTs);
-		}
-		if ( message.substr(0, 10) == "notifyInfo" )
-		{
-			int nTankId, nTankTs, nTankX, nTankY, nTankHomeX, nTankHomeY, nDir;
-			_ASSERT_VALID( sscanf(message.c_str(), "notifyInfo({id:%d, ts:%d, hx:%d, hy:%d, x:%d, y:%d, dir:%d})", 
-				&nTankId, &nTankTs, &nTankHomeX, &nTankHomeY, &nTankX, &nTankY, &nDir) == 7 );
-			NetInfoTank(nTankId, nTankX, nTankY, nTankHomeX, nTankHomeY, nDir);
-		}
-		if ( message.substr(0, 10) == "notifyFire" )
-		{
-			int nTankId, nFireTs, nFireX, nFireY, nFireVectorX, nFireVectorY;
-			_ASSERT_VALID( sscanf(message.c_str(), "notifyFire({id:%d, ts:%d, x:%d, y:%d, vx:%d, vy:%d})", 
-				&nTankId, &nFireTs, &nFireX, &nFireY, &nFireVectorX, &nFireVectorY) == 6);
-			NetFireTank(nTankId, nFireX, nFireY, nFireVectorX, nFireVectorY);
-		}
-		if ( message.substr(0, 10) == "notifyDead" )
-		{
-			int nTankId;
-			_ASSERT_VALID( sscanf(message.c_str(), "notifyDead({id:%d})", 
-				&nTankId) == 1);
-			NetKillTank(nTankId);
-		}
-		if ( message.substr(0, 9) == "replyTime" )
-		{
-			int nN = 0, nTs = 0;
-			_ASSERT_VALID( sscanf(message.c_str(), "replyTime({n:%d, ts:%d})", &nN, &nTs) == 2 );
-			NetOnReplyTime(nN, nTs);
+			std::shared_ptr<CNetCommand> sNetCommand = m_lstCommands.front();
+			m_lstCommands.pop_front();
+
+			sNetCommand->Do();
 		}
 	}
-		
+
 	bool IsConnected()
 	{
 		return m_pNet ? true : false;
 	}
 
-	void Send(std::string str)
+	virtual void Send(std::string str)
 	{
 		if (!m_pNet)
 			return;
@@ -203,25 +203,14 @@ protected:
 	}
 
 	// requests
-	int m_nStartRequestState;
-	long m_nStartRequestTime;
-
-	enum {
-		EStartRequestReset = 0,
-		EStartRequestConnecting = 4,
-		EStartRequestConnected = 5,
-		EStartRequestPending = 1,
-		EStartRequestSuccess = 2,
-		EStartRequestFailed = 3
-	};
 
 	void StartRequest()
 	{
 		m_nStartRequestTime = GetTickCount();
-		CNetGame::StartRequestSet(CNetGame::EStartRequestPending);
-		CNetGame::Send("requestStart();");
+		CNetGame::StartRequestSet(EStartRequestPending);
+		CNetCommandStart().Send();
 	}
-	
+
 	void StartRequestSet(int nNewState)
 	{
 		m_nStartRequestState = nNewState;
@@ -245,61 +234,31 @@ protected:
 		}
 		return m_nStartRequestState;
 	}
-	
-	bool StartRequestHandler(std::string message)
-	{
-		_ASSERT ( m_nStartRequestState == EStartRequestPending );
-		
-		int nId, nTs, nWorldSeed, nX, nY;
-		_ASSERT_VALID( sscanf(message.c_str(), "replyStart({id:%d, ts:%d, world:%d, x:%d, y:%d})", &nId, &nTs, &nWorldSeed, &nX, &nY) == 5);
-
-		m_nTimeOffset = nTs-GetTickCount(); // TODO: compensate ping times
-
-		NetCreateWorld(nWorldSeed);
-		NetCreateTank(nId, nX, nY, nX, nY, 8);
-		NetRequestInfo();
-
-		m_nStartRequestState = EStartRequestSuccess;
-		return true;
-	}
 
 	// game notifications
 	void NotifyTankMoves(int nId, int nX, int nY, int nDir, int nEnergy)
 	{
-		int nTs = GetTs();
-		char msg[128];
-		sprintf(msg, "notifyMove({id:%d, ts:%d, x:%d, y:%d, dir:%d, e:%d});\n", nId, nTs, nX, nY, nDir, nEnergy);
-		Send(msg);
+		CNetCommandNotifyMove(nId, nX, nY, nDir, nEnergy).Send();
 	}
 
 	void NotifyTankInfo(int nId, int nHomeX, int nHomeY, int nX, int nY, int nDir)
 	{
-		int nTs = GetTs();
-		char msg[128];
-		sprintf(msg, "notifyInfo({id:%d, ts:%d, hx:%d, hy:%d, x:%d, y:%d, dir:%d});\n", 
-			nId, nTs, nHomeX, nHomeY, nX, nY, nDir);
-		Send(msg);
+		CNetCommandNotifyInfo(nId, nHomeX, nHomeY, nX, nY, nDir).Send();
 	}
 
 	void NotifyTankFires(int nId, POINT ptStart, POINT ptVector)
 	{
-		int nTs = GetTs();
-		char msg[128];
-		sprintf(msg, "notifyFire({id:%d, ts:%d, x:%d, y:%d, vx:%d, vy:%d});\n", 
-			nId, nTs, ptStart.x, ptStart.y, ptVector.x, ptVector.y);
-		Send(msg);
+		CNetCommandNotifyFire(nId, ptStart.x, ptStart.y, ptVector.x, ptVector.y).Send();
 	}
 
 	void NetRequestTime(int nSequence)
 	{
-		char msg[128];
-		sprintf(msg, "requestTime({n:%d});\n", nSequence);
-		Send(msg);
+		CNetCommandTime(nSequence).Send();
 	}
 
-	void NotifyTankDies(int nId, POINT ptWhere)
+	void NotifyTankDies(int nId, POINT ptWhere, int nIdBy)
 	{
-		// TODO:
+		CNetCommandNotifyKilled(nId, ptWhere.x, ptWhere.y, nIdBy).Send();
 	}
 
 	/*
@@ -347,8 +306,9 @@ protected:
 		//CNetGame::NotifyTankMoves(t.m_nId, t.m_ptPosition.x, t.m_ptPosition.y, 5);
 	}
 
-	virtual void NetMoveTank(int nId, int nX, int nY, int nDir, int nEnergy, int nTs)
+	virtual void NetMoveTank(int nId, int nX, int nY, int nDir, int nEnergy, int nTs, int nStopTs)
 	{
+		int nFrameInterval = 1000 / 40;
 		for (int i=0; i<(int)m_arrTanks.size(); i++)
 		{
 			CTank& t = m_arrTanks[i];
@@ -359,7 +319,11 @@ protected:
 				// simuluj pohyb, ale pozor, co ak nas caka dalsia sprava a pocas simulacie uz zmenil smer?
 				t.m_ptPosition.x = nX;
 				t.m_ptPosition.y = nY;
+				t.AddPointQueue(nX, nY, nDir, (nStopTs - nTs) / nFrameInterval );
+				
 				t.m_nNetworkKey = nDir;
+				//t.m_nNetworkTsStart = nTs;
+				//t.m_nNetworkTsStop = nStopTs;
 				t.SetEnergy( nEnergy );
 				t.Draw(true);
 				return;
@@ -377,7 +341,7 @@ protected:
 			{
 				t.RemoveHome();
 				t.Draw(false);
-			
+
 				POINT ptVector = {0, 0};
 				CBullet bullet(&m_world, t.m_nId, t.m_ptPosition, ptVector, 50, 40);
 				Explode(bullet);
@@ -423,15 +387,16 @@ public:
 
 	void Do()
 	{
+		ProcessMessages();
 		CNetTimer::Do();
 
-		if ( CNetGame::StartRequestState() == CNetGame::EStartRequestConnected )
+		if ( CNetGame::StartRequestState() == EStartRequestConnected )
 		{
 			CNetGame::StartRequest();
 		}
-		if ( CNetGame::StartRequestState() == CNetGame::EStartRequestFailed )
+		if ( CNetGame::StartRequestState() == EStartRequestFailed )
 		{
-			CNetGame::StartRequestSet(CNetGame::EStartRequestReset);
+			CNetGame::StartRequestSet(EStartRequestReset);
 			NetCreateTank(0, m_ptViewPoint.x, m_ptViewPoint.y, m_ptViewPoint.x, m_ptViewPoint.y, 8);
 		}
 	}
@@ -447,7 +412,7 @@ public:
 	void NetDies()
 	{
 		CTank& t = m_arrTanks[0];		
-		NotifyTankDies(t.m_nId, t.m_ptPosition);
+		NotifyTankDies(t.m_nId, t.m_ptPosition, t.m_nKilledBy);
 	}
 
 	void NetMovement(int nDir)
@@ -491,5 +456,5 @@ public:
 public:
 	// imports
 	virtual void Explode(CBullet& bullet) = 0;
-//	virtual void NetOnReplyTime(int nSequence, int nTs) = 0;
+	//	virtual void NetOnReplyTime(int nSequence, int nTs) = 0;
 };

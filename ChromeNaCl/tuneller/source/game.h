@@ -3,6 +3,7 @@
 #include "gfx.h"
 #include <algorithm>
 #include <vector>
+#include "debug/debug.h"
 #include "noise.h"
 #include "net.h"
 
@@ -18,7 +19,6 @@
 #include "bullet.h"
 #include "bitmaps.h"
 #include "tank.h"
-#include "debug/debug.h"
 #include "entity.h"
 #include "gamecommon.h"
 #include "powerups.h"
@@ -28,6 +28,9 @@ extern std::vector<std::pair<std::string, std::string> > g_arrMainArgs;
 
 class CGame : public CNetGame
 {
+	int m_nPseudoTime;
+	int m_nPseudoStep;
+
 public:
 	void Init()
 	{
@@ -110,7 +113,11 @@ public:
 
 		int nFramesPassed = (lTick - lLastTick) / lInterval;
 		for ( int i = 0; i < nFramesPassed; i++ )
+		{
+			m_nPseudoTime = lLastTick + GetTsOffset() + i * lInterval;
+			m_nPseudoStep = lInterval;
 			SimulateStep(ptVector);
+		}
 		lLastTick += nFramesPassed * lInterval;
 
 		Blit();
@@ -147,12 +154,22 @@ public:
 			CTank& t = m_arrTanks[i];
 			t.Do();
 
-			if ( t.GetEnergy() < 0 )
+			// Only your own tank can die
+//									GetTankById( particle.GetOwnerId() ).AddKilled();f
+			if ( i == 0 && t.m_nKilledBy == -1 && t.GetEnergy() < 0 )
+			{
+				t.m_nKilledBy = -2; // lost energy
+			}
+
+			if ( i == 0 && t.m_nKilledBy != -1 ) //t.GetEnergy() < 0 )
 			{
 				CApi::SendMessage( (char*)"Umrel si!" );
 				t.AddDied();
+				GetTankById( t.m_nKilledBy ).AddKilled();
+
 				NetDies();
 
+				t.m_nKilledBy = -1;
 				t.Draw(false);
 				POINT ptVector = {0, 0};
 				CBullet bullet(&m_world, t.m_nId, t.m_ptPosition, ptVector, 50, 40);
@@ -177,8 +194,11 @@ public:
 					t.Draw(true);
 				else
 				{
-					t.Move( t.m_nNetworkKey );
-					m_world.FixPosition( t.m_ptPosition );
+					if ( !t.FlushPointQueue() )
+					{
+						t.Move( t.m_nNetworkKey );
+						m_world.FixPosition( t.m_ptPosition );
+					}
 				}
 			}
 		}
@@ -207,7 +227,7 @@ public:
 					
 					if ( bWasAlive && !bIsAlive )
 					{
-						GetTankById( particle.GetOwnerId() ).AddKilled();
+						m_arrTanks[i].m_nKilledBy = particle.GetOwnerId();
 						CApi::SendMessage( (char*)"Nejaky tank umrel!" );
 					}
 
@@ -295,7 +315,7 @@ public:
 			default: break;
 		}
 
-		const char *msg = TsValid() ? (((GetTs() % 1000) < 250) ? "###" : ":::") : "---"; 
+		const char *msg = TsValid() ? (((CNetTimer::GetTs() % 1000) < 250) ? "###" : ":::") : "---"; 
 		CDebug::Print(0, 0, "%s (%s) [%d, %d] %s", m_pNet->GetServerUrl().c_str(), strNetMode, m_ptViewPoint.x, m_ptViewPoint.y, msg);
 		for ( int i = 0; i < (int)m_arrTanks.size(); i++ )
 		{

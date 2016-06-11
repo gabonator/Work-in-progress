@@ -189,7 +189,7 @@ bool SWPACKET::send(void)
 	byte i = SWAP_NB_TX_TRIES;
 	bool res;
 	
-	while(!(res = panstamp.m_radio.sendData(ccPacket)) && i>1)
+	while(!(res = panstamp.sendPacket(ccPacket)) && i>1)
 	{
 		i--;
 		//TODO: pseudo random delay
@@ -276,23 +276,48 @@ void SWPACKET::aesCrypto(void)
  */
 bool SWPACKET::sendAck() 
 {
-  function = SWAPFUNCT_REQ;
+  Assert(HAL::INT::IsMainThread());
+	
+  if ( destAddr == SWAP_BCAST_ADDR )
+  {
+	  // send without request/acknowledge	  
+	  return send();
+  }
+  
+  function |= SWAPFUNCT_REQ; 
 
-  // retry 2 times if no response in half second
-  for ( uint8_t retry = 0; retry < 3; retry++)
+  // retry few times if no response in half second
+  for ( uint8_t retry = 0; retry < 10; retry++)
   {  
     prepare();
     send();
 
     SWPACKET::ackWaitingNonce = nonce;
 
-    for ( uint8_t wait = 0; wait < 50; wait++)
+	int16_t nWaitMs = 1000;
+	switch ( retry )
+	{
+		case 0: 
+		case 1: 
+		case 2: 
+			nWaitMs = 110;
+			break;
+		case 3: 
+			nWaitMs = 830;
+			break;
+		case 4: 
+			nWaitMs = 1170;
+			break;
+	}
+	
+    for ( ; nWaitMs > 0; nWaitMs -= 5)
     {
       HAL_TIME_DelayMs(10); 
 
+// co ak sme stratili ACK!?
       // waiting for packet.nonce match, usually takes 85-105ms
       if ( receivedAck() ) 
-        return this;
+        return true;
     }
 
     nonce = ++panstamp.m_swap.nonce;
@@ -360,10 +385,17 @@ bool SWPACKET::receivedAck(void)
  * ...
  */
 
-SWPACKET* SWPACKET::mediate(int16_t mediateAddr)
+SWPACKET* SWPACKET::mediate(uint16_t mediateAddr)
 {
   if ( mediateAddr != SWAP_BCAST_ADDR )
     MEDIATOR::MediateRequest(this, mediateAddr);
+
+  return this;
+}
+
+SWPACKET* SWPACKET::setDestAddr(uint16_t _destAddr)
+{
+  destAddr = _destAddr;
 
   return this;
 }

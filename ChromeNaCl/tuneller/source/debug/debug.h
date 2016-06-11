@@ -9,6 +9,18 @@ namespace CDebugFont {
 class CDebug
 {
 public:
+	static void Print(const char* strFormat, ...)
+	{
+		static char buff[1024];	// TODO: possible buffer overflow
+
+		va_list argList;
+		va_start(argList, strFormat);
+		vsprintf(buff, strFormat, argList);
+		va_end(argList);
+
+		OutputDebugStringA(buff);	
+	}
+
 	static void Print(int x, int y, const char* strFormat, ...)
 	{
 		static char buff[1024];	// TODO: possible buffer overflow

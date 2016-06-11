@@ -3,10 +3,29 @@
 
 CSerial CSerial::m_Instance;
 
+// not working in interrupt, it just freezes!
+void ReportError(const char* strFile, int nLine, const char* strFunction, const char* strExp)
+{
+	Serial.print("\r\nAssertion failed in ");
+	Serial.print(strFile);
+	Serial.print(" [");
+	Serial.print(nLine, CSerial::DEC);
+	Serial.print(" ]:");
+	Serial.print(strExp);
+	Serial.print(" (");
+	Serial.print(strFunction);
+	Serial.print(")\r\n");
+	while (1)
+	{
+		
+		Serial.print("! ");
+	}
+}
+
 void CSerial::print(char ch)
 {
-	if ( HAL::COM::Ready() )
-	HAL::COM::Put(ch);
+	if ( HAL::COM::Ready() && HAL::COM::ReadyTx() )
+		HAL::COM::Put(ch);
 }
 
 void CSerial::print(int num, EFormat eFormat)

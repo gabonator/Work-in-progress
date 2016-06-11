@@ -10,13 +10,16 @@
 
 // internal {{{
 HAL::INT::THandlerFunction hPortCIsrHandler = nullptr;
+volatile bool g_bMainThread = true;
 
 ISR(PORTD_INT0_vect)
 {
+	g_bMainThread = false; // use int flags register!
+
 	if ( hPortCIsrHandler )
 		hPortCIsrHandler();
 
-	PORTD.INTFLAGS = 0xff; 
+	g_bMainThread = true;
 }
 
 volatile uint32_t g_nTickCount = 0;
@@ -107,15 +110,35 @@ void usb_callback_cdc_disable(void)
 
 /*static*/ byte HAL::SPI::Send(byte data)
 {
+	static bool bSending = false;
+		
 	enum {
 		SPI_STATUS_COMPLETED_bm = 0x80
 	};
+	
+	// TODO!!!!
+	if ( bSending)
+	{
+		Serial.print("sending in different thread!");
+		return 0;
+	}
 
+	bSending = true;
 	SPIC.DATA = data;
 
-	while (!(SPIC.STATUS & SPI_STATUS_COMPLETED_bm));
-
-	return SPIC.DATA;
+	uint16_t nTimeout = 500;
+	while (!(SPIC.STATUS & SPI_STATUS_COMPLETED_bm))
+	{		
+		if ( --nTimeout == 0 )
+		{
+			Serial.print("SPI timeout!\r\n");
+			return 0;
+		}
+	}
+	
+	uint8_t aux = SPIC.DATA;
+	bSending = false;
+	return aux;
 }
 
 /*static*/ void HAL::IO::Configure(EPin ePin, EMode eMode)
@@ -206,7 +229,7 @@ void usb_callback_cdc_disable(void)
 		PMIC.CTRL |= PMIC_LOLVLEN_bm;
 		
 //TODO
-		pPort->INTFLAGS = 0xff; //PIN1_bm; -> clear
+	//	pPort->INTFLAGS = 0xff; //PIN1_bm; -> clear
 	} else {
 		pPort->INT0MASK &= ~nPortMask;
 	}
@@ -222,6 +245,11 @@ void usb_callback_cdc_disable(void)
 /*static*/ void HAL::INT::Disable()
 {
 	cli();
+}
+
+/*static*/ bool HAL::INT::IsMainThread()
+{	
+	return g_bMainThread;
 }
 
 #if 0
@@ -278,7 +306,7 @@ void usb_callback_cdc_disable(void)
 	TCC0.PER = 60000; // 12*1000*5 //1ms -> 5ms?
 
 	TCC0.INTCTRLA = TCC0.INTCTRLA & ~TC0_OVFINTLVL_gm;
-	TCC0.INTCTRLA = TCC0.INTCTRLA | (TC_INT_LVL_LO << TC0_OVFINTLVL_gp);
+	TCC0.INTCTRLA = TCC0.INTCTRLA | TC_OVFINTLVL_MED_gc;
 
 	sei();
 	TCC0.CTRLA = (TCC0.CTRLA & ~TC0_CLKSEL_gm) | TC_CLKSEL_DIV1_gc;
@@ -316,6 +344,11 @@ void usb_callback_cdc_disable(void)
 /*static*/ uint8_t HAL::COM::Available()
 {
 	return udi_cdc_multi_is_rx_ready(0);
+}
+
+/*static*/ uint8_t HAL::COM::ReadyTx()
+{
+	return udi_cdc_get_free_tx_buffer();
 }
 
 /*static*/ uint8_t HAL::COM::Get()

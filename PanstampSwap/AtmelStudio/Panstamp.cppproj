@@ -161,6 +161,12 @@
     <Compile Include="app\app.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="app\client.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="app\client.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="app\dummysender.cpp">
       <SubType>compile</SubType>
     </Compile>

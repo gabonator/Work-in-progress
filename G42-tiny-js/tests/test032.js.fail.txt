@@ -1,0 +1,39 @@
+{
+   Foo : {
+      value : function () {
+return this. x+ this. y;
+      }
+   },
+   Infinity : Infinity,
+   Integer : {
+
+   },
+   JSON : {
+
+   },
+   Math : {
+      E : 2.718282,
+      LN10 : 2.302585,
+      LN2 : 0.693147,
+      LOG10E : 0.434294,
+      LOG2E : 1.442695,
+      PI : 3.141593,
+      SQRT1_2 : 0.707107,
+      SQRT2 : 1.414214
+   },
+   NaN : NaN,
+   a : {
+      prototype : {
+         value : function () {
+return this. x+ this. y;
+         }
+      },
+      x : 1,
+      y : 2
+   },
+   b : undefined,
+   result : 0,
+   result1 : undefined,
+   result2 : undefined,
+   undefined : undefined
+}

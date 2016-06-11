@@ -1,0 +1,120 @@
+<html>
+<head>
+    <title>websockets client</title>
+    <style>
+			html, body {
+			  background:#c0c0e0;
+			  height: 100%;
+			}
+		</style>
+</head>
+<body>
+<canvas id="canvas" width="1000" height="400" style="border:solid 1px #000000;"></canvas>
+
+    <script type="text/javascript">
+				String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
+
+				var SockClass = function()
+        {
+					// private
+					var ws = null;
+					var arrListeners = new Array();
+					var _this = this;
+
+					var url = "ws://127.0.0.1:38950/resourcePath";
+
+					// public
+					this.Send = function( msg ) 
+					{
+						ws.send( msg );
+					}
+					this.Receive = function ( msg )
+					{
+						if ( msg.substr(0, 1) == "[" )
+							Process( eval(msg) );                          
+					}
+					this.Connect = function()
+					{
+            document.title = "Connecting...";
+	          ws = new WebSocket(url);
+            ws.onmessage = this.onMessage;
+            ws.onopen = this.onOpen;
+            ws.onclose = this.onClose;
+            ws.onerror = this.onError;
+          }
+
+					// private
+					this.onMessage = function(evt)
+					{
+            if (typeof evt !== "undefined" && typeof evt.data == "string") {
+								_this.Receive( evt.data.toString() );
+            }
+					}
+
+					this.onOpen = function(evt)
+					{
+						document.title = "Online";
+					}
+
+					this.onClose = function(evt)
+					{
+						document.title = "Offline";
+					}
+					this.onEror = function(evt)
+					{
+						document.title = "Error";
+						alert(evt);
+					}
+
+				};
+
+				var Sock = new SockClass();
+        window.onload = function () {
+          setTimeout( "Sock.Connect();", 500 );
+        };
+
+  var c = document.getElementById("canvas");
+  var ctx = c.getContext('2d');
+  var lasty=0,x=0;
+
+  var avg=0;
+  var center=0;
+
+		function Process(arr)
+		{
+	//		document.write(arr.length);
+			Sock.Send( "rcvd="+arr.length );
+	    ctx.beginPath();
+			if (lasty!=-1)	
+				ctx.moveTo(x, lasty);
+
+			for (var i=0; i<arr.length; i++ )
+			{
+				var r=0;
+				if (lasty==-1)r=1;
+
+				var sample = arr[i];					
+			  avg += sample;
+
+
+			  lasty = c.height/2+(-sample+center)/5;
+			  r?ctx.moveTo(x,lasty): ctx.lineTo(x, lasty);
+				x += 0.5;
+				if (x > c.width)
+				{
+					x = 0;
+				  ctx.fillStyle = "rgba(255,255,255,1)";
+				  ctx.fillRect(0, 0, c.width, c.height);
+					lasty = -1;
+					center = avg / c.width;
+					avg = 0;
+				}
+			}
+ 	   ctx.stroke();
+
+		} 
+
+
+    </script>
+</body>
+</html>

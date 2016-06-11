@@ -1,0 +1,929 @@
+<html>
+<head>
+    <title>websockets client</title>
+    <style>
+			html, body {
+			  background:#f0f0f0;
+			  height: 100%;
+				font-family:tahoma;
+			}
+			
+			.heading {text-align:center;}
+		  .rawval {width:40px; font-size:12px; border: 0px; background:#b0b0b0; }
+		  .minval {width:40px; font-size:12px; border: 0px; color:#808080; background:none;}
+		  .maxval {width:40px; font-size:12px; border: 0px; color:#808080; background:none;}
+
+			.bga { background:#ffd0d0; }
+			.bgm { background:#d0ffd0; }
+			.bgg { background:#d0d0ff; }
+		</style>
+</head>
+<body>
+
+<br>
+On/Off:
+<input type="button" value="#o0" onClick="WSocket.Send(this.value)">
+<input type="button" value="#o1" onClick="WSocket.Send(this.value)">
+<input type="button" value="#f" onClick="WSocket.Send(this.value)">
+Text modes:
+<input type="button" value="#osrt" onClick="WSocket.Send(this.value)">
+<input type="button" value="#osct" onClick="WSocket.Send(this.value)">
+<input type="button" value="#osbt" onClick="WSocket.Send(this.value)">
+<input type="button" value="#ot" onClick="WSocket.Send(this.value)">
+Calib:
+<input type="button" value="#oc" onClick="WSocket.Send(this.value)">
+<input type="button" value="#on" onClick="WSocket.Send(this.value)">
+Errors:
+<input type="button" value="#oe0" onClick="WSocket.Send(this.value)">
+<input type="button" value="#oe1" onClick="WSocket.Send(this.value)">
+
+<table>
+<tr><td></td><td class="heading">Acc (G)</td><td class="heading">Mag (Ga)</td><td class="heading">Gyro (deg/s)</td><td></td>
+ <td rowspan="4">
+   <input type="radio" name="values" value="raw" checked>Raw<br>
+   <input type="radio" name="values" value="units">Real units<br>
+   <input type="radio" name="values" value="average">Average<br>
+ </td>
+</tr>
+<tr><td>X</td>                                                                           
+  <td class="bga"><input class="minval" type="text" id="axmin"><input class="rawval" type="text" id="ax"><input class="maxval" type="text" id="axmax"></td>
+  <td class="bgm"><input class="minval" type="text" id="mxmin"><input class="rawval" type="text" id="mx"><input class="maxval" type="text" id="mxmax"></td>
+  <td class="bgg"><input class="minval" type="text" id="gxmin"><input class="rawval" type="text" id="gx"><input class="maxval" type="text" id="gxmax"></td>
+</tr>
+<tr><td>Y</td>                                                                           
+  <td class="bga"><input class="minval" type="text" id="aymin"><input class="rawval" type="text" id="ay"><input class="maxval" type="text" id="aymax"></td>
+	<td class="bgm"><input class="minval" type="text" id="mymin"><input class="rawval" type="text" id="my"><input class="maxval" type="text" id="mymax"></td>
+  <td class="bgg"><input class="minval" type="text" id="gymin"><input class="rawval" type="text" id="gy"><input class="maxval" type="text" id="gymax"></td>
+</tr>
+<tr><td>Z</td>
+  <td class="bga"><input class="minval" type="text" id="azmin"><input class="rawval" type="text" id="az"><input class="maxval" type="text" id="azmax"></td>
+  <td class="bgm"><input class="minval" type="text" id="mzmin"><input class="rawval" type="text" id="mz"><input class="maxval" type="text" id="mzmax"></td>
+  <td class="bgg"><input class="minval" type="text" id="gzmin"><input class="rawval" type="text" id="gz"><input class="maxval" type="text" id="gzmax"></td>
+</tr>
+<tr>
+  <td></td>
+  <td class="bga"><input class="resetrange" type="button" id="reseta" value="Reset"></td>
+  <td class="bgm"><input class="resetrange" type="button" id="resetm" value="Reset"></td>
+  <td class="bgg"><input class="resetrange" type="button" id="resetg" value="Reset"></td>
+</tr>
+</table>
+
+<canvas id="canvas" width="400" height="400" style="border:solid 1px #000000;"></canvas>
+<canvas id="3d" width="400" height="400" style="border:solid 1px #000000;"></canvas>
+
+<textarea cols="80" rows="10" id="ta">
+Wire = {onData:function() {alert(arguments.length);}}
+function cmd(str) { WSocket.Send( ":" + str + "\n" ); };
+
+//WSocket.Send("#o0");
+accRead();
+// accCalib({x:0, y:0, z:0}); // reset calibration
+accCalib({x:-12, y:-180, z:1156});
+accCalibApp = {xo:0, yo:0, zo:-374, xm:1/1.2, ym:1/1.2, zm:1};
+                          
+
+// helpers
+function accRead()
+{
+  cmd("Wire.select(0x53);");  
+  cmd("Wire.write(0x32);");
+  cmd("Wire.read(6);");
+}
+function accCalib(nums)
+{
+  cmd("Wire.select(0x53);");
+  cmd("Wire.write(0x1f, " + accClamp(nums.x) + ");");
+  cmd("Wire.write(0x1e, " + accClamp(nums.y) + ");");
+  cmd("Wire.write(0x20, " + accClamp(nums.z) + ");");
+}
+function accClamp(num)
+{
+  num = - Math.floor(num/4); 
+  if (num < -128) num = -128; 
+  if (num > 127) num = 127;
+  if (num < 0) num += 256; // 8 bit signed
+  return num;
+}
+</textarea><bt>
+<input type="button" value="exec" onClick="eval($('ta').value)"><br>
+<pre id="txt">Result...</div>
+
+    <script type="text/javascript">
+
+function getParamNames(func) {
+    var funStr = func.toString();
+    return funStr.slice(funStr.indexOf('(')+1, funStr.indexOf(')')).match(/([^\s,]+)/g);
+}
+				String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
+
+				var SocketClass = function()
+        {
+					// private
+					var ws = null;
+					var arrListeners = new Array();
+					var _this = this;
+					var buffer = "";
+
+					var url = "ws://127.0.0.1:38950/resourcePath";
+
+					// public
+					this.Send = function( msg ) 
+					{
+						ws.send( msg );
+					}
+					this.Receive = function ( msg )
+					{
+						buffer += msg;
+						var e = buffer.indexOf("\n");
+						while ( (e= buffer.indexOf("\n")) >= 0 )
+						{
+							var line = buffer.substr(0, e);
+							buffer = buffer.substr(e+1);
+							OnLine(line);
+						}	
+					}
+					this.Connect = function()
+					{
+            document.title = "Connecting...";
+	          ws = new WebSocket(url);
+            ws.onmessage = this.onMessage;
+            ws.onopen = this.onOpen;
+            ws.onclose = this.onClose;
+            ws.onerror = this.onError;
+          }
+
+					// private
+					this.onMessage = function(evt)
+					{
+            if (typeof evt !== "undefined" && typeof evt.data == "string") {
+								_this.Receive( evt.data.toString() );
+            }
+					}
+
+					this.onOpen = function(evt)
+					{
+						document.title = "Online";
+					}
+
+					this.onClose = function(evt)
+					{
+						document.title = "Offline";
+					}
+					this.onEror = function(evt)
+					{
+						document.title = "Error";
+						alert(evt);
+					}
+				};
+
+				var WSocket = new SocketClass();
+
+        window.onload = function () {
+          setTimeout( "WSocket.Connect();", 200 );
+          setTimeout( "WSocket.Send('#osrt');", 500 ); // switch to text mode, raw values
+ 					setInterval("update()",50);
+					init3d();
+        };
+
+   function getCheckedRadio() {
+     var radioButtons = document.getElementsByName("values");
+     for (var x = 0; x < radioButtons.length; x ++) {
+       if (radioButtons[x].checked) {
+         return radioButtons[x].value;
+       }
+     }
+   }
+function getCheckedValue(radioObj) {
+	if(!radioObj)
+		return "";
+	var radioLength = radioObj.length;
+	if(radioLength == undefined)
+		if(radioObj.checked)
+			return radioObj.value;
+		else
+			return "";
+	for(var i = 0; i < radioLength; i++) {
+		if(radioObj[i].checked) {
+			return radioObj[i].value;
+		}
+	}
+	return "";
+}
+
+var accCalibApp = {xo:0, yo:0, zo:-374, xm:1/1.2, ym:1/1.2, zm:1/1.0};
+var magn_ellipsoid_center = [121.561, 31.9505, -12.0965];
+var magn_ellipsoid_transform = [[0.977825, -0.00484788, -0.0275912], [-0.00484788, 0.936079, 0.0208331], [-0.0275912, 0.0208331, 0.954189]];
+var gyrCalib = {x:22, y:-11, z:65};
+
+last = [];
+dataG = {x:{minimum:0, maximum:0, raw:0, average:-999}, y:{minimum:0, maximum:0, raw:0, average:-999}, z:{minimum:0, maximum:0, raw:0, average:-999}};
+dataM = {x:{minimum:0, maximum:0, raw:0, average:-999}, y:{minimum:0, maximum:0, raw:0, average:-999}, z:{minimum:0, maximum:0, raw:0, average:-999}};
+dataA = {x:{minimum:0, maximum:0, raw:0, average:-999}, y:{minimum:0, maximum:0, raw:0, average:-999}, z:{minimum:0, maximum:0, raw:0, average:-999}};
+dataC = []; // corrected yaw pitch roll
+datacount = 0;
+
+function usevalues(obj, arr)
+{
+	x = parseInt(arr[0]);
+	if ( obj.x.minimum == obj.x.maximum && obj.x.maximum == 0)
+		obj.x.minimum = obj.x.maximum = x;
+	if ( x < obj.x.minimum )
+		obj.x.minimum = x;
+	if ( x > obj.x.maximum )
+		obj.x.maximum = x;
+	obj.x.raw = x;
+
+	y = parseInt(arr[1]);
+	if ( obj.y.minimum == obj.y.maximum && obj.y.maximum == 0 )
+		obj.y.minimum = obj.y.maximum = y;
+	if ( y < obj.y.minimum )
+		obj.y.minimum = y;
+	if ( y > obj.y.maximum )
+		obj.y.maximum = y;
+	obj.y.raw = y;
+
+	z = parseInt(arr[2]);
+	if ( obj.z.minimum == obj.z.maximum && obj.z.maximum == 0 )
+		obj.z.minimum = obj.z.maximum = z;
+	if ( y < obj.y.minimum )
+		obj.y.minimum = y;
+	if ( z > obj.z.maximum )
+		obj.z.maximum = z;
+	obj.z.raw = z;
+}
+
+function Matrix_Vector_Multiply(a, b)
+{
+  var out = [];
+  for(var x = 0; x < 3; x++)
+    out[x] = a[x][0] * b[0] + a[x][1] * b[1] + a[x][2] * b[2];
+  return out;
+}
+
+function OnLine(l)
+{
+  last[3] = last[2];
+  last[2] = last[1];
+  last[1] = last[0];
+  last[0] = l;
+
+	if ( l.indexOf(");") != -1 )
+	{
+		setTimeout(l, 0);
+		return;
+	}
+
+  var p;
+  if ( (p=l.indexOf("#G-")) > -1 )
+	{
+  	usevalues(dataG, l.substr(p+5).split(","));
+		dataG.x.raw += gyrCalib.x;
+		dataG.y.raw += gyrCalib.y;
+		dataG.z.raw += gyrCalib.z;
+	}
+  if ( (p=l.indexOf("#M-")) > -1 )
+	{
+  	usevalues(dataM, l.substr(p+5).split(","));
+		dataM.x.raw -= magn_ellipsoid_center[0];
+		dataM.y.raw -= magn_ellipsoid_center[1];
+		dataM.z.raw -= magn_ellipsoid_center[2];
+    var out = Matrix_Vector_Multiply(magn_ellipsoid_transform, [dataM.x.raw, dataM.y.raw, dataM.z.raw]);
+		dataM.x.raw = out[0];
+		dataM.y.raw = out[1];
+		dataM.z.raw = out[2];
+	}
+  if ( (p=l.indexOf("#A-")) > -1 )
+	{
+  	usevalues(dataA, l.substr(p+5).split(","));
+		dataA.x.raw += accCalibApp.xo;
+		dataA.y.raw += accCalibApp.yo;
+		dataA.z.raw += accCalibApp.zo;
+		dataA.x.raw *= accCalibApp.xm;
+		dataA.y.raw *= accCalibApp.ym;
+		dataA.z.raw *= accCalibApp.zm;
+	}
+
+  if ( (p=l.indexOf("YPR")) > -1 )
+  	dataC = l.substr(p+5).split(",");
+  datacount++;
+}
+
+  var c = document.getElementById("canvas");
+  var ctx = c.getContext('2d');
+
+function clear()
+{
+				  ctx.fillStyle = "rgba(240, 240, 240, 1)";
+				  ctx.fillRect(0, 0, c.width, c.height);
+}
+function bar(x1, y1, x2, y2, clr)
+{
+				  ctx.fillStyle = "rgba("+clr+", 1)";
+				  ctx.fillRect(x1, y1, x2-x1, y2-y1);
+}
+
+function $(id)
+{
+	return document.getElementById(id);
+}
+function resetData(obj)
+{
+  obj.x.minimum = obj.x.maximum = obj.x.raw;
+  obj.y.minimum = obj.y.maximum = obj.y.raw;
+  obj.z.minimum = obj.z.maximum = obj.z.raw;
+}
+
+function Vector_Cross_Product(v1, v2)
+{
+  var out = [];
+  out[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
+  out[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
+  out[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
+	return out;
+}
+
+function valueAcc(mode, value)
+{
+  switch (mode)
+	{
+		case "raw": return value.raw.toFixed(1);
+		case "units": return (value.raw*16/(1<<12)).toFixed(2); // +-16g 13 bit mode
+		case "average": return value.average.toFixed(1);
+	}
+}
+function valueMag(mode, value)
+{
+  switch (mode)
+	{
+		case "raw": return value.raw.toFixed(1);
+		case "units": return (value.raw/1090).toFixed(3); // 1090LSB = 1 gauss 
+		case "average": return value.average.toFixed(1);
+	}
+}
+function valueGyr(mode, value)
+{
+  switch (mode)
+	{
+		case "raw": return value.raw.toFixed(1);
+		case "units": return (value.raw/14.375).toFixed(1); //14.375 LSB = (1 deg/s)
+		case "average": return value.average.toFixed(1);
+	}
+}
+
+function averager(v)
+{
+  if (v.average == -999)
+	{
+		v.average = v.raw;
+		return;
+	}
+  var p = 0.01;
+  v.average = v.raw*p + v.average*(1-p);
+}
+
+function update()
+{
+	var minmax = true;
+	var dispmode = getCheckedRadio();
+
+	averager(dataA.x);
+	averager(dataA.y);
+	averager(dataA.z);
+
+	averager(dataM.x);
+	averager(dataM.y);
+	averager(dataM.z);
+
+	averager(dataG.x);
+	averager(dataG.y);
+	averager(dataG.z);
+
+  $("ax").value = valueAcc(dispmode, dataA.x);
+  $("ay").value = valueAcc(dispmode, dataA.y);
+  $("az").value = valueAcc(dispmode, dataA.z);
+
+  $("gx").value = valueGyr(dispmode, dataG.x);
+  $("gy").value = valueGyr(dispmode, dataG.y);
+  $("gz").value = valueGyr(dispmode, dataG.z);
+
+  $("mx").value = valueMag(dispmode, dataM.x);
+  $("my").value = valueMag(dispmode, dataM.y);
+  $("mz").value = valueMag(dispmode, dataM.z);
+
+  if ( minmax )
+	{
+    $("axmin").value = dataA.x.minimum;
+    $("aymin").value = dataA.y.minimum;
+    $("azmin").value = dataA.z.minimum;
+
+    $("gxmin").value = dataG.x.minimum;
+    $("gymin").value = dataG.y.minimum;
+    $("gzmin").value = dataG.z.minimum;
+
+    $("mxmin").value = dataM.x.minimum;
+    $("mymin").value = dataM.y.minimum;
+    $("mzmin").value = dataM.z.minimum;
+
+    $("axmax").value = dataA.x.maximum;
+    $("aymax").value = dataA.y.maximum;
+    $("azmax").value = dataA.z.maximum;
+
+    $("gxmax").value = dataG.x.maximum;
+    $("gymax").value = dataG.y.maximum;
+    $("gzmax").value = dataG.z.maximum;
+
+    $("mxmax").value = dataM.x.maximum;
+    $("mymax").value = dataM.y.maximum;
+    $("mzmax").value = dataM.z.maximum;
+	}
+
+  $("reseta").onclick = function(){ resetData(dataA) };
+  $("resetm").onclick = function(){ resetData(dataM) };
+  $("resetg").onclick = function(){ resetData(dataG) };
+
+
+  mg = 0.1; ma = 0.3; mm = 0.3;
+  clear();
+  bar(100, 200, 110, 200-dataA.x.raw*ma, "255, 128, 128");
+  bar(120, 200, 130, 200-dataA.y.raw*ma, "255, 128, 128");
+  bar(140, 200, 150, 200-dataA.z.raw*ma, "255, 128, 128");
+
+  bar(200, 200, 210, 200-dataM.x.raw*mm, "128, 255, 128");
+  bar(220, 200, 230, 200-dataM.y.raw*mm, "128, 255, 128");
+  bar(240, 200, 250, 200-dataM.z.raw*mm, "128, 255, 128");
+
+  bar(300, 200, 310, 200-dataG.x.raw*mg, "128, 128, 255");
+  bar(320, 200, 330, 200-dataG.y.raw*mg, "128, 128, 255");
+  bar(340, 200, 350, 200-dataG.z.raw*mg, "128, 128, 255");
+
+  calculation();
+
+//  last[6] = "yaw="+yaw.toFixed(2)+ " pitch="+pitch.toFixed(2)+" roll="+roll.toFixed(2);
+
+ctx.lineWidth = 5;
+ctx.strokeColor = "#ff0000";
+ctx.beginPath();
+ctx.moveTo(350,350);
+ctx.lineTo(350+Math.sin(yaw)*50,350-Math.cos(yaw)*50);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.lineTo(350+Math.sin(yaw+0.1)*40,350-Math.cos(yaw+0.1)*40);
+ctx.lineTo(350+Math.sin(yaw)*50,350-Math.cos(yaw)*50);
+ctx.lineTo(350+Math.sin(yaw-0.1)*40,350-Math.cos(yaw-0.1)*40);
+ctx.stroke();
+draw3d();
+document.getElementById("txt").innerHTML = last.join(""); 
+
+}
+
+
+calibrated = 0;
+
+var accel, magnetom, gyro;
+var yaw, pitch, roll;
+var MAG_Heading;
+
+function calculation()
+{
+	accel = [dataA.x.raw, dataA.y.raw, dataA.z.raw];
+	magnetom = [dataM.x.raw, dataM.y.raw, dataM.z.raw];
+	gyro = [dataG.x.raw, dataG.y.raw, dataG.z.raw];
+	var xAxis = [1, 0, 0];
+
+	/*
+	yaw = Math.atan2( magnetom[1], magnetom[0] );
+	roll = -Math.atan2( magnetom[2], magnetom[1] )+Math.PI/2;
+  pitch = -Math.atan2( magnetom[0], magnetom[2] );
+	return;
+	*/
+
+	if ( datacount > 6 && !calibrated)
+	{
+		calibrated = 1;
+	  pitch = -Math.atan2(accel[0], Math.sqrt(accel[1] * accel[1] + accel[2] * accel[2]));
+	
+	  // GET ROLL
+	  // Compensate pitch of gravity vector 
+	  temp1 = Vector_Cross_Product(accel, xAxis);
+	  temp2 = Vector_Cross_Product(xAxis, temp1);
+
+	  roll = Math.atan2(temp2[1], temp2[2]);
+	  Compass_Heading();
+		yaw = MAG_Heading;
+		return;
+	} 
+	if (calibrated)
+	{	
+      Compass_Heading(); // Calculate magnetic heading
+      Matrix_update();
+      Normalize();
+      Drift_correction();
+      Euler_angles();
+	}
+}
+
+function Compass_Heading()
+{
+	  cos_roll = Math.cos(roll);
+	  sin_roll = Math.sin(roll);
+	  cos_pitch = Math.cos(pitch);
+	  sin_pitch = Math.sin(pitch);
+
+	  mag_x = magnetom[0] * cos_pitch + magnetom[1] * sin_roll * sin_pitch + magnetom[2] * cos_roll * sin_pitch;
+	  // Tilt compensated magnetic field Y
+	  mag_y = magnetom[1] * cos_roll - magnetom[2] * sin_roll;
+    // Magnetic Heading
+	  MAG_Heading = Math.atan2(-mag_y, mag_x);
+
+}
+function Vector_Add(v1, v2)
+{
+ var out = [];
+  for(var c = 0; c < 3; c++)
+  {
+    out[c] = v1[c] + v2[c];
+  }
+  return out;
+}
+
+function Matrix_Multiply(a, b)
+{
+  var out = [[],[],[]];
+  for(var x = 0; x < 3; x++)  // rows
+  {
+    for(var y = 0; y < 3; y++)  // columns
+    {
+      out[x][y] = a[x][0] * b[0][y] + a[x][1] * b[1][y] + a[x][2] * b[2][y];
+    }
+  }
+  return out;
+}
+function Vector_Dot_Product(v1, v2)
+{
+  var result = 0;
+  
+  for(var c = 0; c < 3; c++)
+  {
+    result += v1[c] * v2[c];
+  }
+  
+  return result; 
+}
+function Vector_Scale(v, scale)
+{
+  var out=[];
+  for(var c = 0; c < 3; c++)
+  {
+    out[c] = v[c] * scale; 
+  }
+  return out;
+}
+
+
+var Omega_I = [0, 0, 0];
+var Omega_P = [0, 0, 0];
+//var DCM_Matrix = [[], [], []];
+var DCM_Matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+var G_Dt = 1/20;
+function Matrix_update()
+{
+  var scale = 0.06957*Math.PI/180;
+	Gyro_Vector = [ gyro[0]*scale, gyro[1]*scale, gyro[2]*scale ];
+  var Accel_Vector = [];
+  Accel_Vector[0]=accel[0];
+  Accel_Vector[1]=accel[1];
+  Accel_Vector[2]=accel[2];
+    
+  Omega = Vector_Add(Gyro_Vector, Omega_I);  //adding proportional term
+  Omega_Vector = Vector_Add(Omega, Omega_P); //adding Integrator term
+  var Update_Matrix = [[], [], []];
+  
+  Update_Matrix[0][0]=0;
+  Update_Matrix[0][1]=-G_Dt*Omega_Vector[2];//-z
+  Update_Matrix[0][2]=G_Dt*Omega_Vector[1];//y
+  Update_Matrix[1][0]=G_Dt*Omega_Vector[2];//z
+  Update_Matrix[1][1]=0;
+  Update_Matrix[1][2]=-G_Dt*Omega_Vector[0];//-x
+  Update_Matrix[2][0]=-G_Dt*Omega_Vector[1];//-y
+  Update_Matrix[2][1]=G_Dt*Omega_Vector[0];//x
+  Update_Matrix[2][2]=0;
+
+  var Temporary_Matrix=Matrix_Multiply(DCM_Matrix,Update_Matrix); //a*b=c
+
+  for(var x=0; x<3; x++) //Matrix Addition (update)
+  {
+    for(var y=0; y<3; y++)
+    {
+      DCM_Matrix[x][y]+=Temporary_Matrix[x][y];
+    } 
+  }
+}
+function Normalize()
+{
+  var error=0;
+  var temporary= [[],[],[]];
+  var renorm=0;
+  
+  error= -Vector_Dot_Product(DCM_Matrix[0],DCM_Matrix[1])*.5; //eq.19
+
+  temporary[0] =  Vector_Scale(DCM_Matrix[1], error); //eq.19
+  temporary[1] = Vector_Scale( DCM_Matrix[0], error); //eq.19
+  
+  temporary[0] = Vector_Add(temporary[0], DCM_Matrix[0]);//eq.19
+  temporary[1] = Vector_Add(temporary[1], DCM_Matrix[1]);//eq.19
+  
+  temporary[2] = Vector_Cross_Product(temporary[0],temporary[1]); // c= a x b //eq.20
+  
+  renorm= .5 *(3 - Vector_Dot_Product(temporary[0],temporary[0])); //eq.21
+  DCM_Matrix[0] = Vector_Scale(temporary[0], renorm);
+  
+  renorm= .5 *(3 - Vector_Dot_Product(temporary[1],temporary[1])); //eq.21
+  DCM_Matrix[1] = Vector_Scale(temporary[1], renorm);
+  
+  renorm= .5 *(3 - Vector_Dot_Product(temporary[2],temporary[2])); //eq.21
+  DCM_Matrix[2] = Vector_Scale(temporary[2], renorm);
+}
+
+function Euler_angles()
+{
+  pitch = -Math.asin(DCM_Matrix[2][0]);
+  roll = Math.atan2(DCM_Matrix[2][1],DCM_Matrix[2][2]);
+  yaw = Math.atan2(DCM_Matrix[1][0],DCM_Matrix[0][0]);
+}
+
+var Scaled_Omega_I = [];
+var Scaled_Omega_P = [];
+var GRAVITY = 300;
+var Kp_ROLLPITCH = 0.02;
+var Ki_ROLLPITCH = 0.00002;
+var Kp_YAW = 1.2;
+var Ki_YAW = 0.00002;
+
+/*
+#define Kp_ROLLPITCH 0.02f
+#define Ki_ROLLPITCH 0.00002f
+#define Kp_YAW 1.2f
+#define Ki_YAW 0.00002f
+
+*/
+function constrain(v, b, t)
+{
+  if (v<b) return b;
+  if (v>t) return t;
+  return v;
+}
+function Drift_correction()
+{
+  var mag_heading_x;
+  var mag_heading_y;
+  var errorCourse;
+  //Compensation the Roll, Pitch and Yaw drift. 
+  var Accel_magnitude;
+  var Accel_weight;
+  
+  var Accel_Vector = accel;
+  //*****Roll and Pitch***************
+
+
+  // Calculate the magnitude of the accelerometer vector
+  Accel_magnitude = Math.sqrt(Accel_Vector[0]*Accel_Vector[0] + Accel_Vector[1]*Accel_Vector[1] + Accel_Vector[2]*Accel_Vector[2]);
+  Accel_magnitude = Accel_magnitude / GRAVITY; // Scale to gravity.
+  // Dynamic weighting of accelerometer info (reliability filter)
+  // Weight for accelerometer info (<0.5G = 0.0, 1G = 1.0 , >1.5G = 0.0)
+  Accel_weight = constrain(1 - 2*Math.abs(1 - Accel_magnitude),0,1);  //  
+
+  errorRollPitch = Vector_Cross_Product(Accel_Vector,DCM_Matrix[2]); //adjust the ground of reference
+  Omega_P = Vector_Scale(errorRollPitch,Kp_ROLLPITCH*Accel_weight);
+  
+  Scaled_Omega_I = Vector_Scale(errorRollPitch,Ki_ROLLPITCH*Accel_weight);
+  Omega_I = Vector_Add(Omega_I,Scaled_Omega_I);     
+  
+  //*****YAW***************
+  // We make the gyro YAW drift correction based on compass magnetic heading
+ 
+  mag_heading_x = Math.cos(MAG_Heading);
+  mag_heading_y = Math.sin(MAG_Heading);
+  errorCourse=(DCM_Matrix[0][0]*mag_heading_y) - (DCM_Matrix[1][0]*mag_heading_x);  //Calculating YAW error
+  errorYaw = Vector_Scale(DCM_Matrix[2],errorCourse); //Applys the yaw correction to the XYZ rotation of the aircraft, depeding the position.
+  
+  Scaled_Omega_P = Vector_Scale(errorYaw,Kp_YAW);//.01proportional of YAW.
+  Omega_P = Vector_Add(Omega_P,Scaled_Omega_P);//Adding  Proportional.
+  
+  Scaled_Omega_I = Vector_Scale(errorYaw,Ki_YAW);//.00001Integrator
+  Omega_I = Vector_Add(Omega_I,Scaled_Omega_I);//adding integrator to the Omega_I
+}
+
+
+    </script>
+
+
+<!-- 3d render -->
+<script src="J3DI.js"> </script>
+<script src="J3DIMath.js" type="text/javascript"> </script>
+
+
+<script id="vshader" type="x-shader/x-vertex">
+    uniform mat4 u_modelViewProjMatrix;
+    uniform mat4 u_normalMatrix;
+    uniform vec3 lightDir;
+
+    attribute vec3 vNormal;
+    attribute vec4 vTexCoord;
+    attribute vec4 vPosition;
+
+    varying float v_Dot;
+    varying vec2 v_texCoord;
+
+    void main()
+    {
+        gl_Position = u_modelViewProjMatrix * vPosition;
+        v_texCoord = vTexCoord.st;
+        vec4 transNormal = u_normalMatrix * vec4(vNormal, 1);
+        v_Dot = max(dot(transNormal.xyz, lightDir), 0.0);
+    }
+</script>
+<script id="fshader" type="x-shader/x-fragment">
+#ifdef GL_ES
+    precision mediump float;
+#endif
+        
+    uniform sampler2D sampler2d;
+
+    varying float v_Dot;
+    varying vec2 v_texCoord;
+
+    void main()
+    {
+        vec2 texCoord = vec2(v_texCoord.s, 1.0 - v_texCoord.t);
+        vec4 color = texture2D(sampler2d, texCoord);
+        color += vec4(0.1, 0.1, 0.1, 1);
+        gl_FragColor = vec4(color.xyz * v_Dot, color.a);
+    }
+</script>
+
+<script language="javascript">
+		var gl;
+		var currentAngle = 0;
+
+function makeMyBox(ctx)
+{
+    // vertex coords array
+    var texCoords = new Float32Array(
+        [  0, 0,   0, 0,   0, 0,   0, 0,    // v0-v1-v2-v3 front
+           0, 0,   0, 0,   0, 0,   0, 0,    // v0-v3-v4-v5 right
+           //1, 0,   1, 1,   0, 1,   0, 0,    // v0-v5-v6-v1 top
+					 0, 1,   0, 0,   1, 0,   1, 1,    // v0-v5-v6-v1 top
+           0, 0,   0, 0,   0, 0,   0, 0,    // v1-v6-v7-v2 left
+           0.3,0.4,   0.3,0.4,   0.3,0.4, 0.3,0.4,     // v7-v4-v3-v2 bottom
+           0, 0,   0, 0,   0, 0,   0, 0 ]   // v4-v7-v6-v5 back
+       );
+
+
+    var vertices = new Float32Array(
+        [  1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,    // v0-v1-v2-v3 front
+           1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,    // v0-v3-v4-v5 right
+           1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,    // v0-v5-v6-v1 top
+          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,    // v1-v6-v7-v2 left
+          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1,    // v7-v4-v3-v2 bottom
+           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1 ]   // v4-v7-v6-v5 back
+    );
+
+		for (i=0; i<vertices.length; i+=3)	
+		{
+			vertices[i+0] *= 1.3;
+			vertices[i+1] *= 0.04;
+			vertices[i+2] *= 0.7;
+		}
+
+    // normal array
+    var normals = new Float32Array(
+        [  0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,     // v0-v1-v2-v3 front
+           1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,     // v0-v3-v4-v5 right
+           0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,     // v0-v5-v6-v1 top
+          -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0,     // v1-v6-v7-v2 left
+           0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,     // v7-v4-v3-v2 bottom
+           0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1 ]    // v4-v7-v6-v5 back
+       );
+
+    // index array
+    var indices = new Uint8Array(
+        [  0, 1, 2,   0, 2, 3,    // front
+           4, 5, 6,   4, 6, 7,    // right
+           8, 9,10,   8,10,11,    // top
+          12,13,14,  12,14,15,    // left
+          16,17,18,  16,18,19,    // bottom
+          20,21,22,  20,22,23 ]   // back
+      );
+
+    var retval = { };
+    retval.normalObject = ctx.createBuffer();
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.normalObject);
+    ctx.bufferData(ctx.ARRAY_BUFFER, normals, ctx.STATIC_DRAW);
+    retval.texCoordObject = ctx.createBuffer();
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.texCoordObject);
+    ctx.bufferData(ctx.ARRAY_BUFFER, texCoords, ctx.STATIC_DRAW);
+    retval.vertexObject = ctx.createBuffer();
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, retval.vertexObject);
+    ctx.bufferData(ctx.ARRAY_BUFFER, vertices, ctx.STATIC_DRAW);
+    ctx.bindBuffer(ctx.ARRAY_BUFFER, null);
+    retval.indexObject = ctx.createBuffer();
+    ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, retval.indexObject);
+    ctx.bufferData(ctx.ELEMENT_ARRAY_BUFFER, indices, ctx.STATIC_DRAW);
+    ctx.bindBuffer(ctx.ELEMENT_ARRAY_BUFFER, null);
+    retval.numIndices = indices.length;
+    return retval;
+}
+
+
+    function init3d()
+    {
+        gl = initWebGL(
+            "3d",
+	            "vshader", "fshader", 
+            [ "vNormal", "vColor", "vPosition"],
+            [ 0.4, 0.4, 0.9, 1 ], 10000);
+
+        gl.uniform3f(gl.getUniformLocation(gl.program, "lightDir"), 0, 0, 1);
+        gl.uniform1i(gl.getUniformLocation(gl.program, "sampler2d"), 0);
+        gl.enable(gl.TEXTURE_2D);
+
+        gl.box = makeMyBox(gl);
+
+        spiritTexture = loadImageTexture(gl, "razor.jpg");
+
+        gl.mvMatrix = new J3DIMatrix4();
+        gl.u_normalMatrixLoc = gl.getUniformLocation(gl.program, "u_normalMatrix");
+        gl.normalMatrix = new J3DIMatrix4();
+        gl.u_modelViewProjMatrixLoc = gl.getUniformLocation(gl.program, "u_modelViewProjMatrix");
+        gl.mvpMatrix = new J3DIMatrix4();
+
+        gl.enableVertexAttribArray(0);
+        gl.enableVertexAttribArray(1);
+        gl.enableVertexAttribArray(2);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.box.vertexObject);
+        gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.box.normalObject);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.box.texCoordObject);
+        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.box.indexObject);
+
+				reshape(gl);
+        return gl;
+    }
+
+    width = -1;
+    height = -1;
+
+    function reshape(gl)
+    {
+        var canvas = document.getElementById('3d');
+        width = canvas.width;
+        height = canvas.height;
+
+        // Set the viewport and projection matrix for the scene
+        gl.viewport(0, 0, width, height);
+        gl.perspectiveMatrix = new J3DIMatrix4();
+        gl.perspectiveMatrix.perspective(30, width/height, 1, 10000);
+        gl.perspectiveMatrix.lookat(0, 0, 7, 0, 0, 0, 0, 1, 0);
+    }
+
+    function drawPicture(gl)
+    {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.mvMatrix.makeIdentity();
+
+        gl.mvMatrix.rotate(20, 1,0,0);
+
+        gl.mvMatrix.rotate(yaw*180/Math.PI+270-180*0+20, 0,-1,0);
+        gl.mvMatrix.rotate(pitch*180/Math.PI, 0,0,1);
+        gl.mvMatrix.rotate(roll*180/Math.PI, 1,0,0);
+
+
+        gl.normalMatrix.load(gl.mvMatrix);
+        gl.normalMatrix.invert();
+        gl.normalMatrix.transpose();
+        gl.normalMatrix.setUniform(gl, gl.u_normalMatrixLoc, false);
+
+        gl.mvpMatrix.load(gl.perspectiveMatrix);
+        gl.mvpMatrix.multiply(gl.mvMatrix);
+        gl.mvpMatrix.setUniform(gl, gl.u_modelViewProjMatrixLoc, false);
+
+        gl.bindTexture(gl.TEXTURE_2D, spiritTexture);
+        gl.drawElements(gl.TRIANGLES, gl.box.numIndices, gl.UNSIGNED_BYTE, 0);
+        gl.flush();
+    }
+
+		function draw3d()
+		{
+			drawPicture(gl);
+		}
+</script>
+
+</body>
+</html>

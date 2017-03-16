@@ -1,0 +1,423 @@
+<html>
+  <head>
+    <title>Night rider</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100%; width:100%}
+      body { width:100%; height: 100%; margin: 0; padding: 0; font-family:arial; font-size:15px; }
+      #map-canvas { width:100%; height: 100%; z-index:2}
+      #map-canvas-small {
+          position:absolute; width:300px; height:300px; right:100px; top:100px; z-index:5;
+          box-shadow: 2px 2px 5px  #888888;
+      }
+      #info {
+          padding-left:4px;
+          padding-right:4px;
+          padding-top:2px;
+          width:292px; height:40px; position:absolute; top:50px; right:100px; z-index:6; background:#ffffff;
+          
+          box-shadow: 2px 2px 5px  #888888;
+      }
+      #tools {width:300px; height:60px; position:absolute; top:420px; right:100px; z-index:6; }
+      #debug {width:300px; height:400px; position:absolute; top:20px; left:20px; z-index:8; background:rgba(255, 255, 255, 0.2); }
+      #debug td {font-family:arial; font-size:8px;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5YCStfqf6-KLMm3UJbwRK3Kx6zRxffl8&libraries=geometry">
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"/></div>
+    <div id="map-canvas-small"/></div>
+    <img id="car" style="position:absolute; width:40px; height:40px; left:50%; top:50%; margin-left:-20px; margin-top:-20px; z-index:6; transform:rotate(45deg)">
+    <div id="info" onClick="connect()"/></div>
+    <div id="tools">
+      <input type="button" value="Enable debug" onClick="Send('SygicDebug(1);')">
+      <input type="button" value="Disable debug" onClick="Send('SygicDebug(0);')">
+      <input type="button" value="Go to" onClick="setCoordinates();">
+      <input type="button" value="Query" onClick="query();">
+    </div>
+    <div id="debug" style="display:none">test</div>
+  </body>
+</html>
+
+<script language="javascript">
+
+function getStorage(key, def)
+{
+    if (typeof(Storage) == "undefined")
+      return def;
+    if (localStorage.getItem(key) === null)
+      return def;
+    return localStorage.getItem(key);
+}
+
+function setStorage(key, value)
+{
+    if (typeof(Storage) == "undefined")
+        return def;
+    localStorage.setItem(key, value);
+}
+
+var map, mapMini, markerMini, markerPos=[];
+var markerIndex = 0;
+var glob_ip = "10.0.15.59"; //"localhost";
+var glob_position = {y:48.14389, x:17.10972};
+
+glob_position.x = parseFloat(getStorage("sym_car_x", glob_position.x));
+glob_position.y = parseFloat(getStorage("sym_car_y", glob_position.y));
+glob_ip = getStorage("ip", glob_ip);
+
+function initialize()
+{
+  var mapOptions = {
+    center: new google.maps.LatLng(glob_position.y, glob_position.x),
+    zoom: 20,
+    keyboardShortcuts: false,
+    disableDefaultUI: true
+  };
+  
+  map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+
+  mapOptions.zoom = 15;
+  mapMini = new google.maps.Map(document.getElementById("map-canvas-small"), mapOptions);
+
+  markerMini = new google.maps.Marker({
+    position: map.getCenter(),
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 4,
+    },
+    draggable: false,
+    map: mapMini
+  });
+
+  for (var i=0; i<5; i++)
+  {
+    markerPos[i] = new google.maps.Marker({
+      position: map.getCenter(),
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 4,
+      },
+      draggable: false,
+      map: map
+    });
+  }
+
+  google.maps.event.addListener(mapMini, 'click', function(e) {
+    car.y = e.latLng.lat();
+    car.x = e.latLng.lng();
+  });
+
+  google.maps.event.addListener(map, 'click', function(e) {
+     socket.send("TMC.AddEvent("+Math.floor(e.latLng.lng()*100000)+","+Math.floor(e.latLng.lat()*100000)+");");
+  });
+  setIcon();
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+var keys = [];
+var c = {left:37, right:39, up:38, down:40}
+var car = {rotation:0, x:glob_position.x, y:glob_position.y, spd:0};
+var vect = {x:0.0000001/Math.cos(car.y*Math.PI/180), y:0.0000001};
+var lastSend = (new Date()).getTime(); 
+var lastPos = new google.maps.LatLng(car.y, car.x);
+
+function update()
+{
+  if ( keys[c.left] )
+    car.rotation -= 5;
+  if ( keys[c.right] )
+    car.rotation += 5;
+  if ( keys[c.up] )
+    car.spd += 1;
+  else
+  if ( keys[c.down] )
+  {
+    car.spd *= 0.95;
+    car.spd -= 1;
+  } else
+    car.spd *= 0.95;
+
+  car.spd *= 0.99;
+  var spdmul = 1/Math.pow(2, map.getZoom()-20);
+
+  car.x += Math.cos(car.rotation*Math.PI/180)*car.spd*spdmul*vect.x;
+  car.y -= Math.sin(car.rotation*Math.PI/180)*car.spd*spdmul*vect.y;
+  if ( car.spd < 0.01 )
+    return;
+  // update pos
+  document.getElementById("car").style.transform = "rotate("+car.rotation.toFixed(1)+"deg)";
+  document.getElementById("car").style.webkitTransform = "rotate("+car.rotation.toFixed(1)+"deg)";
+  map.setCenter(new google.maps.LatLng(car.y,car.x));
+  markerMini.setPosition(new google.maps.LatLng(car.y,car.x));
+  if ( car.spd > 0.1 )
+    mapMini.setCenter(new google.maps.LatLng(car.y,car.x));
+  
+  // send coords
+  var curTime = (new Date()).getTime();
+  var period = 500;
+  if ( curTime > lastSend+period)
+  { 
+    lastSend = curTime;
+    var prevP = markerPos[markerIndex].position;
+    var newP = new google.maps.LatLng(car.y,car.x);
+    
+    distance = google.maps.geometry.spherical.computeDistanceBetween(prevP, newP);
+    passed = google.maps.geometry.spherical.computeDistanceBetween(lastPos, newP);
+    
+    var spd = passed*3600/period;
+    document.getElementById("info").innerHTML = getConInfo() +
+      "spd = "+spd.toFixed(1) + "Km/h";
+    lastPos = newP;
+
+    if (distance > 5) 
+    {
+      markerPos[markerIndex++].setPosition(new google.maps.LatLng(car.y,car.x));
+      if (markerIndex>=markerPos.length)
+        markerIndex = 0;
+    }
+  
+    if (connected)
+    {
+      var angle = Math.floor(car.rotation);
+      angle = (angle+3600+90)%360;
+
+      var cmd = "GPS.SetSpeed("+spd.toFixed(1)+");\n"
+      cmd += "GPS.SetCourse("+angle+");\n";
+      cmd += "GPS.SetPosition("+Math.floor(car.x*100000)+","+Math.floor(car.y*100000)+");\n";
+      socket.send(cmd);
+    }
+    if ( car.spd < 0.1 )
+    {
+        setStorage("sym_car_x", car.x.toFixed(9));
+        setStorage("sym_car_y", car.y.toFixed(9));
+    }
+  }
+}
+
+setInterval("update()", 50);
+setInterval("updateRoute()", 2000);
+document.addEventListener("keydown", function(e) {keys[e.keyCode] = 1;}, false);
+document.addEventListener("keyup", function(e) {keys[e.keyCode] = 0;}, false);
+
+// websocket
+var socket;
+var buffer = "";
+var connected = 0, connecting = 0;
+
+function connect()
+{
+  var new_ip = window.prompt("Enter IP address", glob_ip);
+  if ( new_ip == null || new_ip == "" )
+    return;
+    
+  glob_ip = new_ip;
+  setStorage("ip", glob_ip);
+
+  var url = "ws://"+glob_ip+":38950/index.html";
+  console.log("Connecting to "+url);
+
+  connecting = 1;
+  socket = new WebSocket(url);
+  socket.onopen = function()
+  {
+    console.log("Connected!");
+    connecting = 0;
+    connected = 1;
+  }
+  socket.onclose = function()
+  {
+    console.log("Connection lost!");
+    connecting = 0;
+    connected = 0;
+  }
+  socket.onerror = function()
+  {
+      console.log("Connection lost!");
+      connecting = 0;
+      connected = 0;
+  }
+  socket.onmessage = function(msg)
+  {
+    buffer += new String(msg.data);
+    var lines = buffer.split("\n");
+    while ( lines.length > 1 )
+    Receive( lines.shift() );
+    buffer = lines.join("\n");
+  }
+}
+
+function Receive(line)
+{
+  var key = "jshandler_";
+  if ( line.substr(0, key.length) == key )
+  {
+    setTimeout(line.substr(key.length), 0);
+    return;
+  }
+  
+  console.log(line);
+}
+
+function getConInfo()
+{
+  if (connected)
+    return "Connected to " + glob_ip + "<br>";
+  if (connecting)
+    return "Connecting...<br>";
+  return "Click here to connect" + "<br>";
+}
+
+// utils
+var poly, polyMini, lastStart = lastPos;
+
+function getRoute()
+{
+  socket.send("Route.Get('jshandler_h');");
+}
+
+function hRouteAddStart()	
+{
+  if ( poly )
+  {
+    poly.setMap(null);
+    polyMini.setMap(null);
+  }
+
+  var polyOptions = {
+    strokeColor: '#b000b0',
+    strokeOpacity: 0.4,
+    strokeWeight: 10
+  };
+  poly = new google.maps.Polyline(polyOptions);
+  polyMini = new google.maps.Polyline(polyOptions);
+
+}
+
+function hRouteAddDone()	
+{
+  poly.setMap(map);
+  polyMini.setMap(mapMini);
+}
+
+function hRouteAddPoints(points)	
+{
+  var path = poly.getPath();
+  var pathMini = polyMini.getPath();
+  for (var i=0; i<points.length; i++)
+  {
+    var p = new google.maps.LatLng( points[i].lY / 100000, points[i].lX / 100000 );
+    path.push(p);
+    pathMini.push(p);
+  }
+}
+
+function updateRoute()
+{
+  if (!connected)
+    return;
+  socket.send("_jshandler_hOnRoute(Route.Serialize());\n");
+}
+
+function hOnRoute(json)
+{
+  var start = new google.maps.LatLng( json[1].lY / 100000, json[1].lX / 100000 );
+  if ( start.equals(lastStart) )
+    return;
+  lastStart = start;
+  console.log("Loading route.");
+  getRoute();
+}
+
+function hReportPerformance(json)
+{
+    var q = "<table>";
+    for (id in json)
+    {
+        var pdata = json[id];
+        q += "<tr><td>"+id+(pdata.info?pdata.info:"")+"</td>";
+        
+        var info = "";
+        for (var i in pdata)
+        {
+            if ( i == "info" )
+                continue;
+                
+            if (info != "")
+                info += "/";
+            info += pdata[i];
+        }
+        
+        q += "<td>"+info+"</td>";
+        q += "</tr>"
+    }
+    q += "</table>";
+    document.getElementById("debug").innerHTML = q;
+}
+
+// Shortcut
+function query()
+{
+    var q = prompt('Enter Command', 'SetPerformanceReporting(1)');
+    if (q == null || q == "")
+    {
+        return;
+    }
+    socket.send(q + ";\n");
+    document.getElementById("debug").style.display = "block";
+}
+
+function Send(cmd)
+{
+    socket.send(cmd);
+}
+
+function setIcon()
+{
+  document.getElementById("car").src = 
+     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAMAAAC7IEhfAAAABGdBTUEAALG" +
+     "PC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpR" +
+     "PAAAAmdQTFRFAAAAAAAtAAAfAAAcAAAdAAAjZzEXm0EWSigYAAAeAAgbAA0aAAgaAAEdBAsbOyMYaTIXh" +
+     "zsWnUIWq0YVsUgVrUcVqEUVo0QVnUIVlT8Wjj0WiDsWhDoWhDoWhToWhToWhToW1FMUkj8WfTgWgDkWgj" +
+     "kWoEMVtkoVuksVt0oVrEcVkj4WYi8XFBQaNiIYhDoWr0cVy1AU4VcU2lUUnkIWOCIYejcW4VcURykaCxY" +
+     "bnkIVFRodBREYsUgVbDQZPyUYvEwVkj4WxE4VqEYWyE8UvUwVylAUyVAUnkIWNSIYnEIWq0YVkT4WYS8X" +
+     "m0EWAAwa8FwT+F4T/WAT/2AT/mAT8lwT1VQVxE8WvEwVvEwWv00WwU4Ww04Wwk4Wu0wWuEsWy1AV61oT7" +
+     "1sT7VsU9F0T/2ET3FUT3FYVbzcdRC0iPCsiMCIbPCohQCwiQi0iRS0hSC4hUTAfZTUdjD8Zt0oWv04Xpk" +
+     "cYvU0X4lgV51oV6FoV6VoV6VoU810U/GAT5lkU+V8Tx00SlD0T5VgT0lMVlkIZjUAbhT4bfjkYhj4bmUM" +
+     "aqkgYwE4X2FUV71sUZjUeSS4hPSsiOSojPysikkEa914T9l4U0VETu0oUxU4V5FkV7lwUbzYa3VYVmUMZ" +
+     "ezscYDMeTS4fnEQZaTYdNiojOisjOysjQiwhw08W8l0U21YVvUsTqUQSzVAT71wVxFAX61oUZzYdNyojO" +
+     "CojcDgd+V4TZDUegTwb/F8T9F0U01MV9V4U3lcVskoXOysicTgdWzIf5loV3FcWgz0bSi4g71wUbDcd1F" +
+     "QVhj4a7FoTOyoht0sWAAAAHlvwuQAAAFB0Uk5TAAEFCQYDaN8pAw0QDgYII0p0mLC6tKmcjoBzaWRjZGK" +
+     "W+5tkZ22fwsjEsodDChZ1ueP59KgodPvJJ7OlCtXxTemg9dj88/7+sxaYsodD3hA10QTWAAAAAWJLR0QA" +
+     "iAUdSAAAAYVJREFUOMtjYBgFgxowMjEzs7Ai+GzsHCCKk4ubhxcuyMcvICgkLCIiKiYuISklLSMrIyevo" +
+     "KikrKKiqqauoamlraMLUqanb2BoFBAYFBwSEhoWHhEZFR0TGxUXn5AYEJCUHBgSHByUYmxiClRoZh6Umh" +
+     "ocnJgWmJ6RmZWdk5uXX1BYVFwSVlpWXlFZVV1TW5dab2HJwGDVEBISnBrU2NTc0trW3tHZ1tXd09tX3j9" +
+     "h4qTJU6ZOq50+Y+as2XOsbRhsg0KC586bv2DhohCgwUCQCgRTFy9ZumzZ0uUrVlauWr1m7br1dvYMDsHB" +
+     "GzZu2jxpyZatITAQnLJt8zIg2Lx9x46dVWG7pu3e48jglJq6dx9IcD+mwkkHkoFWBO2uPnjImcElNejwZ" +
+     "hwKlx6ZmwrihjQcdWVwS516DKfC/OOpEJFUd+IVEm010Z4hOniIDnAP5Cg8gScKoYniJDRRnMKZKDyRk9" +
+     "kKWDI7jZnMIAnXC3fC9fbx1cWTFfygWcEfKSuMgkEJACHcNSOTRRP7AAAAJXRFWHRkYXRlOmNyZWF0ZQA" +
+     "yMDE0LTA4LTEzVDEzOjIwOjA5KzAyOjAwxi8X2gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0wOC0xM1Qx" +
+     "MzoyMDowOSswMjowMLdyr2YAAAAASUVORK5CYII=";
+}
+
+function setCoordinates()
+{
+    var coords = prompt('Enter GPS coordinates in lat, lon format (e.g. 48.12345, 19.12345)', '');
+    if (coords == null || coords == "")
+    {
+        return;
+    }
+
+    var coordsArray = coords.match(/^([0-9]{1,3}\.?[0-9]{0,10}), ?([0-9]{1,3}\.?[0-9]{0,10})$/);
+    var x = coordsArray[2];
+    var y = coordsArray[1];
+    car.x = parseFloat(x);
+    car.y = parseFloat(y);
+
+    update();
+}
+
+</script>

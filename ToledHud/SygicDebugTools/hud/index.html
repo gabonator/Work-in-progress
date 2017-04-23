@@ -1,0 +1,198 @@
+﻿<html>
+<head>
+  <title>Aura terminal client</title>
+  <style>
+@font-face {
+    font-family: 'sygic';
+/* windows */
+    src: url('file://C:/Projects/Private/syg/SygicDebugTools/hud/special.ttf') format('truetype'),
+         url('special.ttf') format('truetype');
+/* osx */
+/*    src: url('nativeui.ttf') format('truetype');*/
+    font-weight: normal;
+    font-style: normal;
+}
+
+    body {font-family:tahoma;}
+    .direction { position:absolute; font-family:"sygic"; font-size:60px; color:#b0b0b0;}
+
+    .ccontainer { position:relative; font-family:"sygic"; font-size:60px; color:#b0b0b0; width:60px; height:60px; }
+
+    .cback { position:absolute; color:#b0b0b0;}
+    .cfront { position:absolute; color:#303030; }
+    .cexit { position:absolute; color:#303030; }
+    .id { color:#b0b0b0; font-weight:bold; }
+  </style>
+
+  <script type="text/javascript">
+  String.prototype.trim=function(){return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');};
+
+  var AuraClass = function()
+  {
+    // private
+    var ws = null;
+    var arrListeners = new Array();
+    var arrTxListeners = new Array();
+    var bModulesLoaded = false;
+    var bOnline = false;
+    var tReconnect = null;
+    var _this = this;
+
+    var url = "ws://10.0.10.122:38950/";
+    var queue = [];
+    var timer = null;
+
+    // public
+    this.Send = function( msg ) 
+    {
+      msg = msg.replace( /"/g, "\'" );
+      queue.push(msg);
+      if (!timer)
+      timer = setInterval(function()
+      {
+        msg = queue.shift();
+        console.log(">" + msg); 
+        ws.send( msg );
+        if (queue.length==0)
+        {
+          clearInterval(timer);
+          timer = null;
+        }
+      }, 200);
+    }
+
+    this.Receive = function ( msg )
+    {                          
+      console.log("<" + msg);
+      if (msg.charAt(0) == '$')
+      {
+        var JSON = msg.substr(msg.indexOf(":")+1);
+      	var func = JSON.replace( /'/g, "\"" );
+      	func = func.trim();
+        var ev = "eval('"+func+"')";
+        setTimeout(ev, 0);
+      }
+    }
+
+    this.Connect = function()
+    {
+      console.log("Connecting");
+      ws = new WebSocket(url);
+      ws.onmessage = this.onMessage;
+      ws.onopen = this.onOpen;
+      ws.onclose = this.onClose;
+      ws.onerror = this.onError;
+    }
+
+    this.isOnline = function()
+    {
+      return bOnline;
+    }
+
+    // private
+    this.onMessage = function(evt)
+    {
+      _this.bOnline = true;
+      if (typeof evt !== "undefined" && typeof evt.data == "string")
+      		_this.Receive( evt.data.toString() );
+    }
+
+    this.onOpen = function(evt)
+    {
+      clearTimeout( _this.tReconnect );
+      _this.bOnline = true;
+      console.log("Aura online");
+      _this.Send("Sdk::SetPrefix('$JS:');\n");
+      _this.Send("Hud.SetHandler('onCommands');\n");
+      _this.Send("Hud.Get('help');\n");
+      _this.Send("Hud.SetHandler('onHud');\n");
+    }
+
+    this.onClose = function(evt)
+    {
+      bOnline = false;
+      console.log("Offline");
+      ws = null;
+    }
+  };
+
+  function AuraReady()
+  {
+    // global handler
+  }
+
+  var Aura = new AuraClass();
+  Aura.Connect();
+
+  function AuraReady()
+  {
+    // called every 10 seconds
+  }
+
+  function onHud()
+  {
+    var args = Array.prototype.slice.call(arguments);
+    console.log("Reply from hud=" + args.join(":"));
+  }
+
+  var arrCommands = [];
+  function onCommands(arr)
+  {
+    arrCommands = arr.split(",");
+    var index = arrCommands.indexOf("help");
+    if ( index > -1 )
+      arrCommands.splice(index, 1);
+    setInterval("Request()", 1000);
+  }
+  function Request()
+  {
+    if ( arrCommands.length > 0 ) 
+    {
+      var cmds = "";
+      for (var i=0; i<arrCommands.length; i++)
+      {
+        if (i > 0)
+          cmds += ",";
+        cmds += "\"" + arrCommands[i] + "\"";
+      }
+      Aura.Send("Hud.Get("+cmds+");");
+    }
+  }
+  function onHud()
+  {
+    var arr = Array.prototype.slice.call(arguments);
+	
+    var out = "<table border=1 bordercolor='#b0b0b0' rules='rows' frame='hsides'>";
+      for (var i=0; i<arrCommands.length; i++)
+      {
+	var command = arrCommands[i];
+	var value = arr[i];
+	if ( command.indexOf("Chars") != -1 )
+	{
+	  var chars = eval("["+value+"]");
+	  if ( chars[0] > 0 || chars[1] > 0 || chars[2] > 0 )
+          {
+	    value += "<div class='ccontainer'>";
+	    if ( chars[1] > 0 )
+	      value += "<div class='cback'>" + String.fromCharCode(chars[1]) + "</div>";
+	    if ( chars[0] > 0 )
+	      value += "<div class='cfront'>" + String.fromCharCode(chars[0]) + "</div>";
+	    if ( chars[2] > 0 )
+	      value += "<div class='cexit'>" + String.fromCharCode(chars[2]) + "</div>";
+	    value += "</div>";
+          }
+	}
+        out += "<tr><td class='id'>" + arrCommands[i] + "</td><td>" + value + "</td></tr>";
+      }
+    out += "</table>";
+    document.getElementById("out").innerHTML = out;
+  }
+  </script>
+</head>
+<body>
+  <div id="out">
+  </div>
+  <br>
+  <input type="text" id="send"><input type="button" value="send" onclick="Aura.Send(document.getElementById('send').value);">
+</body>
+</html>

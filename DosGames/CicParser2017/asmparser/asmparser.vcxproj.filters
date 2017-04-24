@@ -9,13 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="code">
+      <UniqueIdentifier>{9e58aadc-1525-4964-98a4-159c9022af5d}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -24,6 +20,36 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dos.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="ega.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="instructions.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="label.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="machine.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="matchers.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="parser.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="value.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="serializer.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -31,6 +57,12 @@
     </ClCompile>
     <ClCompile Include="asmparser.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dos.cpp">
+      <Filter>code</Filter>
+    </ClCompile>
+    <ClCompile Include="emulator.cpp">
+      <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

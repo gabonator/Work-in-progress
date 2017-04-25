@@ -259,6 +259,8 @@ public:
 	static void EvalLodsw(CMachine& m);
 	static void EvalStosb(CMachine& m);
 	static void EvalStosw(CMachine& m);
+	static void EvalMovsb(CMachine& m);
+	static void EvalMovsw(CMachine& m);
 
 	virtual void Serialize(CSerializer& s)
 	{
@@ -500,6 +502,8 @@ public:
 	{
 	}
 
+	virtual void Eval(CMachine& m);
+
 	virtual void Serialize(CSerializer& s)
 	{
 		s << m_op1 << m_op2;
@@ -516,12 +520,12 @@ public:
 
 public:
 	EType m_eType;
-	string m_strVariableName;
+	CLabel m_strVariableName;
 	unsigned int m_nValue;
 	string m_strFunction;
 
 public:
-	CIData() {}
+	CIData() : m_strVariableName("") {}
 
 	CIData(EType eType, const string& strValue) : 
 	  m_eType(eType), m_strVariableName(strValue)

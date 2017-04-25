@@ -99,6 +99,7 @@ public:
 		if ( CUtils::match("^word_data_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = wordptr; // urcite ptr?
+			m_eRegLength = r16;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
 		}
@@ -133,6 +134,7 @@ public:
 		if ( CUtils::match("^byte_data_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = byteptr;
+			m_eRegLength = r8;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
 		}
@@ -144,12 +146,14 @@ public:
 			{
 				m_value = make_shared<CValue>(matches[0]);
 				m_eType = byteptrval;
+				m_eRegLength = r8;
 				return;
 			}
 			if ( eRegLength == r16 )
 			{
 				m_value = make_shared<CValue>(matches[0]);
 				m_eType = wordptrval;
+				m_eRegLength = r16;
 				return;
 			}
 		}
@@ -212,6 +216,7 @@ public:
 		if ( CUtils::match("^cs:word_code_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = codeword;
+			m_eRegLength = r16;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
 		}
@@ -225,6 +230,7 @@ public:
 
 		if ( value == "es:[di]" )
 		{
+			m_eRegLength = r8;
 			m_eType = es_ptr_di;
 			return;
 		}
@@ -244,8 +250,7 @@ public:
 		}
 
 		printf("%s\n", str.c_str());
-		int f = 9;
-		//Fix(*this);
+		_ASSERT(0);
 	}
 
 	static void SameOperands(CValue& op1, CValue& op2, string str1, string str2)

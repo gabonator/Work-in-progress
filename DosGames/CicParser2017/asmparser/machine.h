@@ -2,6 +2,9 @@
 //#include <vector>
 //#include "instructions.h"
 
+CEga EGA;
+void VideoUpdate();
+
 class CMachine
 {
 public:
@@ -77,9 +80,9 @@ public:
 
 	vector<int> m_arrCallStack;
 	vector<int> m_arrStack;
+	map<string, int> m_mapLabels;
 
 	CDos m_dos;
-	CEga EGA;
 
 public:
 	CMachine()
@@ -107,8 +110,15 @@ public:
 		m_pc = -1;
 
 		Call("start");
-		for ( int i=0; i<1000; i++)
+		for ( int i=0; i<1000000; i++)
+		{
+			if (i % 100 == 0)
+			{
+				VideoUpdate();
+			}
+
 			Eval();
+		}
 	}
 
 	void Call(string label)
@@ -139,8 +149,16 @@ public:
 	
 	void Eval()
 	{
+			if ( m_pc== 6373)
+			{
+				int f = 9;
+			}
+
+		const string& strDebug0 = m_arrSource[m_pc > 0 ? m_pc-1 : 0];
+		const string& strDebug1 = m_arrSource[m_pc];
+
 		SInstruction sInstruction = m_arrCode[m_pc];
-		printf("%s\n", m_arrSource[m_pc].c_str());
+		//printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
 		m_pc++;
 
 		sInstruction->Eval(*this);
@@ -148,15 +166,39 @@ public:
 
 	int FindLabel(string label)
 	{
+		auto i = m_mapLabels.find(label);
+		if (i != m_mapLabels.end())
+		{
+			return i->second;
+		}
+
 		for (int i=0; (size_t)i<m_arrCode.size(); i++)
 		{
 			CILabel* pLabel = dynamic_cast<CILabel*>(m_arrCode[i].get());		
 			if (pLabel && pLabel->m_label == label)
+			{
+				m_mapLabels.insert(make_pair<string, int>(label, i));
 				return i;
+			}
 
 			CIFunction* pFunction = dynamic_cast<CIFunction*>(m_arrCode[i].get());
 			if (pFunction && pFunction->m_eBoundary == CIFunction::Begin && pFunction->m_strName == label)
+			{
+				m_mapLabels.insert(make_pair<string, int>(label, i));
 				return i;
+			}
+
+			CIData* pData = dynamic_cast<CIData*>(m_arrCode[i].get());		
+			if ( pData)
+			{
+				int f = 9;
+			}
+			if (pData && pData->m_strVariableName == label)
+			{
+				m_mapLabels.insert(make_pair<string, int>(label, i));
+				return i;
+			}
+
 		}
 		_ASSERT(0);
 		return -1;
@@ -191,22 +233,64 @@ public:
 
 			case CValue::wordptr: 
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue+1 < sizeof(data));
-				return data[v.m_nValue] | (data[v.m_nValue+1] << 8);
+				return MappedRead(v.m_nValue) | (MappedRead(v.m_nValue+1) << 8);
 
 			case CValue::byteptr: 
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue < sizeof(data));
-				return data[v.m_nValue];
+				return MappedRead(v.m_nValue);
 
 			case CValue::byteptrval: 
-				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
-				return data[m_reg.ds*16 + GetValue(*v.m_value)];
+				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
+				return MappedRead(m_reg.ds, GetValue(*v.m_value));
 
 			case CValue::wordptrval: 
-				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
-				return data[m_reg.ds*16 + GetValue(*v.m_value)] | (data[m_reg.ds*16 + GetValue(*v.m_value) + 1] << 8);
+				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
+				return MappedRead(m_reg.ds, GetValue(*v.m_value) & 0xffff) | (MappedRead(m_reg.ds, (GetValue(*v.m_value) + 1) & 0xffff) << 8);
 
 			case CValue::bp_plus: 
 				return m_reg.bp + v.m_nValue;
+
+			case CValue::es_ptr_di:
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+				return MappedRead(m_reg.es, m_reg.di);
+
+			case CValue::bx_plus_si:
+				//_ASSERT(v.GetRegisterLength() == CValue::r8);
+				return m_reg.b.r16.bx + m_reg.si;
+
+			case CValue::wordptrasbyte:
+				return MappedRead(v.m_nValue);
+
+			case CValue::bx_plus:
+				return m_reg.b.r16.bx + v.m_nValue;
+
+			case CValue::si_plus:
+				return m_reg.si + v.m_nValue;
+
+			case CValue::codeword:
+			{
+				stringstream ss;
+				ss << "word_code_" << std::hex << std::uppercase << v.m_nValue; 
+				CLabel label(ss.str());
+				int nIndex = FindLabel(label);
+				_ASSERT(nIndex >= 0);
+				CIData* pData = dynamic_cast<CIData*>(m_arrCode[nIndex].get());
+				_ASSERT(pData->m_strVariableName == label);
+				return pData->m_nValue;
+			}
+
+			case CValue::codebyte:
+			{
+				stringstream ss;
+				ss << "byte_code_" << std::hex << std::uppercase << v.m_nValue; 
+				CLabel label(ss.str());
+				int nIndex = FindLabel(label);
+				_ASSERT(nIndex >= 0);
+				CIData* pData = dynamic_cast<CIData*>(m_arrCode[nIndex].get());
+				_ASSERT(pData->m_strVariableName == label);
+				return pData->m_nValue;
+			}
+
 		}
 		_ASSERT(0);
 		return 0;
@@ -241,25 +325,61 @@ public:
 			case CValue::sp: m_reg.sp = (unsigned short)nValue; return;
 
 			case CValue::wordptr: 
+				// TODO: toto vsetko musi ist cez mapped, robi sa tam s grafikou!
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue+1 < sizeof(data));
-				data[v.m_nValue] = nValue & 0xff;
-				data[v.m_nValue+1] = nValue >> 8;
+				MappedWrite(v.m_nValue, nValue & 0xff);
+				MappedWrite(v.m_nValue+1, nValue >> 8);
 			return;
 
 			case CValue::byteptr: 
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue < sizeof(data));
-				data[v.m_nValue] = nValue;
+				MappedWrite(v.m_nValue, nValue);
 			return;
 
 			case CValue::byteptrval: 
 				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
-				data[m_reg.ds*16 + GetValue(*v.m_value)] = nValue;
+				MappedWrite(m_reg.ds, GetValue(*v.m_value), nValue);
 			return;
 
 			case CValue::wordptrval: 
-				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
-				data[m_reg.ds*16 + GetValue(*v.m_value)] = nValue & 0xff;
-				data[m_reg.ds*16 + GetValue(*v.m_value)+1] = nValue >> 8;
+				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
+				MappedWrite(m_reg.ds, GetValue(*v.m_value) & 0xffff, nValue & 0xff);
+				MappedWrite(m_reg.ds, (GetValue(*v.m_value)+1) & 0xffff, nValue >> 8);
+			return;
+
+			case CValue::es_ptr_di:
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+				MappedWrite(m_reg.es, m_reg.di, nValue & 0xff);
+			return;
+
+			case CValue::codeword:
+			{
+				stringstream ss;
+				ss << "word_code_" << std::hex << std::uppercase << v.m_nValue; 
+				CLabel label(ss.str());
+				int nIndex = FindLabel(label);
+				_ASSERT(nIndex >= 0);
+				CIData* pData = dynamic_cast<CIData*>(m_arrCode[nIndex].get());
+				_ASSERT(pData->m_strVariableName == label);
+				pData->m_nValue = nValue;
+			}
+			return;
+
+			case CValue::codebyte:
+			{
+				stringstream ss;
+				ss << "byte_code_" << std::hex << std::uppercase << v.m_nValue; 
+				CLabel label(ss.str());
+				int nIndex = FindLabel(label);
+				_ASSERT(nIndex >= 0);
+				CIData* pData = dynamic_cast<CIData*>(m_arrCode[nIndex].get());
+				_ASSERT(pData->m_strVariableName == label);
+				pData->m_nValue = nValue;
+			}
+			return;
+
+			case CValue::wordptrasbyte:
+				MappedWrite(v.m_nValue, nValue & 0xff);
 			return;
 		}
 		_ASSERT(0);
@@ -316,6 +436,40 @@ public:
 		return EGA.Read(addr) | (EGA.Read(addr+1)<<8);
 	}
 	*/
+	int MappedRead(int nOffset)
+	{
+		_ASSERT(m_reg.ds == 0);
+		return MappedRead(m_reg.ds, nOffset);
+	}
+
+	int MappedRead(int nSegment, int nOffset)
+	{
+		_ASSERT(nSegment >= 0 && nSegment < 0xf000);
+		_ASSERT(nOffset >= 0 && nOffset <= 0xfff5);
+
+		if (nSegment >= 0xa000)
+			return VideoRead(nSegment, nOffset);
+		_ASSERT(nSegment * 16 + nOffset < sizeof(data));
+		return data[nSegment * 16 + nOffset];
+	}
+
+	void MappedWrite(int nOffset, int nValue)
+	{
+		_ASSERT(m_reg.ds == 0);
+		MappedWrite(m_reg.ds, nOffset, nValue);
+	}
+
+	void MappedWrite(int nSegment, int nOffset, int nValue)
+	{
+		if (nSegment >= 0xa000)
+		{
+			VideoWrite(nSegment, nOffset, nValue);
+			return;
+		}
+		_ASSERT(nSegment * 16 + nOffset < sizeof(data));
+		data[nSegment * 16 + nOffset] = (BYTE)nValue;
+	}
+
 	void VideoWrite(int nSegment, int nOffset, int nValue)
 	{
 		unsigned int addr = nSegment * 16 + nOffset;
@@ -325,7 +479,7 @@ public:
 		EGA.Write(addr, nValue & 0xff);
 	}
 
-	int VideoRead(int nSegment, int nOffset, int nValue)
+	int VideoRead(int nSegment, int nOffset)
 	{
 		unsigned int addr = nSegment * 16 + nOffset;
 

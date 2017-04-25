@@ -36,7 +36,8 @@ class CIMLabel : public CInstructionMatcher
 
 		if ( CUtils::match("^(locret[\\w]*):$", strLine, arrMatches) )
 		{
-			return make_shared<CINop>();
+			return make_shared<CILabel>(arrMatches[0]);
+			//return make_shared<CINop>();
 		}
 
 		if ( CUtils::match("^(loc[\\w]*):$", strLine, arrMatches) )

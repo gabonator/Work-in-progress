@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <Windows.h>
 #include <regex>
 #include <vector>
 #include <map>
@@ -19,9 +20,9 @@ using namespace std;
 #define CheckEnum2(s, e) if (str==s) return e;
 #define CheckEnum(e) if (str==#e) return e;
 
-typedef uint32_t DWORD;
-typedef uint16_t WORD;
-typedef uint8_t BYTE;
+//typedef uint32_t DWORD;
+//typedef uint16_t WORD;
+//typedef uint8_t BYTE;
 
 unsigned char data[1024*1024];
 unsigned char video[1024*1024];
@@ -49,15 +50,24 @@ class CMachine;
 #include "emulator.cpp"
 
 // Emulator
+#include "video.h"
+
+CVideo videoOutput;
+
+void VideoUpdate()
+{
+	videoOutput.Tick();
+}
 
 int main(int argc, char* argv[])
 {
 	CSourceParser sp;
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
-	//sp.Save("pokus");
-	sp.Load("pokus");
+	//sp.Save("cache");
+	sp.Load("cache");
 
 	CMachine m;
+	videoOutput.Init();
 	m.Eval(sp.m_arrCode, sp.m_arrSource);
 	return 0;
 }

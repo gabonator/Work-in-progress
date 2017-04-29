@@ -50,6 +50,9 @@
     <ClInclude Include="serializer.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="video.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

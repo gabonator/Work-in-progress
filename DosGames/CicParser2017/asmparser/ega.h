@@ -77,13 +77,13 @@ public:
 
 	void SetAddrHi(BYTE b)
 	{
-		cfgAddr &= 0x00ff;
-		cfgAddr |= ((WORD)b)<<8;
+	//	cfgAddr &= 0x00ff;
+	//	cfgAddr |= ((WORD)b)<<8;
 	}
 	void SetAddrLo(BYTE b)
 	{
-		cfgAddr &= 0xff00;
-		cfgAddr |= b;
+	//	cfgAddr &= 0xff00;
+	//	cfgAddr |= b;
 	}
 
 	void SetMapMask(BYTE b) // 3c5.2

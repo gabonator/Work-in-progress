@@ -49,6 +49,11 @@ class CMachine;
 #include "dos.cpp"
 #include "emulator.cpp"
 
+// Export to C
+#include "cvalue.h"
+#include "cinstructions.h"
+#include "cexport.h"
+
 // Emulator
 #include "video.h"
 
@@ -64,9 +69,18 @@ int main(int argc, char* argv[])
 	CSourceParser sp;
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
 	//sp.Save("cache");
+	//return 0;
 	sp.Load("cache");
 
 	CMachine m;
+	m.m_arrCode = sp.m_arrCode;
+	m.m_arrSource = sp.m_arrSource;
+
+	vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("start"));
+	CCExport e;
+	e.Optimize(arrCode);
+	return 0;
+
 	videoOutput.Init();
 	m.Eval(sp.m_arrCode, sp.m_arrSource);
 	return 0;

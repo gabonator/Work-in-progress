@@ -54,16 +54,23 @@ void CISingleArgOp::Eval(CMachine& m)
 	{
 	case CISingleArgOp::push:
 		_ASSERT(m_rvalue.GetRegisterLength() == CValue::r16);
+		m.StackWrite(m.m_reg.sp, m.GetValue(m_rvalue));
+		/*
 		_ASSERT(m.m_reg.sp/2 > 0 && m.m_reg.sp/2 < (int)m.m_arrStack.size());
+		_ASSERT((m.m_reg.sp & 1) == 0);
 		m.m_arrStack[m.m_reg.sp/2] = m.GetValue(m_rvalue);
+		*/
 		m.m_reg.sp -= 2;
 		break;
 
 	case CISingleArgOp::pop:
 		_ASSERT(m_rvalue.GetRegisterLength() == CValue::r16);
 		m.m_reg.sp += 2;
+		/*
 		_ASSERT(m.m_reg.sp/2 > 0 && m.m_reg.sp/2 < (int)m.m_arrStack.size());
 		m.SetValue(m_rvalue, m.m_arrStack[m.m_reg.sp/2]);
+		*/
+		m.SetValue(m_rvalue, m.StackRead(m.m_reg.sp));
 		break;
 
 	case CISingleArgOp::interrupt:
@@ -84,6 +91,12 @@ void CICompare::Eval(CMachine& m)
 	m.m_flag.zf = (nOp1 == nOp2) ? 1 : 0;
 	m.m_flag.cf = (nOp1 < nOp2) ? 1 : 0;
 
+	if (m_op2.m_eType != CValue::constant)
+	{
+		_ASSERT(m_op1.GetRegisterLength() == m_op2.GetRegisterLength());
+	}
+
+	m.m_eCmpLen = m_op1.GetRegisterLength();
 	m.m_nCmpOp1 = nOp1;
 	m.m_nCmpOp2 = nOp2;
 }
@@ -96,17 +109,18 @@ bool CIConditionalJump::SatisfiesCondition1(CMachine& m, CIConditionalJump::ETyp
 	case jbe: return m.m_flag.cf || m.m_flag.zf;
 	case jz: return m.m_flag.zf;
 	case jnz: return !m.m_flag.zf;
-	case jnb: return !m.m_flag.cf;
-	case jb: return m.m_flag.cf;
+	case jnb: /*return SatisfiesCondition2(m, eType); //*/ return !m.m_flag.cf; // TODO!!!
+	case jb: /*return SatisfiesCondition2(m, eType); //*/ return m.m_flag.cf; // TODO!!!!
 	//case ja:
 	//case jb:
 	//case jnb:
-	//case jle:
-	//case jg:
+	case jle:return SatisfiesCondition2(m, eType);
+	case jg:return SatisfiesCondition2(m, eType);
 	//case jge:
+	case jge: return SatisfiesCondition2(m, eType); //return m.m_flag.sf == 0;
 	//case jns:
 	//case jl:
-	//case js:
+	case js: return SatisfiesCondition2(m, eType);
 	//case jcxz:
 	default:
 		_ASSERT(0);
@@ -126,38 +140,64 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 	//case ja:
 	//case jb:
 	//case jnb:
-	//case jle:
-	//case jg:
-	//case jge:
+	case jle:
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)m.m_nCmpOp1 <= (char)m.m_nCmpOp2 ? true : false;
+		case CValue::r16: return (short)m.m_nCmpOp1 <= (short)m.m_nCmpOp2 ? true : false;
+		default: break;
+		}		
+	case jg:
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)m.m_nCmpOp1 > (char)m.m_nCmpOp2 ? true : false;
+		case CValue::r16: return (short)m.m_nCmpOp1 > (short)m.m_nCmpOp2 ? true : false;
+		default: break;
+		}		
+	case jge:
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)m.m_nCmpOp1 >= (char)m.m_nCmpOp2 ? true : false;
+		case CValue::r16: return (short)m.m_nCmpOp1 >= (short)m.m_nCmpOp2 ? true : false;
+		default: break;
+		}		
 	//case jns:
 	//case jl:
-	//case js:
+	case js:
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)(m.m_nCmpOp1-m.m_nCmpOp2) < 0 ? true : false;
+		case CValue::r16: return (short)(m.m_nCmpOp1-m.m_nCmpOp2) < 0 ? true : false;
+		default: break;
+		}
 	//case jcxz:
 	default:
 		_ASSERT(0);
 	}
+	_ASSERT(0);
 	return false;
 }
 
-void CIConditionalJump::Eval(CMachine& m)
-{	
+bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstruction> pInstruction)
+{
 	bool bTest = false;
 
-	if (dynamic_cast<CITest*>(m.m_arrCode[m.m_pc-2].get()))
+	if (dynamic_cast<CITest*>(pInstruction.get()))
 	{
 		_ASSERT(m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jnz);
 		bTest = SatisfiesCondition1(m, m_eType);
 	} else
-	if (dynamic_cast<CICompare*>(m.m_arrCode[m.m_pc-2].get()))
+	if (dynamic_cast<CICompare*>(pInstruction.get()))
 	{
 		bool bTest1 = SatisfiesCondition1(m, m_eType);
 		bool bTest2 = SatisfiesCondition2(m, m_eType);
-		_ASSERT(bTest1 == bTest2);
-		bTest = bTest1;
+		if (bTest1 != bTest2 ) printf("CIConditionalJump error\n");
+		//_ASSERT(bTest1 == bTest2);
+		bTest = bTest2;
 	}
-	else if (dynamic_cast<CIAlu*>(m.m_arrCode[m.m_pc-2].get()))
+	else if (dynamic_cast<CIAlu*>(pInstruction.get()))
 	{
-		CIAlu* pAlu = dynamic_cast<CIAlu*>(m.m_arrCode[m.m_pc-2].get());
+		CIAlu* pAlu = dynamic_cast<CIAlu*>(pInstruction.get());
 		switch (pAlu->m_eType)
 		{
 		case CIAlu::And:
@@ -183,35 +223,75 @@ void CIConditionalJump::Eval(CMachine& m)
 			if ( m_eType == CIConditionalJump::jnz )
 				bTest = m.GetValue(pAlu->m_op1) > 0;
 			break;
+
+		case CIAlu::Sub:
+		case CIAlu::Add:
+			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz);
+			_ASSERT(pAlu->m_op1.GetRegisterLength() == CValue::r16);
+
+			if ( m_eType == CIConditionalJump::js )
+				bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
+
+			if ( m_eType == CIConditionalJump::jns )
+				bTest = ((signed short)m.GetValue(pAlu->m_op1)) >= 0;
+
+			if ( m_eType == CIConditionalJump::jnz )
+				bTest = ((signed short)m.GetValue(pAlu->m_op1)) != 0;
+			break;
+
 		default:
 			_ASSERT(0);
+			return false;
 		}
-
-	}
-	else
+	} else
 	{
-		for (int nTraceBack=m.m_pc-2; nTraceBack>m.m_pc-10; nTraceBack--)
-		{
-			CISingleArgOp* pSingleArgOp = dynamic_cast<CISingleArgOp*>(m.m_arrCode[nTraceBack].get());
-			if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::pop)
-				continue;
-
-			if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::interrupt)
-			{
-				// uses CF to transfer state
-				_ASSERT(m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jnb);
-				bTest = SatisfiesCondition1(m, m_eType);
-				break;
-			}
-
-			_ASSERT(0);
-		}
+		return false;
 	}
 
 	if ( bTest )
 	{
 		m.Goto(m_label);
 	}
+	return true;
+}
+
+void CIConditionalJump::Eval(CMachine& m)
+{	
+	if ( EvalByPrevInstruction(m, m.m_arrCode[m.m_pc-2]) )
+		return;
+
+	for (int nTraceBack=m.m_pc-2; nTraceBack>m.m_pc-10; nTraceBack--)
+	{
+		CISingleArgOp* pSingleArgOp = dynamic_cast<CISingleArgOp*>(m.m_arrCode[nTraceBack].get());
+		if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::pop)
+			continue;
+
+		if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::interrupt)
+		{
+			// uses CF to transfer state
+			_ASSERT(m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jnb);
+			bool bTest = SatisfiesCondition1(m, m_eType);
+			if ( bTest )
+			{
+				m.Goto(m_label);
+			}
+			return;
+		}
+
+		CILabel* pLabel = dynamic_cast<CILabel*>(m.m_arrCode[nTraceBack].get());
+		CIJump* pPrevJump = dynamic_cast<CIJump*>(m.m_arrCode[nTraceBack-1].get());
+		if ( pLabel && pPrevJump )
+		{
+			vector<int> arrRefs = m.FindReferences(pLabel->m_label);
+			_ASSERT(arrRefs.size() == 1);
+
+			if ( EvalByPrevInstruction(m, m.m_arrCode[arrRefs[0]-1]) )
+				return;
+		}
+
+		_ASSERT(0);
+	}
+
 }
 
 void CICall::Eval(CMachine& m)
@@ -229,7 +309,7 @@ void CITwoArgOp::Eval(CMachine& m)
 {
 	if (m_eType == CITwoArgOp::out)
 	{
-		printf("out[%x] = %x\n", m.GetValue(m_rvalue1), m.GetValue(m_rvalue2));
+		//printf("out[%x] = %x\n", m.GetValue(m_rvalue1), m.GetValue(m_rvalue2));
 		if (m_rvalue2.GetRegisterLength() == CValue::r16)
 			m.PortWrite16(m.GetValue(m_rvalue1), m.GetValue(m_rvalue2));
 		else
@@ -245,7 +325,7 @@ void CITwoArgOp::Eval(CMachine& m)
 		_ASSERT(m_rvalue1.GetRegisterLength() == CValue::r8);
 
 		m.SetValue(m_rvalue1, m.PortRead(m.GetValue(m_rvalue2)));
-		printf("in[%x] = %x\n", m.GetValue(m_rvalue2), m.GetValue(m_rvalue1));
+		//printf("in[%x] = %x\n", m.GetValue(m_rvalue2), m.GetValue(m_rvalue1));
 		return;
 
 	}
@@ -413,5 +493,22 @@ void CIJump::Eval(CMachine& m)
 
 void CITest::Eval(CMachine& m)
 {
-	m.m_flag.zf = !!(m.GetValue(m_op1) & m.GetValue(m_op2));
+	m.m_flag.zf = !(m.GetValue(m_op1) & m.GetValue(m_op2));
+}
+
+void CISwitch::Eval(CMachine& m)
+{
+	int nTable = m.FindLabel(m_label);
+	int nRow = nTable + m.GetValue(m_reg) / 2;
+	
+	for (int i=nTable; i<=nRow; i++)
+	{
+		// TODO: could be db, dw... check contents between table start and target
+		shared_ptr<CIData> pTest = dynamic_pointer_cast<CIData>(m.m_arrCode[i]);
+		_ASSERT(pTest && pTest->m_eType == CIData::Function);
+	}
+	shared_ptr<CIData> pData = dynamic_pointer_cast<CIData>(m.m_arrCode[nRow]);
+	_ASSERT(pData && pData->m_eType == CIData::Function);
+
+	m.Call(CLabel(pData->m_strFunction));
 }

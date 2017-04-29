@@ -25,6 +25,7 @@ public:
 		es_ptr_di,
 		bx_plus_di,
 		es_ptr_di_plus,
+		stack_bp_plus,
 
 		invalid
 	};
@@ -139,6 +140,22 @@ public:
 			return;
 		}
 
+		if ( CUtils::match("^\\[bp\\+arg_(.*)\\]$", value.c_str(), matches) )
+		{
+			m_eType = stack_bp_plus;
+			m_nValue = CUtils::ParseLiteral("0x"+matches[0])+4;
+			m_eRegLength = r16;
+			return;
+		}
+
+		if ( CUtils::match("^\\[bp\\+var_(.*)\\]$", value.c_str(), matches) )
+		{
+			m_eType = stack_bp_plus;
+			m_nValue = -CUtils::ParseLiteral("0x"+matches[0]);
+			m_eRegLength = r16;
+			return;
+		}
+
 		if ( CUtils::match("^\\[(.*)\\]$", value.c_str(), matches) )
 		{
 			_ASSERT(eRegLength != unknown);
@@ -201,6 +218,7 @@ public:
 
 		if ( CUtils::match("^bp\\+arg_(.*)$", value.c_str(), matches) )
 		{
+			_ASSERT(0);
 			m_eType = bp_plus;
 			m_nValue = CUtils::ParseLiteral("0x"+matches[0]);
 			return;
@@ -208,6 +226,7 @@ public:
 
 		if ( CUtils::match("^bp\\+var_(.*)$", value.c_str(), matches) )
 		{
+			_ASSERT(0);
 			m_eType = bp_plus;
 			m_nValue = -CUtils::ParseLiteral("0x"+matches[0]);
 			return;
@@ -224,6 +243,7 @@ public:
 		if ( CUtils::match("^cs:byte_code_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = codebyte;
+			m_eRegLength = r8;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
 		}
@@ -392,4 +412,5 @@ public:
 		s << _enum(m_eType) << _enum(m_eRegLength) << _shared<CValue>(m_value) << m_nValue;
 	}
 
+	string ToC();
 };

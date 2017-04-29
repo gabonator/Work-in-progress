@@ -63,6 +63,7 @@ public:
 		bool cf; // carry
 		bool zf; // zero
 		bool df; // dir
+		bool signum;
 		bool interrupt;
 	};
 
@@ -75,9 +76,11 @@ public:
 	CFlags m_flag;
 
 	// Temp helpers;
+	CValue::ERegLength m_eCmpLen;
 	int m_nCmpOp1;
 	int m_nCmpOp2;
 
+	vector<string> m_arrCallStackNames;
 	vector<int> m_arrCallStack;
 	vector<int> m_arrStack;
 	map<string, int> m_mapLabels;
@@ -87,20 +90,15 @@ public:
 public:
 	CMachine()
 	{
-		m_arrStack.resize(1024, 0);
-		m_reg.sp = 512;
+		m_arrStack.resize(32, 0);
+		m_reg.sp = 16*2;
+		m_reg.bp = 0;
 
 		FILE* f;
 		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
 		fread(data, 0x955d, 1, f); 
 		fclose(f);
 	}
-
-	/*
-	int& stackAt(int nOffset)
-	{
-		_ASSERT(nOffset > 0
-	}*/
 
 	void Eval(vector<shared_ptr<CInstruction>>& arrCode, vector<string>& arrSource)
 	{
@@ -110,7 +108,7 @@ public:
 		m_pc = -1;
 
 		Call("start");
-		for ( int i=0; i<1000000; i++)
+		for ( int i=0; i<53251000; i++)
 		{
 			if (i % 100 == 0)
 			{
@@ -118,22 +116,32 @@ public:
 			}
 
 			Eval();
+
 		}
 	}
 
 	void Call(string label)
 	{
 		// return to next instruction
+		m_arrCallStackNames.push_back(label);
 		m_arrCallStack.push_back(m_pc); // == -1 ? -1 : m_pc+1);
 		m_pc = FindLabel(label);
 		_ASSERT(m_pc != -1);
 		
 		// skip function label
 		m_pc++;
+		/*
+		printf("STACK: ");
+		for (int i=0; i<(int)m_arrCallStackNames.size(); i++)
+			printf("%s ", m_arrCallStackNames[i].c_str());
+		printf("\n");
+		*/
 	}
 
 	void Goto(string label)
 	{
+		//if ( m_arrCallStackNames.back() != "sub_33E5")
+//			printf("GOTO: %s\n", label.c_str());
 		m_pc = FindLabel(label);
 		_ASSERT(m_pc != -1);
 
@@ -145,23 +153,109 @@ public:
 	{
 		m_pc = m_arrCallStack.back();
 		m_arrCallStack.pop_back();
+		m_arrCallStackNames.pop_back();
 	}
 	
 	void Eval()
 	{
-			if ( m_pc== 6373)
-			{
-				int f = 9;
-			}
+		//static bool blog = false;
+		////if ( m_arrSource[m_pc].find("D3A") != string::npos)
+		////if ( m_arrSource[m_pc].find("CE7") != string::npos)
+		////if ( m_arrSource[m_pc].find("C24") != string::npos)
+		//	// 9430 je nula! a ma byt jedna, lebo dostal sa na 759 -> sub_BC5
+		////if ( m_arrSource[m_pc].find("9430") != string::npos)
+		//// sub_69a -> 759, sub_69a sa vola na konci titulkov
+		////if ( m_arrSource[m_pc].find("69A") != string::npos)
+		//if ( m_arrSource[m_pc].find("2762") != string::npos) // toto by malo byt intro scroll
+		//{
+		//	int f = 9;
+		//	//blog = true;
+		//}
+		//if ( m_arrSource[m_pc].find("_3291") != string::npos)
+		//{
+		//	//blog = true;
+		//	int f = 9;
+		//}
+		//if ( m_arrSource[m_pc].find("_B7C") != string::npos)
+		//{
+		//	////blog = true;
+		//	int f = 9;
+		//}
+		//if ( m_arrSource[m_pc].find("9430") != string::npos)
+		//{
+		//	printf("%s\n", m_arrSource[m_pc].c_str());
+		//	int f=9;
+		//}
+		//	if ( m_arrSource[m_pc] == "call sub_code_C24")
+		//	{
+		//	//	m_pc++;
+		//		//blog = true;
+		//		int f = 9;
+		//	}
+		//	
+		//	if ( m_arrSource[m_pc].find( "retn" ) != string::npos)
+		//	{
+		//		for (int i=m_pc; i>0; i--)
+		//			if (dynamic_cast<CIFunction*>(m_arrCode[i].get()))
+		//			{
+		//				//printf("ret from %s\n", dynamic_cast<CIFunction*>(m_arrCode[i].get())->m_strName.c_str());
+		//				break;
+		//			}
+		//		VideoUpdate();
+		//		int f = 9;
+		//	}
 
 		const string& strDebug0 = m_arrSource[m_pc > 0 ? m_pc-1 : 0];
 		const string& strDebug1 = m_arrSource[m_pc];
 
 		SInstruction sInstruction = m_arrCode[m_pc];
-		//printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
+		//if (blog )
+		//{
+		//printf("ax:%04x bx:%04x cx:%04x dx:%04x si:%04x di:%04x\t",
+		//	m_reg.a.r16.ax, m_reg.b.r16.bx, m_reg.c.r16.cx, m_reg.d.r16.dx, m_reg.si, m_reg.di);
+		//printf("%s\n", m_arrSource[m_pc].c_str());
+
+		//if ( m_arrSource[m_pc].find("_2959") != string::npos)
+		//{
+		//	int f = 9;
+		//}
+
+		//}
+		////printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
+
 		m_pc++;
 
 		sInstruction->Eval(*this);
+	}
+
+	vector<int> FindReferences(CLabel label)
+	{
+		vector<int> aux;
+
+		for (int i=0; (size_t)i<m_arrCode.size(); i++)
+		{
+			shared_ptr<CIJump> pJump = dynamic_pointer_cast<CIJump>(m_arrCode[i]);
+			if (pJump && pJump->m_label == label)
+				aux.push_back(i);
+
+			shared_ptr<CIConditionalJump> pConditional = dynamic_pointer_cast<CIConditionalJump>(m_arrCode[i]);
+			if (pConditional && pConditional->m_label == label)
+				aux.push_back(i);
+		}
+
+		return move(aux);
+	}
+
+	vector<shared_ptr<CInstruction>> GetSubCode(CLabel label)
+	{
+		vector<shared_ptr<CInstruction>> aux;
+
+		int nBegin = FindLabel(label);
+		_ASSERT(nBegin >= 0);
+		for (int i=nBegin+1; i<(int)m_arrCode.size() && !dynamic_pointer_cast<CIFunction>(m_arrCode[i]); i++)
+			aux.push_back(m_arrCode[i]);
+
+		return move(aux);
 	}
 
 	int FindLabel(string label)
@@ -266,6 +360,12 @@ public:
 
 			case CValue::si_plus:
 				return m_reg.si + v.m_nValue;
+
+			case CValue::stack_bp_plus:
+				return StackRead(m_reg.bp + v.m_nValue);
+
+			case CValue::bx_plus_di:
+				return m_reg.b.r16.bx + m_reg.di;
 
 			case CValue::codeword:
 			{
@@ -381,6 +481,11 @@ public:
 			case CValue::wordptrasbyte:
 				MappedWrite(v.m_nValue, nValue & 0xff);
 			return;
+
+			case CValue::stack_bp_plus:
+				StackWrite(m_reg.bp + v.m_nValue, nValue);
+			return;
+
 		}
 		_ASSERT(0);
 	}
@@ -407,15 +512,19 @@ public:
 			}
 		
 		case 0x33:
-			if ( m_reg.a.r16.ax == 0 )
+			if ( m_reg.a.r8.ah == 0 )
     		{
-   				m_reg.a.r16.ax = 0x0000; // no mouse
+				m_reg.a.r16.ax = 0xffff;
+				m_reg.b.r16.bx = 0x0002;
+
+   				//m_reg.a.r16.ax = 0x0000; // no mouse
    				return;
     		}
 		}
 
 		_ASSERT(0);
 	}
+
 	/*
 	void VideoWrite16(int nSegment, int nOffset, int nValue)
 	{
@@ -436,6 +545,20 @@ public:
 		return EGA.Read(addr) | (EGA.Read(addr+1)<<8);
 	}
 	*/
+	int StackRead(int nOffset)
+	{
+		_ASSERT(nOffset/2 >= 0 && nOffset/2 < (int)m_arrStack.size());
+		_ASSERT((nOffset&1) == 0);
+		return m_arrStack[nOffset/2];
+	}
+
+	void StackWrite(int nOffset, int nData)
+	{
+		_ASSERT(nOffset/2 >= 0 && nOffset/2 < (int)m_arrStack.size());
+		_ASSERT((nOffset&1) == 0);
+		m_arrStack[nOffset/2] = nData;
+	}
+
 	int MappedRead(int nOffset)
 	{
 		_ASSERT(m_reg.ds == 0);
@@ -455,6 +578,10 @@ public:
 
 	void MappedWrite(int nOffset, int nValue)
 	{
+		if ( nOffset == 0x9430 )
+		{
+			int f = 9;
+		}
 		_ASSERT(m_reg.ds == 0);
 		MappedWrite(m_reg.ds, nOffset, nValue);
 	}
@@ -468,6 +595,13 @@ public:
 		}
 		_ASSERT(nSegment * 16 + nOffset < sizeof(data));
 		data[nSegment * 16 + nOffset] = (BYTE)nValue;
+
+		if ( nSegment * 16 + nOffset >= 0x31670 + 0x0800 &&
+			 nSegment * 16 + nOffset <= 0x31670 + 0x0d00 )
+		{
+			int f = 9;
+			data[nSegment * 16 + nOffset] = 0xff;
+		}
 	}
 
 	void VideoWrite(int nSegment, int nOffset, int nValue)
@@ -548,6 +682,7 @@ public:
 		if ( nPort == 0x3da )
 		{
 			// TODO: wait retrace
+			//return ( GetTickCount()%20 < 10 ) ? 0 : 8;
 			static int counter = 0;
 			counter ^= 8;
 			return counter;

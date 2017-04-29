@@ -391,6 +391,7 @@ public:
 
 	static bool SatisfiesCondition1(CMachine& m, CIConditionalJump::EType eType);
 	static bool SatisfiesCondition2(CMachine& m, CIConditionalJump::EType eType);
+	bool EvalByPrevInstruction(CMachine& m, shared_ptr<CInstruction> pInstruction);
 
 	virtual void Serialize(CSerializer& s)
 	{
@@ -432,6 +433,8 @@ public:
 	  m_label(label), m_reg(reg)
 	{
 	}
+
+	virtual void CISwitch::Eval(CMachine& m);
 
 	virtual void Serialize(CSerializer& s)
 	{

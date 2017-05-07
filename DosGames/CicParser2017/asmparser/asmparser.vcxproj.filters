@@ -53,6 +53,15 @@
     <ClInclude Include="video.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="cexport.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="cinstructions.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="cvalue.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

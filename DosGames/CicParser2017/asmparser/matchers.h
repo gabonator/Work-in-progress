@@ -55,6 +55,13 @@ class CIMReturn : public CInstructionMatcher
 	{
 		vector<string> arrMatches;
 
+		if ( CUtils::match("^retf$", strLine, arrMatches) )
+		{
+			// TODO:
+			//https://courses.engr.illinois.edu/ece390/archive/spr2002/books/labmanual/inst-ref-ret.html
+			return make_shared<CIReturn>();
+		}
+
 		if ( CUtils::match("^retn$", strLine, arrMatches) )
 		{
 			return make_shared<CIReturn>();
@@ -85,14 +92,23 @@ class CIMFixedArgOp : public CInstructionMatcher
 			return make_shared<CISingleArgOp>(CISingleArgOp::GetType(arrMatches[0]), CValue(arrMatches[1]));
 		}
 
-		if ( CUtils::match("^(cli|sti|std|stc|ctc|cld|aaa|cbw|lodsw|lodsb|stosw|movsw|movsb|clc|sahf|lahf|popf|pushf)$", strLine, arrMatches) )
+		if ( CUtils::match("^(cli|sti|std|stc|ctc|cld|aaa|cbw|lodsw|lodsb|stosb|stosw|movsw|movsb|clc|sahf|lahf|popf|pushf|xlat)$", strLine, arrMatches) )
 		{
 			return make_shared<CIZeroArgOp>(CIZeroArgOp::GetType(arrMatches[0]));
 		}
 
-		if ( CUtils::match("^(out|in|xchg|rcr|rcl)[\\s]+(.*),\\s*(.*)$", strLine, arrMatches) )
+		if ( CUtils::match("^(out|in|xchg|rcr|rcl|rol|les|lea|sbb)[\\s]+(.*),\\s*(.*)$", strLine, arrMatches) )
 		{
-			return make_shared<CITwoArgOp>(CITwoArgOp::GetType(arrMatches[0]), CValue(arrMatches[1]), CValue(arrMatches[2]));
+			if ( arrMatches[0] == "lea" )
+				return make_shared<CITwoArgOp>(CITwoArgOp::GetType(arrMatches[0]), CValue(arrMatches[1]), CValue(arrMatches[2], CValue::r16));
+			else if ( arrMatches[0] == "xchg" )
+			{
+				CValue op1, op2;
+				CValue::SameOperands(op1, op2, arrMatches[1], arrMatches[2]);
+				return make_shared<CITwoArgOp>(CITwoArgOp::GetType(arrMatches[0]), op1, op2);
+			}
+			else
+				return make_shared<CITwoArgOp>(CITwoArgOp::GetType(arrMatches[0]), CValue(arrMatches[1]), CValue(arrMatches[2]));
 		}
 
 		return nullptr;
@@ -105,7 +121,7 @@ class CIMStringOp : public CInstructionMatcher
 	{
 		vector<string> arrMatches;
 
-		if ( CUtils::match("^(rep|repne)\\s+(stosb|lodsb|stosw|lodsw|movsw|movsb)$", strLine, arrMatches) )
+		if ( CUtils::match("^(rep|repne)\\s+(stosb|lodsb|stosw|lodsw|movsw|movsb|scasw|scasb)$", strLine, arrMatches) )
 		{
 			return make_shared<CIString>(CIString::GetRule(arrMatches[0]), CIString::GetOperation(arrMatches[1]));
 		}
@@ -163,12 +179,16 @@ class CIMAlu : public CInstructionMatcher
 
 		if ( CUtils::match("^adc\\s+([^,]+),\\s*([^,]+)", strLine, arrMatches) )
 		{
-			return make_shared<CIAlu>(CIAlu::AddWithCarry, CValue(arrMatches[0]), CValue(arrMatches[1]));
+			CValue op1, op2;
+			CValue::SameOperands(op1, op2, arrMatches[0], arrMatches[1]);
+			return make_shared<CIAlu>(CIAlu::AddWithCarry, op1, op2);
 		}
 
 		if ( CUtils::match("^xor\\s+(.*),\\s*(.*)", strLine, arrMatches) )
 		{
-			return make_shared<CIAlu>(CIAlu::Xor, CValue(arrMatches[0]), CValue(arrMatches[1]));
+			CValue op1, op2;
+			CValue::SameOperands(op1, op2, arrMatches[0], arrMatches[1]);
+			return make_shared<CIAlu>(CIAlu::Xor, op1, op2);
 		}
 
 		if ( CUtils::match("^and[\\s]+(.*),\\s*(.*)", strLine, arrMatches) )
@@ -249,8 +269,14 @@ class CIMFlow : public CInstructionMatcher
 		{
 			return make_shared<CICall>(CLabel(arrMatches[0]));
 		}
-
+		
 		if ( CUtils::match("^call\\s+cs:(off_code_\\w+)\\[(.*)\\]$", strLine, arrMatches) )
+		{
+			return make_shared<CISwitch>(arrMatches[0], CValue(arrMatches[1]));
+		}
+
+		//WTF: call dword ptr cs:[bp+7FBh]
+		if ( CUtils::match("^call dword ptr cs:(off_code_\\w+)\\[(.*)\\]$", strLine, arrMatches) )
 		{
 			return make_shared<CISwitch>(arrMatches[0], CValue(arrMatches[1]));
 		}
@@ -291,7 +317,10 @@ class CIMCompare : public CInstructionMatcher
 
 		if ( CUtils::match("^test[\\s]+(.*), (.*)$", strLine, arrMatches) )
 		{
-			return make_shared<CITest>(CValue(arrMatches[0]), CValue(arrMatches[1]));
+			CValue op1, op2;
+			CValue::SameOperands(op1, op2, arrMatches[0], arrMatches[1]);
+
+			return make_shared<CITest>(op1, op2);
 		}
 
 		return nullptr;
@@ -359,12 +388,32 @@ class CIMNop : public CInstructionMatcher
 			return make_shared<CINop>(strLine);
 		}
 
+		if ( strLine == "align 4" )
+		{
+			return make_shared<CINop>(strLine);
+		}
+
+		if ( strLine == "align 8" )
+		{
+			return make_shared<CINop>(strLine);
+		}
+
+		if ( strLine == "align 10h" )
+		{
+			return make_shared<CINop>(strLine);
+		}
+
 		if ( CUtils::match("^assume .*", strLine, arrMatches) )
 		{
 			return make_shared<CINop>(strLine);
 		}
 
 		if ( CUtils::match("^(var|arg)_.* = (byte|word) ptr .*", strLine, arrMatches) )
+		{
+			return make_shared<CINop>(strLine);
+		}
+
+		if ( strLine == "code  ends" || strLine == "end start")
 		{
 			return make_shared<CINop>(strLine);
 		}

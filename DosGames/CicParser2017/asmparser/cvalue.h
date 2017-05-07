@@ -20,6 +20,7 @@ string CValue::ToC()
 	case cs: return "_cs";
 	case ds: return "_ds";
 	case es: return "_es";
+	case si: return "_si";
 
 	case constant:
 		{
@@ -34,6 +35,7 @@ string CValue::ToC()
 			return str;
 		}
 
+	case CValue::byteptrasword:
 	case CValue::wordptr:
 		{
 			ss << "*(WORD*)&memory[0x" << hex << uppercase << m_nValue << "]";
@@ -46,6 +48,23 @@ string CValue::ToC()
 			ss << "memory[0x" << hex << uppercase << m_nValue << "]";
 			return ss.str();
 		}
+	case CValue::byteptrval:
+		{
+			return "memory[" + m_value->ToC() + "]";
+		}
+	case CValue::bx_plus_si:
+		{
+			return "_bx + _si";
+		}
+	case CValue::bx_plus:
+		{
+			ss << "_bx + " << m_nValue;
+			return ss.str();
+		}
+	case CValue::segment:
+		_ASSERT(m_eSegment == dseg);
+		return "SEG_DATA";
+
 	default:
 		_ASSERT(0);
 	}

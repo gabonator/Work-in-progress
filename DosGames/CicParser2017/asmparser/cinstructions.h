@@ -11,6 +11,9 @@ public:
 
 class CCAssignment : public CCInstruction
 {
+	string m_strDst;
+	string m_strSrc;
+
 public:
 	CCAssignment(CValue& vTo, CValue& vFrom)
 	{
@@ -21,7 +24,7 @@ public:
 	CCAssignment(shared_ptr<CIAlu> pAlu)
 	{
 		string op1 = pAlu->m_op1.ToC();
-		string op2 = pAlu->m_op2.ToC();
+		string op2 = pAlu->m_op2.m_eType == CValue::invalid ? "???" : pAlu->m_op2.ToC();
 		switch (pAlu->m_eType)
 		{
 		case CIAlu::Increment: 
@@ -38,7 +41,10 @@ public:
 			break;
 		case CIAlu::Sub: 
 			m_strDst = op1; 
-			m_strSrc = op1 + " - " + op2;
+			if ( op1 == op2 )
+				m_strSrc = "0";
+			else
+				m_strSrc = op1 + " - " + op2;
 			break;
 		case CIAlu::Xor: 
 			m_strDst = op1; 
@@ -78,7 +84,7 @@ public:
 		vector<string> arrMatches;
 		string strTest = m_strSrc;
 		CUtils::replace(strTest, m_strDst, "###");
-		if (CUtils::match("### (\\+|\\-|>>|<<|&) ([^\\s]+)", strTest, arrMatches))
+		if (CUtils::match("### (\\+|\\-|>>|<<|&|\\|) ([^\\s]+)", strTest, arrMatches))
 		{
 			// only when finalizing, couldnt join
 			/*
@@ -125,10 +131,6 @@ public:
 		}
 		return false;
 	}
-
-
-	string m_strDst;
-	string m_strSrc;
 };
 
 class CCSingleArgOp : public CCInstruction
@@ -159,18 +161,81 @@ public:
 	}
 };
 
+class CCTwoArgOp : public CCInstruction
+{
+	string m_strOperation;
+	string m_strArgument1;
+	string m_strArgument2;
+
+public:
+	CCTwoArgOp(shared_ptr<CITwoArgOp> pInstruction)
+	{
+		m_strArgument1 = pInstruction->m_rvalue1.ToC();
+		m_strArgument2 = pInstruction->m_rvalue2.ToC();
+		switch (pInstruction->m_eType)
+		{
+		case CITwoArgOp::in: m_strOperation = "_in($arg1, $arg2)"; break;
+		case CITwoArgOp::out: m_strOperation = "_out($arg1, $arg2)"; break;
+		case CITwoArgOp::xchg: m_strOperation = "_xchg($arg1, $arg2)"; break;
+		case CITwoArgOp::rcr: m_strOperation = "_rcr($arg1, $arg2)"; break;
+		case CITwoArgOp::rcl: m_strOperation = "_rcl($arg1, $arg2)"; break;
+		case CITwoArgOp::rol: m_strOperation = "_rol($arg1, $arg2)"; break;
+		case CITwoArgOp::les: m_strOperation = "_les($arg1, $arg2)"; break;
+		case CITwoArgOp::lea: m_strOperation = "_lea($arg1, $arg2)"; break;
+		case CITwoArgOp::sbb: m_strOperation = "_sbb($arg1, $arg2)"; break;
+			default:
+				_ASSERT(0);
+		}
+	}
+
+	virtual string ToString() override
+	{
+		string strAux = m_strOperation;
+		CUtils::replace(strAux, "$arg1", m_strArgument1);
+		CUtils::replace(strAux, "$arg2", m_strArgument2);
+		return strAux + ";";
+	}
+};
+
 class CCConditionalJump : public CCInstruction
 {
+	enum ELabelType {
+		Label,
+		Return,
+		ReturnStack,
+		Break,
+		Continue
+	};
+
 	string m_strOperand1;
 	string m_strOperand2;
 	string m_strCondition;
 	CLabel m_strLabel;
+	ELabelType m_eLabelType;
+	string m_strSigned;
 
 public:
 	CCConditionalJump(shared_ptr<CIJump> pJump) : m_strLabel("")
 	{
 		m_strCondition = "true";
 		m_strLabel = pJump->m_label;
+		m_eLabelType = Label;
+	}
+
+	CCConditionalJump(shared_ptr<CILoop> pLoop) : m_strLabel("")
+	{
+		switch (pLoop->m_eType)
+		{
+		case CILoop::Loop:
+			m_strCondition = "--_cx";
+			break;
+
+		default:
+			_ASSERT(0);
+		}
+
+		m_strLabel = pLoop->m_label;
+		m_eLabelType = Label;
 	}
 
 	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CICompare> pCompare) : m_strLabel("")
@@ -203,10 +268,27 @@ public:
 			condition = format("(%s)%s < (%s)%s", signedtype.c_str(), args[1].c_str(), signedtype.c_str(), args[2].c_str());
 
 		*/
+		_ASSERT(pCompare);
 
 		m_strOperand1 = pCompare->m_op1.ToC();
 		m_strOperand2 = pCompare->m_op2.ToC();
 		m_strLabel = pCondition->m_label;
+		m_eLabelType = Label;
+
+		m_strSigned = "?";
+		if ( pCompare->m_op1.GetRegisterLength() == CValue::r8 &&
+			 pCompare->m_op2.GetRegisterLength() == CValue::r8 )
+		{
+			m_strSigned = "char";
+		}
+
+		if ( pCompare->m_op1.GetRegisterLength() == CValue::r16 &&
+			 pCompare->m_op2.GetRegisterLength() == CValue::r16 )
+		{
+			m_strSigned = "short";
+		}
+
+		// http://marin.jb.free.fr/jumps/
 		switch ( pCondition->m_eType )
 		{
 		case CIConditionalJump::jz: m_strCondition = "$a == $b"; break;
@@ -214,6 +296,9 @@ public:
 		case CIConditionalJump::jb: m_strCondition = "$a < $b"; break;
 		case CIConditionalJump::jnb: m_strCondition = "$a >= $b"; break;
 		case CIConditionalJump::jg: m_strCondition = "($type)$a > ($type)$b"; break;
+		case CIConditionalJump::jge: m_strCondition = "($type)$a >= ($type)$b"; break;
+		case CIConditionalJump::jle: m_strCondition = "($type)$a <= ($type)$b"; break;
+		case CIConditionalJump::jbe: m_strCondition = "$a <= $b"; break;
 
 				
 			/*
@@ -233,9 +318,50 @@ public:
 		}
 	}
 	
+	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CITest> pTest) : m_strLabel("")
+	{
+		m_strOperand1 = pTest->m_op1.ToC();
+		m_strOperand2 = pTest->m_op2.ToC();
+		m_strLabel = pCondition->m_label;
+		m_eLabelType = Label;
+
+		switch ( pCondition->m_eType )
+		{
+		case CIConditionalJump::jz: m_strCondition = "!($a & $b)"; break;
+		case CIConditionalJump::jnz: m_strCondition = "$a & $b"; break;
+		default:
+			_ASSERT(0);
+		}
+	}
+
+	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CIAlu> pAlu) : m_strLabel("")
+	{
+		m_strOperand1 = pAlu->m_op1.ToC();
+		m_strLabel = pCondition->m_label;
+		m_eLabelType = Label;
+
+		switch ( pCondition->m_eType )
+		{
+		case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
+		case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+		default:
+			_ASSERT(0);
+		}
+	}
+
 	string GetNegated()
 	{
 		// TODO: lazy negation!
+		vector<string> arrMatches;
+		if (CUtils::match("^!\\((.*)\\)$", GetCondition(), arrMatches))
+			return arrMatches[0];
+
+		if (CUtils::match("^(.*) == (.*)$", GetCondition(), arrMatches))
+			return arrMatches[0] + " != " + arrMatches[1];
+
+		if (CUtils::match("^(.*) != (.*)$", GetCondition(), arrMatches))
+			return arrMatches[0] + " == " + arrMatches[1];
+
 		return "!(" + GetCondition() + ")";
 	}
 
@@ -244,7 +370,22 @@ public:
 		string strAux = m_strCondition;
 		CUtils::replace(strAux, "$a", m_strOperand1);
 		CUtils::replace(strAux, "$b", m_strOperand2);
+		CUtils::replace(strAux, "($type)", m_strSigned);
+		
 		return strAux;
+	}
+
+	string Target()
+	{
+		switch (m_eLabelType)
+		{
+		case Label: return "goto " + m_strLabel;
+		case Return: return "return";
+		case Break: return "break";
+		case Continue: return "continue";
+		}
+		_ASSERT(0);
+		return "?";
 	}
 
 	virtual string ToString() override
@@ -252,14 +393,60 @@ public:
 		string strAux = GetCondition();
 
 		if ( strAux == "true" )
-			return "goto " + m_strLabel + ";";
+			return Target() + ";";
 
-		return "if (" + strAux + ") goto " + m_strLabel + ";";
+		return "if (" + strAux + ") " + Target() + ";";
 	}
 
 	CLabel GetLabel()
 	{
+		_ASSERT(m_eLabelType == Label);
 		return m_strLabel;
+	}
+
+	void SetLabel(CLabel label)
+	{
+		m_strLabel = label;
+	}
+
+	bool Unconditional()
+	{
+		return m_strCondition == "true";
+	}
+
+	void SetLabelReturn()
+	{
+		m_eLabelType = Return;
+	}
+
+	bool GetLabelReturn()
+	{
+		return m_eLabelType == Return;
+	}
+
+	void SetLabelContinue()
+	{
+		m_eLabelType = Continue;
+	}
+
+	bool GetLabelContinue()
+	{
+		return m_eLabelType == Continue;
+	}
+
+	void SetLabelBreak()
+	{
+		m_eLabelType = Break;
+	}
+
+	bool GetLabelBreak()
+	{
+		return m_eLabelType == Break;
+	}
+
+	bool GetLabelLabel()
+	{
+		return m_eLabelType == Label;
 	}
 };
 
@@ -271,6 +458,10 @@ public:
 	CCLabel(shared_ptr<CILabel> pJump) : m_strLabel("")
 	{
 		m_strLabel = pJump->m_label;
+	}
+
+	CCLabel(CLabel label) : m_strLabel(label)
+	{
 	}
 
 	virtual string ToString() override
@@ -365,3 +556,53 @@ public:
 		return "";
 	}
 };
+
+class CCWhileContinueBreak : public CCInstruction
+{
+public:
+	enum EType {
+		While,
+		Continue,
+		Break,
+		Final
+	};
+
+	shared_ptr<CCConditionalJump> m_pCondition;
+	EType m_eType;
+
+public:
+	CCWhileContinueBreak(EType eType)
+	{
+		m_eType = eType;
+	}
+
+	virtual string ToString() override
+	{
+		switch (m_eType)
+		{
+		case While: return "while (true) {";
+		case Continue: return "continue;";
+		case Break: return "break;";
+		case Final: return "}";
+		}
+		_ASSERT(0);
+		return "";
+	}
+};
+
+class CCReturn : public CCInstruction
+{
+	int m_nReduceStack;
+
+public:
+	CCReturn(shared_ptr<CIReturn> pReturn)
+	{
+		m_nReduceStack = pReturn->m_nReduceStack;;
+	}
+
+	virtual string ToString() override
+	{
+		return "return;";
+	}
+};
+

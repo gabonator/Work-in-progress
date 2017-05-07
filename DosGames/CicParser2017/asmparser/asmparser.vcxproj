@@ -74,6 +74,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cexport.h" />
+    <ClInclude Include="cinstructions.h" />
+    <ClInclude Include="cvalue.h" />
     <ClInclude Include="dos.h" />
     <ClInclude Include="ega.h" />
     <ClInclude Include="instructions.h" />

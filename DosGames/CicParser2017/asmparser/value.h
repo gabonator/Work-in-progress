@@ -7,6 +7,7 @@ public:
 		ch, cl, cx,
 		dh, dl, dx,
 		ds, es, si, di, cs, bp, sp,
+		ss,
 		
 		constant,
 		
@@ -27,12 +28,32 @@ public:
 		es_ptr_di_plus,
 		stack_bp_plus,
 
+		byteptrasword,
+
+		byteptrseg,
+		wordptrseg,
+		segment,
+		wordptr_es,
+		dwordptrseg,
+		dwordptrasword,
+
+		es_ptr,
+		bx_plus_si_plus,
+		ds_ptr_bp_plus,
+
 		invalid
 	};
 
 	enum ERegLength 
 	{
-		r8, r16, unknown
+		r8, r16, r32, unknown
+	};
+
+	enum ESegment {
+		invalidsegment,
+		dseg,
+		seg002,
+		seg003
 	};
 
 public:
@@ -41,12 +62,14 @@ public:
 
 	shared_ptr<CValue> m_value;
 	int m_nValue;	
+	ESegment m_eSegment;
 
 public:
 	CValue()
 	{
 		m_eRegLength = unknown;
 		m_eType = invalid;
+		m_eSegment = invalidsegment;
 	}
 
 	CValue(const std::string& str, ERegLength eRegLength = unknown)
@@ -58,6 +81,7 @@ public:
 	void Parse(const std::string& str, ERegLength eRegLength = unknown)
 	{
 		m_eRegLength = unknown;
+		m_eSegment = invalidsegment;
 		std::string value = CUtils::Trim(str);
 		
 		m_eType = RegisterType8(value);
@@ -89,14 +113,39 @@ public:
 			return;
 		}
 
-		if ( str == "seg dseg" )
+		if (str == "seg dseg" || str == "seg data")
 		{
 			m_nValue = 0;
-			m_eType = constant;
+			m_eType = segment;
+			m_eSegment = dseg;
+			return;
+		}
+
+		if ( str == "seg seg003" )
+		{
+			m_nValue = 0;
+			m_eType = segment;
+			m_eSegment = seg003;
+			return;
+		}
+
+		if ( str == "seg seg002" )
+		{
+			m_nValue = 0;
+			m_eType = segment;
+			m_eSegment = seg002;
 			return;
 		}
 
 		vector<string> matches;
+		if ( CUtils::match("^word_data_(.+)\\+(.+)h$", value.c_str(), matches) )
+		{
+			m_eType = wordptr; // urcite ptr?
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]) + CUtils::ParseLiteral("0x" + matches[1]);
+			return;
+		}
+
 		if ( CUtils::match("^word_data_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = wordptr; // urcite ptr?
@@ -125,12 +174,43 @@ public:
 			return;
 		}
 
+		if ( CUtils::match("^word ptr (es):(.+)$", value.c_str(), matches) )
+		{
+			m_eType = wordptr_es;
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral(matches[1]);
+			//m_value = make_shared<CValue>(matches[1], CValue::r16);
+			return;
+		}
+
+		if ( CUtils::match("^byte ptr word_data_(.+)\\+(.+)h$", value.c_str(), matches) )
+		{
+			m_eType = wordptrasbyte;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]) + CUtils::ParseLiteral("0x" + matches[1]);
+			return;
+		}
+
+		if ( CUtils::match("^word ptr byte_data_(.+)\\+(.+)h$", value.c_str(), matches) )
+		{
+			m_eType = byteptrasword;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]) + CUtils::ParseLiteral("0x" + matches[1]);
+			return;
+		}
+
 		if ( CUtils::match("^byte ptr word_data_(.*)$", value.c_str(), matches) )
 		{
 			m_eType = wordptrasbyte;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
 		}
+
+		if ( CUtils::match("^word ptr dword_dseg_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = dwordptrasword;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
 
 		if ( CUtils::match("^byte_data_(.*)$", value.c_str(), matches) )
 		{
@@ -140,11 +220,65 @@ public:
 			return;
 		}
 
+		if ( CUtils::match("^byte_dseg_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = byteptrseg;
+			m_eSegment = dseg;
+			m_eRegLength = r8;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^byte_seg003_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = byteptrseg;
+			m_eSegment = seg003;
+			m_eRegLength = r8;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^word_dseg_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = wordptrseg;
+			m_eSegment = dseg;
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^word_seg003_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = wordptrseg;
+			m_eSegment = seg003;
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^dword_dseg_(.*)$", value.c_str(), matches) )
+		{
+			m_eType = dwordptrseg;
+			m_eSegment = dseg;
+			m_eRegLength = r32;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^ds:\\[bp\\+(.*)\\]$", value.c_str(), matches) )
+		{
+			m_eType = ds_ptr_bp_plus;
+			m_nValue = CUtils::ParseLiteral("0x"+matches[0]);
+			m_eRegLength = r16;
+			return;
+		}
+
 		if ( CUtils::match("^\\[bp\\+arg_(.*)\\]$", value.c_str(), matches) )
 		{
 			m_eType = stack_bp_plus;
 			m_nValue = CUtils::ParseLiteral("0x"+matches[0])+4;
-			m_eRegLength = r16;
+			_ASSERT(eRegLength == r16 || eRegLength == r8);
+			m_eRegLength = eRegLength;
 			return;
 		}
 
@@ -185,6 +319,13 @@ public:
 		if ( value == "bx+di" )
 		{
 			m_eType = bx_plus_di;
+			return;
+		}
+
+		if ( CUtils::match("^bx\\+si\\+(.*)$", value.c_str(), matches) )
+		{
+			m_eType = bx_plus_si_plus;
+			m_nValue = CUtils::ParseLiteral(matches[0]);
 			return;
 		}
 
@@ -248,6 +389,22 @@ public:
 			return;
 		}
 
+		if ( CUtils::match("^offset loc_seg002_(.+)$", value.c_str(), matches) )
+		{
+			m_eType = constant;
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^offset loc_code_(.+)$", value.c_str(), matches) )
+		{
+			m_eType = constant;
+			m_eRegLength = r16;
+			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
+			return;
+		}
+
 		if ( value == "es:[di]" )
 		{
 			m_eRegLength = r8;
@@ -257,7 +414,45 @@ public:
 
 		if ( CUtils::match("^es:\\[di\\+(.*)\\]$", value.c_str(), matches) )
 		{
+			m_eRegLength = eRegLength;
 			m_eType = es_ptr_di_plus;
+			m_nValue = CUtils::ParseLiteral(matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^ds:(.*)$", value.c_str(), matches) )
+		{
+			_ASSERT(eRegLength == r16 || eRegLength == r8);
+			if ( eRegLength == r16 )
+			{
+				m_eType = wordptr;
+				m_eRegLength = r16;
+			} else
+			if ( eRegLength == r8 )
+			{
+				m_eType = byteptr;
+				m_eRegLength = r8;
+			} else
+			{
+				_ASSERT(0);
+			}
+
+			m_nValue = CUtils::ParseLiteral(matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^byte ptr ds:(.*)$", value.c_str(), matches) )
+		{
+			m_eType = byteptr;
+			m_eRegLength = r8;
+			m_nValue = CUtils::ParseLiteral(matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^word ptr ds:(.*)$", value.c_str(), matches) )
+		{
+			m_eType = wordptr;
+			m_eRegLength = r16;
 			m_nValue = CUtils::ParseLiteral(matches[0]);
 			return;
 		}
@@ -265,6 +460,31 @@ public:
 		if ( CUtils::match("^bp\\+(.*)$", value.c_str(), matches) )
 		{
 			m_eType = bp_plus;
+			m_nValue = CUtils::ParseLiteral(matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^es:word_data_(.+)\\+(.+)$", value.c_str(), matches) )
+		{
+			m_eRegLength = r16;
+			m_eType = es_ptr;
+			m_nValue = CUtils::ParseLiteral("0x"+matches[0]) + CUtils::ParseLiteral(matches[1]);
+			return;
+		}
+
+		if ( CUtils::match("^es:(.+)$", value.c_str(), matches) )
+		{
+			_ASSERT(eRegLength == r8 || eRegLength == r16);
+			m_eRegLength = eRegLength;
+			m_eType = es_ptr;
+			m_nValue = CUtils::ParseLiteral(matches[0]);
+			return;
+		}
+
+		if ( CUtils::match("^byte ptr es:(.+)$", value.c_str(), matches) )
+		{
+			m_eRegLength = r8;
+			m_eType = es_ptr;
 			m_nValue = CUtils::ParseLiteral(matches[0]);
 			return;
 		}
@@ -299,7 +519,7 @@ public:
 	{
 		CheckEnum(ax);		CheckEnum(bx);		CheckEnum(cx);		CheckEnum(dx);
 		CheckEnum(ds);		CheckEnum(es);		CheckEnum(si);		CheckEnum(di);
-		CheckEnum(cs);		CheckEnum(bp);		CheckEnum(sp);
+		CheckEnum(cs);		CheckEnum(bp);		CheckEnum(sp);		CheckEnum(ss);
 		CheckEnum2("bx+si", bx_plus_si);
 		return invalid;
 	}
@@ -409,7 +629,7 @@ public:
 
 	virtual void Serialize(CSerializer& s)
 	{
-		s << _enum(m_eType) << _enum(m_eRegLength) << _shared<CValue>(m_value) << m_nValue;
+		s << _enum(m_eType) << _enum(m_eRegLength) << _shared<CValue>(m_value) << m_nValue << _enum(m_eSegment);
 	}
 
 	string ToC();

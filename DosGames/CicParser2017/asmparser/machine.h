@@ -2,7 +2,9 @@
 //#include <vector>
 //#include "instructions.h"
 
+//CCga EGA;
 CEga EGA;
+
 void VideoUpdate();
 
 class CMachine
@@ -90,14 +92,20 @@ public:
 public:
 	CMachine()
 	{
-		m_arrStack.resize(32, 0);
-		m_reg.sp = 16*2;
+		m_arrStack.resize(32*2, 0);
+		m_reg.sp = 16*2*2;
 		m_reg.bp = 0;
-
+		
 		FILE* f;
 		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
 		fread(data, 0x955d, 1, f); 
 		fclose(f);
+		
+		/*
+		FILE* f;
+		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
+		fread(data, 0x955d, 1, f);
+		fclose(f);*/
 	}
 
 	void Eval(vector<shared_ptr<CInstruction>>& arrCode, vector<string>& arrSource)
@@ -110,7 +118,7 @@ public:
 		Call("start");
 		for ( int i=0; i<53251000; i++)
 		{
-			if (i % 100 == 0)
+			if (i % 50 == 0)
 			{
 				VideoUpdate();
 			}
@@ -221,11 +229,14 @@ public:
 		//}
 
 		//}
-		////printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
+
+		//printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
 
 		m_pc++;
 
 		sInstruction->Eval(*this);
+
+		int f=9;
 	}
 
 	vector<int> FindReferences(CLabel label)
@@ -348,6 +359,15 @@ public:
 				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return MappedRead(m_reg.es, m_reg.di);
 
+			case CValue::es_ptr:
+				if (v.GetRegisterLength() == CValue::r8)
+					return MappedRead(m_reg.es, v.m_nValue);
+				else
+				if (v.GetRegisterLength() == CValue::r16)
+					return MappedRead(m_reg.es, v.m_nValue) | (MappedRead(m_reg.es, v.m_nValue+1) << 8);
+				else
+					_ASSERT(0);
+
 			case CValue::bx_plus_si:
 				//_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return m_reg.b.r16.bx + m_reg.si;
@@ -391,6 +411,27 @@ public:
 				return pData->m_nValue;
 			}
 
+			case CValue::segment: 
+				if ( v.m_eSegment == CValue::dseg )
+					return 0;		
+				break;
+
+			case CValue::wordptr_es: 
+				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
+				return MappedRead(m_reg.es, v.m_nValue & 0xffff) | (MappedRead(m_reg.es, (v.m_nValue + 1) & 0xffff) << 8);
+
+			case CValue::es_ptr_di_plus:
+				if (v.GetRegisterLength() == CValue::r8)
+				{
+					return MappedRead(m_reg.es, m_reg.di + v.m_nValue);
+				}
+				else
+				if (v.GetRegisterLength() == CValue::r16)
+				{
+					return MappedRead(m_reg.es, m_reg.di + v.m_nValue) |
+						(MappedRead(m_reg.es, m_reg.di + v.m_nValue + 1) << 8);
+				}
+				break;
 		}
 		_ASSERT(0);
 		return 0;
@@ -424,6 +465,7 @@ public:
 			case CValue::bp: m_reg.bp = (unsigned short)nValue; return;
 			case CValue::sp: m_reg.sp = (unsigned short)nValue; return;
 
+			case CValue::byteptrasword: 
 			case CValue::wordptr: 
 				// TODO: toto vsetko musi ist cez mapped, robi sa tam s grafikou!
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue+1 < sizeof(data));
@@ -437,11 +479,13 @@ public:
 			return;
 
 			case CValue::byteptrval: 
+				_ASSERT(v.m_value);
 				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				MappedWrite(m_reg.ds, GetValue(*v.m_value), nValue);
 			return;
 
 			case CValue::wordptrval: 
+				_ASSERT(v.m_value);
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				MappedWrite(m_reg.ds, GetValue(*v.m_value) & 0xffff, nValue & 0xff);
 				MappedWrite(m_reg.ds, (GetValue(*v.m_value)+1) & 0xffff, nValue >> 8);
@@ -450,6 +494,12 @@ public:
 			case CValue::es_ptr_di:
 				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				MappedWrite(m_reg.es, m_reg.di, nValue & 0xff);
+			return;
+
+			case CValue::ds_ptr_bp_plus:
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
+				MappedWrite(m_reg.ds, m_reg.bp + v.m_nValue, nValue & 0xff);
+				MappedWrite(m_reg.ds, m_reg.bp + v.m_nValue + 1, nValue >> 8);
 			return;
 
 			case CValue::codeword:
@@ -486,6 +536,38 @@ public:
 				StackWrite(m_reg.bp + v.m_nValue, nValue);
 			return;
 
+			case CValue::es_ptr:
+				if (v.GetRegisterLength() == CValue::r16)
+				{
+					MappedWrite(m_reg.es, v.m_nValue, nValue & 0xff);
+					MappedWrite(m_reg.es, v.m_nValue+1, (nValue>>8) & 0xff);
+				} else
+				if (v.GetRegisterLength() == CValue::r8)
+				{
+					MappedWrite(m_reg.es, v.m_nValue, nValue & 0xff);
+				} else
+					_ASSERT(0);
+
+			return;
+			
+			case CValue::es_ptr_di_plus:
+				if (v.GetRegisterLength() == CValue::r8)
+				{
+					MappedWrite(m_reg.es, m_reg.di + v.m_nValue, nValue);
+				}
+				else
+				if (v.GetRegisterLength() == CValue::r16)
+				{
+					MappedWrite(m_reg.es, m_reg.di + v.m_nValue, nValue & 0xff);
+					MappedWrite(m_reg.es, m_reg.di + v.m_nValue + 1, nValue >> 8);
+				} else
+					_ASSERT(0);
+			return;
+
+			case CValue::wordptr_es: 
+				MappedWrite(m_reg.es, v.m_nValue, nValue & 0xff);
+				MappedWrite(m_reg.es, v.m_nValue+1, nValue >> 8);
+			return;
 		}
 		_ASSERT(0);
 	}
@@ -494,6 +576,11 @@ public:
 	{
 		switch (i)
 		{
+		case 0x11:
+			// equipment detection
+			m_reg.a.r16.ax = 0xb91e;
+			return;
+
 		case 0x12:
 			// free mem -> ax
 			m_reg.a.r16.ax = 0x1000;
@@ -504,13 +591,43 @@ public:
 			return;
 
 		case 0x10:
+			if ( EGA.Interrupt(m_reg.a.r8.ah, m_reg.a.r8.al, m_reg.b.r8.bh, m_reg.b.r8.bl ) )
+				return;
+
 			switch (m_reg.a.r8.ah)
 			{
 			case 0x00:
 				printf("Setting video mode %d\n", m_reg.a.r8.al);
 				return;
 			}
-		
+
+		case 0x1a:	
+			{
+				static DWORD dwTimeBase = 0;
+				DWORD dwTime = (WORD)(GetTickCount()*18.2f/1000.0f);
+
+				switch (m_reg.a.r8.ah)
+				{
+				case 0x00:
+					//http://vitaly_filatov.tripod.com/ng/asm/asm_029.1.html
+					if ( dwTimeBase == 0 )
+						dwTimeBase = dwTime;
+					dwTime -= dwTimeBase;
+					m_reg.c.r16.cx = dwTime >> 16;
+					m_reg.d.r16.dx = dwTime & 0xffff;
+					return;
+
+				case 0x01:
+					if (m_reg.c.r16.cx == 0 && m_reg.d.r16.dx == 0)
+					{
+						dwTimeBase = dwTime;
+						return;
+					}
+					break;
+				}
+			break;
+			}
+
 		case 0x33:
 			if ( m_reg.a.r8.ah == 0 )
     		{
@@ -567,8 +684,11 @@ public:
 
 	int MappedRead(int nSegment, int nOffset)
 	{
+		if (nSegment == 0xf000 && nOffset == 0xfffe )
+			return 0xff; // BIOS - IBM computer type code
+
 		_ASSERT(nSegment >= 0 && nSegment < 0xf000);
-		_ASSERT(nOffset >= 0 && nOffset <= 0xfff5);
+		_ASSERT(nOffset >= 0 && nOffset <= 0xffff);
 
 		if (nSegment >= 0xa000)
 			return VideoRead(nSegment, nOffset);
@@ -609,7 +729,7 @@ public:
 		unsigned int addr = nSegment * 16 + nOffset;
 
 		_ASSERT( addr/16 >= 0xa000 && addr/16 < 0xf000 );
-		addr -= 0xa000*16;
+		//addr -= 0xa000*16;
 		EGA.Write(addr, nValue & 0xff);
 	}
 
@@ -618,53 +738,16 @@ public:
 		unsigned int addr = nSegment * 16 + nOffset;
 
 		_ASSERT( addr/16 >= 0xa000 && addr/16 < 0xf000 );
-		addr -= 0xa000*16;
+		//addr -= 0xa000*16;
 		return EGA.Read(addr);
 	}
 
 	void PortWrite16(int port, int data)
 	{
-		if ( port == 0x3c4 )
-		{
-			if ( (data & 0x00ff) == 0x02 )
-			{
-				/*
-				01 = plane 0, 02 = plane 1, 04 = plane 2, 08 = plane 3
-				0f = default
-				*/
-				//printf("Write mask = %02x\n", data>>8 );
-				EGA.SetMapMask( data>>8); // 3c5.2
-				return;
-			}
-		}	
-		if ( port == 0x3d4 )
-		{
-			if ( (data & 0x00ff) == 0x0c )
-			{
-				EGA.SetAddrHi( data >>8 );
-				return;
-			}
-			if ( (data & 0x00ff) == 0x0d )
-			{
-				EGA.SetAddrLo( data >> 8);
-				return;
-			}
-		}
-		if ( port == 0x3ce )
-		{
-			switch ( data & 0xff )
-			{
-			case 0x00: EGA.SetSR( data >> 8 ); return;
-			case 0x01: EGA.SetEnableSR( data >> 8 ); return;
-			case 0x02: EGA.SetCompare( data >> 8 ); return;
-			case 0x05: EGA.SetMode( data >> 8 ); return;
-			case 0x07: EGA.SetDontCare( data >> 8 ); return;
-			case 0x08: EGA.SetBitMask( data >> 8 ); return;
-			case 0x03: EGA.SetRotate( data >> 8 ); return;
-			default:
-				_ASSERT(0);
-			}
-		}
+		if ( EGA.PortWrite16(port, data) )
+			return;
+		printf("Unknown port write port[%x] = %x\n", port, data);
+		//_ASSERT(0);
 	}
 
 	void PortWrite8(int nPort, int nValue)
@@ -674,11 +757,33 @@ public:
 			// i8254 timer
 			return;
 		}
+		if ( nPort == 0x61)
+		{
+			// TODO: sound
+			return;
+		}
+		if ( nPort == 0x3d8 || nPort == 0x3d9 )
+		{
+			// TODO;
+			return;
+		}
 		_ASSERT(0);
 	}
 	
 	int PortRead(int nPort)
 	{
+		if ( nPort >= 0x40 && nPort <= 0x43 )
+		{
+			// TODO: timer
+			return 0;
+		}
+
+		if ( nPort == 0x61 )
+		{
+			// TODO: sound
+			return 0;
+		}
+
 		if ( nPort == 0x3da )
 		{
 			// TODO: wait retrace

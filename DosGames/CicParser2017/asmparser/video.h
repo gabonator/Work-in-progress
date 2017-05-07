@@ -66,25 +66,6 @@ public:
 		wnd = NULL;
 	}
 
-	DWORD EgaPixel(int x, int y)
-	{
-		static const DWORD pal[] = {
-			0x000000, 0x0000b0, 0x00b000, 0x00b0b0, 0xb00000, 0xb000b0, 0xb0b000, 0xb0b0b0,
-			0x808080, 0x0000ff, 0x00ff00, 0x00ffff, 0xff0000, 0xff00ff, 0xffff00, 0xffffff};
-
-		BYTE* _video = (BYTE*)EGA.memory;
-		DWORD off = (LONG)y * 40L + ((LONG)x / 8L);
-		DWORD mem_addr = off;
-		int mask = 0x80 >> (x % 8);
-
-		BYTE b = 0;
-		if ( _video[EGA.cfgAddr*4 + off*4 + 0] & mask ) b |= 1;
-		if ( _video[EGA.cfgAddr*4 + off*4 + 1] & mask ) b |= 2;
-		if ( _video[EGA.cfgAddr*4 + off*4 + 2] & mask ) b |= 4;
-		if ( _video[EGA.cfgAddr*4 + off*4 + 3] & mask ) b |= 8;
-		return pal[b];
-	}
-
 	void Init()
 	{
 		const char* const myclass = "myclass" ;
@@ -138,7 +119,7 @@ public:
 		for (int y=0; y<200; y++)
 			for (int x=0; x<320; x++)
 			{
-				*pBuffer++ = EgaPixel(x,y);
+				*pBuffer++ = EGA.GetPixel(x,y);
 			}
 
 		MSG msg;

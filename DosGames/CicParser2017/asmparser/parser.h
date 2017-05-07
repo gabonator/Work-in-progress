@@ -118,7 +118,10 @@ public:
 			char strLine[1024];
 			fgets(strLine, 1023, f);
 			if ( strLine[0] )
-				strLine[strlen(strLine)-1] = 0;
+			{
+				while ( strLine[strlen(strLine)-1] == 0x0d || strLine[strlen(strLine)-1] == 0x0a )
+					strLine[strlen(strLine)-1] = 0;
+			}
 			
 			string _strLine = Trim(strLine);
 

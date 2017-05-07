@@ -1,3 +1,98 @@
+class CCga
+{
+	enum {
+		MemSize = 0x10000*2
+	};
+
+public:
+	BYTE memory[MemSize];
+
+	DWORD _cgaPalette[4];
+	DWORD _cgaBackground;
+
+	CCga()
+	{
+		_cgaPalette[0] = 0x000000;
+		_cgaPalette[1] = 0x808080;
+		_cgaPalette[2] = 0xb0b0b0;
+		_cgaPalette[3] = 0xffffff;
+	}
+
+	bool PortWrite16(int port, int data)
+	{
+		return false;
+	}
+
+	bool Interrupt(int ah, int al, int bh, int bl)
+	{
+		if ( ah == 0x0b )
+		{
+			if ( bh == 0x00 )
+			{
+				_cgaBackground = bl;
+				return true;
+			}
+			if ( bh == 0x01 )
+			{
+				if (bl == 0x00)
+				{
+					_cgaPalette[0] = 0x000000;
+					_cgaPalette[1] = 0x00b000;
+					_cgaPalette[2] = 0xb00000;
+					_cgaPalette[3] = 0xb0b000;
+					return true;
+				}
+				if (bl == 0x01)
+				{
+					_cgaPalette[0] = 0x000000;
+					_cgaPalette[1] = 0x00ffff;
+					_cgaPalette[2] = 0xff00ff;
+					_cgaPalette[3] = 0xffffff;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	void Write(DWORD dwAddr, BYTE bWrite)
+	{
+		_ASSERT(dwAddr >= 0xb800*16);
+		dwAddr -= 0xb800 * 16;
+		_ASSERT(dwAddr < MemSize);
+		memory[dwAddr] = bWrite;
+	}
+
+	BYTE Read(DWORD dwAddr)
+	{
+		_ASSERT(dwAddr >= 0xb800*16);
+		dwAddr -= 0xb800 * 16;
+		_ASSERT(dwAddr < MemSize);
+		return memory[dwAddr];
+	}
+
+
+	DWORD GetPixel(int x, int y)
+	{
+		if ((y&1) == 0)
+		{
+			y /= 2;
+			BYTE pix4 = memory[y*80+x/4];
+			pix4 <<= (x&3)*2;
+			return _cgaPalette[pix4 >> 6];
+		} else
+		{
+			y /= 2;
+			BYTE pix4 = memory[0x2000+y*80+x/4];
+			pix4 <<= (x&3)*2;
+			return _cgaPalette[pix4 >> 6];
+		}
+		return 0;
+	}
+
+
+};
+
 class CEga
 {
 	enum {
@@ -75,15 +170,86 @@ public:
 		full_bit_mask				= 0xffffffff;
 	}
 
+	bool Interrupt(int ah, int al, int bh, int bl)
+	{
+		return false;
+	}
+
+	bool PortWrite16(int port, int data)
+	{
+		if ( port == 0x3c4 )
+		{
+			if ( (data & 0x00ff) == 0x02 )
+			{
+				/*
+				01 = plane 0, 02 = plane 1, 04 = plane 2, 08 = plane 3
+				0f = default
+				*/
+				//printf("Write mask = %02x\n", data>>8 );
+				SetMapMask( data>>8); // 3c5.2
+				return true;
+			}
+		}	
+		if ( port == 0x3d4 )
+		{
+			if ( (data & 0x00ff) == 0x0c )
+			{
+				SetAddrHi( data >>8 );
+				return true;
+			}
+			if ( (data & 0x00ff) == 0x0d )
+			{
+				SetAddrLo( data >> 8);
+				return true;
+			}
+		}
+		if ( port == 0x3ce )
+		{
+			switch ( data & 0xff )
+			{
+			case 0x00: SetSR( data >> 8 ); return true;
+			case 0x01: SetEnableSR( data >> 8 ); return true;
+			case 0x02: SetCompare( data >> 8 ); return true;
+			case 0x05: SetMode( data >> 8 ); return true;
+			case 0x07: SetDontCare( data >> 8 ); return true;
+			case 0x08: SetBitMask( data >> 8 ); return true;
+			case 0x03: SetRotate( data >> 8 ); return true;
+			default:
+				_ASSERT(0);
+			}
+		}
+		return false;
+	}
+	
+	DWORD GetPixel(int x, int y)
+	{
+		static const DWORD pal[] = {
+			0x000000, 0x0000b0, 0x00b000, 0x00b0b0, 0xb00000, 0xb000b0, 0xb0b000, 0xb0b0b0,
+			0x808080, 0x0000ff, 0x00ff00, 0x00ffff, 0xff0000, 0xff00ff, 0xffff00, 0xffffff};
+
+		BYTE* _video = (BYTE*)memory;
+		DWORD off = (LONG)y * 40L + ((LONG)x / 8L);
+		DWORD mem_addr = off;
+		int mask = 0x80 >> (x % 8);
+
+		BYTE b = 0;
+		if ( _video[cfgAddr*4 + off*4 + 0] & mask ) b |= 1;
+		if ( _video[cfgAddr*4 + off*4 + 1] & mask ) b |= 2;
+		if ( _video[cfgAddr*4 + off*4 + 2] & mask ) b |= 4;
+		if ( _video[cfgAddr*4 + off*4 + 3] & mask ) b |= 8;
+		return pal[b];
+	}
+
 	void SetAddrHi(BYTE b)
 	{
-	//	cfgAddr &= 0x00ff;
-	//	cfgAddr |= ((WORD)b)<<8;
+		cfgAddr &= 0x00ff;
+		cfgAddr |= ((WORD)b)<<8;
 	}
+
 	void SetAddrLo(BYTE b)
 	{
-	//	cfgAddr &= 0xff00;
-	//	cfgAddr |= b;
+		cfgAddr &= 0xff00;
+		cfgAddr |= b;
 	}
 
 	void SetMapMask(BYTE b) // 3c5.2
@@ -149,28 +315,7 @@ public:
 #else
 	void Write(DWORD dwAddr, BYTE bWrite)
 	{
-		if ( dwAddr == 171 )
-		{
-			int f = 9;
-		}
-		/*
-		int nPlane = 0;
-		_ASSERT( nPlane < 4 );
-		if ( cfgMapMask & 1 ) uLatch.u8Data[0] = bWrite;
-		if ( cfgMapMask & 2 ) uLatch.u8Data[1] = bWrite;
-		if ( cfgMapMask & 4 ) uLatch.u8Data[2] = bWrite;
-		if ( cfgMapMask & 8 ) uLatch.u8Data[3] = bWrite;
-		StoreLatch(dwAddr);
-		*/
-		
-		/*
-		if ( nWriteMode == 1 && nReadMode == 0 )
-		{
-			//uLatch.u32Data |= 0xaaaa00aa;
-			uLatch.u32Data |= 0xff;
-			StoreLatch(dwAddr);
-			return;
-		}*/
+		dwAddr -= 0xa000 * 16;
 
 		DWORD data = ModeOperation(bWrite);
 
@@ -187,6 +332,8 @@ public:
 
 	BYTE Read(DWORD dwAddr)
 	{
+		dwAddr -= 0xa000 * 16;
+
 		/*
 		if ( nWriteMode == 1 && nReadMode == 0 )
 		{

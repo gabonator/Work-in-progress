@@ -105,7 +105,7 @@ class CIZeroArgOp : public CInstruction
 {
 public:
 	enum EType {
-		cli, sti, _std, stc, ctc, cld, aaa, cbw, lodsw, lodsb, stosw, movsw, movsb, clc, sahf, lahf, popf, pushf,
+		cli, sti, _std, stc, ctc, cld, aaa, cbw, lodsw, lodsb, stosw, stosb, movsw, movsb, clc, sahf, lahf, popf, pushf, xlat,
 		invalid
 	};
 
@@ -125,7 +125,7 @@ public:
 		CheckEnum(ctc);		CheckEnum(cld);		CheckEnum(aaa);		CheckEnum(cbw);
 		CheckEnum(lodsw);	CheckEnum(lodsb);	CheckEnum(stosw);	CheckEnum(movsw);
 		CheckEnum(movsb);	CheckEnum(clc);		CheckEnum(sahf);	CheckEnum(lahf);
-		CheckEnum(popf);	CheckEnum(pushf);
+		CheckEnum(popf);	CheckEnum(pushf);	CheckEnum(stosb);	CheckEnum(xlat);
 		_ASSERT(0);
 		return invalid;
 	}
@@ -163,7 +163,7 @@ public:
 	static EType GetType(string str)
 	{
 		CheckEnum(push);	CheckEnum(pop);	CheckEnum(div);
-		CheckEnum2("int", interrupt);
+		CheckEnum2("int", interrupt);		
 		_ASSERT(0);
 		return invalid;
 	}
@@ -179,7 +179,8 @@ class CITwoArgOp : public CInstruction
 {
 public:
 	enum EType {
-		out, in, xchg, rcr, rcl, invalid
+		out, in, xchg, rcr, rcl, rol,
+		les, lea, sbb, invalid
 	};
 
 public:
@@ -198,6 +199,7 @@ public:
 	static EType GetType(string str)
 	{
 		CheckEnum(out);	CheckEnum(in); CheckEnum(xchg); CheckEnum(rcr); CheckEnum(rcl);
+		CheckEnum(rol); CheckEnum(les); CheckEnum(lea); CheckEnum(sbb);
 		_ASSERT(0);
 		return invalid;
 	}
@@ -222,7 +224,7 @@ public:
 
 	enum EOperation
 	{
-		stosb, lodsb, stosw, lodsw, movsw, movsb,
+		stosb, lodsb, stosw, lodsw, movsw, movsb, scasw, scasb,
 		invalidop
 	};
 
@@ -250,6 +252,7 @@ public:
 		CheckEnum(stosb);	CheckEnum(lodsb);
 		CheckEnum(stosw);	CheckEnum(lodsw);
 		CheckEnum(movsw);	CheckEnum(movsb);
+		CheckEnum(scasw);	CheckEnum(scasb);
 		_ASSERT(0);
 		return invalidop;
 	}

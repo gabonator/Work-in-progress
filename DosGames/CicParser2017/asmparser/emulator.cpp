@@ -36,12 +36,27 @@ void CIAlu::Eval(CMachine& m)
 	case CIAlu::Neg: m.SetValue(m_op1, -m.GetValue(m_op1)); return;
 	case CIAlu::AddWithCarry: m.SetValue(m_op1, m.GetValue(m_op1) + m.GetValue(m_op2) + m.m_flag.cf); return;
 	case CIAlu::Shl: 
+		if (m_op1.GetRegisterLength() == CValue::r8)
+			m.m_flag.cf = m.GetValue(m_op1) & 0x80 ? true : false;
+		else
+		if (m_op1.GetRegisterLength() == CValue::r16)
+			m.m_flag.cf = m.GetValue(m_op1) & 0x8000 ? true : false;
+		else
+			_ASSERT(0);
+
 		m.SetValue(m_op1, m.GetValue(m_op1) << m.GetValue(m_op2)); 
 		return;
 	case CIAlu::Shr: 
+		m.m_flag.cf = m.GetValue(m_op1) & 1 ? true : false;
 		m.SetValue(m_op1, m.GetValue(m_op1) >> m.GetValue(m_op2)); 
 		return;
-	//	case CIAlu::Sar,
+	case CIAlu::Sar: 
+		_ASSERT(m.GetValue(m_op2) == 1);
+		if ( m.GetValue(m_op1) & 0x80 )
+			m.SetValue(m_op1, m.GetValue(m_op1) >> m.GetValue(m_op2) | 0x80); 
+		else
+			m.SetValue(m_op1, m.GetValue(m_op1) >> m.GetValue(m_op2)); 
+		return;
 	case CIAlu::Mul: m.m_reg.a.r16.ax = m.GetValue(m_op1) * m.m_reg.a.r8.al; return;
 	default:
 		_ASSERT(0);
@@ -76,8 +91,16 @@ void CISingleArgOp::Eval(CMachine& m)
 	case CISingleArgOp::interrupt:
 		m.Interrupt(m.GetValue(m_rvalue));
 		return;
-	//case CISingleArgOp::div:
-	//case CISingleArgOp::invalid:
+
+	case CISingleArgOp::div:
+		{
+			int divisor = m.GetValue(m_rvalue);
+			int low = m.m_reg.a.r16.ax / divisor;
+			int high = m.m_reg.a.r16.ax % divisor;
+			m.m_reg.a.r8.al = low;
+			m.m_reg.a.r8.ah = high;
+		}
+		return;
 	default:
 		_ASSERT(0);
 	}
@@ -111,7 +134,7 @@ bool CIConditionalJump::SatisfiesCondition1(CMachine& m, CIConditionalJump::ETyp
 	case jnz: return !m.m_flag.zf;
 	case jnb: /*return SatisfiesCondition2(m, eType); //*/ return !m.m_flag.cf; // TODO!!!
 	case jb: /*return SatisfiesCondition2(m, eType); //*/ return m.m_flag.cf; // TODO!!!!
-	//case ja:
+	case ja: return !m.m_flag.cf || !m.m_flag.zf;
 	//case jb:
 	//case jnb:
 	case jle:return SatisfiesCondition2(m, eType);
@@ -137,7 +160,7 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 	case jnz: return m.m_nCmpOp1 != m.m_nCmpOp2;
 	case jnb: return m.m_nCmpOp1 > m.m_nCmpOp2;
 	case jb: return m.m_nCmpOp1 <= m.m_nCmpOp2;
-	//case ja:
+	case ja: return m.m_nCmpOp1 > m.m_nCmpOp2;
 	//case jb:
 	//case jnb:
 	case jle:
@@ -200,6 +223,7 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 		CIAlu* pAlu = dynamic_cast<CIAlu*>(pInstruction.get());
 		switch (pAlu->m_eType)
 		{
+		case CIAlu::Or:
 		case CIAlu::And:
 			m.m_flag.zf = m.GetValue(pAlu->m_op1) == 0;
 			_ASSERT(m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jnz);
@@ -208,12 +232,13 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 
 		case CIAlu::Shr:
 			m.m_flag.zf = m.GetValue(pAlu->m_op1) == 0;
-			_ASSERT(m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jnz);
+			_ASSERT(m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jnz ||
+				m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jnb);
 			bTest = SatisfiesCondition1(m, m_eType);
 			break;
 
 		case CIAlu::Decrement:
-			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz);
+			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz  || m_eType == CIConditionalJump::jz);
 			if ( m_eType == CIConditionalJump::js )
 				bTest = m.GetValue(pAlu->m_op1) < 0;
 
@@ -221,7 +246,10 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 				bTest = m.GetValue(pAlu->m_op1) >= 0;
 
 			if ( m_eType == CIConditionalJump::jnz )
-				bTest = m.GetValue(pAlu->m_op1) > 0;
+				bTest = m.GetValue(pAlu->m_op1) != 0;
+			
+			if ( m_eType == CIConditionalJump::jz )
+				bTest = m.GetValue(pAlu->m_op1) == 0;
 			break;
 
 		case CIAlu::Sub:
@@ -262,7 +290,20 @@ void CIConditionalJump::Eval(CMachine& m)
 
 	for (int nTraceBack=m.m_pc-2; nTraceBack>m.m_pc-10; nTraceBack--)
 	{
-		CISingleArgOp* pSingleArgOp = dynamic_cast<CISingleArgOp*>(m.m_arrCode[nTraceBack].get());
+		shared_ptr<CInstruction> pInstruction = dynamic_pointer_cast<CInstruction>(m.m_arrCode[nTraceBack]);
+
+		shared_ptr<CIConditionalJump> pConditional = dynamic_pointer_cast<CIConditionalJump>(pInstruction);
+		if ( pConditional )
+			continue;
+
+		shared_ptr<CISingleArgOp> pSingleArgOp = dynamic_pointer_cast<CISingleArgOp>(m.m_arrCode[nTraceBack]);
+		if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::pop)
+			continue;
+		
+		shared_ptr<CILoop> pLoop = dynamic_pointer_cast<CILoop>(m.m_arrCode[nTraceBack]);
+		if ( pLoop )
+			continue;
+
 		if (pSingleArgOp && pSingleArgOp->m_eType == CISingleArgOp::pop)
 			continue;
 
@@ -278,8 +319,15 @@ void CIConditionalJump::Eval(CMachine& m)
 			return;
 		}
 
-		CILabel* pLabel = dynamic_cast<CILabel*>(m.m_arrCode[nTraceBack].get());
-		CIJump* pPrevJump = dynamic_cast<CIJump*>(m.m_arrCode[nTraceBack-1].get());
+		if ( dynamic_pointer_cast<CICompare>(pInstruction) )
+		{
+			if ( EvalByPrevInstruction(m, pInstruction) )
+				return;
+			_ASSERT(0);
+		}
+
+		shared_ptr<CILabel> pLabel = dynamic_pointer_cast<CILabel>(m.m_arrCode[nTraceBack]);
+		shared_ptr<CIJump> pPrevJump = dynamic_pointer_cast<CIJump>(m.m_arrCode[nTraceBack-1]);
 		if ( pLabel && pPrevJump )
 		{
 			vector<int> arrRefs = m.FindReferences(pLabel->m_label);
@@ -287,6 +335,69 @@ void CIConditionalJump::Eval(CMachine& m)
 
 			if ( EvalByPrevInstruction(m, m.m_arrCode[arrRefs[0]-1]) )
 				return;
+		}
+
+		shared_ptr<CICall> pCall = dynamic_pointer_cast<CICall>(m.m_arrCode[nTraceBack]);
+		if ( pCall )
+		{
+			if ( pCall->m_label == "sub_22F7" )
+			{
+				if ( SatisfiesCondition1(m, m_eType) )
+					m.Goto(m_label);
+				return;
+			}
+
+			int nLabel = m.FindLabel(pCall->m_label);
+			int nEndPos = -1;
+
+			for (int iTest = nLabel; iTest < nLabel + 100; iTest++)
+			{
+				shared_ptr<CIFunction> pReturn = dynamic_pointer_cast<CIFunction>(m.m_arrCode[iTest]);
+				if ( pReturn && pReturn->m_eBoundary == CIFunction::End )
+				{
+					nEndPos = iTest-1;
+					break;
+				}
+			}
+
+			_ASSERT(nEndPos != -1);
+			// TODO: unsafe !
+
+
+			for (int iTest = nEndPos; iTest > nEndPos - 5; iTest--)
+			{
+				shared_ptr<CInstruction> pTestInstruction = dynamic_pointer_cast<CInstruction>(m.m_arrCode[iTest]);
+
+				bool bOk = EvalByPrevInstruction(m, m.m_arrCode[iTest]);
+				if (bOk)
+					return;
+				/*
+				shared_ptr<CIFunction> pReturn = dynamic_pointer_cast<CIFunction>(pTestInstruction);
+				if ( pReturn && pReturn->m_eBoundary == CIFunction::End )
+				{
+					shared_ptr<CIReturn> pLastReturn = dynamic_pointer_cast<CIReturn>(m.m_arrCode[iTest-1]);
+					_ASSERT(pLastReturn);
+					bool bOk = EvalByPrevInstruction(m, m.m_arrCode[iTest-2]);
+					_ASSERT(bOk);
+					return;
+				}*/
+				/*
+				shared_ptr<CIConditionalJump> pConditional = dynamic_pointer_cast<CIConditionalJump>(pTestInstruction);
+				//shared_ptr<CILabel> pLabel = dynamic_pointer_cast<CILabel>(pTestInstruction);
+				shared_ptr<CIJump> pJump = dynamic_pointer_cast<CIJump>(pTestInstruction);
+				_ASSERT(!pConditional);
+				//_ASSERT(!pLabel);
+				_ASSERT(!pJump);
+				*/
+				shared_ptr<CIZeroArgOp> pZeroArg = dynamic_pointer_cast<CIZeroArgOp>(pTestInstruction);
+				if ( pZeroArg && (pZeroArg->m_eType == CIZeroArgOp::clc || pZeroArg->m_eType == CIZeroArgOp::stc))
+				{	
+					// TODO: verify stc/ctc flow
+					if ( SatisfiesCondition1(m, m_eType) )
+						m.Goto(m_label);
+					return;
+				}
+			}
 		}
 
 		_ASSERT(0);
@@ -329,6 +440,19 @@ void CITwoArgOp::Eval(CMachine& m)
 		return;
 
 	}
+	if (m_eType == CITwoArgOp::rcr)
+	{
+		_ASSERT( m.GetValue(m_rvalue2) == 1 );
+		int nValue = m.GetValue(m_rvalue1); 
+		bool ncf = nValue & 1;
+		nValue >>= 1;
+		if ( m.m_flag.cf )
+			nValue |= 0x8000;
+		m.m_flag.cf = ncf;
+		m.SetValue(m_rvalue1, nValue);
+		return;
+	}
+
 	_ASSERT(0);
 }
 
@@ -370,6 +494,7 @@ void CIString::Eval(CMachine& m)
 			_ASSERT(m.m_flag.df == false);
 			while (m.m_reg.c.r16.cx--) 
 				EvalStosb(m);
+			m.m_reg.c.r16.cx = 0;
 			return;
 		case CIString::lodsb:
 			_ASSERT(0);
@@ -379,18 +504,24 @@ void CIString::Eval(CMachine& m)
 			_ASSERT(m.m_flag.df == false);
 			while (m.m_reg.c.r16.cx--) 
 				EvalStosw(m);
+			m.m_reg.c.r16.cx = 0;
 			return;
 		case CIString::lodsw: 
 			_ASSERT(0);
 			break;
 		case CIString::movsw:
-			_ASSERT(0);
-			break;
+			_ASSERT(m.m_reg.c.r16.cx);
+			_ASSERT(m.m_flag.df == false);
+			while (m.m_reg.c.r16.cx--) 
+				EvalMovsw(m);
+			m.m_reg.c.r16.cx = 0;
+			return;
 		case CIString::movsb:
 			_ASSERT(m.m_reg.c.r16.cx);
 			_ASSERT(m.m_flag.df == false);
 			while (m.m_reg.c.r16.cx--) 
 				EvalMovsb(m);
+			m.m_reg.c.r16.cx = 0;
 			return;
 		}
 
@@ -423,7 +554,8 @@ void CIString::EvalLodsb(CMachine& m)
 
 void CIString::EvalLodsw(CMachine& m)
 {
-	_ASSERT(0);
+	m.m_reg.a.r8.ah = m.MappedRead(m.m_reg.ds, m.m_reg.si++);
+	m.m_reg.a.r8.al = m.MappedRead(m.m_reg.ds, m.m_reg.si++);
 }
 
 void CIString::EvalStosb(CMachine& m)
@@ -459,11 +591,6 @@ void CIString::EvalStosw(CMachine& m)
 
 void CILoop::Eval(CMachine& m)
 { 
-	if ( m_label == "loc_3406" )
-	{
-		int f = 9;
-	}
-
 	switch (m_eType)
 	{
 	case CILoop::Loop:
@@ -471,6 +598,20 @@ void CILoop::Eval(CMachine& m)
 			return;
 		if ( --m.m_reg.c.r16.cx )
 			m.Goto(m_label);
+		return;
+
+	case CILoop::WhileEqual:
+		{
+			if ( !m.m_reg.c.r16.cx )
+				return;
+
+			_ASSERT(dynamic_pointer_cast<CICompare>(m.m_arrCode[m.m_pc-2]));
+			bool bConditionEqual = m.m_nCmpOp1 == m.m_nCmpOp2;
+
+			if ( --m.m_reg.c.r16.cx && bConditionEqual )
+				m.Goto(m_label);
+
+		}
 		return;
 	}
 	_ASSERT(0);

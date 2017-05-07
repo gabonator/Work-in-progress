@@ -89,7 +89,7 @@ public:
 
 	CSerializer& operator <<(string& str)
 	{
-		const int nMaxLength = 40;
+		const int nMaxLength = 48;
 		char buf[nMaxLength];
 
 		if (pOutput)

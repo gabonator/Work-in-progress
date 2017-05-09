@@ -102,6 +102,8 @@ public:
 
 		if (CUtils::ParseLiteral(str, m_nValue))
 		{
+			m_eRegLength = eRegLength;
+
 			if ( CUtils::match("^[0-9A-F]{2}h$", value.c_str()) )
 				m_eRegLength = r8;
 			if ( CUtils::match("^0[0-9A-F]{2}h$", value.c_str()) )
@@ -268,7 +270,7 @@ public:
 		if ( CUtils::match("^ds:\\[bp\\+(.*)\\]$", value.c_str(), matches) )
 		{
 			m_eType = ds_ptr_bp_plus;
-			m_nValue = CUtils::ParseLiteral("0x"+matches[0]);
+			m_nValue = CUtils::ParseLiteral(matches[0]);
 			m_eRegLength = r16;
 			return;
 		}
@@ -407,7 +409,8 @@ public:
 
 		if ( value == "es:[di]" )
 		{
-			m_eRegLength = r8;
+			_ASSERT(eRegLength != invalid);
+			m_eRegLength = eRegLength;
 			m_eType = es_ptr_di;
 			return;
 		}

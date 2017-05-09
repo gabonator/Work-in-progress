@@ -40,7 +40,8 @@ void CDos::Interrupt(CMachine& m)
 			int len = m.m_reg.c.r16.cx;
 			_ASSERT(ofs >= 0 && ofs + len < sizeof(data));
 			unsigned char* ptr = &data[ofs];
-			fread(ptr, len, 1, f);
+			size_t nRead = fread(ptr, 1, len, f);
+			_ASSERT(nRead == len);
 			//_ASSERT( 0x5a5c < ofs || 0x5a5c > ofs+len); 
 			m.m_flag.cf = 0;
 			printf("Read %x bytes into %04x:%04x\n", len, m.m_reg.ds, m.m_reg.d.r16.dx);

@@ -2,6 +2,10 @@
 
 void CIAssignment::Eval(CMachine& m)
 {
+	if (m_valueFrom.m_eType != CValue::constant && m_valueFrom.m_eType != CValue::segment)
+	{
+		_ASSERT(m_valueFrom.GetRegisterLength() == m_valueTo.GetRegisterLength());
+	}
 	int nValue = m.GetValue(m_valueFrom);
 	m.SetValue(m_valueTo, nValue);
 }
@@ -189,7 +193,7 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 	case jl:
 		switch (m.m_eCmpLen)
 		{
-		case CValue::r8: return (char)m.m_nCmpOp1 < (short)m.m_nCmpOp2 ? true : false;
+		case CValue::r8: return (char)m.m_nCmpOp1 < (char)m.m_nCmpOp2 ? true : false;
 		case CValue::r16: return (short)m.m_nCmpOp1 < (short)m.m_nCmpOp2 ? true : false;
 		default: break;
 		}
@@ -269,6 +273,43 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 
 		case CIAlu::Sub:
 		case CIAlu::Add:
+			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz
+				 || m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jb);
+			_ASSERT(pAlu->m_op1.GetRegisterLength() == CValue::r16 || pAlu->m_op1.GetRegisterLength() == CValue::r8);
+			
+			if ( pAlu->m_op1.GetRegisterLength() == CValue::r16 )
+			{
+				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
+
+				if ( m_eType == CIConditionalJump::jns )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) >= 0;
+
+				if ( m_eType == CIConditionalJump::jnz )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) != 0;
+
+				if ( m_eType == CIConditionalJump::jz )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) == 0;
+			} else 
+			if ( pAlu->m_op1.GetRegisterLength() == CValue::r8 )
+			{
+				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) < 0;
+
+				if ( m_eType == CIConditionalJump::jns )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) >= 0;
+
+				if ( m_eType == CIConditionalJump::jnz )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) != 0;
+
+				if ( m_eType == CIConditionalJump::jz )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) == 0;
+			} else
+			{
+				_ASSERT(0);
+			}
+			break;
+			/*
 			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz ||
 				m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jz);
 
@@ -305,7 +346,7 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 				_ASSERT(0);
 			}
 			break;
-
+			*/
 		default:
 			_ASSERT(0);
 			return false;
@@ -324,6 +365,13 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 
 void CIConditionalJump::Eval(CMachine& m)
 {	
+	if (m_eType == jcxz)
+	{
+		if (m.m_reg.c.r16.cx == 0)
+			m.Goto(m_label);
+		return;
+	}
+
 	if ( EvalByPrevInstruction(m, m.m_arrCode[m.m_pc-2]) )
 		return;
 
@@ -585,47 +633,24 @@ void CIString::EvalMovsw(CMachine& m)
 void CIString::EvalLodsb(CMachine& m)
 {
 	_ASSERT(m.m_flag.df == false);
-	_ASSERT(m.m_reg.ds < 0xa000);
-	m.m_reg.a.r8.al = m.MappedRead(m.m_reg.ds, m.m_reg.si);
-	m.m_reg.si++;
-	_ASSERT(m.m_reg.si < 0xfff5);
+	m.m_reg.a.r8.al = m.MappedRead(m.m_reg.ds, m.m_reg.si++);// ds:si
 }
 
 void CIString::EvalLodsw(CMachine& m)
 {
-	m.m_reg.a.r8.ah = m.MappedRead(m.m_reg.ds, m.m_reg.si++);
 	m.m_reg.a.r8.al = m.MappedRead(m.m_reg.ds, m.m_reg.si++);
+	m.m_reg.a.r8.ah = m.MappedRead(m.m_reg.ds, m.m_reg.si++);
 }
 
 void CIString::EvalStosb(CMachine& m)
 {
-	int es = m.m_reg.es;
-	_ASSERT(m.m_flag.df == false);
-
-	if ( ( es == 0xa000 ) || (es == 0xb800) )
-		m.VideoWrite(es, m.m_reg.di++, m.m_reg.a.r8.al);
-	else
-		data[es*16+m.m_reg.di++] = m.m_reg.a.r8.al; 
-
-	_ASSERT( m.m_reg.di < 0xfff5 );
+	m.MappedWrite(m.m_reg.es, m.m_reg.di++, m.m_reg.a.r8.al);
 }
 
 void CIString::EvalStosw(CMachine& m)
 {
-	int es = m.m_reg.es;
-	_ASSERT(m.m_flag.df == false);
-
-	if ( ( es == 0xa000 ) || (es == 0xb800) )
-	{
-		m.VideoWrite(es, m.m_reg.di++, m.m_reg.a.r8.ah);
-		m.VideoWrite(es, m.m_reg.di++, m.m_reg.a.r8.al);
-	}
-	else
-	{
-		data[es*16+m.m_reg.di++] = m.m_reg.a.r8.ah;
-		data[es*16+m.m_reg.di++] = m.m_reg.a.r8.al;
-	}
-	_ASSERT( m.m_reg.di < 0xfff5 );
+	m.MappedWrite(m.m_reg.es, m.m_reg.di++, m.m_reg.a.r8.al);
+	m.MappedWrite(m.m_reg.es, m.m_reg.di++, m.m_reg.a.r8.ah);
 }
 
 void CILoop::Eval(CMachine& m)

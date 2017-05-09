@@ -96,13 +96,6 @@ public:
 		m_arrStack.resize(32*2, 0);
 		m_reg.sp = 16*2*2;
 		m_reg.bp = 0;
-		FILE* f;
-		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
-		fread(data, 0x955d, 1, f); 
-
-//		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
-//		fread(data, 28976, 1, f);
-		fclose(f);
 	}
 
 	void Eval(vector<shared_ptr<CInstruction>>& arrCode, vector<string>& arrSource)
@@ -127,9 +120,41 @@ public:
 
 	void Call(string label)
 	{
-		if ( label == "sub_103" )
-			return;
+		//if ( label == "sub_103" )
+		//	return;
+		//if ( label == "sub_2D35" )
+		//{
+		//	int f = 9;
+		////	return;
+		//}
 
+		//if ( label == "sub_2D9D" )
+		//{
+		//	/*
+		//	int xx0 = data[m_reg.ds*16+0x2ae0];
+		//	int xx1 = data[m_reg.ds*16+0x2ae1];
+		//	int xx2 = data[m_reg.ds*16+0x2ae2];
+
+		//	int _cl = m_reg.c.r8.cl;
+		//	int _ch = m_reg.c.r8.ch;
+
+		//	m_reg.c.r8.cl = rand();*/
+		//	if ( m_reg.c.r16.cx == 0x0b03 || m_reg.c.r16.cx == 0x0c0a )
+		//	{
+		//printf("STACK: ");
+		//for (int i=0; i<(int)m_arrCallStackNames.size(); i++)
+		//	printf("%s ", m_arrCallStackNames[i].c_str());
+		//printf(": ");
+
+		//		printf("%dx%d\t", m_reg.c.r8.ch, m_reg.c.r8.cl);
+		//		printf("%04x:%04x <- %04x:%04x\n", 
+		//			m_reg.es, m_reg.di, m_reg.ds, m_reg.si);
+		//		//return;
+		//	}
+		//	//int f = 9;
+		//}
+
+		//	return;
 		// return to next instruction
 		m_arrCallStackNames.push_back(label);
 		m_arrCallStack.push_back(m_pc); // == -1 ? -1 : m_pc+1);
@@ -359,8 +384,15 @@ public:
 				return m_reg.di + v.m_nValue;
 
 			case CValue::es_ptr_di:
-				_ASSERT(v.GetRegisterLength() == CValue::r8);
-				return MappedRead(m_reg.es, m_reg.di);
+				if (v.GetRegisterLength() == CValue::r8)
+				{
+					return MappedRead(m_reg.es, m_reg.di);
+				} else
+				if (v.GetRegisterLength() == CValue::r16)
+				{
+					return MappedRead(m_reg.es, m_reg.di) | (MappedRead(m_reg.es, m_reg.di+1) << 8);
+				}
+				break;
 
 			case CValue::es_ptr:
 				if (v.GetRegisterLength() == CValue::r8)
@@ -712,6 +744,8 @@ public:
 		if (nSegment >= 0xa000)
 			return VideoRead(nSegment, nOffset);
 		_ASSERT(nSegment * 16 + nOffset < sizeof(data));
+		_ASSERT(*(WORD*)&data[nSegment * 16 + nOffset] != 0x6a6a);
+		//_ASSERT(*(WORD*)&data[nSegment * 16 + nOffset] != 0xcccc);
 		return data[nSegment * 16 + nOffset];
 	}
 

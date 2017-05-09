@@ -103,7 +103,7 @@ public:
 		return DefWindowProc( window, msg, wp, lp ) ;
 	}
 
-	void Tick()
+	void Tick(shared_ptr<CVideoAdapter> pAdapter)
 	{
 		static LONG last = 0;
 		LONG cur = GetTickCount();
@@ -115,12 +115,15 @@ public:
 		last = GetTickCount();
 		InvalidateRect( wnd, NULL, FALSE );
 
-		DWORD* pBuffer = (DWORD*)m_Display.GetBuffer();
-		for (int y=0; y<200; y++)
-			for (int x=0; x<320; x++)
-			{
-				*pBuffer++ = EGA.GetPixel(x,y);
-			}
+		if (pAdapter)
+		{
+			DWORD* pBuffer = (DWORD*)m_Display.GetBuffer();
+			for (int y=0; y<200; y++)
+				for (int x=0; x<320; x++)
+				{
+					*pBuffer++ = pAdapter->GetPixel(x,y);
+				}
+		}
 
 		MSG msg;
 		while ( PeekMessage( &msg, wnd, 0, 0, 1 ) ) 

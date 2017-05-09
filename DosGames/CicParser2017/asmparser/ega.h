@@ -1,4 +1,14 @@
-class CCga
+class CVideoAdapter
+{
+public:
+	virtual bool PortWrite16(int port, int data) = 0;
+	virtual bool Interrupt(int ah, int al, int bh, int bl) = 0;
+	virtual void Write(DWORD dwAddr, BYTE bWrite) = 0;
+	virtual BYTE Read(DWORD dwAddr) = 0;
+	virtual DWORD GetPixel(int x, int y) = 0;
+};
+
+class CCga : public CVideoAdapter
 {
 	enum {
 		MemSize = 0x10000*2
@@ -18,12 +28,12 @@ public:
 		_cgaPalette[3] = 0xffffff;
 	}
 
-	bool PortWrite16(int port, int data)
+	virtual bool PortWrite16(int port, int data) override
 	{
 		return false;
 	}
 
-	bool Interrupt(int ah, int al, int bh, int bl)
+	virtual bool Interrupt(int ah, int al, int bh, int bl) override
 	{
 		if ( ah == 0x0b )
 		{
@@ -55,7 +65,7 @@ public:
 		return false;
 	}
 
-	void Write(DWORD dwAddr, BYTE bWrite)
+	virtual void Write(DWORD dwAddr, BYTE bWrite) override
 	{
 		_ASSERT(dwAddr >= 0xb800*16);
 		dwAddr -= 0xb800 * 16;
@@ -63,7 +73,7 @@ public:
 		memory[dwAddr] = bWrite;
 	}
 
-	BYTE Read(DWORD dwAddr)
+	virtual BYTE Read(DWORD dwAddr) override
 	{
 		_ASSERT(dwAddr >= 0xb800*16);
 		dwAddr -= 0xb800 * 16;
@@ -72,7 +82,7 @@ public:
 	}
 
 
-	DWORD GetPixel(int x, int y)
+	DWORD GetPixel(int x, int y) override
 	{
 		if ((y&1) == 0)
 		{
@@ -93,7 +103,7 @@ public:
 
 };
 
-class CEga
+class CEga : public CVideoAdapter
 {
 	enum {
 		MemSize = 0x10000*2
@@ -170,12 +180,12 @@ public:
 		full_bit_mask				= 0xffffffff;
 	}
 
-	bool Interrupt(int ah, int al, int bh, int bl)
+	virtual bool Interrupt(int ah, int al, int bh, int bl) override
 	{
 		return false;
 	}
 
-	bool PortWrite16(int port, int data)
+	virtual bool PortWrite16(int port, int data) override
 	{
 		if ( port == 0x3c4 )
 		{
@@ -221,7 +231,7 @@ public:
 		return false;
 	}
 	
-	DWORD GetPixel(int x, int y)
+	virtual DWORD GetPixel(int x, int y) override
 	{
 		static const DWORD pal[] = {
 			0x000000, 0x0000b0, 0x00b000, 0x00b0b0, 0xb00000, 0xb000b0, 0xb0b000, 0xb0b0b0,
@@ -313,7 +323,7 @@ public:
 	}
 
 #else
-	void Write(DWORD dwAddr, BYTE bWrite)
+	virtual void Write(DWORD dwAddr, BYTE bWrite) override
 	{
 		dwAddr -= 0xa000 * 16;
 
@@ -330,7 +340,7 @@ public:
 		StoreLatch(dwAddr);
 	}
 
-	BYTE Read(DWORD dwAddr)
+	virtual BYTE Read(DWORD dwAddr) override
 	{
 		dwAddr -= 0xa000 * 16;
 

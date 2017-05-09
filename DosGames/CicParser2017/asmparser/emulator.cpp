@@ -134,7 +134,7 @@ bool CIConditionalJump::SatisfiesCondition1(CMachine& m, CIConditionalJump::ETyp
 	case jnz: return !m.m_flag.zf;
 	case jnb: /*return SatisfiesCondition2(m, eType); //*/ return !m.m_flag.cf; // TODO!!!
 	case jb: /*return SatisfiesCondition2(m, eType); //*/ return m.m_flag.cf; // TODO!!!!
-	case ja: return !m.m_flag.cf || !m.m_flag.zf;
+	case ja: return !m.m_flag.cf && !m.m_flag.zf; //?
 	//case jb:
 	//case jnb:
 	case jle:return SatisfiesCondition2(m, eType);
@@ -142,7 +142,8 @@ bool CIConditionalJump::SatisfiesCondition1(CMachine& m, CIConditionalJump::ETyp
 	//case jge:
 	case jge: return SatisfiesCondition2(m, eType); //return m.m_flag.sf == 0;
 	//case jns:
-	//case jl:
+	case jl: return SatisfiesCondition2(m, eType);
+	case jns:
 	case js: return SatisfiesCondition2(m, eType);
 	//case jcxz:
 	default:
@@ -158,8 +159,8 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 	case jbe: return m.m_nCmpOp1 <= m.m_nCmpOp2;
 	case jz: return m.m_nCmpOp1 == m.m_nCmpOp2;
 	case jnz: return m.m_nCmpOp1 != m.m_nCmpOp2;
-	case jnb: return m.m_nCmpOp1 > m.m_nCmpOp2;
-	case jb: return m.m_nCmpOp1 <= m.m_nCmpOp2;
+	case jnb: return m.m_nCmpOp1 >= m.m_nCmpOp2;
+	case jb: return m.m_nCmpOp1 < m.m_nCmpOp2;
 	case ja: return m.m_nCmpOp1 > m.m_nCmpOp2;
 	//case jb:
 	//case jnb:
@@ -185,7 +186,20 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 		default: break;
 		}		
 	//case jns:
-	//case jl:
+	case jl:
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)m.m_nCmpOp1 < (short)m.m_nCmpOp2 ? true : false;
+		case CValue::r16: return (short)m.m_nCmpOp1 < (short)m.m_nCmpOp2 ? true : false;
+		default: break;
+		}
+	case jns: 
+		switch (m.m_eCmpLen)
+		{
+		case CValue::r8: return (char)(m.m_nCmpOp1-m.m_nCmpOp2) >= 0 ? true : false;
+		case CValue::r16: return (short)(m.m_nCmpOp1-m.m_nCmpOp2) >= 0 ? true : false;
+		default: break;
+		}
 	case js:
 		switch (m.m_eCmpLen)
 		{
@@ -214,7 +228,8 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 	{
 		bool bTest1 = SatisfiesCondition1(m, m_eType);
 		bool bTest2 = SatisfiesCondition2(m, m_eType);
-		if (bTest1 != bTest2 ) printf("CIConditionalJump error\n");
+		if (bTest1 != bTest2 ) 
+			printf("CIConditionalJump error\n");
 		//_ASSERT(bTest1 == bTest2);
 		bTest = bTest2;
 	}
@@ -254,17 +269,41 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 
 		case CIAlu::Sub:
 		case CIAlu::Add:
-			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz);
-			_ASSERT(pAlu->m_op1.GetRegisterLength() == CValue::r16);
+			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz ||
+				m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jz);
 
-			if ( m_eType == CIConditionalJump::js )
-				bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
-
-			if ( m_eType == CIConditionalJump::jns )
-				bTest = ((signed short)m.GetValue(pAlu->m_op1)) >= 0;
+			if ( m_eType == CIConditionalJump::jz )
+				bTest = m.GetValue(pAlu->m_op1) == 0;
 
 			if ( m_eType == CIConditionalJump::jnz )
-				bTest = ((signed short)m.GetValue(pAlu->m_op1)) != 0;
+				bTest = m.GetValue(pAlu->m_op1) != 0;
+
+			if (pAlu->m_op1.GetRegisterLength() == CValue::r16)
+			{
+				// TODO "jb" a "js"
+				if ( m_eType == CIConditionalJump::js )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
+
+				if ( m_eType == CIConditionalJump::jns )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) >= 0;
+
+				if ( m_eType == CIConditionalJump::jb )
+					bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
+			} else
+			if (pAlu->m_op1.GetRegisterLength() == CValue::r8)
+			{
+				if ( m_eType == CIConditionalJump::js )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) < 0;
+
+				if ( m_eType == CIConditionalJump::jns )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) >= 0;
+
+				if ( m_eType == CIConditionalJump::jb )
+					bTest = ((signed char)m.GetValue(pAlu->m_op1)) < 0;
+			} else
+			{
+				_ASSERT(0);
+			}
 			break;
 
 		default:

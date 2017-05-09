@@ -3,7 +3,7 @@
 //#include "instructions.h"
 
 //CCga EGA;
-CEga EGA;
+//CEga EGA;
 
 void VideoUpdate();
 
@@ -88,6 +88,7 @@ public:
 	map<string, int> m_mapLabels;
 
 	CDos m_dos;
+	shared_ptr<CVideoAdapter> m_pVideo;
 
 public:
 	CMachine()
@@ -95,17 +96,13 @@ public:
 		m_arrStack.resize(32*2, 0);
 		m_reg.sp = 16*2*2;
 		m_reg.bp = 0;
-		
 		FILE* f;
 		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
 		fread(data, 0x955d, 1, f); 
+
+//		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
+//		fread(data, 28976, 1, f);
 		fclose(f);
-		
-		/*
-		FILE* f;
-		fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
-		fread(data, 0x955d, 1, f);
-		fclose(f);*/
 	}
 
 	void Eval(vector<shared_ptr<CInstruction>>& arrCode, vector<string>& arrSource)
@@ -130,6 +127,9 @@ public:
 
 	void Call(string label)
 	{
+		if ( label == "sub_103" )
+			return;
+
 		// return to next instruction
 		m_arrCallStackNames.push_back(label);
 		m_arrCallStack.push_back(m_pc); // == -1 ? -1 : m_pc+1);
@@ -346,7 +346,7 @@ public:
 
 			case CValue::byteptrval: 
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
-				return MappedRead(m_reg.ds, GetValue(*v.m_value));
+				return MappedRead(m_reg.ds, GetValue(*v.m_value) & 0xffff);
 
 			case CValue::wordptrval: 
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
@@ -354,6 +354,9 @@ public:
 
 			case CValue::bp_plus: 
 				return m_reg.bp + v.m_nValue;
+
+			case CValue::di_plus: 
+				return m_reg.di + v.m_nValue;
 
 			case CValue::es_ptr_di:
 				_ASSERT(v.GetRegisterLength() == CValue::r8);
@@ -591,15 +594,30 @@ public:
 			return;
 
 		case 0x10:
-			if ( EGA.Interrupt(m_reg.a.r8.ah, m_reg.a.r8.al, m_reg.b.r8.bh, m_reg.b.r8.bl ) )
-				return;
-
 			switch (m_reg.a.r8.ah)
 			{
 			case 0x00:
-				printf("Setting video mode %d\n", m_reg.a.r8.al);
+				printf("Setting video mode 0x%02x - ", m_reg.a.r8.al);
+				switch (m_reg.a.r8.al)
+				{
+				case 4: 
+					printf("320x200 2bpp, CGA Adapter\n");
+					m_pVideo.reset(new CCga());
+					return;
+				case 13: 
+					printf("320x200 4bpp, EGA Adapter\n");
+					m_pVideo.reset(new CEga());
+					return;
+				}
+				_ASSERT(0);
+				printf("Unknown adapter\n");
 				return;
+			default:
+				_ASSERT( m_pVideo );
+				if ( m_pVideo->Interrupt(m_reg.a.r8.ah, m_reg.a.r8.al, m_reg.b.r8.bh, m_reg.b.r8.bl ) )
+					return;
 			}
+			break;
 
 		case 0x1a:	
 			{
@@ -684,6 +702,7 @@ public:
 
 	int MappedRead(int nSegment, int nOffset)
 	{
+		_ASSERT(nSegment != 0xcccc);
 		if (nSegment == 0xf000 && nOffset == 0xfffe )
 			return 0xff; // BIOS - IBM computer type code
 
@@ -708,6 +727,7 @@ public:
 
 	void MappedWrite(int nSegment, int nOffset, int nValue)
 	{
+		_ASSERT(nSegment != 0xcccc);
 		if (nSegment >= 0xa000)
 		{
 			VideoWrite(nSegment, nOffset, nValue);
@@ -730,7 +750,8 @@ public:
 
 		_ASSERT( addr/16 >= 0xa000 && addr/16 < 0xf000 );
 		//addr -= 0xa000*16;
-		EGA.Write(addr, nValue & 0xff);
+		_ASSERT(m_pVideo);
+		m_pVideo->Write(addr, nValue & 0xff);
 	}
 
 	int VideoRead(int nSegment, int nOffset)
@@ -739,12 +760,14 @@ public:
 
 		_ASSERT( addr/16 >= 0xa000 && addr/16 < 0xf000 );
 		//addr -= 0xa000*16;
-		return EGA.Read(addr);
+		_ASSERT(m_pVideo);
+		return m_pVideo->Read(addr);
 	}
 
 	void PortWrite16(int port, int data)
 	{
-		if ( EGA.PortWrite16(port, data) )
+		_ASSERT(m_pVideo);
+		if ( m_pVideo && m_pVideo->PortWrite16(port, data) )
 			return;
 		printf("Unknown port write port[%x] = %x\n", port, data);
 		//_ASSERT(0);

@@ -4,6 +4,7 @@ void CIAssignment::Eval(CMachine& m)
 {
 	if (m_valueFrom.m_eType != CValue::constant && m_valueFrom.m_eType != CValue::segment)
 	{
+		_ASSERT(m_valueFrom.GetRegisterLength() != CValue::invalid);
 		_ASSERT(m_valueFrom.GetRegisterLength() == m_valueTo.GetRegisterLength());
 	}
 	int nValue = m.GetValue(m_valueFrom);
@@ -257,20 +258,6 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 			break;
 
 		case CIAlu::Decrement:
-			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz  || m_eType == CIConditionalJump::jz);
-			if ( m_eType == CIConditionalJump::js )
-				bTest = m.GetValue(pAlu->m_op1) < 0;
-
-			if ( m_eType == CIConditionalJump::jns )
-				bTest = m.GetValue(pAlu->m_op1) >= 0;
-
-			if ( m_eType == CIConditionalJump::jnz )
-				bTest = m.GetValue(pAlu->m_op1) != 0;
-			
-			if ( m_eType == CIConditionalJump::jz )
-				bTest = m.GetValue(pAlu->m_op1) == 0;
-			break;
-
 		case CIAlu::Sub:
 		case CIAlu::Add:
 			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz

@@ -1,10 +1,3 @@
-//#pragma once
-//#include <vector>
-//#include "instructions.h"
-
-//CCga EGA;
-//CEga EGA;
-
 void VideoUpdate();
 
 class CMachine
@@ -93,7 +86,10 @@ public:
 public:
 	CMachine()
 	{
+		memset(&m_reg, 0, sizeof(m_reg));
+		memset(data, 0xff, sizeof(data));
 		m_arrStack.resize(32*2, 0);
+
 		m_reg.sp = 16*2*2;
 		m_reg.bp = 0;
 	}
@@ -120,39 +116,77 @@ public:
 
 	void Call(string label)
 	{
-		//if ( label == "sub_103" )
-		//	return;
-		//if ( label == "sub_2D35" )
-		//{
-		//	int f = 9;
-		////	return;
-		//}
-
-		//if ( label == "sub_2D9D" )
+		//if ( label == "sub_69A" )
 		//{
 		//	/*
-		//	int xx0 = data[m_reg.ds*16+0x2ae0];
-		//	int xx1 = data[m_reg.ds*16+0x2ae1];
-		//	int xx2 = data[m_reg.ds*16+0x2ae2];
+		//	loc_code_708:				; CODE XREF: sub_code_69A+95j
+		//dec	bl
+		//jns	short loc_code_72C
+		//lodsb
 
-		//	int _cl = m_reg.c.r8.cl;
-		//	int _ch = m_reg.c.r8.ch;
-
-		//	m_reg.c.r8.cl = rand();*/
-		//	if ( m_reg.c.r16.cx == 0x0b03 || m_reg.c.r16.cx == 0x0c0a )
-		//	{
-		//printf("STACK: ");
-		//for (int i=0; i<(int)m_arrCallStackNames.size(); i++)
-		//	printf("%s ", m_arrCallStackNames[i].c_str());
-		//printf(": ");
-
-		//		printf("%dx%d\t", m_reg.c.r8.ch, m_reg.c.r8.cl);
-		//		printf("%04x:%04x <- %04x:%04x\n", 
-		//			m_reg.es, m_reg.di, m_reg.ds, m_reg.si);
-		//		//return;
-		//	}
-		//	//int f = 9;
+		//	*/
+		//	int f = 9;
 		//}
+		//if ( label == "sub_7AF" )
+		//{
+		//	// toto nam nastavuje vysku na 1px
+		//	// mov	byte_data_27E, al
+		//	int f = 9;
+		//	// r8[al] = _data[r16[bx]]; mem at 34469 ma byt 1
+
+		//}
+		//if ( label == "sub_BDC" )
+		//{
+		//	// kresli sprite cez map c24, chceme vediet preco je vyska q=1 px
+		//	
+		//	int w = data[m_reg.ds * 16 + m_reg.si +	9];
+		//	int h = data[m_reg.ds * 16 + m_reg.si +	10];
+		//	int f = 9;
+		//}
+		//if ( label == "sub_C24" )
+		//{
+		//	int q = StackRead(m_reg.sp+2);
+		//	int x = StackRead(m_reg.sp+4);
+		//	int y = StackRead(m_reg.sp+6);
+		//	int z = StackRead(m_reg.sp+8);
+		//	printf("sprite %d x %x\n", x, q);
+		//	//if ( q > 10)
+		//	if ( q == 1)
+		//		StackWrite(m_reg.sp+2, 5);
+		//}
+		if ( label == "sub_103" )
+			return;
+		////if ( label == "sub_2D35" )
+		////{
+		////	int f = 9;
+		//////	return;
+		////}
+
+		////if ( label == "sub_2D9D" )
+		////{
+		////	/*
+		////	int xx0 = data[m_reg.ds*16+0x2ae0];
+		////	int xx1 = data[m_reg.ds*16+0x2ae1];
+		////	int xx2 = data[m_reg.ds*16+0x2ae2];
+
+		////	int _cl = m_reg.c.r8.cl;
+		////	int _ch = m_reg.c.r8.ch;
+
+		////	m_reg.c.r8.cl = rand();*/
+		////	if ( m_reg.c.r16.cx == 0x0b03 || m_reg.c.r16.cx == 0x0c0a )
+		////	{
+		////printf("STACK: ");
+		////for (int i=0; i<(int)m_arrCallStackNames.size(); i++)
+		////	printf("%s ", m_arrCallStackNames[i].c_str());
+		////printf(": ");
+
+		////		printf("%dx%d\t", m_reg.c.r8.ch, m_reg.c.r8.cl);
+		////		printf("%04x:%04x <- %04x:%04x\n", 
+		////			m_reg.es, m_reg.di, m_reg.ds, m_reg.si);
+		////		//return;
+		////	}
+		////	//int f = 9;
+		////}
 
 		//	return;
 		// return to next instruction
@@ -191,77 +225,21 @@ public:
 	
 	void Eval()
 	{
-		//static bool blog = false;
-		////if ( m_arrSource[m_pc].find("D3A") != string::npos)
-		////if ( m_arrSource[m_pc].find("CE7") != string::npos)
-		////if ( m_arrSource[m_pc].find("C24") != string::npos)
-		//	// 9430 je nula! a ma byt jedna, lebo dostal sa na 759 -> sub_BC5
-		////if ( m_arrSource[m_pc].find("9430") != string::npos)
-		//// sub_69a -> 759, sub_69a sa vola na konci titulkov
-		////if ( m_arrSource[m_pc].find("69A") != string::npos)
-		//if ( m_arrSource[m_pc].find("2762") != string::npos) // toto by malo byt intro scroll
-		//{
-		//	int f = 9;
-		//	//blog = true;
-		//}
-		//if ( m_arrSource[m_pc].find("_3291") != string::npos)
-		//{
-		//	//blog = true;
-		//	int f = 9;
-		//}
-		//if ( m_arrSource[m_pc].find("_B7C") != string::npos)
-		//{
-		//	////blog = true;
-		//	int f = 9;
-		//}
-		//if ( m_arrSource[m_pc].find("9430") != string::npos)
-		//{
-		//	printf("%s\n", m_arrSource[m_pc].c_str());
-		//	int f=9;
-		//}
-		//	if ( m_arrSource[m_pc] == "call sub_code_C24")
-		//	{
-		//	//	m_pc++;
-		//		//blog = true;
-		//		int f = 9;
-		//	}
-		//	
-		//	if ( m_arrSource[m_pc].find( "retn" ) != string::npos)
-		//	{
-		//		for (int i=m_pc; i>0; i--)
-		//			if (dynamic_cast<CIFunction*>(m_arrCode[i].get()))
-		//			{
-		//				//printf("ret from %s\n", dynamic_cast<CIFunction*>(m_arrCode[i].get())->m_strName.c_str());
-		//				break;
-		//			}
-		//		VideoUpdate();
-		//		int f = 9;
-		//	}
-
 		const string& strDebug0 = m_arrSource[m_pc > 0 ? m_pc-1 : 0];
 		const string& strDebug1 = m_arrSource[m_pc];
 
 		SInstruction sInstruction = m_arrCode[m_pc];
-		//if (blog )
-		//{
-		//printf("ax:%04x bx:%04x cx:%04x dx:%04x si:%04x di:%04x\t",
-		//	m_reg.a.r16.ax, m_reg.b.r16.bx, m_reg.c.r16.cx, m_reg.d.r16.dx, m_reg.si, m_reg.di);
-		//printf("%s\n", m_arrSource[m_pc].c_str());
-
-		//if ( m_arrSource[m_pc].find("_2959") != string::npos)
-		//{
-		//	int f = 9;
-		//}
-
-		//}
-
-		//printf("%d: %s\n", m_pc, m_arrSource[m_pc].c_str());
 
 		m_pc++;
+		/*
+		if ( m_arrCallStackNames.back() == "sub_DA7" )
+		{
+		printf("ax:%04x bx:%04x cx:%04x dx:%04x si:%04x di:%04x\t",
+			m_reg.a.r16.ax, m_reg.b.r16.bx, m_reg.c.r16.cx, m_reg.d.r16.dx, m_reg.si, m_reg.di);
+		printf("%s\n", m_arrSource[m_pc].c_str());
+		}*/
 
 		sInstruction->Eval(*this);
-
-		int f=9;
 	}
 
 	vector<int> FindReferences(CLabel label)
@@ -362,25 +340,29 @@ public:
 			case CValue::sp: return m_reg.sp;
 
 			case CValue::wordptr: 
-				_ASSERT(v.m_nValue >= 0 && v.m_nValue+1 < sizeof(data));
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return MappedRead(v.m_nValue) | (MappedRead(v.m_nValue+1) << 8);
 
 			case CValue::byteptr: 
-				_ASSERT(v.m_nValue >= 0 && v.m_nValue < sizeof(data));
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return MappedRead(v.m_nValue);
 
 			case CValue::byteptrval: 
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				return MappedRead(m_reg.ds, GetValue(*v.m_value) & 0xffff);
 
 			case CValue::wordptrval: 
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				return MappedRead(m_reg.ds, GetValue(*v.m_value) & 0xffff) | (MappedRead(m_reg.ds, (GetValue(*v.m_value) + 1) & 0xffff) << 8);
 
 			case CValue::bp_plus: 
+//				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return m_reg.bp + v.m_nValue;
 
 			case CValue::di_plus: 
+//				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return m_reg.di + v.m_nValue;
 
 			case CValue::es_ptr_di:
@@ -404,26 +386,41 @@ public:
 					_ASSERT(0);
 
 			case CValue::bx_plus_si:
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				//_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return m_reg.b.r16.bx + m_reg.si;
 
 			case CValue::wordptrasbyte:
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return MappedRead(v.m_nValue);
 
 			case CValue::bx_plus:
+				//_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return m_reg.b.r16.bx + v.m_nValue;
 
 			case CValue::si_plus:
+				//_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return m_reg.si + v.m_nValue;
 
 			case CValue::stack_bp_plus:
-				return StackRead(m_reg.bp + v.m_nValue);
+				if (v.GetRegisterLength() == CValue::r16)
+					return StackRead(m_reg.bp + v.m_nValue);
+				else
+				if (v.GetRegisterLength() == CValue::r8)
+					return StackRead(m_reg.bp + v.m_nValue);
+				else
+					_ASSERT(0);
+				//_ASSERT(v.GetRegisterLength() == CValue::r16);
+				//return StackRead(m_reg.bp + v.m_nValue);
 
 			case CValue::bx_plus_di:
+				//_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return m_reg.b.r16.bx + m_reg.di;
 
 			case CValue::codeword:
 			{
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
+
 				stringstream ss;
 				ss << "word_code_" << std::hex << std::uppercase << v.m_nValue; 
 				CLabel label(ss.str());
@@ -436,6 +433,8 @@ public:
 
 			case CValue::codebyte:
 			{
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+
 				stringstream ss;
 				ss << "byte_code_" << std::hex << std::uppercase << v.m_nValue; 
 				CLabel label(ss.str());
@@ -452,6 +451,7 @@ public:
 				break;
 
 			case CValue::wordptr_es: 
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				return MappedRead(m_reg.es, v.m_nValue & 0xffff) | (MappedRead(m_reg.es, (v.m_nValue + 1) & 0xffff) << 8);
 
@@ -502,6 +502,7 @@ public:
 
 			case CValue::byteptrasword: 
 			case CValue::wordptr: 
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				// TODO: toto vsetko musi ist cez mapped, robi sa tam s grafikou!
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue+1 < sizeof(data));
 				MappedWrite(v.m_nValue, nValue & 0xff);
@@ -509,17 +510,23 @@ public:
 			return;
 
 			case CValue::byteptr: 
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+
 				_ASSERT(v.m_nValue >= 0 && v.m_nValue < sizeof(data));
 				MappedWrite(v.m_nValue, nValue);
 			return;
 
 			case CValue::byteptrval: 
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+
 				_ASSERT(v.m_value);
 				_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				MappedWrite(m_reg.ds, GetValue(*v.m_value), nValue);
 			return;
 
 			case CValue::wordptrval: 
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
+
 				_ASSERT(v.m_value);
 				//_ASSERT(m_reg.ds*16 + GetValue(*v.m_value) >= 0 && v.ds*16 + GetValue(*v.m_value) < sizeof(data));
 				MappedWrite(m_reg.ds, GetValue(*v.m_value) & 0xffff, nValue & 0xff);
@@ -539,6 +546,8 @@ public:
 
 			case CValue::codeword:
 			{
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
+
 				stringstream ss;
 				ss << "word_code_" << std::hex << std::uppercase << v.m_nValue; 
 				CLabel label(ss.str());
@@ -552,6 +561,8 @@ public:
 
 			case CValue::codebyte:
 			{
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
+
 				stringstream ss;
 				ss << "byte_code_" << std::hex << std::uppercase << v.m_nValue; 
 				CLabel label(ss.str());
@@ -564,10 +575,12 @@ public:
 			return;
 
 			case CValue::wordptrasbyte:
+				_ASSERT(v.GetRegisterLength() == CValue::r8);
 				MappedWrite(v.m_nValue, nValue & 0xff);
 			return;
 
 			case CValue::stack_bp_plus:
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				StackWrite(m_reg.bp + v.m_nValue, nValue);
 			return;
 
@@ -600,6 +613,7 @@ public:
 			return;
 
 			case CValue::wordptr_es: 
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				MappedWrite(m_reg.es, v.m_nValue, nValue & 0xff);
 				MappedWrite(m_reg.es, v.m_nValue+1, nValue >> 8);
 			return;
@@ -751,10 +765,6 @@ public:
 
 	void MappedWrite(int nOffset, int nValue)
 	{
-		if ( nOffset == 0x9430 )
-		{
-			int f = 9;
-		}
 		_ASSERT(m_reg.ds == 0);
 		MappedWrite(m_reg.ds, nOffset, nValue);
 	}

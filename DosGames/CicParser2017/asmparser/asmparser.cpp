@@ -24,7 +24,7 @@ using namespace std;
 //typedef uint16_t WORD;
 //typedef uint8_t BYTE;
 
-unsigned char data[1024*1024];
+unsigned char data[1024*1024/2];
 //unsigned char video[1024*1024];
 
 #include "utils.h"
@@ -68,21 +68,20 @@ void VideoUpdate()
 int main(int argc, char* argv[])
 {
 	CSourceParser sp;
-	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
+//	sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
 	//sp.Parse("C:\\Data\\Devel\\VC\\catdec_xen\\catdec\\goose_vx\\goose_code.asm");
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsXenon\\asm\\xenon2a.asm");
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Source\\cat_code.asm");
 	//sp.Save("cat.cache");
 	//sp.Load("cat.cache");
 
-	//sp.Save("goose.cache");
+//	sp.Save("goose.cache");
 	sp.Load("goose.cache");
 
 
 	m.m_arrCode = sp.m_arrCode;
 	m.m_arrSource = sp.m_arrSource;
 
-	memset(data, sizeof(data), 0x6a);
 	FILE* f;
 	fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
 	fread(data, 38244, 1, f); 

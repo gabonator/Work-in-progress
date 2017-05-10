@@ -159,12 +159,8 @@ public:
 		if ( CUtils::match("^byte ptr \\[(.*)\\]$", value.c_str(), matches) )
 		{
 			m_eType = byteptrval;
-			m_eRegLength = r16;
+			m_eRegLength = r8;
 			m_value = make_shared<CValue>(matches[0]);
-			// TODO: HOPLA TOTO JE PTR
-			// iba castujeme na byte, nepotrebujeme
-			//Parse(matches[0]);
-			//m_eRegLength = r8;
 			return;
 		}
 
@@ -187,6 +183,7 @@ public:
 
 		if ( CUtils::match("^byte ptr word_data_(.+)\\+(.+)h$", value.c_str(), matches) )
 		{
+			m_eRegLength = r8;
 			m_eType = wordptrasbyte;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]) + CUtils::ParseLiteral("0x" + matches[1]);
 			return;
@@ -194,6 +191,7 @@ public:
 
 		if ( CUtils::match("^word ptr byte_data_(.+)\\+(.+)h$", value.c_str(), matches) )
 		{
+			m_eRegLength = r16;
 			m_eType = byteptrasword;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]) + CUtils::ParseLiteral("0x" + matches[1]);
 			return;
@@ -201,6 +199,7 @@ public:
 
 		if ( CUtils::match("^byte ptr word_data_(.*)$", value.c_str(), matches) )
 		{
+			m_eRegLength = r8;
 			m_eType = wordptrasbyte;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
@@ -208,6 +207,7 @@ public:
 
 		if ( CUtils::match("^word ptr dword_dseg_(.*)$", value.c_str(), matches) )
 		{
+			m_eRegLength = r16;
 			m_eType = dwordptrasword;
 			m_nValue = CUtils::ParseLiteral("0x" + matches[0]);
 			return;
@@ -271,7 +271,8 @@ public:
 		{
 			m_eType = ds_ptr_bp_plus;
 			m_nValue = CUtils::ParseLiteral(matches[0]);
-			m_eRegLength = r16;
+			_ASSERT(eRegLength == r16 || eRegLength == r8);
+			m_eRegLength = eRegLength;
 			return;
 		}
 
@@ -417,6 +418,7 @@ public:
 
 		if ( CUtils::match("^es:\\[di\\+(.*)\\]$", value.c_str(), matches) )
 		{
+			_ASSERT(eRegLength == r16 || eRegLength == r8);
 			m_eRegLength = eRegLength;
 			m_eType = es_ptr_di_plus;
 			m_nValue = CUtils::ParseLiteral(matches[0]);

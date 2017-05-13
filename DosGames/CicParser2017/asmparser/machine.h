@@ -1,5 +1,200 @@
 void VideoUpdate();
 
+class CTimer8254
+{
+	int nReset0;
+	int nReset1;
+	int nReset2;
+	int nSpkrFrequency;
+
+	WORD wLatch0;
+
+public:
+	CTimer8254()
+	{
+		nReset0 = 0;
+		nReset1 = 0;
+		nReset2 = 0;
+		nSpkrFrequency = 0;
+	}
+
+	WORD Read18Hz()
+	{
+		return (WORD)((FLOAT)GetTickCount()*65543.0f/(1000.0f*60.0f*60.0f));
+	}
+
+	void WriteCtl(BYTE arg) // 43h
+	{
+		int nChannel = arg >> 6;
+		int nAccess = (arg >> 4) & 3; // 0 = citame, 2 = ideme zapisovat
+		int nMode = (arg >> 1) & 7; // 0 = irq on count, 3 = sq wave
+		int nFormat = arg & 1; // 0 = 16 bit, 1 = bcd 4 digit
+
+		switch ( nChannel )
+		{
+			case 0: 
+
+				_ASSERT(arg==0);  // nAccess = 0 -> Latch for reading
+				wLatch0 = -Read18Hz(); 
+				wLatch0 = -(WORD)(GetTickCount()/5);
+				//wLatch0 = 0;
+				//nReset0 = 1; 
+				break;
+			case 1: nReset1 = 1; break;
+			case 2: 
+				nReset2 = 1; 
+				break;
+			default:
+				_ASSERT(0);
+		}
+	}
+	BYTE ReadCounter0() // 40h
+	{
+		BYTE b = wLatch0 >> 8;
+		wLatch0 <<= 8;
+		return b;
+	}
+	BYTE ReadCounter1() // 41h
+	{
+		_ASSERT(0);
+		return 0;
+	}
+	BYTE ReadCounter2() // 42h
+	{
+		_ASSERT(0);
+		return 0;
+	}
+
+	void WriteCounter0(BYTE arg)
+	{
+		_ASSERT(0);
+	}
+	void WriteCounter1(BYTE arg)
+	{
+		_ASSERT(0);
+	}
+	void WriteCounter2(BYTE arg)
+	{
+		static int nFreqLow;
+		static int nFreqHigh;
+
+		switch ( nReset2++ )
+		{
+		case 1: nFreqLow = arg; break;
+		case 2: nFreqHigh = arg; 
+			{
+				int nFreqDiv = nFreqHigh*256 + nFreqLow;
+				INT nSpkrFrequency = 1193180/nFreqDiv;
+				///printf("Tone %d Hz\n", nSpkrFrequency);
+				//Beep(nSpkrFrequency*2, 100);
+			}
+			break;
+		default:
+			_ASSERT(0);
+		}
+	}
+
+	int GetFrequency()
+	{
+		return nSpkrFrequency;
+	}
+	BOOL Out(WORD port, BYTE val)
+	{
+		switch ( port )
+		{
+			case 0x43: WriteCtl(val); return TRUE;
+			case 0x40: WriteCounter0(val); return TRUE;
+			case 0x41: WriteCounter1(val); return TRUE;
+			case 0x42: WriteCounter2(val); return TRUE;
+		}
+		return FALSE;
+	}
+
+	BYTE In(WORD port)
+	{
+		switch ( port )
+		{
+			case 0x40: return ReadCounter0();
+			case 0x41: return ReadCounter1();
+			case 0x42: return ReadCounter2();
+		}
+		_ASSERT(0);
+		return 0;
+	}
+};
+
+// i8254
+class CTimer
+{
+	int _p42;
+	int _buffer42;
+	int _buffer;
+	int _t0;
+
+public:
+	CTimer()
+	{
+		_p42 = 0;
+		_buffer42 = 0;
+		_buffer = 0;
+		_t0 = 0;
+	}
+
+	void Out(int nPort, int nValue)
+	{
+		_ASSERT(nPort >= 0x40 && nPort <= 0x43);
+
+		if ( nPort == 0x43 )
+		{
+			if ( nValue == 0xB6 ) // play tone
+			{
+				_p42 = 0;
+				_buffer42 = 0;
+				return;
+			} 
+			if (nValue == 0x00)
+			{
+				_buffer = (-tick()*6) &0xffff; //(-this.tick()*1000) & 0xffff;
+				return;
+			}
+		}
+
+		if ( nPort == 0x42 )
+		{
+			if ( _p42 == 0 )
+			{
+				_buffer42 = nValue;
+				_p42++;
+			} else if ( _p42 == 1 )
+			{
+				_buffer42 = (nValue<<8) | _buffer42;
+				//_tone(_buffer42, 1000);
+			}    
+		}
+
+	}
+
+	int In(int nPort)
+	{
+		_ASSERT(nPort >= 0x40 && nPort <= 0x43);
+
+		int b = _buffer >> 8;
+		_buffer <<= 8;
+		return b & 0xff;
+	}
+
+	int tick()
+	{
+		int t = GetTickCount();
+		if ( _t0 == 0 )
+			_t0 = t;
+		t -= _t0;
+		t = (int)(t*18.2f/1000.0f);
+		return t;
+	}
+
+};
+
 class CMachine
 {
 public:
@@ -60,6 +255,17 @@ public:
 		bool df; // dir
 		bool signum;
 		bool interrupt;
+
+		BYTE ToByte()
+		{
+			return cf + 2*zf;
+		}
+
+		void FromByte(BYTE b)
+		{
+			cf = b & 1;
+			zf = !!(b & 2);
+		}
 	};
 
 	typedef shared_ptr<CInstruction> SInstruction;
@@ -69,6 +275,7 @@ public:
 	int m_pc;
 	CRegisters m_reg;
 	CFlags m_flag;
+	CTimer8254 m_Timer;
 
 	// Temp helpers;
 	CValue::ERegLength m_eCmpLen;
@@ -106,6 +313,10 @@ public:
 		{
 			if (i % 50 == 0)
 			{
+				data[0x693]++;
+				data[0x6BC+5] = 1;
+				data[0x6BC+7] = 1;
+
 				VideoUpdate();
 			}
 
@@ -339,6 +550,7 @@ public:
 			case CValue::bp: return m_reg.bp;
 			case CValue::sp: return m_reg.sp;
 
+			case CValue::byteptrasword: 
 			case CValue::wordptr: 
 				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return MappedRead(v.m_nValue) | (MappedRead(v.m_nValue+1) << 8);
@@ -389,6 +601,11 @@ public:
 				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				//_ASSERT(v.GetRegisterLength() == CValue::r8);
 				return m_reg.b.r16.bx + m_reg.si;
+
+			case CValue::bx_plus_si_plus: // PTR?
+				// TODO: ptr, 16
+				//_ASSERT(v.GetRegisterLength() == CValue::r16);
+				return MappedRead(m_reg.b.r16.bx + m_reg.si + v.m_nValue);
 
 			case CValue::wordptrasbyte:
 				_ASSERT(v.GetRegisterLength() == CValue::r8);
@@ -821,6 +1038,7 @@ public:
 	{
 		if ( nPort >= 0x40 && nPort <= 0x43)
 		{
+			m_Timer.Out(nPort, nValue);
 			// i8254 timer
 			return;
 		}
@@ -834,6 +1052,11 @@ public:
 			// TODO;
 			return;
 		}
+		if ( nPort == 0x201)
+		{
+			// TODO: joystick
+			return;
+		}
 		_ASSERT(0);
 	}
 	
@@ -841,6 +1064,7 @@ public:
 	{
 		if ( nPort >= 0x40 && nPort <= 0x43 )
 		{
+			return m_Timer.In(nPort);
 			// TODO: timer
 			return 0;
 		}
@@ -858,6 +1082,12 @@ public:
 			static int counter = 0;
 			counter ^= 8;
 			return counter;
+		}
+
+		if ( nPort == 0x201 )
+		{
+			// TODO: joystick
+			return 0;
 		}
 
 		_ASSERT(0);

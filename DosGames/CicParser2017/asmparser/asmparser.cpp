@@ -73,9 +73,9 @@ int main(int argc, char* argv[])
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsXenon\\asm\\xenon2a.asm");
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Source\\cat_code.asm");
 	//sp.Save("cat.cache");
-	//sp.Load("cat.cache");
+	sp.Load("cat.cache");
 
-//	sp.Save("goose.cache");
+	sp.Save("goose.cache");
 	sp.Load("goose.cache");
 
 
@@ -83,11 +83,11 @@ int main(int argc, char* argv[])
 	m.m_arrSource = sp.m_arrSource;
 
 	FILE* f;
-	fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
-	fread(data, 38244, 1, f); 
+	//fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\bin\\data", "rb");
+	//fread(data, 38244, 1, f); 
 
-	//fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
-	//fread(data, 28976, 1, f);
+	fopen_s(&f, "C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Converted\\datasegment", "rb");
+	fread(data, 28976, 1, f);
 	fclose(f);
 
 	// TODO: optimize exit condition sub_CF

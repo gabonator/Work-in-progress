@@ -8,7 +8,27 @@ public:
 	virtual DWORD GetPixel(int x, int y) = 0;
 };
 
-class CCga : public CVideoAdapter
+class CTextMode : public CVideoAdapter
+{
+public:
+	virtual bool Interrupt(int ah, int al, int bh, int bl) override
+	{
+		if (ah == 0x02)
+		{
+			// gotoxy dl, dh
+			return true;
+		}
+		if (ah == 0x0e)
+		{
+			printf("%c", al);
+			return true;
+		}
+		return false;
+
+	}
+};
+
+class CCga : public CTextMode
 {
 	enum {
 		MemSize = 0x10000*2
@@ -35,6 +55,9 @@ public:
 
 	virtual bool Interrupt(int ah, int al, int bh, int bl) override
 	{
+		if ( CTextMode::Interrupt( ah, al, bh, bl ) )
+			return true;
+
 		if ( ah == 0x0b )
 		{
 			if ( bh == 0x00 )

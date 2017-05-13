@@ -261,7 +261,7 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 		case CIAlu::Sub:
 		case CIAlu::Add:
 			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz
-				 || m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jb);
+				 || m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jnb);
 			_ASSERT(pAlu->m_op1.GetRegisterLength() == CValue::r16 || pAlu->m_op1.GetRegisterLength() == CValue::r8);
 			
 			if ( pAlu->m_op1.GetRegisterLength() == CValue::r16 )
@@ -269,7 +269,7 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
 					bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
 
-				if ( m_eType == CIConditionalJump::jns )
+				if ( m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnb )
 					bTest = ((signed short)m.GetValue(pAlu->m_op1)) >= 0;
 
 				if ( m_eType == CIConditionalJump::jnz )
@@ -283,7 +283,7 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
 					bTest = ((signed char)m.GetValue(pAlu->m_op1)) < 0;
 
-				if ( m_eType == CIConditionalJump::jns )
+				if ( m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnb )
 					bTest = ((signed char)m.GetValue(pAlu->m_op1)) >= 0;
 
 				if ( m_eType == CIConditionalJump::jnz )
@@ -414,7 +414,8 @@ void CIConditionalJump::Eval(CMachine& m)
 		shared_ptr<CICall> pCall = dynamic_pointer_cast<CICall>(m.m_arrCode[nTraceBack]);
 		if ( pCall )
 		{
-			if ( pCall->m_label == "sub_22F7" )
+			// TODO: trace stc/clc instructions recursively!
+			if ( pCall->m_label == "sub_22F7" || pCall->m_label == "sub_265E" )
 			{
 				if ( SatisfiesCondition1(m, m_eType) )
 					m.Goto(m_label);
@@ -510,10 +511,9 @@ void CITwoArgOp::Eval(CMachine& m)
 		_ASSERT(m_rvalue1.GetRegisterLength() == CValue::r8);
 
 		m.SetValue(m_rvalue1, m.PortRead(m.GetValue(m_rvalue2)));
-		//printf("in[%x] = %x\n", m.GetValue(m_rvalue2), m.GetValue(m_rvalue1));
 		return;
-
 	}
+
 	if (m_eType == CITwoArgOp::rcr)
 	{
 		_ASSERT( m.GetValue(m_rvalue2) == 1 );
@@ -524,6 +524,29 @@ void CITwoArgOp::Eval(CMachine& m)
 			nValue |= 0x8000;
 		m.m_flag.cf = ncf;
 		m.SetValue(m_rvalue1, nValue);
+		return;
+	}
+
+	if (m_eType == CITwoArgOp::rcl)
+	{
+		_ASSERT( m.GetValue(m_rvalue2) == 1 );
+		int nValue = m.GetValue(m_rvalue1); 
+		bool ncf = !!(nValue & 128);
+		nValue <<= 1;
+		if ( m.m_flag.cf )
+			nValue |= 1;
+		m.m_flag.cf = ncf;
+		m.SetValue(m_rvalue1, nValue);
+		return;
+	}
+
+	if (m_eType == CITwoArgOp::xchg)
+	{
+		_ASSERT( m_rvalue1.GetRegisterLength() != CValue::invalid );
+		_ASSERT( m_rvalue1.GetRegisterLength() == m_rvalue2.GetRegisterLength() );
+		CValue temp = m_rvalue1;
+		m_rvalue1 = m_rvalue2;
+		m_rvalue2 = temp;
 		return;
 	}
 
@@ -552,6 +575,8 @@ void CIZeroArgOp::Eval(CMachine& m)
 		else
 			m.m_reg.a.r8.ah = 0x00;
 		return;
+	case CIZeroArgOp::lahf: m.m_reg.a.r8.ah = m.m_flag.ToByte(); return;
+	case CIZeroArgOp::sahf: m.m_flag.FromByte(m.m_reg.a.r8.ah); return;
 	}
 	_ASSERT(0);
 }
@@ -592,7 +617,6 @@ void CIString::Eval(CMachine& m)
 			return;
 		case CIString::movsb:
 			_ASSERT(m.m_reg.c.r16.cx);
-			_ASSERT(m.m_flag.df == false);
 			while (m.m_reg.c.r16.cx--) 
 				EvalMovsb(m);
 			m.m_reg.c.r16.cx = 0;
@@ -608,7 +632,10 @@ void CIString::Eval(CMachine& m)
 
 void CIString::EvalMovsb(CMachine& m)
 {
-	m.MappedWrite(m.m_reg.es, m.m_reg.di++, m.MappedRead(m.m_reg.ds, m.m_reg.si++));
+	if (m.m_flag.df)
+		m.MappedWrite(m.m_reg.es, m.m_reg.di--, m.MappedRead(m.m_reg.ds, m.m_reg.si--));
+	else
+		m.MappedWrite(m.m_reg.es, m.m_reg.di++, m.MappedRead(m.m_reg.ds, m.m_reg.si++));
 }
 
 void CIString::EvalMovsw(CMachine& m)

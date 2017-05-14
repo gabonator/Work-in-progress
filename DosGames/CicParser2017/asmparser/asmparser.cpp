@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
 	//sp.Save("cat.cache");
 	sp.Load("cat.cache");
 
-	sp.Save("goose.cache");
-	sp.Load("goose.cache");
+	//sp.Save("goose.cache");
+	//sp.Load("goose.cache");
 
 
 	m.m_arrCode = sp.m_arrCode;
@@ -97,13 +97,14 @@ int main(int argc, char* argv[])
 	
 	
 	//vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("start"));
-	//CCExport e;
+	CCExport e;
+	e.Process(m.m_arrCode);
 	//e.Optimize(arrCode);
 	//e.DumpProgram(arrCode);
 	//return 0;
 
-	videoOutput.Init();
-	m.Eval(sp.m_arrCode, sp.m_arrSource);
+	//videoOutput.Init();
+	//m.Eval(sp.m_arrCode, sp.m_arrSource);
 	return 0;
 }
 

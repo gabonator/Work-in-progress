@@ -106,6 +106,8 @@ class CIZeroArgOp : public CInstruction
 public:
 	enum EType {
 		cli, sti, _std, stc, ctc, cld, aaa, cbw, lodsw, lodsb, stosw, stosb, movsw, movsb, clc, sahf, lahf, popf, pushf, xlat,
+		// TODO: Should be in separate fake instruction
+		FakeZeroTest, FakeCarryTest, FakeZeroCarryTest,
 		invalid
 	};
 

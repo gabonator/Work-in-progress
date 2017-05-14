@@ -39,6 +39,11 @@ public:
 			m_strDst = op1; 
 			m_strSrc = op1 + " + " + op2;
 			break;
+		case CIAlu::AddWithCarry: 
+			// TODO CARRY!!! ODKIAL??
+			m_strDst = op1; 
+			m_strSrc = op1 + " + " + op2 + " + _flags.carry; _ASSERT(0 /* add with carry */)";
+			break;
 		case CIAlu::Sub: 
 			m_strDst = op1; 
 			if ( op1 == op2 )
@@ -73,6 +78,10 @@ public:
 		case CIAlu::Shr: 
 			m_strDst = op1; 
 			m_strSrc = op1 + " >> " + op2;
+			break;
+		case CIAlu::Mul: 
+			m_strDst = CValue("ax").ToC(); 
+			m_strSrc = op1 + " * " + CValue("al").ToC();
 			break;
 		default:
 			_ASSERT(0);
@@ -124,12 +133,53 @@ public:
 			}
 
 			if ( pPrev->m_strSrc.find(" ") != string::npos )
-				CUtils::replace(m_strSrc, m_strDst, "(" + pPrev->m_strSrc + ")");
+				CUtils::replaceOnce(m_strSrc, m_strDst, "(" + pPrev->m_strSrc + ")");
 			else
-				CUtils::replace(m_strSrc, m_strDst, pPrev->m_strSrc);
+				CUtils::replaceOnce(m_strSrc, m_strDst, pPrev->m_strSrc);
 			return true;
 		}
 		return false;
+	}
+};
+
+class CCZeroArgOp : public CCInstruction
+{
+	string m_strOperation;
+
+public:
+	CCZeroArgOp(shared_ptr<CIZeroArgOp> pInstruction)
+	{
+		//cli, sti, _std, stc, ctc, cld, aaa, cbw, lodsw, lodsb, stosw, stosb, movsw, movsb, clc, sahf, lahf, popf, pushf, xlat,
+
+		switch (pInstruction->m_eType)
+		{
+		case CIZeroArgOp::cli: m_strOperation = "_flags.interrupt = false"; break;
+		case CIZeroArgOp::sti: m_strOperation = "_flags.interrupt = true"; break;
+		case CIZeroArgOp::cld: m_strOperation = "_flags.direction = false"; break;
+		case CIZeroArgOp::_std: m_strOperation = "_flags.direction = true"; break;
+		case CIZeroArgOp::clc: m_strOperation = "_flags.carry = false"; break;
+		case CIZeroArgOp::stc: m_strOperation = "_flags.carry = true"; break;
+		case CIZeroArgOp::lahf: m_strOperation = "_ah = _regs.toByte()"; break;
+		case CIZeroArgOp::sahf: m_strOperation = "_regs.fromByte(_ah)"; break;
+
+		case CIZeroArgOp::lodsb: m_strOperation = "_lodsb()"; break;
+		case CIZeroArgOp::stosb: m_strOperation = "_stosb()"; break;
+		case CIZeroArgOp::lodsw: m_strOperation = "_lodsw()"; break;
+		case CIZeroArgOp::stosw: m_strOperation = "_stosw()"; break;
+		case CIZeroArgOp::movsb: m_strOperation = "_movsb()"; break;
+		case CIZeroArgOp::movsw: m_strOperation = "_movsw()"; break;
+
+		case CIZeroArgOp::pushf: m_strOperation = "_pushf()"; break;
+		case CIZeroArgOp::popf: m_strOperation = "_popf()"; break;
+		case CIZeroArgOp::aaa: m_strOperation = "_aaa()"; break;
+		default:
+				_ASSERT(0);
+		}
+	}
+
+	virtual string ToString() override
+	{
+		return m_strOperation + ";";
 	}
 };
 
@@ -199,12 +249,20 @@ public:
 
 class CCConditionalJump : public CCInstruction
 {
+public:
 	enum ELabelType {
 		Label,
 		Return,
 		ReturnStack,
 		Break,
 		Continue
+	};
+
+	enum EConditionType {
+		Regular,
+		ZeroFlag,
+		ZeroCarryFlag,
+		CarryFlag
 	};
 
 	string m_strOperand1;
@@ -222,12 +280,24 @@ public:
 		m_eLabelType = Label;
 	}
 
-	CCConditionalJump(shared_ptr<CILoop> pLoop) : m_strLabel("")
+	CCConditionalJump(shared_ptr<CILoop> pLoop, shared_ptr<CInstruction> pCondition) : m_strLabel("")
 	{
+		string strExtraCondition;
+
 		switch (pLoop->m_eType)
 		{
 		case CILoop::Loop:
 			m_strCondition = "--_cx";
+			break;
+
+		case CILoop::WhileNotEqual:
+			strExtraCondition = make_shared<CCConditionalJump>( make_shared<CIConditionalJump>(CIConditionalJump::jnz, CLabel("")), pCondition )->GetCondition();
+			m_strCondition = "--_cx && " + strExtraCondition;
+			break;
+
+		case CILoop::WhileEqual:
+			strExtraCondition = make_shared<CCConditionalJump>( make_shared<CIConditionalJump>(CIConditionalJump::jz, CLabel("")), pCondition )->GetCondition();
+			m_strCondition = "--_cx && " + strExtraCondition;
 			break;
 
 		default:
@@ -238,36 +308,38 @@ public:
 		m_eLabelType = Label;
 	}
 
-	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CICompare> pCompare) : m_strLabel("")
+	string SignedType(CValue& op)
 	{
-		/*
-				if ( jump == "jz" )
-			condition = format("%s == %s", args[1].c_str(), args[2].c_str());
-		if ( jump == "jnz" )
-			condition = format("%s != %s", args[1].c_str(), args[2].c_str());
-		if ( jump == "jb" )
-			condition = format("%s < %s", args[1].c_str(), args[2].c_str());
-		if ( jump == "ja" )
-			condition = format("%s > %s", args[1].c_str(), args[2].c_str());
-		if ( jump == "jnb" )
-			condition = format("%s >= %s", args[1].c_str(), args[2].c_str());
-		if ( jump == "jbe" )
-			condition = format("%s <= %s", args[1].c_str(), args[2].c_str());
-		// signed
-		if ( jump == "jle" ) // <=
-			condition = format("(%s)%s <= (%s)%s", signedtype.c_str(), args[1].c_str(), signedtype.c_str(), args[2].c_str());
-		if ( jump == "jge" ) // >=
-			condition = format("(%s)%s >= (%s)%s", signedtype.c_str(), args[1].c_str(), signedtype.c_str(), args[2].c_str());
-		if ( jump == "jg" ) // >
-			condition = format("(%s)%s > (%s)%s", signedtype.c_str(), args[1].c_str(), signedtype.c_str(), args[2].c_str());
-		if ( jump == "jns" ) // >= 0
-			condition = format("(%s)(%s-%s) >= 0", signedtype.c_str(), args[1].c_str(), args[2].c_str());
-		if ( jump == "js" ) // < 0
-			condition = format("(%s)(%s-%s) < 0", signedtype.c_str(), args[1].c_str(), args[2].c_str());
-		if ( jump == "jl" ) // <
-			condition = format("(%s)%s < (%s)%s", signedtype.c_str(), args[1].c_str(), signedtype.c_str(), args[2].c_str());
+		if (op.GetRegisterLength() == CValue::r8)
+			return "char";
 
-		*/
+		if (op.GetRegisterLength() == CValue::r16)
+			return "short";
+
+		_ASSERT(0);
+		return "?";
+	}
+
+	explicit CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CInstruction> pInstruction) : m_strLabel("")
+	{
+		if ( dynamic_pointer_cast<CIZeroArgOp>(pInstruction) && dynamic_pointer_cast<CIZeroArgOp>(pInstruction)->m_eType == CIZeroArgOp::FakeZeroTest )
+			From(pCondition, CCConditionalJump::ZeroFlag);
+		else if ( dynamic_pointer_cast<CIZeroArgOp>(pInstruction) && dynamic_pointer_cast<CIZeroArgOp>(pInstruction)->m_eType == CIZeroArgOp::FakeZeroCarryTest )
+			From(pCondition, CCConditionalJump::ZeroCarryFlag);
+		else if ( dynamic_pointer_cast<CIZeroArgOp>(pInstruction) && dynamic_pointer_cast<CIZeroArgOp>(pInstruction)->m_eType == CIZeroArgOp::FakeCarryTest )
+			From(pCondition, CCConditionalJump::CarryFlag);
+		else if ( dynamic_pointer_cast<CICompare>(pInstruction) )
+			From(pCondition, dynamic_pointer_cast<CICompare>(pInstruction));
+		else if ( dynamic_pointer_cast<CITest>(pInstruction) )
+			From(pCondition, dynamic_pointer_cast<CITest>(pInstruction));
+		else if ( dynamic_pointer_cast<CIAlu>(pInstruction) )
+			From(pCondition, dynamic_pointer_cast<CIAlu>(pInstruction));
+		else 
+			_ASSERT(0);
+	}
+
+	void From(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CICompare> pCompare)
+	{
 		_ASSERT(pCompare);
 
 		m_strOperand1 = pCompare->m_op1.ToC();
@@ -276,16 +348,9 @@ public:
 		m_eLabelType = Label;
 
 		m_strSigned = "?";
-		if ( pCompare->m_op1.GetRegisterLength() == CValue::r8 &&
-			 pCompare->m_op2.GetRegisterLength() == CValue::r8 )
+		if (pCompare->m_op1.GetRegisterLength() == pCompare->m_op2.GetRegisterLength())
 		{
-			m_strSigned = "char";
-		}
-
-		if ( pCompare->m_op1.GetRegisterLength() == CValue::r16 &&
-			 pCompare->m_op2.GetRegisterLength() == CValue::r16 )
-		{
-			m_strSigned = "short";
+			m_strSigned = SignedType(pCompare->m_op1);
 		}
 
 		// http://marin.jb.free.fr/jumps/
@@ -299,26 +364,13 @@ public:
 		case CIConditionalJump::jge: m_strCondition = "($type)$a >= ($type)$b"; break;
 		case CIConditionalJump::jle: m_strCondition = "($type)$a <= ($type)$b"; break;
 		case CIConditionalJump::jbe: m_strCondition = "$a <= $b"; break;
-
-				
-			/*
-		case CIConditionalJump::jbe:
-		case CIConditionalJump::ja:
-		case CIConditionalJump::jnb:
-		case CIConditionalJump::jle:
-		case CIConditionalJump::jg:
-		case CIConditionalJump::jge:
-		case CIConditionalJump::jns:
-		case CIConditionalJump::jl:
-		case CIConditionalJump::js:
-		case CIConditionalJump::jcxz:
-		*/
+		case CIConditionalJump::ja: m_strCondition = "$a > $b"; break;
 		default:
 			_ASSERT(0);
 		}
 	}
 	
-	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CITest> pTest) : m_strLabel("")
+	void From(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CITest> pTest)
 	{
 		m_strOperand1 = pTest->m_op1.ToC();
 		m_strOperand2 = pTest->m_op2.ToC();
@@ -334,21 +386,57 @@ public:
 		}
 	}
 
-	CCConditionalJump(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CIAlu> pAlu) : m_strLabel("")
+	void From(shared_ptr<CIConditionalJump> pCondition, shared_ptr<CIAlu> pAlu)
 	{
 		m_strOperand1 = pAlu->m_op1.ToC();
 		m_strLabel = pCondition->m_label;
 		m_eLabelType = Label;
+		m_strSigned = SignedType(pAlu->m_op1);
 
 		switch ( pCondition->m_eType )
 		{
 		case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
 		case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+		case CIConditionalJump::jb: m_strCondition = "($type)$a < 0"; break;
+		case CIConditionalJump::ja: m_strCondition = "($type)$a > 0"; break;
+		case CIConditionalJump::jnb: m_strCondition = "($type)$a >= 0"; break;
 		default:
 			_ASSERT(0);
 		}
 	}
 
+	void From(shared_ptr<CIConditionalJump> pCondition, EConditionType eCondition)
+	{
+		m_strLabel = pCondition->m_label;
+		m_eLabelType = Label;
+
+		switch ( pCondition->m_eType )
+		{
+		case CIConditionalJump::jz: 
+			_ASSERT(eCondition == ZeroFlag);
+			m_strCondition = "_flags.zero"; 
+			break;
+			
+		case CIConditionalJump::jnz: 
+			_ASSERT(eCondition == ZeroFlag);
+			m_strCondition = "!_flags.zero"; 
+			break;
+
+		case CIConditionalJump::jnb: 
+			_ASSERT(eCondition == CarryFlag || eCondition == ZeroCarryFlag);
+			m_strCondition = "!_flags.carry"; 
+			break;
+
+		case CIConditionalJump::jb: 
+			_ASSERT(eCondition == CarryFlag);
+			m_strCondition = "_flags.carry"; 
+			break;
+
+		default:
+			_ASSERT(0);
+		}
+	}
+	
 	string GetNegated()
 	{
 		// TODO: lazy negation!
@@ -370,7 +458,7 @@ public:
 		string strAux = m_strCondition;
 		CUtils::replace(strAux, "$a", m_strOperand1);
 		CUtils::replace(strAux, "$b", m_strOperand2);
-		CUtils::replace(strAux, "($type)", m_strSigned);
+		CUtils::replace(strAux, "$type", m_strSigned);
 		
 		return strAux;
 	}
@@ -395,7 +483,7 @@ public:
 		if ( strAux == "true" )
 			return Target() + ";";
 
-		return "if (" + strAux + ") " + Target() + ";";
+		return "if (" + strAux + ")\n  " + Target() + ";";
 	}
 
 	CLabel GetLabel()
@@ -606,3 +694,118 @@ public:
 	}
 };
 
+class CCCompare : public CCInstruction
+{
+public:
+	enum EType
+	{
+		ZeroFlag,
+		ZeroCarryFlag,
+	};
+
+	string m_strCode;
+
+public:
+	CCCompare(shared_ptr<CICompare> pInstruction, EType eType)
+	{
+		string strArgument1 = pInstruction->m_op1.ToC();
+		string strArgument2 = pInstruction->m_op2.ToC();
+
+		switch (eType)
+		{
+		case CCCompare::ZeroCarryFlag: 
+			// TODO: Check
+			m_strCode = "_flags.zero = $arg1 == $arg2; _flags.carry = $arg1 < $arg2"; 
+			break;
+
+		case CCCompare::ZeroFlag: 
+			if (strArgument1 == strArgument2)
+				m_strCode = "_flags.zero = true";
+			else
+				m_strCode = "_flags.zero = $arg1 == $arg2"; 
+			break;
+
+		default:
+			_ASSERT(0);
+		}
+
+		CUtils::replace(m_strCode, "$arg1", strArgument1);
+		CUtils::replace(m_strCode, "$arg2", strArgument2);
+	}
+
+	virtual string ToString() override
+	{
+		return m_strCode + ";";
+	}
+};
+
+class CCStringOp : public CCInstruction
+{
+public:
+	string m_strRepeat;
+	string m_strOperation;
+
+public:
+	CCStringOp(shared_ptr<CIString> pInstruction)
+	{
+		switch (pInstruction->m_rule)		
+		{
+		case CIString::rep: m_strRepeat = "rep"; break;
+		case CIString::repne: m_strRepeat = "repne"; break;
+		default:
+			_ASSERT(0);
+		}
+
+		switch (pInstruction->m_operation)		
+		{
+		case CIString::lodsb: m_strOperation = "lodsb"; break;
+		case CIString::stosb: m_strOperation = "stosb"; break;
+		case CIString::lodsw: m_strOperation = "lodsw"; break;
+		case CIString::stosw: m_strOperation = "stosw"; break;
+		case CIString::movsb: m_strOperation = "movsb"; break;
+		case CIString::movsw: m_strOperation = "movsw"; break;
+		case CIString::scasb: m_strOperation = "scasb"; break;
+		case CIString::scasw: m_strOperation = "scasw"; break;
+		default:
+			_ASSERT(0);
+		}
+	}
+	
+	virtual string ToString() override
+	{
+		return "_" + m_strRepeat + "_" + m_strOperation + "();";
+	}
+};
+
+class CCSwitch : public CCInstruction
+{
+	string m_strSelector;
+	vector<string> m_arrLabels;
+public:
+	CCSwitch(shared_ptr<CISwitch> pSwitch, vector<shared_ptr<CInstruction>> arrInstructions)
+	{
+		m_strSelector = pSwitch->m_reg.ToC();
+
+		for (int i=0; i<(int)arrInstructions.size(); i++)
+		{
+			shared_ptr<CIData> pData = dynamic_pointer_cast<CIData>(arrInstructions[i]);
+			_ASSERT(pData && pData->m_eType == CIData::Function);
+			m_arrLabels.push_back(pData->m_strFunction);
+		}
+	}
+
+	virtual string ToString() override
+	{
+		// TODO: how to optimize without gotos?
+		stringstream ss;
+		ss << "switch (" << m_strSelector << ")" << endl;
+		ss << "{" << endl;
+		for (int i=0; i<(int)m_arrLabels.size(); i++)
+			ss << "  case " << i*2 << ": goto " << m_arrLabels[i] << ";" << endl;
+		ss << "  default:" << endl;
+		ss << "    _ASSERT(0)" << endl;
+		ss << "}" << endl;
+
+		return ss.str();
+	}
+};

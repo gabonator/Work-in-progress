@@ -245,6 +245,11 @@ class CIMFlow : public CInstructionMatcher
 	{
 		vector<string> arrMatches;
 
+		if ( CUtils::match("^jmp\\s+cs:(off_code_\\w+)\\[(.*)\\]$", strLine, arrMatches) )
+		{
+			return make_shared<CISwitch>(arrMatches[0], CValue(arrMatches[1]));
+		}
+
 		if ( CUtils::match("^jmp(\\sshort)?\\s+(.*)$", strLine, arrMatches) )
 		{
 			return make_shared<CIJump>(CLabel(arrMatches.back()));
@@ -270,11 +275,6 @@ class CIMFlow : public CInstructionMatcher
 			return make_shared<CICall>(CLabel(arrMatches[0]));
 		}
 		
-		if ( CUtils::match("^call\\s+cs:(off_code_\\w+)\\[(.*)\\]$", strLine, arrMatches) )
-		{
-			return make_shared<CISwitch>(arrMatches[0], CValue(arrMatches[1]));
-		}
-
 		//WTF: call dword ptr cs:[bp+7FBh]
 		if ( CUtils::match("^call dword ptr cs:(off_code_\\w+)\\[(.*)\\]$", strLine, arrMatches) )
 		{

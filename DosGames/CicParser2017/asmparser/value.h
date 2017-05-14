@@ -298,14 +298,14 @@ public:
 			_ASSERT(eRegLength != unknown);
 			if ( eRegLength == r8 )
 			{
-				m_value = make_shared<CValue>(matches[0]);
+				m_value = make_shared<CValue>(matches[0], CValue::r16);
 				m_eType = byteptrval;
 				m_eRegLength = r8;
 				return;
 			}
 			if ( eRegLength == r16 )
 			{
-				m_value = make_shared<CValue>(matches[0]);
+				m_value = make_shared<CValue>(matches[0], CValue::r16);
 				m_eType = wordptrval;
 				m_eRegLength = r16;
 				return;
@@ -321,13 +321,16 @@ public:
 
 		if ( value == "bx+di" )
 		{
+			m_eRegLength = r16;
 			m_eType = bx_plus_di;
 			return;
 		}
 
 		if ( CUtils::match("^bx\\+si\\+(.*)$", value.c_str(), matches) )
 		{
+			_ASSERT(eRegLength == r16);
 			m_eType = bx_plus_si_plus;
+			m_eRegLength = eRegLength;
 			m_nValue = CUtils::ParseLiteral(matches[0]);
 			return;
 		}

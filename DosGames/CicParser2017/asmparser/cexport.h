@@ -1,5 +1,7 @@
 class CCExport
 {
+	vector<shared_ptr<CInstruction>> m_arrSource;
+
 public:
 	int CountRefs(vector<shared_ptr<CCInstruction>>& arrOutput, CLabel label)
 	{
@@ -15,91 +17,404 @@ public:
 		return nCount;
 	}
 
-	void Convert(vector<shared_ptr<CInstruction>>& arrInput, vector<shared_ptr<CCInstruction>>& arrOutput)
+	vector<int> FindReferences(const vector<shared_ptr<CInstruction>>& arrCode, CLabel label)
+	{
+		vector<int> aux;
+
+		for (int i=0; (size_t)i<arrCode.size(); i++)
+		{
+			shared_ptr<CIJump> pJump = dynamic_pointer_cast<CIJump>(arrCode[i]);
+			if (pJump && pJump->m_label == label)
+				aux.push_back(i);
+
+			shared_ptr<CIConditionalJump> pConditional = dynamic_pointer_cast<CIConditionalJump>(arrCode[i]);
+			if (pConditional && pConditional->m_label == label)
+				aux.push_back(i);
+		}
+
+		return move(aux);
+	}
+
+	vector<shared_ptr<CInstruction>> GetDataStarting(CLabel label)
+	{
+		vector<shared_ptr<CInstruction>> aux;
+		bool bFound = false;
+
+		for (int i=0; (size_t)i<m_arrSource.size(); i++)
+		{
+			shared_ptr<CIData> pData = dynamic_pointer_cast<CIData>(m_arrSource[i]);
+			if (pData)
+			{
+				if (!bFound)
+					bFound = true;
+			} else
+			{
+				if (bFound)
+					return aux;
+			}
+
+			if (bFound)
+				aux.push_back(pData);
+		}
+
+		_ASSERT(0);
+		return aux;
+	}
+
+	shared_ptr<CCInstruction> Convert(string strFunction, shared_ptr<CInstruction> pInInstruction, shared_ptr<CInstruction> pPrevious)
+	{
+		shared_ptr<CCInstruction> pOutInstruction;
+
+		if ( dynamic_pointer_cast<CINop>(pInInstruction) )
+			return nullptr;
+
+		shared_ptr<CICompare> pCompare = dynamic_pointer_cast<CICompare>(pInInstruction);
+		if ( pCompare )
+		{
+			// TODO: Automatic
+			if (strFunction=="")
+			{
+				pOutInstruction = make_shared<CCCompare>(pCompare, CCCompare::ZeroCarryFlag);
+			} else
+			if (strFunction=="sub_658")
+			{
+				pOutInstruction = make_shared<CCCompare>(pCompare, CCCompare::ZeroFlag);
+			} else
+			if (strFunction=="sub_34A0")
+			{
+				pOutInstruction = make_shared<CCCompare>(pCompare, CCCompare::ZeroCarryFlag);
+			} else
+				return nullptr;
+		}
+		if (dynamic_pointer_cast<CITest>(pInInstruction) )
+		{
+			return nullptr;
+		}
+
+		if ( dynamic_pointer_cast<CIData>(pInInstruction) && dynamic_pointer_cast<CIData>(pInInstruction)->m_eType == CIData::Function )
+		{
+			return nullptr;
+		}
+
+		shared_ptr<CIReturn> pReturn = dynamic_pointer_cast<CIReturn>(pInInstruction);
+		/*
+		if (pReturn && i == arrInput.size()-1 && pReturn->m_nReduceStack == 0)
+			return nullptr;
+			*/
+
+		if (pReturn)
+			pOutInstruction = make_shared<CCReturn>( pReturn );
+
+		shared_ptr<CIAssignment> pAssignment = dynamic_pointer_cast<CIAssignment>(pInInstruction);
+		if (pAssignment)
+			pOutInstruction = make_shared<CCAssignment>( pAssignment->m_valueTo, pAssignment->m_valueFrom);
+
+		shared_ptr<CIAlu> pAlu = dynamic_pointer_cast<CIAlu>(pInInstruction);
+		if (pAlu)
+			pOutInstruction = make_shared<CCAssignment>( pAlu );
+
+		shared_ptr<CIZeroArgOp> pZeroArgOp = dynamic_pointer_cast<CIZeroArgOp>(pInInstruction);
+		if (pZeroArgOp)
+			pOutInstruction = make_shared<CCZeroArgOp>( pZeroArgOp );
+
+		shared_ptr<CISingleArgOp> pSingleArgOp = dynamic_pointer_cast<CISingleArgOp>(pInInstruction);
+		if (pSingleArgOp)
+			pOutInstruction = make_shared<CCSingleArgOp>( pSingleArgOp );
+
+		shared_ptr<CITwoArgOp> pTwoArgOp = dynamic_pointer_cast<CITwoArgOp>(pInInstruction);
+		if (pTwoArgOp)
+			pOutInstruction = make_shared<CCTwoArgOp>( pTwoArgOp );
+
+		shared_ptr<CIString> pStringOp = dynamic_pointer_cast<CIString>(pInInstruction);
+		if (pStringOp)
+			pOutInstruction = make_shared<CCStringOp>(pStringOp);
+
+		shared_ptr<CIConditionalJump> pConditionalJump = dynamic_pointer_cast<CIConditionalJump>(pInInstruction);
+		if (pConditionalJump)
+			pOutInstruction = make_shared<CCConditionalJump>( pConditionalJump, pPrevious );
+
+		shared_ptr<CIJump> pJump = dynamic_pointer_cast<CIJump>(pInInstruction);
+		if (pJump)
+			pOutInstruction = make_shared<CCConditionalJump>( pJump );
+
+		shared_ptr<CILabel> pLabel = dynamic_pointer_cast<CILabel>(pInInstruction);
+		if (pLabel)
+			pOutInstruction = make_shared<CCLabel>( pLabel );
+
+		shared_ptr<CICall> pCall = dynamic_pointer_cast<CICall>(pInInstruction);
+		if (pCall)
+			pOutInstruction = make_shared<CCCall>( pCall );
+
+		shared_ptr<CISwitch> pSwitch = dynamic_pointer_cast<CISwitch>(pInInstruction);
+		if (pSwitch)
+		{
+			vector<shared_ptr<CInstruction>> arrOptions = GetDataStarting(pSwitch->m_label);
+			pOutInstruction = make_shared<CCSwitch>( pSwitch, arrOptions );
+		}
+
+		shared_ptr<CILoop> pLoop = dynamic_pointer_cast<CILoop>(pInInstruction);
+		if (pLoop)
+		{
+			if ( pLoop->m_eType != CILoop::Loop )
+			{
+				_ASSERT(pPrevious);
+			}
+
+			pOutInstruction = make_shared<CCConditionalJump>( pLoop, pPrevious );
+		}
+			
+		_ASSERT(pOutInstruction);
+		return pOutInstruction;
+	}
+
+	shared_ptr<CInstruction> TracebackCondition(CIConditionalJump::EType eType, vector<shared_ptr<CInstruction>>& arrInput, int nLine)
+	{
+		for (int nTraceBack=nLine; nTraceBack>=max(0, nLine-10); nTraceBack--)
+		{
+			shared_ptr<CInstruction> pPrev = nTraceBack > 0 ? arrInput[nTraceBack-1] : nullptr;
+			shared_ptr<CInstruction> pInstruction = arrInput[nTraceBack];
+
+			if (dynamic_pointer_cast<CITest>(pInstruction) || dynamic_pointer_cast<CICompare>(pInstruction) ||
+				dynamic_pointer_cast<CIAlu>(pInstruction) )
+			{
+				return pInstruction;
+			}
+			if (dynamic_pointer_cast<CIConditionalJump>(pInstruction) || dynamic_pointer_cast<CILoop>(pInstruction) )
+			{
+				continue;
+			}
+			if (dynamic_pointer_cast<CISingleArgOp>(pInstruction) && dynamic_pointer_cast<CISingleArgOp>(pInstruction)->m_eType == CISingleArgOp::pop)
+			{
+				continue;
+			}
+			if (dynamic_pointer_cast<CISingleArgOp>(pInstruction) && dynamic_pointer_cast<CISingleArgOp>(pInstruction)->m_eType == CISingleArgOp::interrupt)
+			{
+				return pInstruction;
+			}
+			if ( dynamic_pointer_cast<CILabel>(pInstruction) && dynamic_pointer_cast<CIJump>(pPrev) )
+			{
+				vector<int> arrRefs = FindReferences(arrInput, dynamic_pointer_cast<CILabel>(pInstruction)->m_label);
+				_ASSERT(arrRefs.size() == 1);
+
+				return TracebackCondition(eType, arrInput, arrRefs[0]);
+			}
+			if (dynamic_pointer_cast<CICall>(pInstruction))
+			{
+				// Toto musime manualne!!!
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_13D8" ) // alu op -> AL
+				{
+					return make_shared<CIAlu>(CIAlu::And, CValue("al"), CValue("8", CValue::r8));
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_658" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeZeroTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_34A0" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeZeroCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_1B7A" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_20F5" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_FC9" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_1608" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_22F7" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_1657" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_2E29" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_3C43" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_1B05" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_1B4C" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_265E" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_2567" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_33BA" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_21E0" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_3E52" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_3E6E" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_4065" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_42DB" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_42FC" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_431C" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_4557" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_4786" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_44E7" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_473E" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_47B0" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_502D" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_4DD0" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_5FE5" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_600F" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				if ( dynamic_pointer_cast<CICall>(pInstruction)->m_label == "sub_62A6" ) // need to use FLAGS!!!
+				{
+					//TODO: totally fake instruction just to let know that we need to use flag test
+					return make_shared<CIZeroArgOp>( CIZeroArgOp::FakeCarryTest );
+				} else
+				{
+					//vector<shared_ptr<CInstruction>> arrSub = GetSubCode(arrSource, pFunction->m_strName)
+					//dynamic_pointer_cast<CICall>(pInstruction)->m_label
+
+					_ASSERT(0);
+				}
+				return pInstruction;
+			}
+		}
+		_ASSERT(0);
+		return nullptr;
+	}
+
+	void Convert(CLabel strFunction, vector<shared_ptr<CInstruction>>& arrInput, vector<shared_ptr<CCInstruction>>& arrOutput)
 	{
 		shared_ptr<CCInstruction> pPrev;
 
 		for (int i=0; i<(int)arrInput.size(); i++)
 		{
 			shared_ptr<CInstruction> pInInstruction = arrInput[i];
-			shared_ptr<CCInstruction> pOutInstruction;
-
-			if ( dynamic_pointer_cast<CINop>(pInInstruction) )
-				continue;
-
-			if ( dynamic_pointer_cast<CICompare>(pInInstruction) ||
-			     dynamic_pointer_cast<CITest>(pInInstruction) )
-				continue;
-
-			if ( dynamic_pointer_cast<CIData>(pInInstruction) && dynamic_pointer_cast<CIData>(pInInstruction)->m_eType == CIData::Function )
+			shared_ptr<CInstruction> pCondition;
+			
+			if (dynamic_pointer_cast<CIConditionalJump>(pInInstruction))
 			{
-				// TODO: probably switch, check previous instruction
-				continue;
+				pCondition = TracebackCondition(dynamic_pointer_cast<CIConditionalJump>(pInInstruction)->m_eType, arrInput, i-1);
+			}
+			if (dynamic_pointer_cast<CILoop>(pInInstruction) && dynamic_pointer_cast<CILoop>(pInInstruction)->m_eType == CILoop::WhileEqual)
+			{
+				pCondition = TracebackCondition(CIConditionalJump::jz, arrInput, i-1);
+			}
+			if (dynamic_pointer_cast<CILoop>(pInInstruction) && dynamic_pointer_cast<CILoop>(pInInstruction)->m_eType == CILoop::WhileNotEqual)
+			{
+				pCondition = TracebackCondition(CIConditionalJump::jnz, arrInput, i-1);
 			}
 
-			shared_ptr<CIReturn> pReturn = dynamic_pointer_cast<CIReturn>(pInInstruction);
-			if (pReturn && i == arrInput.size()-1 && pReturn->m_nReduceStack == 0)
-				continue;
-
-			if (pReturn)
-				pOutInstruction = make_shared<CCReturn>( pReturn );
-
-			shared_ptr<CIAssignment> pAssignment = dynamic_pointer_cast<CIAssignment>(pInInstruction);
-			if (pAssignment)
-				pOutInstruction = make_shared<CCAssignment>( pAssignment->m_valueTo, pAssignment->m_valueFrom);
-
-			shared_ptr<CIAlu> pAlu = dynamic_pointer_cast<CIAlu>(pInInstruction);
-			if (pAlu)
-				pOutInstruction = make_shared<CCAssignment>( pAlu );
-
-			shared_ptr<CISingleArgOp> pSingleArgOp = dynamic_pointer_cast<CISingleArgOp>(pInInstruction);
-			if (pSingleArgOp)
-				pOutInstruction = make_shared<CCSingleArgOp>( pSingleArgOp );
-
-			shared_ptr<CITwoArgOp> pTwoArgOp = dynamic_pointer_cast<CITwoArgOp>(pInInstruction);
-			if (pTwoArgOp)
-				pOutInstruction = make_shared<CCTwoArgOp>( pTwoArgOp );
-
-			shared_ptr<CIConditionalJump> pConditionalJump = dynamic_pointer_cast<CIConditionalJump>(pInInstruction);
-			if (pConditionalJump)
-			{
-				shared_ptr<CInstruction> pInstruction = arrInput[i-1];
-				if ( dynamic_pointer_cast<CICompare>(pInstruction) )
-					pOutInstruction = make_shared<CCConditionalJump>( pConditionalJump, dynamic_pointer_cast<CICompare>(pInstruction) );
-				else if ( dynamic_pointer_cast<CITest>(pInstruction) )
-					pOutInstruction = make_shared<CCConditionalJump>( pConditionalJump, dynamic_pointer_cast<CITest>(pInstruction) );
-				else if ( dynamic_pointer_cast<CIAlu>(pInstruction) )
-					pOutInstruction = make_shared<CCConditionalJump>( pConditionalJump, dynamic_pointer_cast<CIAlu>(pInstruction) );
-				else
-					_ASSERT(0);
-			}
-
-			shared_ptr<CIJump> pJump = dynamic_pointer_cast<CIJump>(pInInstruction);
-			if (pJump)
-				pOutInstruction = make_shared<CCConditionalJump>( pJump );
-
-			shared_ptr<CILabel> pLabel = dynamic_pointer_cast<CILabel>(pInInstruction);
-			if (pLabel)
-				pOutInstruction = make_shared<CCLabel>( pLabel );
-
-			shared_ptr<CICall> pCall = dynamic_pointer_cast<CICall>(pInInstruction);
-			if (pCall)
-				pOutInstruction = make_shared<CCCall>( pCall );
-
-			shared_ptr<CILoop> pLoop = dynamic_pointer_cast<CILoop>(pInInstruction);
-			if (pLoop)
-				pOutInstruction = make_shared<CCConditionalJump>( pLoop );
+			shared_ptr<CCInstruction> pOutInstruction = Convert(strFunction, pInInstruction, pCondition);
 
 			if (!pOutInstruction)
-				_ASSERT(0);
+				continue;
 
 			if (pOutInstruction->TryJoin(pPrev))
 				arrOutput.pop_back();
 
 			//printf("%s\n", pOutInstruction->ToString().c_str());
 			pPrev = pOutInstruction;
-			arrOutput.push_back( pOutInstruction);
+			arrOutput.push_back(pOutInstruction);
 		}
+
+		if ( !arrOutput.empty() && arrOutput.back()->ToString() == "return;" )
+			arrOutput.pop_back();
 	}
 
 	void OptimizeLoops(vector<shared_ptr<CCInstruction>>& arrOutput)
@@ -402,28 +717,38 @@ public:
 		}
 	}
 
-	void DumpProgram(vector<shared_ptr<CCInstruction>>& arrOutput)
+	void DumpProgram(vector<shared_ptr<CCInstruction>>& arrOutput, int nBaseIndent = 0)
 	{
 		int nIndent = 0;
 		for (int i=0; i<(int)arrOutput.size(); i++)
 		{	
-			if ( arrOutput[i]->ToString().find("}") != string::npos )
-				nIndent--;
+			if ( !dynamic_pointer_cast<CCSwitch>(arrOutput[i]) )
+			{
+				if ( arrOutput[i]->ToString().find("}") != string::npos )
+					nIndent--;
+			}
 
-			for (int j=0; j<nIndent; j++)
-				printf("  ");
+			string strPad;
+			if ( !dynamic_pointer_cast<CCLabel>(arrOutput[i]) )
+				for (int j=0; j<nBaseIndent + nIndent; j++)
+					strPad += "  ";
 
-			printf("%s\n", arrOutput[i]->ToString().c_str());
+			string all(arrOutput[i]->ToString());
+			CUtils::replace(all, "\r", "\n"); 
+			istringstream is(all);
+			string line;
+			while (getline(is, line, '\n'))
+				printf("%s%s\n", strPad.c_str(), line.c_str());
 
 			if ( arrOutput[i]->ToString().find("{") != string::npos )
 				nIndent++;
 		}
 	}
 
-	void Optimize(vector<shared_ptr<CInstruction>>& arrInput)
+	void Optimize(CLabel name, vector<shared_ptr<CInstruction>>& arrInput)
 	{
 		vector<shared_ptr<CCInstruction>> arrOutput;
-		Convert(arrInput, arrOutput);
+		Convert(name, arrInput, arrOutput);
 		/*
 		//arrOutput.insert(arrOutput.begin(), make_shared<CCLabel>(CLabel("sub_CF")));
 		OptimizeRedirects(arrOutput);		
@@ -440,5 +765,84 @@ public:
 		OptimizeConditions(arrOutput);
 		*/
 		DumpProgram(arrOutput);	
+	}
+
+	// TODO: Duplicity
+	int FindLabel(const vector<shared_ptr<CInstruction>>& arrCode, string label)
+	{
+		for (int i=0; (size_t)i<arrCode.size(); i++)
+		{
+			shared_ptr<CIFunction> pFunction = dynamic_pointer_cast<CIFunction>(arrCode[i]);
+			if (pFunction && pFunction->m_eBoundary == CIFunction::Begin && pFunction->m_strName == label)
+			{
+				return i;
+			}
+		}
+		_ASSERT(0);
+		return -1;
+	}
+
+	vector<shared_ptr<CInstruction>> GetSubCode(const vector<shared_ptr<CInstruction>>& arrCode, CLabel label)
+	{
+		vector<shared_ptr<CInstruction>> aux;
+
+		int nBegin = FindLabel(arrCode, label);
+		_ASSERT(nBegin >= 0);
+		for (int i=nBegin+1; i<(int)arrCode.size() && !dynamic_pointer_cast<CIFunction>(arrCode[i]); i++)
+			aux.push_back(arrCode[i]);
+
+		return move(aux);
+	}
+
+	void Process(const vector<shared_ptr<CInstruction>>& arrSource)
+	{
+		m_arrSource = arrSource;
+
+		bool bInFunc = false;
+		for (int i=0; i<(int)arrSource.size(); i++)
+		{
+			shared_ptr<CInstruction> pInstruction = arrSource[i];
+			shared_ptr<CINop> pNop = dynamic_pointer_cast<CINop>(pInstruction);
+
+			if ( pNop )
+				continue;
+
+			shared_ptr<CIFunction> pFunction = dynamic_pointer_cast<CIFunction>(pInstruction);
+			if (bInFunc)
+			{
+				shared_ptr<CIReturn> pReturn = dynamic_pointer_cast<CIReturn>(pInstruction);
+				if ( pReturn )
+				{
+					_ASSERT(pReturn->m_nReduceStack == 0);
+					bInFunc = false;
+					continue;
+				}
+
+				_ASSERT(pFunction && pFunction->m_eBoundary == CIFunction::End);
+				bInFunc = false;
+				continue;
+			}
+
+			if (!pFunction || pFunction->m_eBoundary != CIFunction::Begin)
+			{
+				// lost code!
+				printf("// %s\n", typeid(*pInstruction).name()); //Convert("", pInstruction, nullptr)->ToString().c_str());
+				continue;
+			}
+
+			_ASSERT(pFunction && pFunction->m_eBoundary == CIFunction::Begin);
+			bInFunc = true;
+
+			vector<shared_ptr<CInstruction>> arrFunction = GetSubCode(arrSource, pFunction->m_strName);
+
+			vector<shared_ptr<CCInstruction>> arrCFunction;
+			Convert(pFunction->m_strName, arrFunction, arrCFunction);
+
+			printf("void %s()\n{\n", pFunction->m_strName.c_str());
+			DumpProgram(arrCFunction, 1);	
+			printf("}\n\n");
+
+			i += arrFunction.size();
+		}
 	}
 };

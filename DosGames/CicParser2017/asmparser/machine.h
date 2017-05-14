@@ -471,18 +471,6 @@ public:
 		return move(aux);
 	}
 
-	vector<shared_ptr<CInstruction>> GetSubCode(CLabel label)
-	{
-		vector<shared_ptr<CInstruction>> aux;
-
-		int nBegin = FindLabel(label);
-		_ASSERT(nBegin >= 0);
-		for (int i=nBegin+1; i<(int)m_arrCode.size() && !dynamic_pointer_cast<CIFunction>(m_arrCode[i]); i++)
-			aux.push_back(m_arrCode[i]);
-
-		return move(aux);
-	}
-
 	int FindLabel(string label)
 	{
 		auto i = m_mapLabels.find(label);
@@ -604,7 +592,7 @@ public:
 
 			case CValue::bx_plus_si_plus: // PTR?
 				// TODO: ptr, 16
-				//_ASSERT(v.GetRegisterLength() == CValue::r16);
+				_ASSERT(v.GetRegisterLength() == CValue::r16);
 				return MappedRead(m_reg.b.r16.bx + m_reg.si + v.m_nValue);
 
 			case CValue::wordptrasbyte:

@@ -313,9 +313,9 @@ public:
 		{
 			if (i % 50 == 0)
 			{
-				data[0x693]++;
-				data[0x6BC+5] = 1;
-				data[0x6BC+7] = 1;
+				//data[0x693]++;
+				//data[0x6BC+5] = 1;
+				//data[0x6BC+7] = 1;
 
 				VideoUpdate();
 			}

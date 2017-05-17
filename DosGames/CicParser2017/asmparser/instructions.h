@@ -321,16 +321,19 @@ public:
 	CValue m_op2;
 	EType m_eType;
 
+	// Realtime
+	bool m_bExportInsertion;
+
 public:
-	CIAlu() {}
+	CIAlu() : m_bExportInsertion(false) {}
 
 	CIAlu(EType eType, const CValue& op1) : 
-	  m_eType(eType), m_op1(op1)
+	  m_eType(eType), m_op1(op1), m_bExportInsertion(false)
 	{
 	}
 
 	CIAlu(EType eType, const CValue& op1, const CValue& op2) : 
-	  m_eType(eType), m_op1(op1), m_op2(op2)
+	  m_eType(eType), m_op1(op1), m_op2(op2), m_bExportInsertion(false)
 	{
 	}
 
@@ -428,14 +431,22 @@ public:
 class CISwitch : public CInstruction
 {
 public:
+	enum EType
+	{
+		Jump,
+		Call
+	};
+
+public:
 	CLabel m_label;
 	CValue m_reg;
+	EType m_eType;
 
 public:
 	CISwitch() : m_label("") {}
 
-	CISwitch(const CLabel& label, const CValue& reg) : 
-	  m_label(label), m_reg(reg)
+	CISwitch(const CLabel& label, const CValue& reg, EType eType) : 
+	  m_label(label), m_reg(reg), m_eType(eType)
 	{
 	}
 

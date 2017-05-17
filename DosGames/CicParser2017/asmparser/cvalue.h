@@ -42,6 +42,7 @@ string CValue::ToC()
 
 	case CValue::wordptrasbyte:
 	case CValue::byteptr:
+		// TODO: vsade pridat adr(_ds, ...)
 		ss << "memory[0x" << hex << uppercase << m_nValue << "]";
 		return ss.str();
 
@@ -67,7 +68,7 @@ string CValue::ToC()
 		if ( m_eRegLength == CValue::r8 )
 			ss << "memory[adr(_es, _di)]";
 		else if ( m_eRegLength == CValue::r16 )
-			ss << "*(WORD*)memory[adr(_es, _di)]";
+			ss << "*(WORD*)&memory[adr(_es, _di)]";
 		else
 			_ASSERT(0);
 		return ss.str();
@@ -75,10 +76,10 @@ string CValue::ToC()
 	case CValue::es_ptr_di_plus:
 		_ASSERT(m_nValue >= 0);
 		if ( m_eRegLength == CValue::r8 )
-			ss << "memory[_es*16 + ofs(_di + " << m_nValue << ")]";
+			ss << "memory[adr(_es, _di + " << m_nValue << ")]";
 		else
 		if ( m_eRegLength == CValue::r16 )
-			ss << "*(WORD*)memory[_es*16 + ofs(_di + " << m_nValue << ")]";
+			ss << "*(WORD*)&memory[adr(_es, _di + " << m_nValue << ")]";
 		else
 			_ASSERT(0);
 		return ss.str();
@@ -86,10 +87,10 @@ string CValue::ToC()
 	case CValue::es_ptr:
 		_ASSERT(m_nValue >= 0);
 		if ( m_eRegLength == CValue::r8 )
-			ss << "memory[_es*16 + " << m_nValue << "]";
+			ss << "memory[adr(_es, " << m_nValue << ")]";
 		else
 		if ( m_eRegLength == CValue::r16 )
-			ss << "*(WORD*)memory[_es*16 + " << m_nValue << "]";
+			ss << "*(WORD*)&memory[adr(_es, " << m_nValue << ")]";
 		else
 			_ASSERT(0);
 		return ss.str();
@@ -114,7 +115,7 @@ string CValue::ToC()
 
 	case CValue::bx_plus_si_plus:
 		_ASSERT(m_eRegLength == r16);
-		ss << "*(WORD*)&memory[ofs(_bx + _si + " << m_nValue << ")]";
+		ss << "_bx + _si + " << m_nValue;
 		return ss.str();
 
 	case CValue::bx_plus_di:

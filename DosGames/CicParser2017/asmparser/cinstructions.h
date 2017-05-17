@@ -13,6 +13,7 @@ class CCAssignment : public CCInstruction
 {
 	string m_strDst;
 	string m_strSrc;
+	string m_strInsertion;
 
 public:
 	CCAssignment(CValue& vTo, CValue& vFrom)
@@ -28,23 +29,42 @@ public:
 		switch (pAlu->m_eType)
 		{
 		case CIAlu::Increment: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = op1 + " + 1";
 			break;
 		case CIAlu::Decrement: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = op1 + " - 1";
 			break;
 		case CIAlu::Add: 
+			if (pAlu->m_bExportInsertion)
+			{
+				_ASSERT(pAlu->m_op1.GetRegisterLength() == pAlu->m_op2.GetRegisterLength());
+				if (pAlu->m_op1.GetRegisterLength() == CValue::r8)
+					m_strInsertion = "flags.carry = (" + op1 + " + " + op2 + ") >= 0x100";
+				else if (pAlu->m_op1.GetRegisterLength() == CValue::r8)
+					m_strInsertion = "flags.carry = (" + op1 + " + " + op2 + ") >= 0x10000";
+				else
+					_ASSERT(0);
+			}
+
 			m_strDst = op1; 
 			m_strSrc = op1 + " + " + op2;
 			break;
 		case CIAlu::AddWithCarry: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			// TODO CARRY!!! ODKIAL??
 			m_strDst = op1; 
-			m_strSrc = op1 + " + " + op2 + " + _flags.carry; _ASSERT(0 /* add with carry */)";
+			m_strSrc = op1 + " + " + op2 + " + flags.carry; _ASSERT(0 /* add with carry */)";
 			break;
 		case CIAlu::Sub: 
+			if (pAlu->m_bExportInsertion)
+			{
+				m_strInsertion = "flags.carry = " + op1 + " < " + op2;
+			}
+
 			m_strDst = op1; 
 			if ( op1 == op2 )
 				m_strSrc = "0";
@@ -52,34 +72,55 @@ public:
 				m_strSrc = op1 + " - " + op2;
 			break;
 		case CIAlu::Xor: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = op1 + " ^ " + op2;
 			break;
 		case CIAlu::And: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = op1 + " & " + op2;
 			break;
 		case CIAlu::Or: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = op1 + " | " + op2;
 			break;
 		case CIAlu::Not: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
-			m_strSrc = "!" + op1;
+			m_strSrc = "(~" + op1 + ")";
 			break;
 		case CIAlu::Neg: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = op1; 
 			m_strSrc = "-" + op1;
 			break;
 		case CIAlu::Shl: 
+			if (pAlu->m_bExportInsertion)
+			{
+				_ASSERT(op2 == "1");
+				if (pAlu->m_op1.GetRegisterLength() == CValue::r8)
+					m_strInsertion = "flags.carry = !!(" + op1 + " & 0x80)";
+				else if (pAlu->m_op1.GetRegisterLength() == CValue::r16)
+					m_strInsertion = "flags.carry = !!(" + op1 + " & 0x8000)";
+				else
+					_ASSERT(0);
+			}
 			m_strDst = op1; 
 			m_strSrc = op1 + " << " + op2;
 			break;
 		case CIAlu::Shr: 
+			if (pAlu->m_bExportInsertion)
+			{
+				_ASSERT(op2 == "1");
+				m_strInsertion = "flags.carry = " + op1 + " & 1";
+			}
 			m_strDst = op1; 
 			m_strSrc = op1 + " >> " + op2;
 			break;
 		case CIAlu::Mul: 
+			_ASSERT(!pAlu->m_bExportInsertion);
 			m_strDst = CValue("ax").ToC(); 
 			m_strSrc = op1 + " * " + CValue("al").ToC();
 			break;
@@ -90,6 +131,7 @@ public:
 
 	virtual string ToString() override
 	{
+		string strInsertion = m_strInsertion.empty() ? "" : m_strInsertion + ";\n";
 		vector<string> arrMatches;
 		string strTest = m_strSrc;
 		CUtils::replace(strTest, m_strDst, "###");
@@ -102,16 +144,19 @@ public:
 			if ( arrMatches[0] == "-" && arrMatches[1] == "1" )
 				return m_strDst + "--";
 				*/
-			return m_strDst + " " + arrMatches[0] + "= " + arrMatches[1] + ";";
+			return strInsertion + m_strDst + " " + arrMatches[0] + "= " + arrMatches[1] + ";";
 		}
 
-		return m_strDst + " = " + m_strSrc + ";";
+		return strInsertion + m_strDst + " = " + m_strSrc + ";";
 	}
 
 	virtual bool TryJoin(shared_ptr<CCInstruction> pInstruction) override
 	{
 		shared_ptr<CCAssignment> pPrev = dynamic_pointer_cast<CCAssignment>(pInstruction);
 		if (!pPrev)
+			return false;
+
+		if ( !pPrev->m_strInsertion.empty() || !m_strInsertion.empty())
 			return false;
 
 		if ( m_strDst == pPrev->m_strDst )
@@ -153,14 +198,14 @@ public:
 
 		switch (pInstruction->m_eType)
 		{
-		case CIZeroArgOp::cli: m_strOperation = "_flags.interrupt = false"; break;
-		case CIZeroArgOp::sti: m_strOperation = "_flags.interrupt = true"; break;
-		case CIZeroArgOp::cld: m_strOperation = "_flags.direction = false"; break;
-		case CIZeroArgOp::_std: m_strOperation = "_flags.direction = true"; break;
-		case CIZeroArgOp::clc: m_strOperation = "_flags.carry = false"; break;
-		case CIZeroArgOp::stc: m_strOperation = "_flags.carry = true"; break;
-		case CIZeroArgOp::lahf: m_strOperation = "_ah = _regs.toByte()"; break;
-		case CIZeroArgOp::sahf: m_strOperation = "_regs.fromByte(_ah)"; break;
+		case CIZeroArgOp::cli: m_strOperation = "flags.interrupt = false"; break;
+		case CIZeroArgOp::sti: m_strOperation = "flags.interrupt = true"; break;
+		case CIZeroArgOp::cld: m_strOperation = "flags.direction = false"; break;
+		case CIZeroArgOp::_std: m_strOperation = "flags.direction = true"; break;
+		case CIZeroArgOp::clc: m_strOperation = "flags.carry = false"; break;
+		case CIZeroArgOp::stc: m_strOperation = "flags.carry = true"; break;
+		case CIZeroArgOp::lahf: m_strOperation = "_ah = flags.toByte()"; break;
+		case CIZeroArgOp::sahf: m_strOperation = "flags.fromByte(_ah)"; break;
 
 		case CIZeroArgOp::lodsb: m_strOperation = "_lodsb()"; break;
 		case CIZeroArgOp::stosb: m_strOperation = "_stosb()"; break;
@@ -171,7 +216,7 @@ public:
 
 		case CIZeroArgOp::pushf: m_strOperation = "_pushf()"; break;
 		case CIZeroArgOp::popf: m_strOperation = "_popf()"; break;
-		case CIZeroArgOp::aaa: m_strOperation = "_aaa()"; break;
+		case CIZeroArgOp::aaa: m_strOperation = "_ASSERT(0 /* check carry */); _aaa()"; break;
 		default:
 				_ASSERT(0);
 		}
@@ -227,8 +272,8 @@ public:
 		case CITwoArgOp::in: m_strOperation = "_in($arg1, $arg2)"; break;
 		case CITwoArgOp::out: m_strOperation = "_out($arg1, $arg2)"; break;
 		case CITwoArgOp::xchg: m_strOperation = "_xchg($arg1, $arg2)"; break;
-		case CITwoArgOp::rcr: m_strOperation = "_rcr($arg1, $arg2)"; break;
-		case CITwoArgOp::rcl: m_strOperation = "_rcl($arg1, $arg2)"; break;
+		case CITwoArgOp::rcr: m_strOperation = "_ASSERT(0 /* check carry */); _rcr($arg1, $arg2)"; break;
+		case CITwoArgOp::rcl: m_strOperation = "_ASSERT(0 /* check carry */); _rcl($arg1, $arg2)"; break;
 		case CITwoArgOp::rol: m_strOperation = "_rol($arg1, $arg2)"; break;
 		case CITwoArgOp::les: m_strOperation = "_les($arg1, $arg2)"; break;
 		case CITwoArgOp::lea: m_strOperation = "_lea($arg1, $arg2)"; break;
@@ -392,14 +437,67 @@ public:
 		m_strLabel = pCondition->m_label;
 		m_eLabelType = Label;
 		m_strSigned = SignedType(pAlu->m_op1);
-
-		switch ( pCondition->m_eType )
+		switch (pAlu->m_eType)
 		{
-		case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
-		case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
-		case CIConditionalJump::jb: m_strCondition = "($type)$a < 0"; break;
-		case CIConditionalJump::ja: m_strCondition = "($type)$a > 0"; break;
-		case CIConditionalJump::jnb: m_strCondition = "($type)$a >= 0"; break;
+		case CIAlu::Increment:
+			switch ( pCondition->m_eType )
+			{
+			case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
+			case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+			case CIConditionalJump::jb: m_strCondition = "($type)$a < 0"; break; // TODO: verify?
+			default:
+				_ASSERT(0);
+			}
+			break;
+
+		case CIAlu::Decrement: // TODO: should change carry??
+			switch ( pCondition->m_eType )
+			{
+			case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
+			case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+			default:
+				_ASSERT(0);
+			}
+			break;
+
+		case CIAlu::And:
+		case CIAlu::Or:
+		case CIAlu::Sub:
+		case CIAlu::Add:
+		case CIAlu::Xor:
+			switch ( pCondition->m_eType )
+			{
+			case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
+			case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+			case CIConditionalJump::ja: m_strCondition = "$a > 0"; break;
+			case CIConditionalJump::jb: 
+				pAlu->m_bExportInsertion = true;
+				m_strCondition = "flags.carry"; break;
+			case CIConditionalJump::jnb: 
+				pAlu->m_bExportInsertion = true;
+				m_strCondition = "!flags.carry"; break;
+			default:
+				_ASSERT(0);
+			}
+			break;
+		
+		case CIAlu::Shl:
+		case CIAlu::Shr:
+			switch ( pCondition->m_eType )
+			{
+			case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
+			case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
+			case CIConditionalJump::jb: 
+				pAlu->m_bExportInsertion = true;
+				m_strCondition = "flags.carry"; break;
+			case CIConditionalJump::jnb: 
+				pAlu->m_bExportInsertion = true;
+				m_strCondition = "!flags.carry"; break;
+			default:
+				_ASSERT(0);
+			}
+			break;
+
 		default:
 			_ASSERT(0);
 		}
@@ -414,22 +512,22 @@ public:
 		{
 		case CIConditionalJump::jz: 
 			_ASSERT(eCondition == ZeroFlag);
-			m_strCondition = "_flags.zero"; 
+			m_strCondition = "flags.zero"; 
 			break;
 			
 		case CIConditionalJump::jnz: 
 			_ASSERT(eCondition == ZeroFlag);
-			m_strCondition = "!_flags.zero"; 
+			m_strCondition = "!flags.zero"; 
 			break;
 
 		case CIConditionalJump::jnb: 
 			_ASSERT(eCondition == CarryFlag || eCondition == ZeroCarryFlag);
-			m_strCondition = "!_flags.carry"; 
+			m_strCondition = "!flags.carry"; 
 			break;
 
 		case CIConditionalJump::jb: 
 			_ASSERT(eCondition == CarryFlag);
-			m_strCondition = "_flags.carry"; 
+			m_strCondition = "flags.carry"; 
 			break;
 
 		default:
@@ -680,6 +778,7 @@ public:
 
 class CCReturn : public CCInstruction
 {
+public:
 	int m_nReduceStack;
 
 public:
@@ -690,6 +789,7 @@ public:
 
 	virtual string ToString() override
 	{
+		_ASSERT(m_nReduceStack == 0);
 		return "return;";
 	}
 };
@@ -715,14 +815,14 @@ public:
 		{
 		case CCCompare::ZeroCarryFlag: 
 			// TODO: Check
-			m_strCode = "_flags.zero = $arg1 == $arg2; _flags.carry = $arg1 < $arg2"; 
+			m_strCode = "flags.zero = $arg1 == $arg2; flags.carry = $arg1 < $arg2"; 
 			break;
 
 		case CCCompare::ZeroFlag: 
 			if (strArgument1 == strArgument2)
-				m_strCode = "_flags.zero = true";
+				m_strCode = "flags.zero = true";
 			else
-				m_strCode = "_flags.zero = $arg1 == $arg2"; 
+				m_strCode = "flags.zero = $arg1 == $arg2"; 
 			break;
 
 		default:
@@ -779,8 +879,10 @@ public:
 
 class CCSwitch : public CCInstruction
 {
+public:
 	string m_strSelector;
-	vector<string> m_arrLabels;
+	vector<CLabel> m_arrLabels;
+
 public:
 	CCSwitch(shared_ptr<CISwitch> pSwitch, vector<shared_ptr<CInstruction>> arrInstructions)
 	{
@@ -803,7 +905,7 @@ public:
 		for (int i=0; i<(int)m_arrLabels.size(); i++)
 			ss << "  case " << i*2 << ": goto " << m_arrLabels[i] << ";" << endl;
 		ss << "  default:" << endl;
-		ss << "    _ASSERT(0)" << endl;
+		ss << "    _ASSERT(0);" << endl;
 		ss << "}" << endl;
 
 		return ss.str();

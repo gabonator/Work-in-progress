@@ -516,6 +516,8 @@ void CITwoArgOp::Eval(CMachine& m)
 
 	if (m_eType == CITwoArgOp::rcr)
 	{
+		// TODO: Both 8bit &  16big
+		_ASSERT( m_rvalue1.GetRegisterLength() == CValue::r16 );
 		_ASSERT( m.GetValue(m_rvalue2) == 1 );
 		int nValue = m.GetValue(m_rvalue1); 
 		bool ncf = nValue & 1;

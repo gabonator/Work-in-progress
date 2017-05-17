@@ -3,20 +3,6 @@ class CCExport
 	vector<shared_ptr<CInstruction>> m_arrSource;
 
 public:
-	int CountRefs(vector<shared_ptr<CCInstruction>>& arrOutput, CLabel label)
-	{
-		int nCount = 0;
-
-		for (int i=0; i<(int)arrOutput.size(); i++)
-		{
-			shared_ptr<CCConditionalJump> pJump = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i]);
-			if ( pJump && pJump->GetLabel() == label )
-				nCount++;
-		}
-
-		return nCount;
-	}
-
 	vector<int> FindReferences(const vector<shared_ptr<CInstruction>>& arrCode, CLabel label)
 	{
 		vector<int> aux;
@@ -173,6 +159,18 @@ public:
 		{
 			shared_ptr<CInstruction> pPrev = nTraceBack > 0 ? arrInput[nTraceBack-1] : nullptr;
 			shared_ptr<CInstruction> pInstruction = arrInput[nTraceBack];
+			/*
+			if ( eType == CIConditionalJump::jb )
+			{
+				//carry 
+				shared_ptr<CIAlu> pAlu = dynamic_pointer_cast<CIAlu>(pInstruction);
+				if (pAlu->m_eType == CIAlu::Decrement)
+					return pAlu;
+
+				shared_ptr<CIZeroArgOp> pZeroArgOp = dynamic_pointer_cast<CIZeroArgOp>(pInstruction);
+				if ( pZeroArgOp->m_eType == CIZeroArgOp::sahf
+				continue;
+			}*/
 
 			if (dynamic_pointer_cast<CITest>(pInstruction) || dynamic_pointer_cast<CICompare>(pInstruction) ||
 				dynamic_pointer_cast<CIAlu>(pInstruction) )
@@ -386,7 +384,20 @@ public:
 		{
 			shared_ptr<CInstruction> pInInstruction = arrInput[i];
 			shared_ptr<CInstruction> pCondition;
-			
+			/*
+			if (dynamic_pointer_cast<CITwoArgOp>(pInInstruction) && 
+				(dynamic_pointer_cast<CITwoArgOp>(pInInstruction)->m_eType == CITwoArgOp::rcl ||
+				 dynamic_pointer_cast<CITwoArgOp>(pInInstruction)->m_eType == CITwoArgOp::rcr ))
+			{
+				pCondition = TracebackCondition(CIConditionalJump::jb, arrInput, i-1);
+			}
+
+			if (dynamic_pointer_cast<CIAlu>(pInInstruction) && 
+				dynamic_pointer_cast<CIAlu>(pInInstruction)->m_eType == CIAlu::AddWithCarry )
+			{
+				pCondition = TracebackCondition(CIConditionalJump::jb, arrInput, i-1);
+			}
+			*/
 			if (dynamic_pointer_cast<CIConditionalJump>(pInInstruction))
 			{
 				pCondition = TracebackCondition(dynamic_pointer_cast<CIConditionalJump>(pInInstruction)->m_eType, arrInput, i-1);
@@ -451,7 +462,7 @@ public:
 
 					if ( pJump->GetLabel() == pLastLabel->GetLabel() )
 					{
-						if (CountRefs(arrOutput, pLastLabel->GetLabel()) == 1)
+						if (GetReferencesToLabel(arrOutput, pLastLabel->GetLabel()).size() == 1)
 						{
 							// only one loop uses this label
 							arrOutput[nLastLabel] = make_shared<CCLoop>(pLastLabel);
@@ -526,7 +537,7 @@ public:
 
 					if ( pTryNextLabel && pTryNextLabel->GetLabel() == pCondition->GetLabel())
 					{
-						if ( GetReferencesToLabel(arrOutput, pCondition->GetLabel()) == 1 )
+						if ( GetReferencesToLabel(arrOutput, pCondition->GetLabel()).size() == 1 )
 						{
 							arrOutput[i] = make_shared<CCIfThenElse>(pCondition);
 							arrOutput[j+1] = make_shared<CCIfThenElse>(CCIfThenElse::Final);
@@ -558,27 +569,40 @@ public:
 		// inner loop remover, should run multiple times
 		for (int i=0; i<(int)arrOutput.size(); i++)
 		{
-			shared_ptr<CCConditionalJump> pJump = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i]);
-			if (pJump)
+			shared_ptr<CCLabel> pCurLabel = dynamic_pointer_cast<CCLabel>(arrOutput[i]);
+			if ( pCurLabel )
+			//shared_ptr<CCConditionalJump> pJump = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i]);
+			//if (pJump)
 			{
-				int nTarget = GetLabelRow(arrOutput, pJump->GetLabel());
+				//int nTarget = GetLabelRow(arrOutput, pJump->GetLabel());
 				// if return
 				// TODO: mali by sme zrusit vyhadzovanie returnu na konci funkcie
-				if ( nTarget+1 == arrOutput.size() )
+				shared_ptr<CCInstruction> pNextInstruction = i < (int)arrOutput.size()-1 ? arrOutput[i+1] : nullptr;
+				shared_ptr<CCReturn> pReturn = dynamic_pointer_cast<CCReturn>(pNextInstruction);
+
+				if ( i+1 == arrOutput.size() || (pReturn && pReturn->m_nReduceStack == 0) )
 				{
 					// there will be no reference to label
-					if ( GetReferencesToLabel(arrOutput, pJump->GetLabel()) == 1 )
+					vector<int> arrRefs = GetReferencesToLabel(arrOutput, pCurLabel->GetLabel());
+					
+					for (int j=0; j<(int)arrRefs.size(); j++)
 					{
-						pJump->SetLabelReturn();
-						arrOutput.erase(arrOutput.begin() + nTarget);
+						shared_ptr<CCInstruction> pRedir = arrOutput[arrRefs[j]];
+						if ( dynamic_pointer_cast<CCConditionalJump>(pRedir) )
+							dynamic_pointer_cast<CCConditionalJump>(pRedir)->SetLabelReturn();
+						else
+							_ASSERT(0);
 					}
+					arrOutput.erase(arrOutput.begin() + i);
+					i--;
 				}
 			}
 		}
 	}
 
-	int GetReferencesToLabel(vector<shared_ptr<CCInstruction>>& arrOutput, CLabel label)
+	vector<int> GetReferencesToLabel(vector<shared_ptr<CCInstruction>>& arrOutput, CLabel label)
 	{
+		vector<int> aux;
 		int nCount = 0;
 
 		for (int i=0; i<(int)arrOutput.size(); i++)
@@ -586,10 +610,17 @@ public:
 			shared_ptr<CCConditionalJump> pJump = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i]);
 			if (pJump && pJump->GetLabelLabel() && pJump->GetLabel() == label)
 			{
-				nCount++;
+				aux.push_back(i);
+			}
+
+			shared_ptr<CCSwitch> pSwitch = dynamic_pointer_cast<CCSwitch>(arrOutput[i]);
+			if ( pSwitch )
+			{
+				if (find(pSwitch->m_arrLabels.begin(), pSwitch->m_arrLabels.end(), label) != pSwitch->m_arrLabels.end())
+					aux.push_back(i);;
 			}
 		}
-		return nCount;
+		return aux;
 	}
 
 	int GetLabelRow(vector<shared_ptr<CCInstruction>>& arrOutput, CLabel label)
@@ -626,6 +657,23 @@ public:
 						pJump->SetLabel(pNextJump->GetLabel());
 				}
 				arrOutput.erase(arrOutput.begin()+i);
+			}
+		}
+	}
+
+	void OptimizeUnreferenced(vector<shared_ptr<CCInstruction>>& arrOutput)
+	{
+		for (int i=0; i<(int)arrOutput.size()-1; i++)
+		{
+			shared_ptr<CCLabel> pLabel = dynamic_pointer_cast<CCLabel>(arrOutput[i]);
+
+			if (pLabel) 
+			{
+				if (GetReferencesToLabel(arrOutput, pLabel->GetLabel()).size() == 0)
+				{
+					arrOutput.erase(arrOutput.begin()+i);
+					i--;
+				}
 			}
 		}
 	}
@@ -745,6 +793,37 @@ public:
 		}
 	}
 
+	void DumpProgram(ostream& out, vector<shared_ptr<CCInstruction>>& arrOutput, int nBaseIndent = 0)
+	{
+		int nIndent = 0;
+		for (int i=0; i<(int)arrOutput.size(); i++)
+		{	
+			if ( !dynamic_pointer_cast<CCSwitch>(arrOutput[i]) )
+			{
+				if ( arrOutput[i]->ToString().find("}") != string::npos )
+					nIndent--;
+			}
+
+			string strPad;
+			if ( !dynamic_pointer_cast<CCLabel>(arrOutput[i]) )
+				for (int j=0; j<nBaseIndent + nIndent; j++)
+					strPad += "  ";
+
+			string all(arrOutput[i]->ToString());
+			CUtils::replace(all, "\r", "\n"); 
+			istringstream is(all);
+			string line;
+			while (getline(is, line, '\n'))
+				out << strPad << line << endl;
+
+			if ( !dynamic_pointer_cast<CCSwitch>(arrOutput[i]) )
+			{
+				if ( arrOutput[i]->ToString().find("{") != string::npos )
+					nIndent++;
+			}
+		}
+	}
+
 	void Optimize(CLabel name, vector<shared_ptr<CInstruction>>& arrInput)
 	{
 		vector<shared_ptr<CCInstruction>> arrOutput;
@@ -797,7 +876,51 @@ public:
 	void Process(const vector<shared_ptr<CInstruction>>& arrSource)
 	{
 		m_arrSource = arrSource;
+		//std::ostream& osCode = cout;
+		//std::ostream& osHeader = cout;
 
+		ofstream osCode("C:\\Data\\Devel\\VC\\asmhost1\\asmhost1\\code\\app.cpp");
+		ofstream osHeader("C:\\Data\\Devel\\VC\\asmhost1\\asmhost1\\code\\app.h");
+
+		osCode << "#include \"stdafx.h\"" << endl;
+		osCode << "#include \"app.h\"" << endl;
+		osCode << endl;
+		osHeader << "#include \"common.h\"" << endl;
+		osHeader << endl;
+
+		// first pass - set export flags for shl/shr
+		for (int i=0; i<(int)arrSource.size(); i++)
+		{
+			shared_ptr<CInstruction> pInstruction = arrSource[i];
+			shared_ptr<CIFunction> pFunction = dynamic_pointer_cast<CIFunction>(pInstruction);
+			shared_ptr<CIData> pData = dynamic_pointer_cast<CIData>(pInstruction);
+
+			// TODO: nestripovat _code_
+			if (pData && pData->m_eType == CIData::Byte)
+			{
+				osHeader << "extern BYTE " << pData->m_strVariableName << ";" << endl;
+				osCode << "BYTE " << pData->m_strVariableName << " = " << pData->m_nValue << ";" << endl;
+			}
+
+			if (pData && pData->m_eType == CIData::Word)
+			{
+				osHeader << "extern WORD " << pData->m_strVariableName << ";" << endl;
+				osCode << "WORD " << pData->m_strVariableName << " = " << pData->m_nValue << ";" << endl;
+			}
+
+			if (!pFunction || pFunction->m_eBoundary != CIFunction::Begin)
+				continue;
+
+			vector<shared_ptr<CInstruction>> arrFunction = GetSubCode(arrSource, pFunction->m_strName);
+			vector<shared_ptr<CCInstruction>> arrCFunction;
+			Convert(pFunction->m_strName, arrFunction, arrCFunction);
+			i += arrFunction.size();
+		}
+
+		osCode << endl;
+		osHeader << endl;
+
+		// second pass - generate code
 		bool bInFunc = false;
 		for (int i=0; i<(int)arrSource.size(); i++)
 		{
@@ -808,6 +931,10 @@ public:
 				continue;
 
 			shared_ptr<CIFunction> pFunction = dynamic_pointer_cast<CIFunction>(pInstruction);
+
+			if (pFunction && pFunction->m_eBoundary == CIFunction::Begin)
+				osHeader << "void " << pFunction->m_strName.c_str() << "();" << endl;
+
 			if (bInFunc)
 			{
 				shared_ptr<CIReturn> pReturn = dynamic_pointer_cast<CIReturn>(pInstruction);
@@ -826,7 +953,7 @@ public:
 			if (!pFunction || pFunction->m_eBoundary != CIFunction::Begin)
 			{
 				// lost code!
-				printf("// %s\n", typeid(*pInstruction).name()); //Convert("", pInstruction, nullptr)->ToString().c_str());
+				osCode << "// " << typeid(*pInstruction).name() << "\n";
 				continue;
 			}
 
@@ -837,10 +964,19 @@ public:
 
 			vector<shared_ptr<CCInstruction>> arrCFunction;
 			Convert(pFunction->m_strName, arrFunction, arrCFunction);
+			// TODO: locret musime vyhodit
+			// TODO: pridat entry label a stripnut unused labels
 
-			printf("void %s()\n{\n", pFunction->m_strName.c_str());
-			DumpProgram(arrCFunction, 1);	
-			printf("}\n\n");
+			shared_ptr<CCLabel> pEntry = make_shared<CCLabel>(pFunction->m_strName);
+			arrCFunction.insert(arrCFunction.begin(), pEntry);
+			
+			OptimizeRedirects(arrCFunction);		
+			OptimizeExits(arrCFunction);
+			OptimizeUnreferenced(arrCFunction);
+
+			osCode << "void " << pFunction->m_strName << "()" << endl << "{" << endl;
+			DumpProgram(osCode, arrCFunction, 1);	
+			osCode << "}" << endl << endl;
 
 			i += arrFunction.size();
 		}

@@ -68,11 +68,12 @@ void VideoUpdate()
 int main(int argc, char* argv[])
 {
 	CSourceParser sp;
-//	sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
+	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsGoose\\devel\\goose_code.asm");
 	//sp.Parse("C:\\Data\\Devel\\VC\\catdec_xen\\catdec\\goose_vx\\goose_code.asm");
 	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\JsXenon\\asm\\xenon2a.asm");
-	//sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Source\\cat_code.asm");
-	//sp.Save("cat.cache");
+	
+	sp.Parse("C:\\Data\\Devel\\Github\\Work-in-progress\\DosGames\\AlleyCat\\Source\\cat_code.asm");
+	sp.Save("cat.cache");
 	sp.Load("cat.cache");
 
 	//sp.Save("goose.cache");
@@ -93,7 +94,7 @@ int main(int argc, char* argv[])
 	// TODO: optimize exit condition sub_CF
 //	vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("sub_103"));
 	//vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("sub_1AD"));
-	//vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("sub_1C0"));
+	//vector<shared_ptr<CInstruction>> arrCo%de = m.GetSubCode(CLabel("sub_1C0"));
 	
 	
 	//vector<shared_ptr<CInstruction>> arrCode = m.GetSubCode(CLabel("start"));

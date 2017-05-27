@@ -1,3 +1,12 @@
+#include "stdafx.h"
+#include "app.h"
+
+WORD word_code_13DF = 0;
+WORD word_code_13E1 = 0;
+WORD word_code_13E3 = 0;
+WORD word_code_13E5 = 0;
+BYTE byte_code_13E7 = 0;
+
 void start()
 {
   _push(_ds);
@@ -194,193 +203,193 @@ loc_249:
   _bx <<= 1;
   switch (_bx)
   {
-    case 0: goto loc_code_3E2;
-    case 2: goto loc_code_3E2;
-    case 4: goto loc_code_459;
-    case 6: goto loc_code_394;
-    case 8: goto loc_code_349;
-    case 10: goto loc_code_2FE;
-    case 12: goto loc_code_2AA;
-    case 14: goto loc_code_260;
+    case 0: goto loc_3E2;
+    case 2: goto loc_3E2;
+    case 4: goto loc_459;
+    case 6: goto loc_394;
+    case 8: goto loc_349;
+    case 10: goto loc_2FE;
+    case 12: goto loc_2AA;
+    case 14: goto loc_260;
     default:
-      _ASSERT(0)
+      _ASSERT(0);
   }
 loc_260:
-    *(WORD*)&memory[0x4] = 7;
-    sub_1BF0();
-    sub_2790();
-    sub_7A1();
-    sub_1E40();
-    sub_3405();
-    sub_6100();
-    sub_4F59();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 7;
+  sub_1BF0();
+  sub_2790();
+  sub_7A1();
+  sub_1E40();
+  sub_3405();
+  sub_6100();
+  sub_4F59();
+  sub_58BD();
 loc_27E:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_8E5();
-    sub_6106();
-    sub_2F66();
-    sub_2E60();
-    sub_4C10();
-    _al = ((memory[0x551] | memory[0x553]) | memory[0x41C]) | memory[0x41B];
-    if (_al == 0)
-      goto loc_27E;
-    goto loc_427;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_8E5();
+  sub_6106();
+  sub_2F66();
+  sub_2E60();
+  sub_4C10();
+  _al = ((memory[0x551] | memory[0x553]) | memory[0x41C]) | memory[0x41B];
+  if (_al == 0)
+    goto loc_27E;
+  goto loc_427;
 loc_2AA:
-    *(WORD*)&memory[0x4] = 6;
-    sub_1BF0();
-    sub_2790();
-    nullsub_1();
-    sub_7A1();
-    sub_3405();
-    sub_1E40();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 6;
+  sub_1BF0();
+  sub_2790();
+  nullsub_1();
+  sub_7A1();
+  sub_3405();
+  sub_1E40();
+  sub_58BD();
 loc_2C5:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_4943();
-    sub_47D6();
-    sub_8E5();
-    if (memory[0x1CB8] == 0)
-      goto loc_2E3;
-    sub_1E63();
-    goto loc_2E6;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_4943();
+  sub_47D6();
+  sub_8E5();
+  if (memory[0x1CB8] == 0)
+    goto loc_2E3;
+  sub_1E63();
+  goto loc_2E6;
 loc_2E3:
-    sub_3150();
+  sub_3150();
 loc_2E6:
-    _al = (((memory[0x551] | memory[0x552]) | memory[0x553]) | memory[0x41B]) | memory[0x41C];
-    if (_al == 0)
-      goto loc_2C5;
-    goto loc_427;
+  _al = (((memory[0x551] | memory[0x552]) | memory[0x553]) | memory[0x41B]) | memory[0x41C];
+  if (_al == 0)
+    goto loc_2C5;
+  goto loc_427;
 loc_2FE:
-    *(WORD*)&memory[0x4] = 5;
-    sub_1BF0();
-    sub_2790();
-    sub_457A();
-    sub_7A1();
-    sub_3405();
-    sub_1E40();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 5;
+  sub_1BF0();
+  sub_2790();
+  sub_457A();
+  sub_7A1();
+  sub_3405();
+  sub_1E40();
+  sub_58BD();
 loc_319:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_45AB();
-    sub_4340();
-    sub_8E5();
-    sub_3150();
-    sub_1E63();
-    _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
-    if (_al == 0)
-      goto loc_319;
-    goto loc_427;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_45AB();
+  sub_4340();
+  sub_8E5();
+  sub_3150();
+  sub_1E63();
+  _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
+  if (_al == 0)
+    goto loc_319;
+  goto loc_427;
 loc_349:
-    *(WORD*)&memory[0x4] = 4;
-    sub_1BF0();
-    sub_2790();
-    sub_7A1();
-    sub_3405();
-    sub_1E40();
-    sub_4090();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 4;
+  sub_1BF0();
+  sub_2790();
+  sub_7A1();
+  sub_3405();
+  sub_1E40();
+  sub_4090();
+  sub_58BD();
 loc_364:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_8E5();
-    sub_3E90();
-    sub_40C2();
-    sub_3150();
-    sub_1E63();
-    _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
-    if (_al == 0)
-      goto loc_364;
-    goto loc_427;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_8E5();
+  sub_3E90();
+  sub_40C2();
+  sub_3150();
+  sub_1E63();
+  _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
+  if (_al == 0)
+    goto loc_364;
+  goto loc_427;
 loc_394:
-    *(WORD*)&memory[0x4] = 3;
-    sub_1BF0();
-    sub_2790();
-    sub_7A1();
-    sub_3405();
-    sub_1E40();
-    sub_3B30();
-    sub_3C90();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 3;
+  sub_1BF0();
+  sub_2790();
+  sub_7A1();
+  sub_3405();
+  sub_1E40();
+  sub_3B30();
+  sub_3C90();
+  sub_58BD();
 loc_3B2:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_8E5();
-    sub_3CB1();
-    sub_3B42();
-    sub_3150();
-    sub_1E63();
-    _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
-    if (_al == 0)
-      goto loc_3B2;
-    goto loc_427;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_8E5();
+  sub_3CB1();
+  sub_3B42();
+  sub_3150();
+  sub_1E63();
+  _al = (((memory[0x552] | memory[0x553]) | memory[0x551]) | memory[0x41C]) | memory[0x41B];
+  if (_al == 0)
+    goto loc_3B2;
+  goto loc_427;
 loc_3E2:
-    *(WORD*)&memory[0x4] = 1;
-    sub_1BF0();
-    sub_2790();
-    sub_7A1();
-    sub_3405();
-    sub_1E40();
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 1;
+  sub_1BF0();
+  sub_2790();
+  sub_7A1();
+  sub_3405();
+  sub_1E40();
+  sub_58BD();
 loc_3FA:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_8E5();
-    sub_3150();
-    sub_1E63();
-    sub_3850();
-    if (memory[0x554] != 0)
-      goto loc_459;
-    _al = ((memory[0x552] | memory[0x551]) | memory[0x41B]) | memory[0x41C];
-    if (_al == 0)
-      goto loc_3FA;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_8E5();
+  sub_3150();
+  sub_1E63();
+  sub_3850();
+  if (memory[0x554] != 0)
+    goto loc_459;
+  _al = ((memory[0x552] | memory[0x551]) | memory[0x41B]) | memory[0x41C];
+  if (_al == 0)
+    goto loc_3FA;
 loc_427:
-    if (memory[0x41B] == 0)
-      goto loc_431;
-    goto loc_AE;
+  if (memory[0x41B] == 0)
+    goto loc_431;
+  goto loc_AE;
 loc_431:
-    if (memory[0x41C] == 0)
-      goto loc_43B;
-    goto loc_A3;
+  if (memory[0x41C] == 0)
+    goto loc_43B;
+  goto loc_A3;
 loc_43B:
-    if (memory[0x552] == 0)
-      goto loc_447;
-    memory[0x419] = 0;
+  if (memory[0x552] == 0)
+    goto loc_447;
+  memory[0x419] = 0;
 loc_447:
-    _ax = *(WORD*)&memory[0x4];
-    *(WORD*)&memory[0x6] = _ax;
-    *(WORD*)&memory[0x4] = 0;
-    sub_1BF0();
-    goto loc_F3;
+  _ax = *(WORD*)&memory[0x4];
+  *(WORD*)&memory[0x6] = _ax;
+  *(WORD*)&memory[0x4] = 0;
+  sub_1BF0();
+  goto loc_F3;
 loc_459:
-    *(WORD*)&memory[0x4] = 2;
-    sub_1BF0();
-    sub_2790();
-    sub_35C9();
-    sub_7A1();
-    memory[0x1CBF] = 0;
-    memory[0x1CB8] = 0;
-    sub_58BD();
+  *(WORD*)&memory[0x4] = 2;
+  sub_1BF0();
+  sub_2790();
+  sub_35C9();
+  sub_7A1();
+  memory[0x1CBF] = 0;
+  memory[0x1CB8] = 0;
+  sub_58BD();
 loc_478:
-    sub_1338();
-    sub_1200();
-    sub_546D();
-    sub_8E5();
-    sub_3675();
-    sub_37E5();
-    _al = ((memory[0x552] | memory[0x553]) | memory[0x41C]) | memory[0x41B];
-    if (_al == 0)
-      goto loc_478;
-    goto loc_427;
+  sub_1338();
+  sub_1200();
+  sub_546D();
+  sub_8E5();
+  sub_3675();
+  sub_37E5();
+  _al = ((memory[0x552] | memory[0x553]) | memory[0x41C]) | memory[0x41B];
+  if (_al == 0)
+    goto loc_478;
+  goto loc_427;
 }
 
 void sub_4A0()
@@ -388,21 +397,20 @@ void sub_4A0()
   memory[0x531] -= 1;
   if (memory[0x531] == 0)
     goto loc_4A7;
-locret_4A6:
   return;
 loc_4A7:
   memory[0x531] += 1;
   sub_13D8();
   if (_al != 0)
-    goto locret_4A6;
+    return;
   if (memory[0x55A] != 0)
-    goto locret_4A6;
+    return;
   if (memory[0x1673] != 0)
-    goto locret_4A6;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx == *(WORD*)&memory[0x544])
-    goto locret_4A6;
+    return;
   *(WORD*)&memory[0x544] = _dx;
   _bx = *(WORD*)&memory[0x8];
   _al = memory[ofs(_bx + 1330)];
@@ -413,11 +421,11 @@ loc_4DF:
   memory[0x531] = _al;
   _bx = *(WORD*)&memory[0x52F];
   sub_658();
-  if (_flags.zero)
+  if (flags.zero)
     goto loc_50C;
   _al = memory[0x525] + memory[ofs(_bx + 1321)];
   if (_al < 0x04)
-    goto locret_4A6;
+    return;
 loc_4F6:
   sub_2DFD();
   _dl &= 0x03;
@@ -442,7 +450,7 @@ loc_523:
     goto loc_523;
   _bl = _dl;
   sub_658();
-  if (!_flags.zero)
+  if (!flags.zero)
     goto loc_523;
 loc_535:
   *(WORD*)&memory[0x52F] = _bx;
@@ -490,8 +498,9 @@ loc_59E:
   goto loc_5D0;
 loc_5BF:
   *(WORD*)&memory[0x55F] -= 1;
+  flags.carry = _ax < 0x0004;
   _ax -= 0x0004;
-  if ((short)_ax < 0)
+  if (flags.carry)
     goto loc_59E;
   if (_ax < 0x0008)
     goto loc_59E;
@@ -509,23 +518,23 @@ loc_5D0:
   _di = _si;
   if (_bx != 0x0002)
     goto loc_5F1;
-  _flags.direction = false;
+  flags.direction = false;
   _di -= 1;
   goto loc_5F3;
 loc_5F1:
-  _flags.direction = true;
+  flags.direction = true;
   _di += 1;
 loc_5F3:
   _cx = 0x027f;
   _push(_di);
   _push(_si);
-  _rep_movsb();
+  _rep_movsb<MemB800, MemB800, DirBackward>();
   _si = _pop();
   _di = _pop();
   _si += 0x2000;
   _di += 0x2000;
   _cx = 0x0280;
-  _rep_movsb();
+  _rep_movsb<MemB800, MemB800, DirBackward>();
   _ds = _pop();
   _di = *(WORD*)&memory[0x523];
   _bl = memory[0x525];
@@ -547,24 +556,24 @@ loc_630:
 
 void sub_633()
 {
-  _ah = _regs.toByte();
+  _ah = flags.toByte();
   _bx = *(WORD*)&memory[0x52F];
   _bl = memory[ofs(_bx + 1345)];
   _cx = 0x0005;
   if (_bl == 0x09)
     goto loc_64E;
 loc_644:
-  _regs.fromByte(_ah);
-  _rcr(memory[ofs(_bx + 4118)], 1);
-  _ah = _regs.toByte();
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcr(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
   _bx += 1;
   if (--_cx)
     goto loc_644;
   return;
 loc_64E:
-  _regs.fromByte(_ah);
-  _rcl(memory[ofs(_bx + 4118)], 1);
-  _ah = _regs.toByte();
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcl(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
   _bx -= 1;
   if (--_cx)
     goto loc_64E;
@@ -574,40 +583,39 @@ void sub_658()
 {
   memory[0x4D6] = 0;
   _al = memory[0x57C];
-  _flags.zero = _al == memory[ofs(_bx + 1341)];
+  flags.zero = _al == memory[ofs(_bx + 1341)];
   if (_al < memory[ofs(_bx + 1341)])
     goto loc_679;
-  _flags.zero = _al == memory[ofs(_bx + 1338)];
+  flags.zero = _al == memory[ofs(_bx + 1338)];
   if (_al >= memory[ofs(_bx + 1338)])
     goto loc_679;
-  _flags.zero = memory[0x55C] == 1;
+  flags.zero = memory[0x55C] == 1;
   if (memory[0x55C] >= 1)
     goto loc_674;
   return;
 loc_674:
   memory[0x4D6] = 1;
 loc_679:
-  _flags.zero = true;
+  flags.zero = true;
 }
 
 // class CIReturn
 void sub_67D()
 {
   memory[0x540] = 0;
-  _flags.direction = false;
+  flags.direction = false;
   _cx = 0x20;
   _ax = 0xaaaa;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _di -= 0x40;
   _ax = 0x4444;
-  *(WORD*)memory[_es*16 + ofs(_di + 4)] = _ax;
-  *(WORD*)memory[_es*16 + ofs(_di + 6)] = _ax;
+  *(WORD*)&memory[adr(_es, _di + 4)] = _ax;
+  *(WORD*)&memory[adr(_es, _di + 6)] = _ax;
   sub_2DFD();
   if (_dl < _bl)
-    goto locret_6A4;
+    return;
   if (_dh > _bh)
     goto loc_6A5;
-locret_6A4:
   return;
 loc_6A5:
   sub_2DFD();
@@ -632,7 +640,7 @@ loc_6D0:
   _cx = 0x10;
   _si = 0x0460;
 loc_6D6:
-  _rep_movsw();
+  _rep_movsw<MemData, MemData, DirForward>();
   memory[0x540] = 3;
 }
 
@@ -649,8 +657,8 @@ loc_6ED:
   _si = *(WORD*)&memory[ofs(_bx + 1232)];
   _cx = 0x0008;
 loc_6F6:
-  _lodsw();
-  _stosw();
+  _lodsw<MemData, DirForward>();
+  _stosw<MemData, DirForward>();
   _di += 0x0002;
   if (--_cx)
     goto loc_6F6;
@@ -751,7 +759,7 @@ loc_805:
   memory[0x127C] = 0;
   sub_700();
   if (*(WORD*)&memory[0x4] != 2)
-    goto locret_871;
+    return;
   memory[0x576] = 0x10;
   *(WORD*)&memory[0x574] = 0x10;
   _ah = 0;
@@ -760,7 +768,6 @@ loc_805:
   memory[0x5F3] = 0;
   memory[0x5F4] = 5;
   memory[0x5F5] = 1;
-locret_871:
 }
 
 void sub_872()
@@ -780,17 +787,17 @@ loc_892:
   memory[0x571] = _dl;
   _ax = *(WORD*)&memory[0x579] - *(WORD*)&memory[0x2650];
   _dl = 0xff;
-  if ((short)_ax > 0)
+  if (_ax > 0)
     goto loc_8A5;
   _dl = 0x01;
-  _ax = !_ax;
+  _ax = (~_ax);
 loc_8A5:
   memory[0x56E] = _dl;
   if (_ah == 0x00)
     goto loc_8B1;
   _ax = 0xff;
 loc_8B1:
-  _al = !_al;
+  _al = (~_al);
   if (_al >= 0x30)
     goto loc_8B9;
   _al = 0x30;
@@ -815,11 +822,10 @@ void sub_8E5()
   if (_dx != *(WORD*)&memory[0x57D])
     goto loc_8FD;
   if (*(WORD*)&memory[0x684] == 0)
-    goto locret_8FC;
+    return;
   *(WORD*)&memory[0x684] -= 1;
   if (*(WORD*)&memory[0x684] == 0)
     goto loc_90C;
-locret_8FC:
   return;
 loc_8FD:
   _ax = 0x20;
@@ -841,19 +847,19 @@ loc_91D:
   _ax = _pop();
   _dx = _pop();
   if (_al == 0)
-    goto locret_8FC;
+    return;
 loc_926:
   *(WORD*)&memory[0x57D] = _dx;
   *(WORD*)&memory[0x57F] = _ax;
   if (*(WORD*)&memory[0x4] != 4)
     goto loc_93B;
   if (memory[0x39E1] != 0)
-    goto locret_8FC;
+    return;
 loc_93B:
   if (*(WORD*)&memory[0x4] != 6)
     goto loc_949;
   if (memory[0x44BD] != 0)
-    goto locret_8FC;
+    return;
 loc_949:
   if (*(WORD*)&memory[0x4] == 2)
     goto loc_953;
@@ -880,8 +886,10 @@ loc_971:
   _al += 0x1e;
   memory[0x5F4] = _al;
 loc_992:
-  _dl = memory[0x57B] - _al;
-  if ((char)_dl >= 0)
+  _dl = memory[0x57B];
+  flags.carry = _dl < _al;
+  _dl -= _al;
+  if (!flags.carry)
     goto loc_99C;
   _dl = 0;
 loc_99C:
@@ -955,7 +963,7 @@ loc_A4E:
   _al = memory[0x699];
   if (_al != 0x00)
     goto loc_A6A;
-  _al = !_al;
+  _al = (~_al);
   if (memory[0x576] < 0x10)
     goto loc_A7E;
   memory[0x576] -= 1;
@@ -990,8 +998,9 @@ loc_AA0:
   _dl = 0xb3;
   goto loc_ACE;
 loc_AB4:
+  flags.carry = _dl < _bl;
   _dl -= _bl;
-  if ((char)_dl < 0)
+  if (flags.carry)
     goto loc_ABD;
   if (_dl > 0x03)
     goto loc_ACE;
@@ -1083,37 +1092,32 @@ loc_B90:
   sub_13D8();
   if (_al == 0)
     goto loc_B90;
-loc_B95:
-  if (--_cx)
-    goto loc_B95;
+  _Sleep(_cx);
 loc_B97:
   sub_11E3();
   _ax = *(WORD*)&memory[0x563];
   *(WORD*)&memory[0x55F] = _ax;
   sub_1145();
   sub_34A0();
-  if (!_flags.carry)
-    goto locret_BAB;
+  if (!flags.carry)
+    return;
   sub_1145();
-locret_BAB:
   return;
 loc_BAC:
   sub_1B7A();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_BB2;
-locret_BB1:
   return;
 loc_BB2:
   if (memory[0x1CB8] != 0)
-    goto locret_BB1;
+    return;
   if (memory[0x558] == 0)
     goto loc_C1C;
   if (memory[0x559] == 0)
     goto loc_BD3;
   if (memory[0x1CBF] != 0)
-    goto locret_BD2;
+    return;
   memory[0x559] -= 1;
-locret_BD2:
   return;
 loc_BD3:
   memory[0x558] -= 1;
@@ -1133,17 +1137,16 @@ loc_BE5:
   sub_11E3();
 loc_C00:
   sub_1B7A();
-  if (_flags.carry)
-    goto locret_C1B;
+  if (flags.carry)
+    return;
   sub_20F5();
-  if (_flags.carry)
-    goto locret_C1B;
+  if (flags.carry)
+    return;
   _dl = memory[0x57B];
   _cx = *(WORD*)&memory[0x579];
   sub_2CB0();
   *(WORD*)&memory[0x55F] = _ax;
   sub_1145();
-locret_C1B:
   return;
 loc_C1C:
   if (memory[0x55C] < 1)
@@ -1158,11 +1161,11 @@ loc_C1C:
   *(WORD*)&memory[0x563] = _ax;
   sub_11E3();
   sub_1B7A();
-  if (_flags.carry)
-    goto locret_C66;
+  if (flags.carry)
+    return;
   sub_20F5();
-  if (_flags.carry)
-    goto locret_C66;
+  if (flags.carry)
+    return;
   _ax = *(WORD*)&memory[0x563];
   *(WORD*)&memory[0x55F] = _ax;
   *(WORD*)&memory[0x565] = 3587;
@@ -1170,10 +1173,8 @@ loc_C1C:
   sub_1145();
 loc_C5F:
   if (memory[0x699] != 0)
-    goto loc_C67;
-locret_C66:
+    goto loc_E78;
   return;
-loc_C67:
   goto loc_E78;
 loc_C6A:
   if (memory[0x571] != 0)
@@ -1181,7 +1182,7 @@ loc_C6A:
   goto loc_E23;
 loc_C74:
   sub_FC9();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_C90;
   memory[0x56E] = 0;
   memory[0x576] = 2;
@@ -1190,8 +1191,9 @@ loc_C74:
   goto loc_CC1;
 loc_C90:
   _al = memory[0x578];
+  flags.carry = memory[0x577] < _al;
   memory[0x577] -= _al;
-  if ((char)memory[0x577] >= 0)
+  if (!flags.carry)
     goto loc_CC1;
   if (memory[0x571] == 1)
     goto loc_CB6;
@@ -1218,7 +1220,7 @@ loc_CD5:
   if (memory[0x571] != 1)
     goto loc_CE7;
   sub_1608();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_CE7;
   _al = memory[0x57C];
   goto loc_D29;
@@ -1226,8 +1228,9 @@ loc_CE7:
   _al = memory[0x57C];
   if (memory[0x571] == 1)
     goto loc_D06;
+  flags.carry = _al < memory[0x576];
   _al -= memory[0x576];
-  if ((char)_al >= 0)
+  if (!flags.carry)
     goto loc_D4F;
   _al = 0;
   memory[0x571] = 1;
@@ -1260,8 +1263,9 @@ loc_D29:
   _ax = _pop();
 loc_D4F:
   memory[0x57C] = _al;
+  flags.carry = _al < 0x32;
   _al -= 0x32;
-  if ((char)_al >= 0)
+  if (!flags.carry)
     goto loc_D58;
   _al = 0;
 loc_D58:
@@ -1275,10 +1279,10 @@ loc_D58:
   sub_11E3();
 loc_D73:
   sub_1B7A();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_DC4;
   sub_20F5();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_DC4;
   _ax = *(WORD*)&memory[0x563];
   *(WORD*)&memory[0x55F] = _ax;
@@ -1295,19 +1299,20 @@ loc_DA1:
 loc_DA8:
   *(WORD*)&memory[0x55D] = _ax;
   *(WORD*)&memory[0x565] = _bx;
-  _al = 0x32 - memory[0x57C];
+  _al = 0x32;
+  flags.carry = _al < memory[0x57C];
+  _al -= memory[0x57C];
   if (_al == 0)
     goto loc_DDE;
-  if ((char)_al < 0)
+  if (flags.carry)
     goto loc_DDE;
   _cx = 0x0168;
-loc_DBC:
-  if (--_cx)
-    goto loc_DBC;
+  _Sleep(_cx);
+  flags.carry = _bh < _al;
   _bh -= _al;
   if (_bh == 0)
     goto loc_DC4;
-  if ((char)_bh >= 0)
+  if (!flags.carry)
     goto loc_DCA;
 loc_DC4:
   memory[0x583] = 1;
@@ -1321,22 +1326,27 @@ loc_DCA:
 loc_DDE:
   if (*(WORD*)&memory[0x4] != 7)
     goto loc_DEE;
-  _al = memory[0x57B] - 0xbb;
-  if ((char)_al < 0)
+  _al = memory[0x57B];
+  flags.carry = _al < 0xbb;
+  _al -= 0xbb;
+  if (flags.carry)
     goto loc_E1F;
-  if ((char)_al >= 0)
+  if (!flags.carry)
     goto loc_DFC;
 loc_DEE:
   if (memory[0x550] != 2)
     goto loc_E1F;
-  _al = memory[0x57B] - 0x5e;
-  if ((char)_al < 0)
+  _al = memory[0x57B];
+  flags.carry = _al < 0x5e;
+  _al -= 0x5e;
+  if (flags.carry)
     goto loc_E1F;
 loc_DFC:
+  flags.carry = _bh < _al;
   _bh -= _al;
   if (_bh == 0)
     goto loc_E02;
-  if ((char)_bh >= 0)
+  if (!flags.carry)
     goto loc_E16;
 loc_E02:
   if (*(WORD*)&memory[0x4] != 7)
@@ -1360,7 +1370,7 @@ loc_E23:
     goto loc_E78;
 loc_E31:
   sub_1608();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_E43;
   memory[0x56E] = 0;
   memory[0x571] = 1;
@@ -1369,7 +1379,7 @@ loc_E43:
   if (*(WORD*)&memory[0x4] != 0)
     goto loc_E78;
   sub_22F7();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_E56;
   memory[0x56C] = 0;
   goto loc_E78;
@@ -1447,9 +1457,8 @@ loc_F14:
   *(WORD*)&memory[0x567] = _ax;
   memory[0x39E0] = 0;
   if (memory[0x127C] == 0)
-    goto locret_F33;
+    return;
   sub_58F8();
-locret_F33:
   return;
 loc_F34:
   if (*(WORD*)&memory[0x4] == 0)
@@ -1473,16 +1482,15 @@ loc_F63:
   *(WORD*)&memory[0x55D] = _bx;
   sub_11E3();
   sub_1B7A();
-  if (_flags.carry)
-    goto locret_F86;
+  if (flags.carry)
+    return;
   sub_20F5();
-  if (_flags.carry)
-    goto locret_F86;
+  if (flags.carry)
+    return;
   _ax = *(WORD*)&memory[0x563];
   *(WORD*)&memory[0x55F] = _ax;
   *(WORD*)&memory[0x565] = 2819;
   sub_1145();
-locret_F86:
 }
 
 void sub_F87()
@@ -1531,23 +1539,24 @@ loc_FE8:
     goto loc_101B;
   _ax = *(WORD*)&memory[0x5F8] - 1;
   *(WORD*)&memory[0x579] = _ax;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_1007:
+  flags.carry = _ax < *(WORD*)&memory[0x572];
   _ax -= *(WORD*)&memory[0x572];
-  if ((short)_ax < 0)
+  if (flags.carry)
     goto loc_1013;
   if (_ax >= *(WORD*)&memory[0x5F6])
     goto loc_101B;
 loc_1013:
   _ax = *(WORD*)&memory[0x5F6];
   *(WORD*)&memory[0x579] = _ax;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_101B:
   *(WORD*)&memory[0x579] = _ax;
 loc_101E:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_1020()
@@ -1588,15 +1597,15 @@ void sub_1069()
     goto loc_1087;
   memory[0x56D] += 1;
   if (memory[0x56D] & 7)
-    goto locret_10DC;
+    return;
 loc_1087:
   sub_11E3();
   sub_1B7A();
-  if (_flags.carry)
-    goto locret_10DC;
+  if (flags.carry)
+    return;
   sub_20F5();
-  if (_flags.carry)
-    goto locret_10DC;
+  if (flags.carry)
+    return;
   sub_2DFD();
   _bl = _dl;
   _bx &= 0x0e;
@@ -1617,7 +1626,6 @@ loc_1087:
   _cx = 0x0602;
   sub_2D35();
   memory[0x583] = 0;
-locret_10DC:
 }
 
 void sub_10DD()
@@ -1654,7 +1662,7 @@ void sub_1124()
   _si = *(WORD*)&memory[0x55F];
   _ax = 0xb800;
   _ds = _ax;
-  _cx = *(WORD*)memory[_es*16 + 1377];
+  _cx = *(WORD*)&memory[adr(_es, 1377)];
   sub_2DCA();
   _ds = _pop();
   memory[0x583] = 0;
@@ -1676,8 +1684,10 @@ void sub_1145()
 void sub_1166()
 {
   _dl = memory[0x57B];
-  _cx = *(WORD*)&memory[0x579] - 0x0c;
-  if ((short)_cx >= 0)
+  _cx = *(WORD*)&memory[0x579];
+  flags.carry = _cx < 0x0c;
+  _cx -= 0x0c;
+  if (!flags.carry)
     goto loc_1175;
   _cx = 0;
 loc_1175:
@@ -1713,11 +1723,10 @@ loc_11AB:
   memory[0x583] = 0;
   sub_2D9D();
   if (memory[0x1678] == 0)
-    goto locret_11E2;
+    return;
   if (memory[0x1F80] == 0)
-    goto locret_11E2;
+    return;
   memory[0x1F80] -= 1;
-locret_11E2:
 }
 
 void sub_11E3()
@@ -1780,7 +1789,7 @@ loc_125E:
   memory[0x699] = _bl;
 loc_1275:
   if (!(memory[0x69E] & 3))
-    goto locret_12A0;
+    return;
   sub_13B7();
   _ax -= *(WORD*)&memory[0x69C];
   if (--_cx && _ax != 0x1964)
@@ -1790,9 +1799,8 @@ loc_1275:
   memory[0x698] = 0xff;
 loc_1294:
   if (!(memory[0x69E] & 2))
-    goto locret_12A0;
+    return;
   memory[0x699] = 0xff;
-locret_12A0:
 }
 
 void sub_12A1()
@@ -1869,15 +1877,14 @@ void sub_1338()
 {
   _ax = *(WORD*)&memory[0x693];
   if (_ax == *(WORD*)&memory[0x691])
-    goto locret_1357;
+    return;
   *(WORD*)&memory[0x691] = _ax;
   if (memory[0x6C0] & 0x80)
     goto loc_1358;
   _ax = *(WORD*)&memory[0x693];
   if (_ax == *(WORD*)&memory[0x6E00])
-    goto locret_1357;
+    return;
   sub_5E70();
-locret_1357:
   return;
 loc_1358:
   if (!(memory[0x6C9] & 0x80))
@@ -1902,14 +1909,12 @@ loc_1381:
   return;
 loc_138E:
   if (memory[0x6C7] & 0x80)
-    goto locret_13A4;
-  memory[0x0] = !memory[0x0];
+    return;
+  memory[0x0] = (~memory[0x0]);
   if (memory[0x0] != 0)
-    goto locret_13A3;
+    return;
   sub_5B21();
-locret_13A3:
   return;
-locret_13A4:
   return;
 loc_13A5:
   sub_147F();
@@ -1920,7 +1925,7 @@ void sub_13AA()
 {
   _ax = 0xf000;
   _es = _ax;
-  _al = memory[_es*16 + 65534];
+  _al = 0xff;
   memory[0x697] = _al;
 }
 
@@ -1964,16 +1969,16 @@ void sub_13E8()
   _push(_cx);
   _ax = SEG_DATA;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _di = 0x06b7;
   _cx = 0x16;
   _al = 0x80;
-  _rep_stosb();
-  _ax = (*(WORD*)memory[_es*16 + 1683]) - 0x70;
-  *(WORD*)memory[_es*16 + 1681] = _ax;
+  _rep_stosb<MemData, DirForward>();
+  _ax = (*(WORD*)&memory[adr(_es, 1683)]) - 0x70;
+  *(WORD*)&memory[adr(_es, 1681)] = _ax;
   _ax = 0x40;
   _es = _ax;
-  _al = memory[_es*16 + 18];
+  _al = memory[adr(_es, 18)];
   byte_code_13E7 = _al;
   _cx = _pop();
   _di = _pop();
@@ -1985,10 +1990,10 @@ void sub_1419()
 {
   _ax = 0;
   _es = _ax;
-  _ax = *(WORD*)memory[_es*16 + 36];
-  _bx = *(WORD*)memory[_es*16 + 38];
-  _cx = *(WORD*)memory[_es*16 + 288];
-  _dx = *(WORD*)memory[_es*16 + 290];
+  _ax = *(WORD*)&memory[adr(_es, 36)];
+  _bx = *(WORD*)&memory[adr(_es, 38)];
+  _cx = *(WORD*)&memory[adr(_es, 288)];
+  _dx = *(WORD*)&memory[adr(_es, 290)];
   word_code_13DF = _ax;
   word_code_13E1 = _bx;
   word_code_13E3 = _cx;
@@ -1998,8 +2003,8 @@ void sub_1419()
     goto loc_1450;
   _bx = 0x14fb;
 loc_1450:
-  _flags.interrupt = false;
-  *(WORD*)memory[_es*16 + 36] = _bx;
+  flags.interrupt = false;
+  *(WORD*)&memory[adr(_es, 36)] = _bx;
   *(WORD*)&memory[adr(_es, 38)] = _cs;
   if (memory[0x697] != 0xfd)
     goto loc_147D;
@@ -2007,10 +2012,10 @@ loc_1450:
   *(WORD*)&memory[adr(_es, 290)] = _cs;
   _ax = 0x40;
   _es = _ax;
-  _al = (memory[_es*16 + 24]) | 0x01;
-  memory[_es*16 + 24] = _al;
+  _al = (memory[adr(_es, 24)]) | 0x01;
+  memory[adr(_es, 24)] = _al;
 loc_147D:
-  _flags.interrupt = true;
+  flags.interrupt = true;
 }
 
 void sub_147F()
@@ -2021,15 +2026,15 @@ void sub_147F()
   _bx = word_code_13E1;
   _cx = word_code_13E3;
   _dx = word_code_13E5;
-  _flags.interrupt = false;
-  *(WORD*)memory[_es*16 + 36] = _ax;
-  *(WORD*)memory[_es*16 + 38] = _bx;
+  flags.interrupt = false;
+  *(WORD*)&memory[adr(_es, 36)] = _ax;
+  *(WORD*)&memory[adr(_es, 38)] = _bx;
   if (memory[0x697] != 0xfd)
     goto loc_14B1;
-  *(WORD*)memory[_es*16 + 288] = _cx;
-  *(WORD*)memory[_es*16 + 290] = _dx;
+  *(WORD*)&memory[adr(_es, 288)] = _cx;
+  *(WORD*)&memory[adr(_es, 290)] = _dx;
 loc_14B1:
-  _flags.interrupt = true;
+  flags.interrupt = true;
 }
 
 // class CISingleArgOp
@@ -2126,37 +2131,36 @@ loc_14B1:
 // class CIJump
 void sub_1572()
 {
-  _al = (memory[_es*16 + 1737]) | memory[_es*16 + 1719];
+  _al = (memory[adr(_es, 1737)]) | memory[adr(_es, 1719)];
   if (_al != 0x00)
-    goto locret_15C9;
-  if (memory[_es*16 + 1738] & 0x80)
+    return;
+  if (memory[adr(_es, 1738)] & 0x80)
     goto loc_158D;
   _al = 0x20;
   _out(0x20, _al);
   goto loc_1557;
 loc_158D:
-  if (memory[_es*16 + 1721] & 0x80)
+  if (memory[adr(_es, 1721)] & 0x80)
     goto loc_15A4;
-  if (memory[_es*16 + 1680] < 1)
-    goto locret_15C9;
-  memory[_es*16 + 1680] -= 1;
+  if (memory[adr(_es, 1680)] < 1)
+    return;
+  memory[adr(_es, 1680)] -= 1;
   goto loc_15B9;
 loc_15A4:
-  if (memory[_es*16 + 1723] & 0x80)
-    goto locret_15C9;
-  if (memory[_es*16 + 1680] >= 7)
-    goto locret_15C9;
-  memory[_es*16 + 1680] += 1;
+  if (memory[adr(_es, 1723)] & 0x80)
+    return;
+  if (memory[adr(_es, 1680)] >= 7)
+    return;
+  memory[adr(_es, 1680)] += 1;
 loc_15B9:
   _push(_dx);
   _al = 0x02;
   _dx = 0x03d4;
   _out(_dx, _al);
-  _al = (memory[_es*16 + 1680]) + 0x27;
+  _al = (memory[adr(_es, 1680)]) + 0x27;
   _dx += 1;
   _out(_dx, _al);
   _dx = _pop();
-locret_15C9:
 }
 
 void sub_15D0()
@@ -2198,8 +2202,8 @@ loc_161E:
   if (_al == 0x60)
     goto loc_1630;
   sub_1657();
-  if (_flags.carry)
-    goto locret_1656;
+  if (flags.carry)
+    return;
   sub_17AD();
   return;
 loc_1630:
@@ -2215,11 +2219,10 @@ loc_1630:
   _interrupt(0x1a);
   *(WORD*)&memory[0x556] = _dx;
 loc_1653:
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_1655:
-  _flags.carry = false;
-locret_1656:
+  flags.carry = false;
 }
 
 void sub_1657()
@@ -2232,7 +2235,7 @@ loc_1669:
   if (_al != 0x00)
     goto loc_1678;
   memory[0x127C] = 0;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_1678:
   _bx += 1;
@@ -2259,7 +2262,7 @@ loc_1681:
   memory[0x127C] = 1;
   sub_590E();
 loc_16C4:
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_16C6()
@@ -2275,16 +2278,16 @@ void sub_16C6()
   _di = 0x18;
   _cx = 0x0e10;
   sub_2E29();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_16FC;
   memory[0x551] = 1;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_16FC:
   if (*(WORD*)&memory[0x4] != 3)
     goto loc_170E;
   sub_3C43();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_170E;
   memory[0x55C] = 1;
   return;
@@ -2295,7 +2298,7 @@ loc_171F:
   _ch = memory[ofs(_bx + 4137)];
   if (_ch != 0x00)
     goto loc_172A;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_172A:
   _al = memory[ofs(_bx + 4233)];
@@ -2311,8 +2314,10 @@ loc_172A:
   _dx = *(WORD*)&memory[0x579] & 0xfff8;
   if (_dx < _ax)
     goto loc_171F;
-  _dx = *(WORD*)&memory[0x579] - *(WORD*)&memory[0x1279];
-  if ((short)_dx >= 0)
+  _dx = *(WORD*)&memory[0x579];
+  flags.carry = _dx < *(WORD*)&memory[0x1279];
+  _dx -= *(WORD*)&memory[0x1279];
+  if (!flags.carry)
     goto loc_175D;
   _dx = 0;
 loc_175D:
@@ -2330,15 +2335,17 @@ loc_175D:
 loc_1780:
   if (*(WORD*)&memory[0x4] != 4)
     goto loc_1797;
-  _bx = (_bx - 1) - 0x27;
-  if ((short)_bx < 0)
+  _bx -= 1;
+  flags.carry = _bx < 0x27;
+  _bx -= 0x27;
+  if (flags.carry)
     goto loc_1797;
   if (_bx >= 0x10)
     goto loc_1797;
   _bx += 1;
   memory[0x39E0] = _bl;
 loc_1797:
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_1799()
@@ -2385,10 +2392,10 @@ loc_17FC:
   _si = _bx;
   _bx = _ax + 0x0a;
   sub_1799();
-  if (memory[ofs(*(WORD*)&memory[ofs(_bx + _si + 4118)])] & _ch)
+  if (memory[ofs(_bx + _si + 4118)] & _ch)
     goto loc_1812;
 loc_1810:
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_1812:
   memory[0x57B] = _dl;
@@ -2396,7 +2403,7 @@ loc_1812:
   memory[0x57C] = _dl;
   *(WORD*)&memory[0x579] &= 0xfff8;
   memory[0x55C] = 1;
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_1830()
@@ -2411,12 +2418,11 @@ void sub_1830()
 void sub_184B()
 {
   if (memory[0x1673] == 0)
-    goto locret_185C;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x17EC])
     goto loc_185D;
-locret_185C:
   return;
 loc_185D:
   *(WORD*)&memory[0x17EC] = _dx;
@@ -2447,8 +2453,9 @@ loc_188E:
   _ax = 0x012e;
   goto loc_18B5;
 loc_18AF:
+  flags.carry = _ax < _dx;
   _ax -= _dx;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_18B5;
   _ax = 0;
 loc_18B5:
@@ -2456,19 +2463,20 @@ loc_18B5:
   _bx = *(WORD*)&memory[0x17DF];
   _al = (memory[0x17E9] >> 1) + memory[0x1673];
   _dl = _al;
+  flags.carry = _al < memory[0x1676];
   _al -= memory[0x1676];
-  if ((char)_al < 0)
+  if (flags.carry)
     goto loc_18E1;
+  flags.carry = _bh < _al;
   _bh -= _al;
   if (_bh == 0)
     goto loc_18D3;
-  if ((char)_bh >= 0)
+  if (!flags.carry)
     goto loc_18E1;
 loc_18D3:
   memory[0x1673] = 0;
   memory[0x1678] = 0;
   sub_1922();
-locret_18E0:
   return;
 loc_18E1:
   memory[0x1673] = _dl;
@@ -2481,8 +2489,8 @@ loc_18E1:
   sub_1922();
 loc_18FD:
   sub_1B7A();
-  if (_flags.carry)
-    goto locret_18E0;
+  if (flags.carry)
+    return;
   _di = *(WORD*)&memory[0x17E7];
   *(WORD*)&memory[0x17E5] = _di;
   _cx = *(WORD*)&memory[0x17E1];
@@ -2509,23 +2517,22 @@ void sub_1936()
   memory[0x166A] -= 1;
   if (memory[0x166A] == 0)
     goto loc_193D;
-locret_193C:
   return;
 loc_193D:
   memory[0x166A] = 0x0d;
   sub_13D8();
   if (_al != 0)
-    goto locret_193C;
+    return;
   if (memory[0x1665] == 0)
     goto loc_1951;
   sub_1B05();
 loc_1951:
   if (memory[0x1673] != 0)
-    goto locret_193C;
+    return;
   if (memory[0x1665] != 0)
     goto loc_19CD;
   if (memory[0x57B] > 0x60)
-    goto locret_193C;
+    return;
   memory[0x1677] = 0;
   if (memory[0x550] != 1)
     goto loc_198A;
@@ -2546,14 +2553,14 @@ loc_198A:
 loc_199A:
   _dl &= 0x0f;
   if (_dl >= 0x0c)
-    goto locret_193C;
+    return;
 loc_19A2:
   memory[0x1669] = _dl;
   sub_1AEA();
   *(WORD*)&memory[0x1666] = _cx;
   memory[0x1668] = _dl;
   sub_1B05();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_198A;
   memory[0x1665] = 0x1d;
   _bx = *(WORD*)&memory[0x8];
@@ -2563,14 +2570,13 @@ loc_19A2:
   memory[0x1670] = 1;
 loc_19CD:
   sub_1B05();
-  if (_flags.carry)
-    goto locret_19E0;
+  if (flags.carry)
+    return;
   memory[0x1664] = 0;
   sub_1B4C();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_19E1;
   memory[0x1664] += 1;
-locret_19E0:
   return;
 loc_19E1:
   if (memory[0x1665] != 0x10)
@@ -2587,11 +2593,11 @@ loc_19F0:
   if (_dx >= *(WORD*)&memory[0x166C])
     goto loc_1A76;
   if (memory[0x1670] == 0)
-    goto locret_1A75;
+    return;
   if (memory[0x1673] != 0)
-    goto locret_1A75;
+    return;
   if (memory[0x418] != 0)
-    goto locret_1A75;
+    return;
   memory[0x1670] -= 1;
   memory[0x1678] = 1;
   _al = memory[0x1668];
@@ -2618,7 +2624,6 @@ loc_1A42:
   *(WORD*)&memory[0x17EA] = 0x20;
   memory[0x17E9] = 1;
   memory[0x1675] = 0;
-locret_1A75:
   return;
 loc_1A76:
   memory[0x1665] -= 1;
@@ -2636,7 +2641,7 @@ loc_1A9A:
   _di = _ax;
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _cx = 0x0004;
   if (memory[0x1665] <= 0x0e)
     goto loc_1AD7;
@@ -2648,18 +2653,18 @@ loc_1A9A:
   _ax = (_ax << _cl) + 0x15e0;
   _si = _ax;
   _cx = 0x0004;
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
   return;
 loc_1AD2:
   _ax = 0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   return;
 loc_1AD7:
   _al = memory[0x166B] - memory[0x1668];
   _ah = 0x0a;
   _ax = (_ah * _al) + 0x2681;
   _si = _ax;
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
 }
 
 void sub_1AEA()
@@ -2681,8 +2686,8 @@ void sub_1B05()
   _di = 0x18;
   _cx = 0x0e0f;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_1B4B;
+  if (!flags.carry)
+    return;
   if (memory[0x571] != 1)
     goto loc_1B4A;
   if (memory[0x55A] != 0)
@@ -2695,8 +2700,7 @@ void sub_1B05()
     goto loc_1B4A;
   memory[0x551] = 1;
 loc_1B4A:
-  _flags.carry = true;
-locret_1B4B:
+  flags.carry = true;
 }
 
 void sub_1B4C()
@@ -2712,17 +2716,18 @@ loc_1B5C:
   _ax = (*(WORD*)&memory[ofs(_bx + 7984)]) + 0x10;
   if (_ax < *(WORD*)&memory[0x1666])
     goto loc_1B78;
+  flags.carry = _ax < 0x30;
   _ax -= 0x30;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_1B70;
   _ax = 0;
 loc_1B70:
   if (_ax > *(WORD*)&memory[0x1666])
     goto loc_1B78;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_1B78:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_1B7A()
@@ -2741,8 +2746,8 @@ void sub_1B7A()
   _di = 0x18;
   _ch = 0x0e;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_1BE2;
+  if (!flags.carry)
+    return;
   sub_11E3();
   sub_1922();
   sub_10DD();
@@ -2760,11 +2765,10 @@ loc_1BCB:
   memory[0x17E9] = 1;
   memory[0x55C] = 0;
 loc_1BDF:
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_1BE1:
-  _flags.carry = false;
-locret_1BE2:
+  flags.carry = false;
 }
 
 void sub_1BF0()
@@ -2782,7 +2786,7 @@ void sub_1BF0()
 loc_1C12:
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   *(WORD*)&memory[0x1839] = 0;
   sub_1C67();
   sub_5B21();
@@ -2834,7 +2838,7 @@ loc_1C8C:
 loc_1CA0:
   _ax = *(WORD*)&memory[0x1839];
   _cx = *(WORD*)&memory[0x1835] >> 3;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _cx = (*(WORD*)&memory[0x1835] >> 2) & 0xfe;
   _di = (_di - _cx) ^ 0x2000;
   if (_di & 0x2000)
@@ -2852,8 +2856,9 @@ loc_1CD6:
   memory[0x1837] += 0x10;
   _cx = *(WORD*)&memory[0x1832];
   _dl = memory[0x1834];
+  flags.carry = _cx < 0x10;
   _cx -= 0x10;
-  if ((short)_cx >= 0)
+  if (!flags.carry)
     goto loc_1CF4;
   _cx = 0;
   memory[0x1838] |= 1;
@@ -2865,22 +2870,24 @@ loc_1CF4:
   *(WORD*)&memory[0x1835] = _ax;
   memory[0x1838] |= 2;
 loc_1D0B:
+  flags.carry = _dl < 0x08;
   _dl -= 0x08;
-  if ((char)_dl >= 0)
+  if (!flags.carry)
     goto loc_1D17;
   _dl = 0;
   memory[0x1838] |= 4;
 loc_1D17:
-  _al = memory[0x1837] + _dl;
-  if ((char)_al < 0)
+  _al = memory[0x1837];
+  flags.carry = (_al + _dl) >= 0x100;
+  _al += _dl;
+  if (flags.carry)
     goto loc_1D22;
   if (_al < 0xc8)
-    goto loc_1D2E;
+    goto loc_1C8C;
 loc_1D22:
   _al = 0xc8 - _dl;
   memory[0x1837] = _al;
   memory[0x1838] |= 8;
-loc_1D2E:
   goto loc_1C8C;
 }
 
@@ -2970,8 +2977,8 @@ loc_1DDF:
   goto loc_1E0A;
 loc_1E02:
   _ax = *(WORD*)&memory[0x1C1B];
-  _flags.carry = true;
-  _rcr(_al, 1);
+  flags.carry = true;
+  _ASSERT(0 /* check carry */); _rcr(_al, 1);
   _ah = _al;
 loc_1E0A:
   *(WORD*)&memory[0x1C1B] = _ax;
@@ -2983,16 +2990,16 @@ loc_1E0A:
 
 void sub_1E17()
 {
-  _flags.direction = false;
+  flags.direction = false;
   _push(_ds);
   _es = _pop();
   _si = *(WORD*)&memory[0x1C2E];
   _di = 0x0e;
   _cx = 0x60;
 loc_1E24:
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= *(WORD*)&memory[0x1C1B];
-  _stosw();
+  _stosw<MemData, DirForward>();
   if (--_cx)
     goto loc_1E24;
   _ax = 0xb800;
@@ -3023,12 +3030,11 @@ void sub_1E63()
   _ax = (*(WORD*)&memory[0x1CE1] & 0x0001) + 0x0001;
   if (_dx >= _ax)
     goto loc_1E7B;
-locret_1E7A:
   return;
 loc_1E7B:
   sub_13D8();
   if (_al == 0)
-    goto locret_1E7A;
+    return;
   *(WORD*)&memory[0x1CC9] = _cx;
   *(WORD*)&memory[0x1CE1] += 1;
   if (memory[0x1CC1] == 0)
@@ -3087,14 +3093,13 @@ loc_1F0C:
   if (memory[0x1D58] != 0)
     goto loc_1F3D;
   if (memory[0x57B] < 0xb4)
-    goto locret_1F3C;
+    return;
   if (memory[0x558] != 0)
-    goto locret_1F3C;
+    return;
   sub_2DFD();
   _bx = *(WORD*)&memory[0x8];
   if (_dl < memory[ofs(_bx + 7377)])
     goto loc_1F3D;
-locret_1F3C:
   return;
 loc_1F3D:
   _al = 0x01;
@@ -3139,8 +3144,9 @@ loc_1FAB:
     goto loc_1FEF;
   if (memory[0x1CD0] == 1)
     goto loc_1FE2;
+  flags.carry = _ax < 0x0008;
   _ax -= 0x0008;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_1FEF;
   _ax = 0;
 loc_1FBB:
@@ -3177,12 +3183,11 @@ loc_1FFB:
   sub_20E1();
 loc_2013:
   sub_20F5();
-  if (_flags.carry)
-    goto locret_2021;
+  if (flags.carry)
+    return;
   _ax = *(WORD*)&memory[0x1CCD];
   *(WORD*)&memory[0x1CBD] = _ax;
   sub_209B();
-locret_2021:
 }
 
 void sub_2022()
@@ -3251,7 +3256,7 @@ loc_20BE:
   _es = _pop();
   _push(_es);
   _push(_ds);
-  _si = *(WORD*)memory[_es*16 + 7357];
+  _si = *(WORD*)&memory[adr(_es, 7357)];
   _di = 0x1c40;
   sub_2DCA();
   _es = _pop();
@@ -3286,8 +3291,9 @@ void sub_20F5()
   _ax = *(WORD*)&memory[0x1CC6] + 0x20;
   if (_ax < *(WORD*)&memory[0x579])
     goto loc_2134;
+  flags.carry = _ax < 0x38;
   _ax -= 0x38;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_212A;
   _ax = 0;
 loc_212A:
@@ -3296,7 +3302,7 @@ loc_212A:
   sub_2136();
   return;
 loc_2134:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_2136()
@@ -3359,7 +3365,7 @@ loc_21D1:
     goto loc_21DE;
   sub_70D();
 loc_21DE:
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_21E0()
@@ -3377,7 +3383,7 @@ void sub_21E0()
   sub_2E29();
   return;
 loc_2209:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_2210()
@@ -3391,17 +3397,16 @@ void sub_2216()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x1D5A])
     goto loc_2221;
-locret_2220:
   return;
 loc_2221:
   _cx = _dx;
   sub_13D8();
   if (_al == 0)
-    goto locret_2220;
+    return;
   *(WORD*)&memory[0x1D5A] = _cx;
   sub_22F7();
-  if (_flags.carry)
-    goto locret_2220;
+  if (flags.carry)
+    return;
   if (memory[0x1D59] != 0)
     goto loc_226D;
   if (memory[0x57B] == 0x86)
@@ -3410,7 +3415,7 @@ loc_2221:
     goto loc_224E;
   sub_2DFD();
   if (_dl > 0x05)
-    goto locret_2220;
+    return;
 loc_224E:
   sub_15D0();
   _dl += 0x03;
@@ -3441,11 +3446,10 @@ loc_229F:
   *(WORD*)&memory[0x1D62] = _ax;
   sub_22DC();
   sub_22F7();
-  if (_flags.carry)
-    goto locret_22BC;
+  if (flags.carry)
+    return;
   if (memory[0x1D59] != 0)
     goto loc_22BD;
-locret_22BC:
   return;
 loc_22BD:
   _ax = 0xb800;
@@ -3462,21 +3466,20 @@ loc_22BD:
 void sub_22DC()
 {
   if (memory[0x1D59] == 0x1a)
-    goto locret_22F6;
+    return;
   _ax = 0xb800;
   _es = _ax;
   _di = *(WORD*)&memory[0x1D60];
   _si = 0x1d24;
   _cx = *(WORD*)&memory[0x1D66];
   sub_2D9D();
-locret_22F6:
 }
 
 void sub_22F7()
 {
   if (memory[0x1D59] != 0)
     goto loc_2300;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_2300:
   _cx = *(WORD*)&memory[0x1D64];
@@ -3489,10 +3492,9 @@ loc_2300:
   _di = 0x18;
   _ch = 0x0e;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_2327;
+  if (!flags.carry)
+    return;
   memory[0x1D58] = 1;
-locret_2327:
 }
 
 void sub_2330()
@@ -3525,12 +3527,11 @@ void sub_237B()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x1F65])
     goto loc_2386;
-locret_2385:
   return;
 loc_2386:
   *(WORD*)&memory[0x1F65] = _dx;
   if (memory[0x55A] != 0)
-    goto locret_2385;
+    return;
   _bx = *(WORD*)&memory[0x1F6C] + 1;
   if (_bx < 0x0003)
     goto loc_239E;
@@ -3538,11 +3539,11 @@ loc_2386:
 loc_239E:
   *(WORD*)&memory[0x1F6C] = _bx;
   sub_265E();
-  if (_flags.carry)
-    goto locret_2385;
+  if (flags.carry)
+    return;
   sub_2567();
-  if (_flags.carry)
-    goto locret_2385;
+  if (flags.carry)
+    return;
   _bx = *(WORD*)&memory[0x1F6C];
   if (memory[ofs(_bx + 8016)] == 0)
     goto loc_23EB;
@@ -3552,7 +3553,7 @@ loc_239E:
   _bl <<= 1;
   _dx = _dx - *(WORD*)&memory[ofs(_bx + 8019)];
   if (_dx < 0x36)
-    goto locret_2385;
+    return;
   _dl = 0x01;
   _ax = 0x0000;
   if (*(WORD*)&memory[0x579] > 0xa0)
@@ -3604,9 +3605,8 @@ loc_2425:
   _cx = *(WORD*)&memory[ofs(_bx + 7984)];
   _bl >>= 1;
   if (_cx < *(WORD*)&memory[0x579])
-    goto loc_2463;
+    goto loc_2492;
   _al = 0xff;
-loc_2463:
   goto loc_2492;
 loc_2466:
   _cl = 0x18;
@@ -3645,8 +3645,9 @@ loc_2496:
   _dl = 0xff;
   goto loc_24C2;
 loc_24B8:
+  flags.carry = _ax < *(WORD*)&memory[0x1F69];
   _ax -= *(WORD*)&memory[0x1F69];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_24C2;
   _ax = 0;
   _dl = 0x01;
@@ -3667,12 +3668,11 @@ loc_24C2:
   sub_254D();
 loc_24F0:
   sub_265E();
-  if (_flags.carry)
-    goto locret_24FA;
+  if (flags.carry)
+    return;
   sub_2567();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_24FB;
-locret_24FA:
   return;
 loc_24FB:
   _bx = *(WORD*)&memory[0x1F6C];
@@ -3680,7 +3680,7 @@ loc_24FB:
   if (memory[ofs(_bx + 7996)] != 0)
     goto loc_2518;
   if (memory[ofs(_bx + 7999)] == 0)
-    goto locret_254C;
+    return;
   _si = 0x1e30;
   goto loc_2533;
 loc_2518:
@@ -3702,7 +3702,6 @@ loc_2533:
   _bp = *(WORD*)&memory[ofs(_bx + 8025)];
   _cx = 0x0802;
   sub_2D35();
-locret_254C:
 }
 
 void sub_254D()
@@ -3729,9 +3728,9 @@ void sub_2567()
   _di = 0x18;
   _cx = 0x0e08;
   sub_2E29();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_258E;
-  goto locret_265D;
+  return;
 loc_258E:
   _bx = *(WORD*)&memory[0x1F6C];
   if (memory[ofs(_bx + 8016)] != 0)
@@ -3774,7 +3773,7 @@ loc_25EC:
   _cx = 0x0806;
   sub_2D9D();
 loc_260C:
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_260E:
   _ah = 0;
@@ -3801,15 +3800,14 @@ loc_260E:
   _ax = 0x03e8;
   _bx = 0x02ee;
   sub_593B();
-  _flags.carry = true;
-locret_265D:
+  flags.carry = true;
 }
 
 void sub_265E()
 {
   if (memory[0x1673] != 0)
     goto loc_2667;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_2667:
   _bx = *(WORD*)&memory[0x1F6C];
@@ -3831,7 +3829,7 @@ void sub_2690()
   _cx = 0x0007;
   _si = 0x1f82;
 loc_2698:
-  _lodsb();
+  _lodsb<MemData, DirAuto>();
   _bx = 0x0007 - _cx;
   if (--_cx && _al == memory[ofs(_bx + 8073)])
     goto loc_2698;
@@ -3842,7 +3840,7 @@ loc_26A7:
   _si = 0x1f82;
   _di = 0x1f89;
   _cx = 0x0007;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirAuto>();
 }
 
 void sub_26B3()
@@ -3882,7 +3880,7 @@ void sub_26E8()
   _es = _pop();
   _cx = 0x0007;
   _al = 0;
-  _rep_stosb();
+  _rep_stosb<MemData, DirAuto>();
 }
 
 void sub_26F2()
@@ -3906,7 +3904,7 @@ loc_2709:
   _bx = _cx;
   _ah = 0x00;
   _al = _al + memory[ofs(_bx + 8065)];
-  _aaa();
+  _ASSERT(0 /* check carry */); _aaa();
   memory[ofs(_bx + 8065)] = _al;
   _al = _ah;
   if (--_cx)
@@ -3919,14 +3917,14 @@ void sub_271E()
   _push(_cx);
   _push(_ax);
   _push(_bx);
-  _flags.carry = false;
+  flags.carry = false;
   _pushf();
   _cx = 0x0007;
 loc_2726:
   _popf();
   _bx = _cx - 1;
-  _al = (memory[ofs(_bx + _di)]) + memory[ofs(_bx + _si)] + _flags.carry; _ASSERT(0 /* add with carry */);
-  _aaa();
+  _al = (memory[ofs(_bx + _di)]) + memory[ofs(_bx + _si)] + flags.carry; _ASSERT(0 /* add with carry */);
+  _ASSERT(0 /* check carry */); _aaa();
   memory[ofs(_bx + _di)] = _al;
   _pushf();
   if (--_cx)
@@ -3958,12 +3956,11 @@ loc_274B:
   *(WORD*)&memory[0x1F93] += 1;
   memory[0x1F92] += 1;
   if (memory[0x1F92] == 7)
-    goto locret_2788;
+    return;
   if (memory[0x1F92] != 3)
     goto loc_274B;
   *(WORD*)&memory[0x1F90] += 2;
   goto loc_274B;
-locret_2788:
 }
 
 void sub_2790()
@@ -3972,14 +3969,14 @@ void sub_2790()
   _es = _ax;
   if (*(WORD*)&memory[0x4] != 2)
     goto loc_27EE;
-  _flags.direction = false;
+  flags.direction = false;
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x50;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x50;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   *(WORD*)&memory[0x2654] = 0;
 loc_27B5:
   sub_2DFD();
@@ -4175,13 +4172,13 @@ void sub_29A0()
   _bx = 0x251c;
   sub_2B24();
   _ax = 0;
-  _flags.direction = false;
+  flags.direction = false;
   _di = *(WORD*)&memory[0x267E] + 0x0284;
   _cx = 0x24;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = *(WORD*)&memory[0x267E] + 0x1184;
   _cx = 0x24;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = *(WORD*)&memory[0x267E] + 0x2284;
   _al = 0x2a;
   sub_29E1();
@@ -4208,14 +4205,14 @@ void sub_2A00()
 {
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   sub_2B9E();
   _bx = 0x28a0;
   _ax = 0;
@@ -4230,14 +4227,14 @@ void sub_2A30()
 {
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   sub_2B9E();
   _bx = 0x28a0;
   _ax = 0;
@@ -4310,10 +4307,10 @@ loc_2ACF:
   _bl = memory[0x2AC4];
   _cl = _bl;
   _bl >>= 2;
-  _cl = (!_cl & 0x03) << 1;
+  _cl = ((~_cl) & 0x03) << 1;
   _al = memory[0x540] << _cl;
   _si = *(WORD*)&memory[0x2ACA];
-  memory[ofs(*(WORD*)&memory[ofs(_bx + _si + 4118)])] |= _al;
+  memory[ofs(_bx + _si + 4118)] |= _al;
   _di = _pop();
   _di += 0x0004;
   memory[0x2AC4] += 1;
@@ -4334,13 +4331,13 @@ loc_2B30:
   return;
 loc_2B39:
   _di = (*(WORD*)&memory[ofs(_bx + 2)]) + *(WORD*)&memory[0x2ACC];
-  _flags.direction = false;
+  flags.direction = false;
   memory[0x2AD0] = _ch;
   _ch = 0;
   *(WORD*)&memory[0x2ACE] = _cx;
 loc_2B4B:
   _cx = *(WORD*)&memory[0x2ACE];
-  _rep_movsb();
+  _rep_movsb<MemB800, MemData, DirForward>();
   _di = (_di - *(WORD*)&memory[0x2ACE]) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_2B62;
@@ -4402,11 +4399,11 @@ loc_2BD2:
   _di = 0x1180;
   _ax = 0x5655;
   _cx = 0x0500;
-  _flags.direction = false;
-  _rep_stosw();
+  flags.direction = false;
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x3180;
   _cx = 0x0500;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   *(WORD*)&memory[0x2AC2] = 10564;
 loc_2BEC:
   memory[0x2AC4] = 9;
@@ -4497,7 +4494,7 @@ loc_2CBE:
 
 void sub_2CCC()
 {
-  _flags.direction = false;
+  flags.direction = false;
   memory[0x2AE0] = _cl;
   memory[0x2AE2] = _ch;
   _ch = 0;
@@ -4506,9 +4503,9 @@ loc_2CDA:
   _cl = memory[0x2AE0];
 loc_2CDE:
   _dx = 0x30c0;
-  _bx = *(WORD*)memory[adr(_es, _di)];
+  _bx = *(WORD*)&memory[adr(_es, _di)];
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   *(WORD*)&memory[0x2AE3] = _ax;
 loc_2CEC:
   if (_ah & _dl)
@@ -4531,7 +4528,7 @@ loc_2D04:
   if (_dh & 0x03)
     goto loc_2CEC;
   _ax = (_ax & _bx) | *(WORD*)&memory[0x2AE3];
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_2CDE;
@@ -4547,18 +4544,18 @@ loc_2D2E:
 
 void sub_2D35()
 {
-  _flags.direction = false;
+  flags.direction = false;
   memory[0x2AE0] = _cl;
   memory[0x2AE2] = _ch;
   _ch = 0;
 loc_2D40:
   _cl = memory[0x2AE0];
 loc_2D44:
-  _bx = *(WORD*)memory[adr(_es, _di)];
+  _bx = *(WORD*)&memory[adr(_es, _di)];
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_2D44;
@@ -4574,7 +4571,7 @@ loc_2D69:
 
 void sub_2D70()
 {
-  _flags.direction = false;
+  flags.direction = false;
   *(WORD*)&memory[0x2AE9] = _si;
   memory[0x2AE0] = _cl;
   memory[0x2AE2] = _ch;
@@ -4583,7 +4580,7 @@ void sub_2D70()
   _ch = 0;
 loc_2D84:
   _cl = memory[0x2AE0];
-  _rep_movsw();
+  _rep_movsw<MemData, MemData, DirForward>();
   _cl = memory[0x2AEB];
   *(WORD*)&memory[0x2AE9] += _cx;
   _si = *(WORD*)&memory[0x2AE9];
@@ -4594,13 +4591,13 @@ loc_2D84:
 
 void sub_2D9D()
 {
-  _flags.direction = false;
+  flags.direction = false;
   memory[0x2AE0] = _cl;
   memory[0x2AE2] = _ch;
   _ch = 0;
 loc_2DA8:
   _cl = memory[0x2AE0];
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
   _di = ((_di - *(WORD*)&memory[0x2AE0]) - *(WORD*)&memory[0x2AE0]) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_2DC3;
@@ -4613,20 +4610,20 @@ loc_2DC3:
 
 void sub_2DCA()
 {
-  _flags.direction = false;
-  memory[_es*16 + 10976] = _cl;
-  memory[_es*16 + 10978] = _ch;
+  flags.direction = false;
+  memory[adr(_es, 10976)] = _cl;
+  memory[adr(_es, 10978)] = _ch;
   _ch = 0;
 loc_2DD7:
-  _cl = memory[_es*16 + 10976];
-  _rep_movsw();
-  _si = ((_si - *(WORD*)memory[_es*16 + 10976]) - *(WORD*)memory[_es*16 + 10976]) ^ 0x2000;
+  _cl = memory[adr(_es, 10976)];
+  _rep_movsw<MemData, MemB800, DirForward>();
+  _si = ((_si - *(WORD*)&memory[adr(_es, 10976)]) - *(WORD*)&memory[adr(_es, 10976)]) ^ 0x2000;
   if (_si & 0x2000)
     goto loc_2DF5;
   _si += 0x50;
 loc_2DF5:
-  memory[_es*16 + 10978] -= 1;
-  if (memory[_es*16 + 10978] != 0)
+  memory[adr(_es, 10978)] -= 1;
+  if (memory[adr(_es, 10978)] != 0)
     goto loc_2DD7;
 }
 
@@ -4634,7 +4631,7 @@ void sub_2DFD()
 {
   _dx = *(WORD*)&memory[0x2AE5];
   _dl = (_dl ^ _dh) >> 2;
-  _rcr(*(WORD*)&memory[0x2AE5], 1);
+  _ASSERT(0 /* check carry */); _rcr(*(WORD*)&memory[0x2AE5], 1);
   _dx = *(WORD*)&memory[0x2AE5];
 }
 
@@ -4657,8 +4654,10 @@ void sub_2E29()
   _ax += _si;
   if (_ax < _bx)
     goto loc_2E4F;
-  _ax = (_ax - _si) - _di;
-  if ((short)_ax >= 0)
+  _ax -= _si;
+  flags.carry = _ax < _di;
+  _ax -= _di;
+  if (!flags.carry)
     goto loc_2E37;
   _ax = 0;
 loc_2E37:
@@ -4667,37 +4666,40 @@ loc_2E37:
   _dl += _cl;
   if (_dl < _dh)
     goto loc_2E4F;
-  _dl = (_dl - _cl) - _ch;
-  if ((char)_dl >= 0)
+  _dl -= _cl;
+  flags.carry = _dl < _ch;
+  _dl -= _ch;
+  if (!flags.carry)
     goto loc_2E49;
   _dl = 0;
 loc_2E49:
   if (_dl > _dh)
     goto loc_2E4F;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_2E4F:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_2E60()
 {
   if (*(WORD*)&memory[0x2E8D] < 8)
     goto loc_2E68;
-locret_2E67:
   return;
 loc_2E68:
   if (memory[0x69A] != 0)
-    goto locret_2E67;
+    return;
   *(WORD*)&memory[0x2E92] = 0xffff;
   memory[0x2E91] = 0xff;
   _cx = 0x0007;
 loc_2E7D:
   _bx = _cx - 1;
-  _al = memory[0x57B] - memory[ofs(_bx + 11220)];
-  if ((char)_al >= 0)
+  _al = memory[0x57B];
+  flags.carry = _al < memory[ofs(_bx + 11220)];
+  _al = _al - memory[ofs(_bx + 11220)];
+  if (!flags.carry)
     goto loc_2E8B;
-  _al = !_al;
+  _al = (~_al);
 loc_2E8B:
   if (_al > memory[0x2E91])
     goto loc_2E98;
@@ -4742,7 +4744,7 @@ loc_2ED5:
   _cx = 0x0f0f;
   sub_2E29();
   _cx = _pop();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_2F07;
   return;
 loc_2F07:
@@ -4808,19 +4810,18 @@ loc_2F7F:
   _cx = 0x0e0f;
   sub_2E29();
   _cx = _pop();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_2FB3;
 loc_2FAA:
   if (--_cx)
     goto loc_2F7F;
 loc_2FAC:
   *(WORD*)&memory[0x2E94] = 0xffff;
-locret_2FB2:
   return;
 loc_2FB3:
   _bx = _cx - 1;
   if (_bx == *(WORD*)&memory[0x2E94])
-    goto locret_2FB2;
+    return;
   _push(_bx);
   sub_11E3();
   if (memory[0x70F2] == 0)
@@ -4877,8 +4878,10 @@ loc_3039:
   _si = *(WORD*)&memory[0x2E8B];
   _ax = *(WORD*)&memory[0x2E88];
   _cl = 0x04;
-  _ax = (_ax >> _cl) - 0x0002;
-  if ((short)_ax >= 0)
+  _ax >>= _cl;
+  flags.carry = _ax < 0x0002;
+  _ax -= 0x0002;
+  if (!flags.carry)
     goto loc_3058;
   _ax = 0;
 loc_3058:
@@ -4962,8 +4965,10 @@ loc_3111:
   _ch = _al;
   _ax = *(WORD*)&memory[0x579] + 0x0007;
   _cl = 0x04;
-  _ax = (_ax >> _cl) - 0x0002;
-  if ((short)_ax >= 0)
+  _ax >>= _cl;
+  flags.carry = _ax < 0x0002;
+  _ax -= 0x0002;
+  if (!flags.carry)
     goto loc_3124;
   _ax = 0;
 loc_3124:
@@ -4981,10 +4986,10 @@ loc_312C:
   memory[0x57B] = _ch;
   _ch += 0x32;
   memory[0x57C] = _ch;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_314D:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_3150()
@@ -4997,33 +5002,36 @@ void sub_3150()
   _ax = _dx - *(WORD*)&memory[0x328C];
   if (_ax >= _cx)
     goto loc_3169;
-locret_3168:
   return;
 loc_3169:
   *(WORD*)&memory[0x328C] = _dx;
   sub_33BA();
-  if (_flags.carry)
-    goto locret_3168;
+  if (flags.carry)
+    return;
   sub_21E0();
-  if (_flags.carry)
-    goto locret_3168;
+  if (flags.carry)
+    return;
   memory[0x32EA] += 1;
   sub_2DFD();
   _al = memory[0x32EA] & _dl;
   memory[0x32EB] = memory[0x32EB] ^ _al;
-  _ax = *(WORD*)&memory[0x327D] - *(WORD*)&memory[0x579];
+  _ax = *(WORD*)&memory[0x327D];
+  flags.carry = _ax < *(WORD*)&memory[0x579];
+  _ax -= *(WORD*)&memory[0x579];
   _dl = 0xff;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_3196;
-  _ax = !_ax;
+  _ax = (~_ax);
   _dl = 0x01;
 loc_3196:
   memory[0x32ED] = _dl;
-  _bl = (memory[0x327F] + 0x14) - memory[0x57B];
+  _bl = memory[0x327F] + 0x14;
+  flags.carry = _bl < memory[0x57B];
+  _bl -= memory[0x57B];
   _dl = 0xff;
-  if ((char)_bl >= 0)
+  if (!flags.carry)
     goto loc_31AD;
-  _bl = !_bl;
+  _bl = (~_bl);
   _dl = 0x01;
 loc_31AD:
   memory[0x32EE] = _dl;
@@ -5045,8 +5053,10 @@ loc_31CC:
   _dx -= *(WORD*)&memory[0x410];
   _cl = 0x03;
   _dx >>= _cl;
-  _al = memory[0x32EC] - _dl;
-  if ((char)_al >= 0)
+  _al = memory[0x32EC];
+  flags.carry = _al < _dl;
+  _al -= _dl;
+  if (!flags.carry)
     goto loc_31EC;
   _al = 0;
 loc_31EC:
@@ -5057,14 +5067,13 @@ loc_31EC:
   if (_dl == 0x00)
     goto loc_320B;
   if (_dl > 0x07)
-    goto loc_320F;
+    goto loc_32AC;
   _dl &= 0x01;
   if (_dl != 0)
     goto loc_320B;
   _dl = 0xff;
 loc_320B:
   memory[0x3280] = _dl;
-loc_320F:
   goto loc_32AC;
 loc_3212:
   _al = memory[0x32EB] & 0x2f;
@@ -5145,8 +5154,9 @@ loc_32AC:
   _cx = 0x0130;
   goto loc_32DA;
 loc_32D3:
+  flags.carry = _cx < 0x0008;
   _cx -= 0x0008;
-  if ((short)_cx >= 0)
+  if (!flags.carry)
     goto loc_32DA;
   _cx = 0;
 loc_32DA:
@@ -5162,8 +5172,9 @@ loc_32DA:
   _dl = 0xa5;
   goto loc_32FE;
 loc_32F7:
+  flags.carry = _dl < 0x02;
   _dl -= 0x02;
-  if ((char)_dl >= 0)
+  if (!flags.carry)
     goto loc_32FE;
   _dl = 0;
 loc_32FE:
@@ -5171,7 +5182,7 @@ loc_32FE:
   sub_2CB0();
   *(WORD*)&memory[0x3284] = _ax;
   sub_33BA();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3328;
 loc_330D:
   memory[0x3280] = 0;
@@ -5183,7 +5194,7 @@ loc_330D:
   return;
 loc_3328:
   sub_21E0();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_330D;
   sub_33A0();
   *(WORD*)&memory[0x327A] += 2;
@@ -5192,6 +5203,7 @@ loc_3328:
 
 void sub_3339()
 {
+sub_3339:
   _bx = *(WORD*)&memory[0x327A];
   _ax = *(WORD*)&memory[ofs(_bx + 12896)];
   if (_ax != 0x0000)
@@ -5207,18 +5219,18 @@ loc_334B:
   _es = _ax;
   _cx = 0x1e02;
   memory[0x3286] = 0;
-  _flags.direction = false;
+  flags.direction = false;
   memory[0x3289] = _ch;
   _ch = 0;
   *(WORD*)&memory[0x3287] = _cx;
 loc_3370:
   _cx = *(WORD*)&memory[0x3287];
 loc_3374:
-  _bx = *(WORD*)memory[adr(_es, _di)];
+  _bx = *(WORD*)&memory[adr(_es, _di)];
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax |= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_3374;
@@ -5235,14 +5247,13 @@ loc_3399:
 void sub_33A0()
 {
   if (memory[0x3286] != 0)
-    goto locret_33B9;
+    return;
   _ax = 0xb800;
   _es = _ax;
   _si = 0x31e8;
   _di = *(WORD*)&memory[0x3282];
   _cx = 0x1e02;
   sub_2D9D();
-locret_33B9:
 }
 
 void sub_33BA()
@@ -5264,7 +5275,7 @@ loc_33D3:
   _di = 0x18;
   _cx = 0x0e1e;
   sub_2E29();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3403;
   if (*(WORD*)&memory[0x4] != 4)
     goto loc_33FE;
@@ -5273,21 +5284,21 @@ loc_33D3:
 loc_33FE:
   sub_872();
 loc_3401:
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_3403:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_3405()
 {
-  _flags.direction = false;
+  flags.direction = false;
   _ax = 0;
   _push(_ds);
   _es = _pop();
   _di = 0x328e;
   _cx = 0x14;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   *(WORD*)&memory[0x32B6] = 0xff;
   *(WORD*)&memory[0x327A] = 0;
   *(WORD*)&memory[0x327D] = 0;
@@ -5303,25 +5314,24 @@ void sub_3405()
 void sub_3445()
 {
   if (memory[0x57B] < 0xb4)
-    goto locret_347E;
+    return;
   if (memory[0x56E] == 0)
-    goto locret_347E;
+    return;
   _ax = *(WORD*)&memory[0x579] + 0x0c;
   _cl = 0x03;
   _ax >>= _cl;
   if (_ax > 0x27)
-    goto locret_347E;
+    return;
   if (_ax == *(WORD*)&memory[0x32B6])
-    goto locret_347E;
+    return;
   *(WORD*)&memory[0x32B6] = _ax;
   _bx = _ax;
   _al = memory[ofs(_bx + 12942)];
   if (_al >= 0x04)
-    goto locret_347E;
+    return;
   _al += 1;
   memory[ofs(_bx + 12942)] = _al;
   sub_347F();
-locret_347E:
 }
 
 void sub_347F()
@@ -5342,17 +5352,16 @@ void sub_34A0()
   memory[0x351B] = 0;
 loc_34AB:
   _bx = *(WORD*)&memory[0x3511];
-  _flags.zero = memory[ofs(_bx + 13479)] == 0; _flags.carry = memory[ofs(_bx + 13479)] < 0;
+  flags.zero = memory[ofs(_bx + 13479)] == 0; flags.carry = memory[ofs(_bx + 13479)] < 0;
   if (memory[ofs(_bx + 13479)] == 0)
     goto loc_34B9;
-loc_34B6:
   goto loc_35AD;
 loc_34B9:
   _si = _bx << 1;
   _ax = *(WORD*)&memory[ofs(_si + 13383)];
   _dl = memory[ofs(_bx + 13431)];
   _di = 0x0000;
-  _flags.zero = _bx == 0x0c; _flags.carry = _bx < 0x0c;
+  flags.zero = _bx == 0x0c; flags.carry = _bx < 0x0c;
   if (_bx < 0x0c)
     goto loc_34D0;
   _di = 0x0002;
@@ -5364,31 +5373,33 @@ loc_34D0:
   _di = 0x18;
   _ch = 0x0e;
   sub_2E29();
-  if (!_flags.carry)
-    goto loc_34B6;
+  if (!flags.carry)
+    goto loc_35AD;
   _bx = *(WORD*)&memory[0x3511];
-  _flags.zero = _bx == 0x0c; _flags.carry = _bx < 0x0c;
+  flags.zero = _bx == 0x0c; flags.carry = _bx < 0x0c;
   if (_bx < 0x0c)
     goto loc_356F;
-  _flags.zero = memory[0x553] == 0; _flags.carry = memory[0x553] < 0;
+  flags.zero = memory[0x553] == 0; flags.carry = memory[0x553] < 0;
   if (memory[0x553] != 0)
     goto loc_356F;
-  _flags.zero = memory[0x5F3] == 0; _flags.carry = memory[0x5F3] < 0;
+  flags.zero = memory[0x5F3] == 0; flags.carry = memory[0x5F3] < 0;
   if (memory[0x5F3] != 0)
     goto loc_356F;
   memory[0x552] = 1;
-  _cx = *(WORD*)&memory[0x579] - 0x0008;
-  if ((short)_cx >= 0)
+  _cx = *(WORD*)&memory[0x579];
+  flags.carry = _cx < 0x0008;
+  _cx -= 0x0008;
+  if (!flags.carry)
     goto loc_3511;
   _cx = 0;
 loc_3511:
-  _flags.zero = _cx == 0x0117; _flags.carry = _cx < 0x0117;
+  flags.zero = _cx == 0x0117; flags.carry = _cx < 0x0117;
   if (_cx < 0x0117)
     goto loc_351A;
   _cx = 0x0116;
 loc_351A:
   _dl = memory[0x57B];
-  _flags.zero = _dl == 0xb5; _flags.carry = _dl < 0xb5;
+  flags.zero = _dl == 0xb5; flags.carry = _dl < 0xb5;
   if (_dl < 0xb5)
     goto loc_3525;
   _dl = 0xb4;
@@ -5424,7 +5435,7 @@ loc_355A:
   _ah = 0;
   _interrupt(0x1a);
   _dx -= *(WORD*)&memory[0x3509];
-  _flags.zero = _dx == 0x0d; _flags.carry = _dx < 0x0d;
+  flags.zero = _dx == 0x0d; flags.carry = _dx < 0x0d;
   if (_dx < 0x0d)
     goto loc_3543;
   return;
@@ -5433,7 +5444,7 @@ loc_356F:
   _ax = 0x05dc;
   _bx = 0x0425;
   sub_593B();
-  _flags.zero = memory[0x351B] == 1; _flags.carry = memory[0x351B] < 1;
+  flags.zero = memory[0x351B] == 1; flags.carry = memory[0x351B] < 1;
   if (memory[0x351B] != 1)
     goto loc_3586;
   sub_11E3();
@@ -5442,31 +5453,31 @@ loc_3586:
   sub_37C1();
   _bx = *(WORD*)&memory[0x3511];
   memory[ofs(_bx + 13479)] = 1;
-  _flags.zero = _bx == 0x0c; _flags.carry = _bx < 0x0c;
+  flags.zero = _bx == 0x0c; flags.carry = _bx < 0x0c;
   if (_bx >= 0x0c)
     goto loc_35AD;
   memory[0x3410] -= 1;
   if (memory[0x3410] != 0)
     goto loc_35AD;
-  _flags.zero = memory[0x5F3] == 0; _flags.carry = memory[0x5F3] < 0;
+  flags.zero = memory[0x5F3] == 0; flags.carry = memory[0x5F3] < 0;
   if (memory[0x5F3] != 0)
     goto loc_35AD;
   memory[0x553] = 1;
 loc_35AD:
   *(WORD*)&memory[0x3511] += 1;
-  _flags.zero = *(WORD*)&memory[0x3511] == 0x18; _flags.carry = *(WORD*)&memory[0x3511] < 0x18;
+  flags.zero = *(WORD*)&memory[0x3511] == 0x18; flags.carry = *(WORD*)&memory[0x3511] < 0x18;
   if (*(WORD*)&memory[0x3511] >= 0x18)
     goto loc_35BB;
   goto loc_34AB;
 loc_35BB:
-  _flags.zero = memory[0x351B] == 0; _flags.carry = memory[0x351B] < 0;
+  flags.zero = memory[0x351B] == 0; flags.carry = memory[0x351B] < 0;
   if (memory[0x351B] == 0)
     goto loc_35C7;
   sub_363D();
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_35C7:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_35C9()
@@ -5486,7 +5497,7 @@ loc_35DD:
   _dl &= 0x01;
   if (_dl != 0)
     goto loc_3601;
-  _dl = !_dl;
+  _dl = (~_dl);
 loc_3601:
   memory[ofs(_bx + 13335)] = _dl;
   _bx <<= 1;
@@ -5514,6 +5525,7 @@ loc_361C:
 
 void sub_363D()
 {
+sub_363D:
   _cx = 0x0c;
 loc_3640:
   _bx = _cx + 0x0b;
@@ -5545,7 +5557,6 @@ void sub_3675()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x3509])
     goto loc_3680;
-locret_367F:
   return;
 loc_3680:
   *(WORD*)&memory[0x350B] = _dx;
@@ -5571,21 +5582,21 @@ loc_36B7:
 loc_36BD:
   _si = _bx << 1;
   if (memory[ofs(_bx + 13479)] != 0)
-    goto locret_367F;
+    return;
   sub_2DFD();
   if (_dl > 0x10)
     goto loc_36E9;
   _dl &= 0x01;
   if (_dl != 0)
     goto loc_36D7;
-  _dl = !_dl;
+  _dl = (~_dl);
 loc_36D7:
   memory[ofs(_bx + 13335)] = _dl;
   sub_2DFD();
   _dl &= 0x01;
   if (_dl != 0)
     goto loc_36E5;
-  _dl = !_dl;
+  _dl = (~_dl);
 loc_36E5:
   memory[ofs(_bx + 13359)] = _dl;
 loc_36E9:
@@ -5597,8 +5608,9 @@ loc_36F3:
   _ax = *(WORD*)&memory[ofs(_si + 13383)];
   if (memory[ofs(_bx + 13335)] == 1)
     goto loc_370B;
+  flags.carry = _ax < _cx;
   _ax -= _cx;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_371A;
   _ax = 0;
   memory[ofs(_bx + 13335)] = 1;
@@ -5668,7 +5680,7 @@ loc_37B6:
 void sub_37C1()
 {
   if (memory[ofs(_bx + 13455)] != 0)
-    goto locret_37E4;
+    return;
   _bx <<= 1;
   _si = 0x3404;
   _di = *(WORD*)&memory[ofs(_bx + 13503)];
@@ -5680,7 +5692,6 @@ void sub_37C1()
   _cx = 0x0202;
 loc_37E1:
   sub_2D9D();
-locret_37E4:
 }
 
 void sub_37E5()
@@ -5689,7 +5700,7 @@ void sub_37E5()
   _interrupt(0x1a);
   _ax = _dx - *(WORD*)&memory[0x350F];
   if (_ax < 0x0008)
-    goto locret_384A;
+    return;
   *(WORD*)&memory[0x350D] += 1;
   _bx = *(WORD*)&memory[0x350D];
   if (_bx < 0x28)
@@ -5703,13 +5714,15 @@ loc_380B:
     goto loc_3829;
   _ax = *(WORD*)&memory[0x579];
   _cl = 0x02;
-  _ax = ((_ax >> _cl) + 1) - _di;
-  if ((short)_ax >= 0)
+  _ax = (_ax >> _cl) + 1;
+  flags.carry = _ax < _di;
+  _ax -= _di;
+  if (!flags.carry)
     goto loc_3824;
-  _ax = !_ax;
+  _ax = (~_ax);
 loc_3824:
   if (_ax < 0x0004)
-    goto locret_384A;
+    return;
 loc_3829:
   _di += 0xa0;
   _al = (memory[ofs(_bx + 9814)]) + 0x08;
@@ -5720,7 +5733,6 @@ loc_3829:
   _es = _ax;
   _cx = 0x0401;
   sub_2D9D();
-locret_384A:
 }
 
 void sub_3850()
@@ -5749,10 +5761,9 @@ loc_3860:
   _di = 0x18;
   _cx = 0x0e0a;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_38A3;
+  if (!flags.carry)
+    return;
   memory[0x554] = 1;
-locret_38A3:
 }
 
 void sub_38B0()
@@ -5774,8 +5785,10 @@ loc_38D3:
   if (*(WORD*)&memory[0x6] != 7)
     goto loc_38EF;
   _dx -= *(WORD*)&memory[0x412];
-  _ax = 0x2a30 - _dx;
-  if ((short)_ax >= 0)
+  _ax = 0x2a30;
+  flags.carry = _ax < _dx;
+  _ax -= _dx;
+  if (!flags.carry)
     goto loc_38EB;
   _ax = 0;
 loc_38EB:
@@ -5788,8 +5801,9 @@ loc_38EF:
     goto loc_38FF;
   _ax <<= 1;
 loc_38FF:
+  flags.carry = _ax < _dx;
   _ax -= _dx;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_3905;
   _ax = 0;
 loc_3905:
@@ -5970,16 +5984,16 @@ loc_3A83:
 
 void sub_3A96()
 {
-  _flags.direction = false;
+  flags.direction = false;
   _ax = SEG_DATA;
   _es = _ax;
   _di = 0x0e;
   _si = 0x35e0;
   _cx = 0x1e;
 loc_3AA5:
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= _dx;
-  _stosw();
+  _stosw<MemData, DirForward>();
   if (--_cx)
     goto loc_3AA5;
 }
@@ -6008,8 +6022,10 @@ loc_3AD5:
   if (_dx < 0x0002)
     goto loc_3AD5;
 loc_3AE2:
-  _ax = *(WORD*)&memory[0x369C] - 0x0280;
-  if ((short)_ax < 0)
+  _ax = *(WORD*)&memory[0x369C];
+  flags.carry = _ax < 0x0280;
+  _ax -= 0x0280;
+  if (flags.carry)
     goto loc_3AF0;
   if (_ax >= *(WORD*)&memory[0x369A])
     goto loc_3ABA;
@@ -6035,8 +6051,9 @@ loc_3B0B:
   sub_271E();
 loc_3B19:
   _bx -= 0x0007;
+  flags.carry = _dx & 1;
   _dx >>= 1;
-  if ((short)_dx >= 0)
+  if (!flags.carry)
     goto loc_3B0B;
 }
 
@@ -6071,7 +6088,7 @@ loc_3B57:
   _di = 0x18;
   _cx = 0x0e10;
   sub_2E29();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3B9B;
   _ax = 0x0c00;
   _bx = 0x08fd;
@@ -6084,8 +6101,9 @@ loc_3B57:
   sub_3E14();
   return;
 loc_3B9B:
+  flags.carry = *(WORD*)&memory[0x37B6] < 2;
   *(WORD*)&memory[0x37B6] -= 2;
-  if ((short)*(WORD*)&memory[0x37B6] >= 0)
+  if (!flags.carry)
     goto loc_3B57;
 }
 
@@ -6094,12 +6112,12 @@ void sub_3BA3()
   *(WORD*)&memory[ofs(_bx + 14256)] = 0;
   _push(_ds);
   _es = _pop();
-  _flags.direction = false;
+  flags.direction = false;
   _ax = 0xaaaa;
   _di = 0x0e;
   _si = _di;
   _cx = 0x20;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _di = *(WORD*)&memory[ofs(_bx + 14249)];
   _ax = 0xb800;
   _es = _ax;
@@ -6107,11 +6125,10 @@ void sub_3BA3()
   sub_2D9D();
   memory[0x37AF] -= 1;
   if (memory[0x37AF] != 0)
-    goto locret_3BDA;
+    return;
   if (memory[0x552] != 0)
-    goto locret_3BDA;
+    return;
   memory[0x553] = 1;
-locret_3BDA:
 }
 
 void sub_3BDB()
@@ -6182,10 +6199,10 @@ void sub_3C43()
   memory[0x57B] = _dl;
   _dl += 0x32;
   memory[0x57C] = _dl;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_3C7F:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_3C90()
@@ -6205,15 +6222,14 @@ void sub_3CB1()
   _ax = _dx - *(WORD*)&memory[0x39C8];
   if (_ax >= 0x0002)
     goto loc_3CC1;
-locret_3CC0:
   return;
 loc_3CC1:
   *(WORD*)&memory[0x39C8] = _dx;
   sub_3E52();
-  if (_flags.carry)
-    goto locret_3CC0;
+  if (flags.carry)
+    return;
   sub_3E6E();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3CD2;
   goto loc_3D90;
 loc_3CD2:
@@ -6238,8 +6254,9 @@ loc_3D0D:
   _ax = *(WORD*)&memory[0x3964];
   if (_ax < _dx)
     goto loc_3D1C;
+  flags.carry = _ax < *(WORD*)&memory[0x39C6];
   _ax -= *(WORD*)&memory[0x39C6];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_3D20;
   _ax = 0;
   goto loc_3D20;
@@ -6254,8 +6271,9 @@ loc_3D25:
   _dl = ((memory[0x396E] >> 2) & 0x03) + 0x02;
   if (memory[0x3967] == 1)
     goto loc_3D52;
+  flags.carry = _al < _dl;
   _al -= _dl;
-  if ((char)_al < 0)
+  if (flags.carry)
     goto loc_3D49;
   if (_al >= 0x09)
     goto loc_3D76;
@@ -6267,10 +6285,12 @@ loc_3D52:
   _al += _dl;
   if (_al > memory[0x57B])
     goto loc_3D71;
-  _bx = *(WORD*)&memory[0x3964] - *(WORD*)&memory[0x579];
-  if ((short)_bx >= 0)
+  _bx = *(WORD*)&memory[0x3964];
+  flags.carry = _bx < *(WORD*)&memory[0x579];
+  _bx -= *(WORD*)&memory[0x579];
+  if (!flags.carry)
     goto loc_3D66;
-  _bx = !_bx;
+  _bx = (~_bx);
 loc_3D66:
   if (_bx > 0x30)
     goto loc_3D71;
@@ -6283,7 +6303,7 @@ loc_3D76:
   memory[0x3966] = _al;
 loc_3D79:
   sub_3E52();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3D8B;
   _ax = *(WORD*)&memory[0x39C3];
   *(WORD*)&memory[0x3964] = _ax;
@@ -6292,15 +6312,17 @@ loc_3D79:
   return;
 loc_3D8B:
   sub_3E6E();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_3DEE;
 loc_3D90:
   if (memory[0x553] == 0)
     goto loc_3D98;
   return;
 loc_3D98:
-  _cx = *(WORD*)&memory[0x579] - 0x0c;
-  if ((short)_cx >= 0)
+  _cx = *(WORD*)&memory[0x579];
+  flags.carry = _cx < 0x0c;
+  _cx -= 0x0c;
+  if (!flags.carry)
     goto loc_3DA3;
   _cx = 0;
 loc_3DA3:
@@ -6308,8 +6330,10 @@ loc_3DA3:
     goto loc_3DAC;
   _cx = 0x010e;
 loc_3DAC:
-  _dl = memory[0x57B] - 0x04;
-  if ((char)_dl >= 0)
+  _dl = memory[0x57B];
+  flags.carry = _dl < 0x04;
+  _dl -= 0x04;
+  if (!flags.carry)
     goto loc_3DB7;
   _dl = 0;
 loc_3DB7:
@@ -6367,12 +6391,11 @@ void sub_3E38()
   _ax = 0xb800;
   _es = _ax;
   if (memory[0x396A] != 0)
-    goto locret_3E51;
+    return;
   _di = *(WORD*)&memory[0x3968];
   _si = 0x396f;
   _cx = 0x0e03;
   sub_2D9D();
-locret_3E51:
 }
 
 void sub_3E52()
@@ -6406,26 +6429,25 @@ void sub_3E90()
   _ah = 0;
   _interrupt(0x1a);
   if (_dx == *(WORD*)&memory[0x3D16])
-    goto locret_3EB9;
+    return;
   goto loc_3F35;
 loc_3EA4:
   if (memory[0x584] != 0)
-    goto locret_3EB9;
+    return;
   if (memory[0x69A] != 0)
-    goto locret_3EB9;
+    return;
   if (memory[0x39E0] != 0)
     goto loc_3EBA;
-locret_3EB9:
   return;
 loc_3EBA:
   sub_4065();
-  if (_flags.carry)
-    goto locret_3EB9;
+  if (flags.carry)
+    return;
   _ah = 0;
   _interrupt(0x1a);
   _ax = _dx - *(WORD*)&memory[0x3D18];
   if (_ax < 0x0c)
-    goto locret_3EB9;
+    return;
   *(WORD*)&memory[0x3D18] = _dx;
   memory[0x55C] = 0;
   _bl = memory[0x39E0] - 1;
@@ -6498,9 +6520,8 @@ loc_3F8B:
   _interrupt(0x1a);
   *(WORD*)&memory[0x3D16] = _dx;
   if (memory[0x39E1] != 0)
-    goto locret_3F9D;
+    return;
   sub_1112();
-locret_3F9D:
 }
 
 void sub_3F9E()
@@ -6613,7 +6634,6 @@ void sub_40C2()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x3EDC])
     goto loc_40CD;
-locret_40CC:
   return;
 loc_40CD:
   *(WORD*)&memory[0x3EDA] += 1;
@@ -6629,15 +6649,15 @@ loc_40E5:
 loc_40E9:
   _si = _bx << 1;
   if (memory[ofs(_bx + 16050)] != 0)
-    goto locret_40CC;
+    return;
   sub_42DB();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_40FC;
   goto loc_4124;
 loc_40FC:
   sub_42FC();
-  if (_flags.carry)
-    goto locret_40CC;
+  if (flags.carry)
+    return;
   if (memory[ofs(_bx + 16054)] != 0)
     goto loc_4118;
   sub_4277();
@@ -6647,15 +6667,14 @@ loc_40FC:
 loc_4118:
   memory[ofs(_bx + 16054)] -= 1;
   sub_42DB();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_4124;
   goto loc_4181;
 loc_4124:
   if (memory[ofs(_bx + 16046)] != 0)
-    goto locret_4132;
+    return;
   if (memory[ofs(_bx + 16054)] < 0x14)
     goto loc_4133;
-locret_4132:
   return;
 loc_4133:
   sub_11E3();
@@ -6690,7 +6709,7 @@ loc_4181:
   _di = *(WORD*)&memory[0x8] << 1;
   _bp = *(WORD*)&memory[ofs(_di + 16094)];
   sub_431C();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_41B0;
   if (memory[ofs(_bx + 16054)] < 2)
     goto loc_41B0;
@@ -6749,7 +6768,7 @@ loc_4204:
   _bx = *(WORD*)&memory[0x3EDA];
   _si = _bx << 1;
   sub_42FC();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4226;
   return;
 loc_4226:
@@ -6774,14 +6793,13 @@ void sub_4254()
   _bx = *(WORD*)&memory[0x3EDA];
   _si = _bx << 1;
   if (memory[ofs(_bx + 16046)] != 0)
-    goto locret_4276;
+    return;
   _di = *(WORD*)&memory[ofs(_si + 16038)];
   _cx = 0x0c02;
   _si = *(WORD*)&memory[ofs(_si + 16066)];
   _ax = 0xb800;
   _es = _ax;
   sub_2D9D();
-locret_4276:
 }
 
 void sub_4277()
@@ -6803,14 +6821,13 @@ loc_428F:
   *(WORD*)&memory[ofs(_si + 16058)] = _dx;
   sub_42B4();
   if (memory[0x3ED9] == 0)
-    goto locret_42B3;
+    return;
   _bp = 0x32;
   sub_431C();
-  if (!_flags.carry)
-    goto locret_42B3;
+  if (!flags.carry)
+    return;
   memory[0x3ED9] -= 1;
   goto loc_427C;
-locret_42B3:
 }
 
 void sub_42B4()
@@ -6863,24 +6880,28 @@ void sub_42FC()
 
 void sub_431C()
 {
-  _ax = (*(WORD*)&memory[ofs(_si + 16076)]) - *(WORD*)&memory[0x579];
-  if ((short)_ax >= 0)
+  _ax = *(WORD*)&memory[ofs(_si + 16076)];
+  flags.carry = _ax < *(WORD*)&memory[0x579];
+  _ax -= *(WORD*)&memory[0x579];
+  if (!flags.carry)
     goto loc_4328;
-  _ax = !_ax;
+  _ax = (~_ax);
 loc_4328:
-  _dl = (memory[ofs(_bx + 16084)]) - memory[0x57B];
-  if ((char)_dl >= 0)
+  _dl = memory[ofs(_bx + 16084)];
+  flags.carry = _dl < memory[0x57B];
+  _dl -= memory[0x57B];
+  if (!flags.carry)
     goto loc_4334;
-  _dl = !_dl;
+  _dl = (~_dl);
 loc_4334:
   _dh = 0;
   _ax += _dx;
   if (_ax < _bp)
     goto loc_433E;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_433E:
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_4340()
@@ -6889,7 +6910,6 @@ void sub_4340()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x40B5])
     goto loc_434B;
-locret_434A:
   return;
 loc_434B:
   memory[0x40FF] += 1;
@@ -6898,11 +6918,11 @@ loc_434B:
   *(WORD*)&memory[0x40B5] = _dx;
 loc_435A:
   if (memory[0x40AA] < 0xa4)
-    goto locret_434A;
+    return;
   sub_452D();
   sub_4557();
-  if (_flags.carry)
-    goto locret_434A;
+  if (flags.carry)
+    return;
   sub_2DFD();
   if (_dl > 0x30)
     goto loc_439C;
@@ -6920,12 +6940,11 @@ loc_435A:
   goto loc_442E;
 loc_439C:
   if (*(WORD*)&memory[0x40C8] > 0x0a)
-    goto loc_43B1;
+    goto loc_4402;
   sub_2DFD();
   if (_dl > 0x06)
     goto loc_43B4;
   *(WORD*)&memory[0x40C8] = 0xff;
-loc_43B1:
   goto loc_4402;
 loc_43B4:
   _bx = *(WORD*)&memory[0x40C8];
@@ -7012,8 +7031,9 @@ loc_4459:
   memory[0x40B7] = 0xff;
   goto loc_4483;
 loc_4477:
+  flags.carry = _ax < 0x0004;
   _ax -= 0x0004;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_4483;
   _ax = 0;
   memory[0x40B7] = 1;
@@ -7035,8 +7055,8 @@ loc_4486:
   sub_2D9D();
 loc_44B0:
   sub_4557();
-  if (_flags.carry)
-    goto locret_44E6;
+  if (flags.carry)
+    return;
   memory[0x40B9] = 0;
   *(WORD*)&memory[0x40BE] += 2;
   _bx = *(WORD*)&memory[0x40BE] & 0x0006;
@@ -7050,7 +7070,6 @@ loc_44D5:
   _bp = 0x3f2c;
   _cx = 0x0501;
   sub_2CCC();
-locret_44E6:
 }
 
 void sub_44E7()
@@ -7060,30 +7079,32 @@ void sub_44E7()
   _al = memory[0x57B] & 0xf8;
   if (_al != 0x88)
     goto loc_44F9;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_44F9:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_44FB()
 {
   _ax = *(WORD*)&memory[0x40B2];
   _dl = 0x01;
+  flags.carry = _ax < *(WORD*)&memory[0x579];
   _ax -= *(WORD*)&memory[0x579];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_450A;
-  _ax = !_ax;
+  _ax = (~_ax);
   _dl = 0xff;
 loc_450A:
   memory[0x40CA] = _dl;
   *(WORD*)&memory[0x40CC] = _ax;
   _al = memory[0x40B4];
   _dl = 0x01;
+  flags.carry = _al < memory[0x57B];
   _al -= memory[0x57B];
-  if ((char)_al >= 0)
+  if (!flags.carry)
     goto loc_4520;
-  _al = !_al;
+  _al = (~_al);
   _dl = 0xff;
 loc_4520:
   memory[0x40CB] = _dl;
@@ -7102,12 +7123,11 @@ void sub_452D()
   _di = 0x18;
   _cx = 0x0e05;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_4556;
+  if (!flags.carry)
+    return;
   if (memory[0x552] != 0)
-    goto locret_4556;
+    return;
   memory[0x553] = 1;
-locret_4556:
 }
 
 void sub_4557()
@@ -7120,10 +7140,9 @@ void sub_4557()
   _di = 0x10;
   _cx = 0x1e05;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_4579;
+  if (!flags.carry)
+    return;
   memory[0x40B8] = 0xff;
-locret_4579:
 }
 
 void sub_457A()
@@ -7148,24 +7167,23 @@ void sub_45AB()
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x40AD])
     goto loc_45B6;
-locret_45B5:
   return;
 loc_45B6:
   *(WORD*)&memory[0x40AD] = _dx;
   if (memory[0x40AA] >= 0xa4)
-    goto locret_45B5;
+    return;
   sub_4786();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_45D6;
   sub_44E7();
-  if (!_flags.carry)
-    goto locret_45B5;
+  if (!flags.carry)
+    return;
   memory[0x571] = 1;
   memory[0x55B] = 0x10;
   return;
 loc_45D6:
   sub_473E();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4649;
   if (memory[0x40AF] != 0)
     goto loc_45FA;
@@ -7212,20 +7230,19 @@ loc_4639:
   _push(_cx);
   sub_473E();
   _cx = _pop();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4642;
   if (--_cx)
     goto loc_4602;
 loc_4642:
   sub_11E3();
   sub_1112();
-locret_4648:
   return;
 loc_4649:
   if (memory[0x40B1] != 0)
     goto loc_46A2;
   if (memory[0x40AF] == 0)
-    goto locret_4648;
+    return;
   _ax = *(WORD*)&memory[0x40A8];
   if (memory[0x40B0] != 1)
     goto loc_4666;
@@ -7236,7 +7253,7 @@ loc_4666:
 loc_4669:
   *(WORD*)&memory[0x40A8] = _ax;
   sub_473E();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4672;
   return;
 loc_4672:
@@ -7261,11 +7278,10 @@ loc_46A2:
   if (memory[0x1CBF] == 0)
     goto loc_46BE;
   sub_44E7();
-  if (!_flags.carry)
-    goto locret_46BD;
+  if (!flags.carry)
+    return;
   memory[0x571] = 1;
   memory[0x55B] = 0x10;
-locret_46BD:
   return;
 loc_46BE:
   _ah = 0;
@@ -7360,10 +7376,10 @@ void sub_4786()
   _ax += 0x30;
   if (_ax < *(WORD*)&memory[0x327D])
     goto loc_47A4;
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_47A4:
-  _flags.carry = false;
+  flags.carry = false;
 }
 
 void sub_47B0()
@@ -7371,8 +7387,10 @@ void sub_47B0()
   _ax = *(WORD*)&memory[0x327D];
   _dl = memory[0x327F];
   _si = 0x10;
-  _bx = *(WORD*)&memory[0x579] - 0x0008;
-  if ((short)_bx >= 0)
+  _bx = *(WORD*)&memory[0x579];
+  flags.carry = _bx < 0x0008;
+  _bx -= 0x0008;
+  if (!flags.carry)
     goto loc_47C5;
   _bx = 0;
 loc_47C5:
@@ -7390,12 +7408,11 @@ void sub_47D6()
   _si = *(WORD*)&memory[0x8] << 1;
   if (_ax > *(WORD*)&memory[ofs(_si + 17628)])
     goto loc_47ED;
-locret_47EC:
   return;
 loc_47ED:
   *(WORD*)&memory[0x44D7] = _dx;
   if (memory[0x1CB8] != 0)
-    goto locret_47EC;
+    return;
   memory[0x44FC] = 0;
   _cx = 0x0c;
 loc_4800:
@@ -7406,10 +7423,12 @@ loc_4800:
   _ax = *(WORD*)&memory[ofs(_bx + 17401)];
   if (_al != memory[0x57B])
     goto loc_485D;
-  _ax = (*(WORD*)&memory[ofs(_bx + 17377)]) - *(WORD*)&memory[0x579];
-  if ((short)_ax >= 0)
+  _ax = *(WORD*)&memory[ofs(_bx + 17377)];
+  flags.carry = _ax < *(WORD*)&memory[0x579];
+  _ax -= *(WORD*)&memory[0x579];
+  if (!flags.carry)
     goto loc_4822;
-  _ax = !_ax;
+  _ax = (~_ax);
 loc_4822:
   _si = *(WORD*)&memory[0x8] << 1;
   if (_ax > *(WORD*)&memory[ofs(_si + 17644)])
@@ -7447,13 +7466,11 @@ loc_4870:
   _cx = _pop();
 loc_487D:
   if (--_cx)
-    goto loc_488A;
+    goto loc_4800;
   if (memory[0x44FC] == 0)
-    goto locret_4889;
+    return;
   sub_5691();
-locret_4889:
   return;
-loc_488A:
   goto loc_4800;
 }
 
@@ -7472,12 +7489,12 @@ void sub_48A1()
 {
   _push(_ds);
   _es = _pop();
-  _flags.direction = false;
+  flags.direction = false;
   _di = 0x0e;
   _si = _di;
   _ax = 0xaaaa;
   _cx = 0x41;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _ax = 0xb800;
   _es = _ax;
   _di = *(WORD*)&memory[0x44DA];
@@ -7488,11 +7505,10 @@ void sub_48A1()
 void sub_48C1()
 {
   if (memory[0x44D9] == 0)
-    goto locret_48D2;
+    return;
   if (memory[0x44BD] == 0)
     goto loc_48D3;
   sub_4B1D();
-locret_48D2:
   return;
 loc_48D3:
   sub_1145();
@@ -7510,8 +7526,8 @@ void sub_48D7()
   _cx = 0x0e06;
   _di = 0x18;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_4915;
+  if (!flags.carry)
+    return;
   memory[0x44D9] = 1;
 loc_4902:
   sub_13D8();
@@ -7523,7 +7539,6 @@ loc_4902:
   return;
 loc_4912:
   sub_11E3();
-locret_4915:
 }
 
 void sub_4916()
@@ -7546,7 +7561,7 @@ loc_4935:
 void sub_4943()
 {
   if (memory[0x1CB8] != 0)
-    goto locret_4966;
+    return;
   if (memory[0x44BE] == 0)
     goto loc_495C;
   _al = memory[0x44BE];
@@ -7557,14 +7572,13 @@ loc_495C:
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x44D3])
     goto loc_4967;
-locret_4966:
   return;
 loc_4967:
   *(WORD*)&memory[0x44D3] = _dx;
   if (memory[0x584] == 0)
     goto loc_4995;
   if (memory[0x44BD] == 0)
-    goto locret_4994;
+    return;
   sub_4B03();
   sub_33A0();
   sub_1124();
@@ -7572,7 +7586,6 @@ loc_4967:
   memory[0x44BD] = 0;
   memory[0x43E0] = 1;
   memory[0x44BE] = 0;
-locret_4994:
   return;
 loc_4995:
   if (memory[0x69A] == 0)
@@ -7594,10 +7607,11 @@ loc_49B6:
   _ax = _si;
   _bl <<= 1;
   _dh = 0xff;
+  flags.carry = _ax < *(WORD*)&memory[ofs(_bx + 17537)];
   _ax = _ax - *(WORD*)&memory[ofs(_bx + 17537)];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_49D6;
-  _ax = !_ax;
+  _ax = (~_ax);
   _dh = 0x01;
 loc_49D6:
   if (_ax > *(WORD*)&memory[0x44BF])
@@ -7648,8 +7662,9 @@ loc_4A4B:
 loc_4A5D:
   memory[0x44BD] = 1;
   _al = 0;
+  flags.carry = (memory[0x44D0] + 0x30) >= 0x100;
   memory[0x44D0] += 0x30;
-  if ((char)memory[0x44D0] >= 0)
+  if (!flags.carry)
     goto loc_4A6D;
   _al += 1;
 loc_4A6D:
@@ -7664,8 +7679,9 @@ loc_4A6D:
   _cx = 0x0126;
   goto loc_4A9C;
 loc_4A95:
+  flags.carry = _cx < 0x0008;
   _cx -= 0x0008;
-  if ((short)_cx >= 0)
+  if (!flags.carry)
     goto loc_4A9C;
   _cx = 0;
 loc_4A9C:
@@ -7700,7 +7716,7 @@ loc_4AE7:
   _push(_bx);
   sub_47B0();
   _bx = _pop();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4AFC;
   _push(_bx);
   sub_33A0();
@@ -7717,14 +7733,13 @@ loc_4AFF:
 void sub_4B03()
 {
   if (memory[0x43E0] != 0)
-    goto locret_4B1C;
+    return;
   _di = *(WORD*)&memory[0x43DE];
   _si = 0x43a0;
   _ax = 0xb800;
   _es = _ax;
   _cx = 0x0a03;
   sub_2D9D();
-locret_4B1C:
 }
 
 void sub_4B1D()
@@ -7751,7 +7766,7 @@ void sub_4B47()
   _ax = 0;
   _di = 0x4441;
   _cx = 0x0c;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _ax = 0xb800;
   _es = _ax;
   _bx = *(WORD*)&memory[0x8];
@@ -7849,9 +7864,8 @@ loc_4C38:
 loc_4C3C:
   sub_4FCD();
   sub_502D();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4C45;
-locret_4C44:
   return;
 loc_4C45:
   if (*(WORD*)&memory[0x454F] == 0)
@@ -7867,7 +7881,7 @@ loc_4C45:
   _ax <<= 1;
 loc_4C67:
   if (_dx < _ax)
-    goto locret_4C44;
+    return;
   *(WORD*)&memory[0x454F] = 0;
   memory[0x454E] = 1;
   _ax = 0x24;
@@ -7879,7 +7893,7 @@ loc_4C84:
   memory[0x454A] = 0;
 loc_4C8C:
   sub_4DD0();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4C99;
   _bx = *(WORD*)&memory[0x45B6];
   sub_4FBB();
@@ -7889,14 +7903,13 @@ loc_4C99:
     goto loc_4CB8;
   memory[0x4553] -= 1;
   if (memory[0x4553] != 0)
-    goto loc_4CB5;
+    goto loc_4D14;
   _dl = 0x01;
   if (memory[0x454A] == 0xff)
     goto loc_4CB1;
   _dl = 0xff;
 loc_4CB1:
   memory[0x454A] = _dl;
-loc_4CB5:
   goto loc_4D14;
 loc_4CB8:
   _al = memory[0x454B];
@@ -7963,8 +7976,9 @@ loc_4D46:
   memory[0x4553] = 0;
   goto loc_4D78;
 loc_4D60:
+  flags.carry = _ax < *(WORD*)&memory[0x45BC];
   _ax -= *(WORD*)&memory[0x45BC];
-  if ((short)_ax < 0)
+  if (flags.carry)
     goto loc_4D6B;
   if (_ax > 0x24)
     goto loc_4D78;
@@ -7991,12 +8005,12 @@ loc_4DA1:
   sub_2CB0();
   *(WORD*)&memory[0x45BA] = _ax;
   sub_502D();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_4DB5;
   return;
 loc_4DB5:
   sub_4DD0();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_4DC8;
   sub_4F4A();
   sub_4F10();
@@ -8017,14 +8031,14 @@ void sub_4DD0()
   _dh = memory[0x454B];
   _cx = 0x0c0e;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_4E3D;
+  if (!flags.carry)
+    return;
   if (*(WORD*)&memory[0x45B6] != 6)
     goto loc_4E00;
   memory[0x553] = 1;
   sub_11E3();
   sub_4F4A();
-  _flags.carry = true;
+  flags.carry = true;
   return;
 loc_4E00:
   sub_11E3();
@@ -8045,8 +8059,7 @@ loc_4E2F:
   _ax = 0x0ce4;
   _bx = 0x123b;
   sub_593B();
-  _flags.carry = true;
-locret_4E3D:
+  flags.carry = true;
 }
 
 void sub_4E3E()
@@ -8089,7 +8102,7 @@ loc_4E78:
   _cx = 0x0c0f;
   sub_2E29();
   _cx = _pop();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_4EA6;
 loc_4EA3:
   if (--_cx)
@@ -8163,10 +8176,9 @@ loc_4F3E:
 void sub_4F4A()
 {
   if (memory[0x454E] != 0)
-    goto locret_4F58;
+    return;
   _di = *(WORD*)&memory[0x454C];
   sub_5008();
-locret_4F58:
 }
 
 void sub_4F59()
@@ -8205,11 +8217,11 @@ void sub_4FBB()
   _push(_ds);
   _es = _pop();
   _bl <<= 1;
-  _flags.direction = false;
+  flags.direction = false;
   _di = *(WORD*)&memory[ofs(_bx + 17832)];
   _si = 0x4548;
   _cx = 0x0c;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirForward>();
 }
 
 void sub_4FCD()
@@ -8217,26 +8229,26 @@ void sub_4FCD()
   _push(_ds);
   _es = _pop();
   _bl <<= 1;
-  _flags.direction = false;
+  flags.direction = false;
   _si = *(WORD*)&memory[ofs(_bx + 17832)];
   _di = 0x4548;
   _cx = 0x0c;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirForward>();
 }
 
 void sub_4FDF()
 {
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _dh = 0x0c;
 loc_4FE7:
   _cx = 0x0003;
 loc_4FEA:
-  _bx = *(WORD*)memory[adr(_es, _di)];
-  _lodsw();
+  _bx = *(WORD*)&memory[adr(_es, _di)];
+  _lodsw<MemData, DirForward>();
   _ax |= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   if (--_cx)
     goto loc_4FEA;
   _di = (_di - 0x0006) ^ 0x2000;
@@ -8253,12 +8265,12 @@ void sub_5008()
 {
   _ax = 0xb800;
   _es = _ax;
-  _flags.direction = false;
+  flags.direction = false;
   _dh = 0x0c;
   _ax = 0x5555;
 loc_5013:
   _cx = 0x0003;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = (_di - 0x0006) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_5028;
@@ -8273,7 +8285,7 @@ void sub_502D()
 {
   if (memory[0x70F2] != 0)
     goto loc_5036;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_5036:
   _ax = *(WORD*)&memory[0x70F3];
@@ -8295,18 +8307,20 @@ void sub_5060()
     goto loc_5070;
   _ax = 0x0116;
 loc_5070:
+  flags.carry = _ax < 0x10;
   _ax -= 0x10;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_5077;
   _ax = 0;
 loc_5077:
   _ax &= 0x0ff0;
   *(WORD*)&memory[0x579] = _ax;
   memory[0x57B] = 0x14;
+  flags.carry = _ax < 0x80;
   _ax -= 0x80;
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_5089;
-  _ax = !_ax;
+  _ax = (~_ax);
 loc_5089:
   _cl = 0x03;
   _ax >>= _cl;
@@ -8485,8 +8499,9 @@ void sub_522A()
   memory[0x4D6E] += 1;
   goto loc_5256;
 loc_524A:
+  flags.carry = _ax < *(WORD*)&memory[0x4D6A];
   _ax -= *(WORD*)&memory[0x4D6A];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_5256;
   _ax = 0;
   memory[0x4D6E] += 1;
@@ -8495,7 +8510,7 @@ loc_5256:
 loc_525A:
   _ax = *(WORD*)&memory[ofs(_bx + 19802)];
   if (*(WORD*)&memory[ofs(_bx + 19839)] < 1)
-    goto locret_528A;
+    return;
   if (*(WORD*)&memory[ofs(_bx + 19839)] != 1)
     goto loc_527A;
   _ax += *(WORD*)&memory[0x4D6C];
@@ -8505,14 +8520,14 @@ loc_525A:
   memory[0x4D6E] += 1;
   goto loc_5286;
 loc_527A:
+  flags.carry = _ax < *(WORD*)&memory[0x4D6C];
   _ax -= *(WORD*)&memory[0x4D6C];
-  if ((short)_ax >= 0)
+  if (!flags.carry)
     goto loc_5286;
   _ax = 0;
   memory[0x4D6E] += 1;
 loc_5286:
   *(WORD*)&memory[ofs(_bx + 19802)] = _ax;
-locret_528A:
 }
 
 void sub_528B()
@@ -8545,11 +8560,11 @@ loc_52BB:
 void sub_52D0()
 {
   if (memory[0x0] == 0)
-    goto locret_5312;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx == *(WORD*)&memory[0x52C4])
-    goto locret_5312;
+    return;
   *(WORD*)&memory[0x52C4] = _dx;
   _bx = *(WORD*)&memory[0x52C6];
   *(WORD*)&memory[0x52C6] += 2;
@@ -8569,13 +8584,12 @@ loc_52FC:
   _in(_al, 0x61);
   _al |= 0x03;
   _out(0x61, _al);
-locret_5312:
 }
 
 void sub_5313()
 {
   if (*(WORD*)&memory[0x8] < 2)
-    goto locret_5367;
+    return;
   *(WORD*)&memory[0x5016] = 0;
   _ah = 0;
   _interrupt(0x1a);
@@ -8599,7 +8613,6 @@ loc_5345:
   if (_dx < 0x28)
     goto loc_533C;
   sub_5B21();
-locret_5367:
 }
 
 void sub_5368()
@@ -8628,11 +8641,11 @@ loc_5386:
 void sub_53B0()
 {
   if (memory[0x0] == 0)
-    goto locret_53F5;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx == *(WORD*)&memory[0x5322])
-    goto locret_53F5;
+    return;
   *(WORD*)&memory[0x5322] = _dx;
   _bx = *(WORD*)&memory[0x5320];
   _bl = memory[ofs(_bx + 21388)];
@@ -8655,7 +8668,6 @@ loc_53E1:
   _in(_al, 0x61);
   _al |= 0x03;
   _out(0x61, _al);
-locret_53F5:
 }
 
 void sub_5400()
@@ -8671,7 +8683,7 @@ void sub_5400()
 loc_541C:
   _di = *(WORD*)&memory[ofs(_bx)];
   if (_di == 0xffff)
-    goto locret_5447;
+    return;
   sub_2DFD();
   _dx = (_dx & 0x0e) + *(WORD*)&memory[0x5918];
   _si = *(WORD*)&memory[ofs(_dx + 22664)];
@@ -8682,7 +8694,6 @@ loc_541C:
   _bx = _pop();
   _bx += 0x0002;
   goto loc_541C;
-locret_5447:
 }
 
 void sub_5450()
@@ -8697,7 +8708,7 @@ void sub_5450()
 void sub_546D()
 {
   if (memory[0x0] == 0)
-    goto locret_54A5;
+    return;
   if (memory[0x1CB8] == 0)
     goto loc_54F8;
   _ah = 0;
@@ -8705,14 +8716,13 @@ void sub_546D()
   if (memory[0x5B0F] != 0)
     goto loc_54A6;
   if (_dx == *(WORD*)&memory[0x5B10])
-    goto locret_54A5;
+    return;
   *(WORD*)&memory[0x5B10] = _dx;
   _al = 0xb6;
   _out(0x43, _al);
   _ax = (*(WORD*)&memory[0x5B12] & 0x01ff) + 0xc8;
   sub_5889();
   *(WORD*)&memory[0x5B12] -= 0x4b;
-locret_54A5:
   return;
 loc_54A6:
   if (_dx == *(WORD*)&memory[0x5B10])
@@ -8722,7 +8732,7 @@ loc_54A6:
 loc_54B4:
   memory[0x5B0E] -= 1;
   if (memory[0x5B0E] != 0)
-    goto locret_54F7;
+    return;
   _al = 0x01;
   if (memory[0x697] == 0xfd)
     goto loc_54C5;
@@ -8743,7 +8753,6 @@ loc_54E1:
   sub_2DFD();
   _ax = ((_dx & *(WORD*)&memory[0x5B0A]) & 0x01ff) + 0x0190;
   sub_5889();
-locret_54F7:
   return;
 loc_54F8:
   _ah = 0;
@@ -8751,7 +8760,7 @@ loc_54F8:
   if (memory[0x5920] == 0)
     goto loc_5522;
   if (_dx == *(WORD*)&memory[0x5921])
-    goto locret_5562;
+    return;
   *(WORD*)&memory[0x5921] = _dx;
   memory[0x5920] -= 1;
   if (memory[0x5920] == 0)
@@ -8766,7 +8775,7 @@ loc_551E:
   return;
 loc_5522:
   if (_dx == *(WORD*)&memory[0x5925])
-    goto locret_5562;
+    return;
   _si = 0x0003;
   _al = memory[0x1CBF] | memory[0x5B07];
   if (_al != 0)
@@ -8786,7 +8795,6 @@ loc_5549:
   _ax = _dx - *(WORD*)&memory[0x5925];
   if (_ax >= *(WORD*)&memory[ofs(_di + 23026)])
     goto loc_5563;
-locret_5562:
   return;
 loc_5563:
   *(WORD*)&memory[0x5925] = _dx;
@@ -8821,8 +8829,9 @@ loc_559E:
 loc_55BB:
   _ax = *(WORD*)&memory[ofs(_di + 23042)];
   *(WORD*)&memory[0x592E] = _ax;
+  flags.carry = memory[0x5927] & 1;
   memory[0x5927] >>= 1;
-  if ((char)memory[0x5927] >= 0)
+  if (!flags.carry)
     goto loc_5623;
   *(WORD*)&memory[0x592E] = 4096;
   memory[0x5927] = 0x80;
@@ -8881,13 +8890,12 @@ loc_5667:
   if (_al != 0)
     goto loc_568D;
   if (memory[0x592D] == 0)
-    goto locret_5690;
+    return;
   memory[0x592D] -= 1;
   _ax = *(WORD*)&memory[ofs(_di + 23046)];
   *(WORD*)&memory[0x592E] = _ax;
 loc_568D:
   sub_5B28();
-locret_5690:
 }
 
 void sub_5691()
@@ -8983,10 +8991,9 @@ void sub_576E()
     goto loc_577A;
   _cx >>= 1;
 loc_577A:
-  if (--_cx)
-    goto loc_577A;
+  _Sleep(_cx);
   if (memory[0x0] == 0)
-    goto locret_5796;
+    return;
   _al = 0xb6;
   _out(0x43, _al);
   _ax = *(WORD*)&memory[0x5ACB];
@@ -8996,7 +9003,6 @@ loc_577A:
   _in(_al, 0x61);
   _al |= 0x03;
   _out(0x61, _al);
-locret_5796:
 }
 
 void sub_5797()
@@ -9040,12 +9046,12 @@ void sub_57D5()
 void sub_57E4()
 {
   if (memory[0x0] == 0)
-    goto locret_5828;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   _ax = _dx - *(WORD*)&memory[0x5A83];
   if (_ax < 0x0002)
-    goto locret_5828;
+    return;
   *(WORD*)&memory[0x5A83] = _dx;
   _bx = *(WORD*)&memory[0x5A85];
   *(WORD*)&memory[0x5A85] += 2;
@@ -9064,7 +9070,6 @@ loc_581F:
   _out(0x43, _al);
   _ax = _pop();
   sub_5889();
-locret_5828:
 }
 
 void sub_5829()
@@ -9076,12 +9081,11 @@ void sub_5829()
 void sub_5835()
 {
   if (memory[0x0] == 0)
-    goto locret_5846;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x5A80])
     goto loc_5847;
-locret_5846:
   return;
 loc_5847:
   *(WORD*)&memory[0x5A80] = _dx;
@@ -9100,7 +9104,7 @@ loc_5861:
 void sub_5869()
 {
   if (memory[0x0] == 0)
-    goto locret_5888;
+    return;
   _push(_bx);
   _push(_ax);
   _al = 0xb6;
@@ -9111,7 +9115,6 @@ void sub_5869()
   sub_5889();
   _ax = _pop();
   _bx = _pop();
-locret_5888:
 }
 
 void sub_5889()
@@ -9127,7 +9130,7 @@ void sub_5889()
 void sub_5897()
 {
   if (memory[0x0] == 0)
-    goto locret_58BC;
+    return;
   _push(_ax);
   _push(_cx);
   _push(_dx);
@@ -9140,7 +9143,6 @@ void sub_5897()
   _dx = _pop();
   _cx = _pop();
   _ax = _pop();
-locret_58BC:
 }
 
 void sub_58BD()
@@ -9172,11 +9174,10 @@ loc_5908:
 void sub_590E()
 {
   if (memory[0x1CBF] != 0)
-    goto locret_591E;
+    return;
   _bx = 0x0400;
   _cx = 0x1800;
   sub_59A3();
-locret_591E:
 }
 
 void sub_591F()
@@ -9195,7 +9196,7 @@ void sub_591F()
 void sub_593B()
 {
   if (memory[0x0] == 0)
-    goto locret_595C;
+    return;
   *(WORD*)&memory[0x5923] = _bx;
   _push(_ax);
   _al = 0xb6;
@@ -9206,27 +9207,25 @@ void sub_593B()
   _ah = 0;
   _interrupt(0x1a);
   *(WORD*)&memory[0x5921] = _dx;
-locret_595C:
 }
 
 void sub_595D()
 {
   if (memory[0x0] == 0)
-    goto locret_597E;
+    return;
   if (memory[0x5920] != 0)
-    goto locret_597E;
+    return;
   sub_2DFD();
   _ax = (_dx & 0x7f) + 0xaa;
   _bx = _ax;
   _ax += 0x1e;
   sub_593B();
-locret_597E:
 }
 
 void sub_597F()
 {
   if (memory[0x0] == 0)
-    goto locret_59A2;
+    return;
   _ax = 0x1200;
   _bx = 0x1312;
   _ax += *(WORD*)&memory[0x5B08];
@@ -9234,13 +9233,12 @@ void sub_597F()
   *(WORD*)&memory[0x5B08] += 350;
   sub_593B();
   memory[0x5B07] = 0x18;
-locret_59A2:
 }
 
 void sub_59A3()
 {
   if (memory[0x0] == 0)
-    goto locret_59CA;
+    return;
   _al = 0xb6;
   _out(0x43, _al);
   _ax = _bx;
@@ -9254,10 +9252,8 @@ void sub_59A3()
     goto loc_59C5;
   _cx >>= 1;
 loc_59C5:
-  if (--_cx)
-    goto loc_59C5;
+  _Sleep(_cx);
   sub_5B21();
-locret_59CA:
 }
 
 void sub_59CB()
@@ -9304,14 +9300,15 @@ loc_5A18:
 void sub_5A1C()
 {
   if (memory[0x0] == 0)
-    goto locret_5A34;
+    return;
   sub_13B7();
-  _bx = *(WORD*)&memory[0x5A16] - _ax;
-  if ((short)_bx < 0)
+  _bx = *(WORD*)&memory[0x5A16];
+  flags.carry = _bx < _ax;
+  _bx -= _ax;
+  if (flags.carry)
     goto loc_5A35;
   if (_bx > 0x0260)
     goto loc_5A35;
-locret_5A34:
   return;
 loc_5A35:
   *(WORD*)&memory[0x5A16] = _ax;
@@ -9349,12 +9346,11 @@ loc_5A6D:
 void sub_5A90()
 {
   if (memory[0x0] == 0)
-    goto locret_5AA1;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   if (_dx != *(WORD*)&memory[0x5A14])
     goto loc_5AA2;
-locret_5AA1:
   return;
 loc_5AA2:
   *(WORD*)&memory[0x5A14] = _dx;
@@ -9448,13 +9444,12 @@ void sub_5B54()
 void sub_5B63()
 {
   if (memory[0x0] == 0)
-    goto locret_5B79;
+    return;
   _ah = 0;
   _interrupt(0x1a);
   _ax = _dx - *(WORD*)&memory[0x59C0];
   if (_ax >= 0x0002)
     goto loc_5B7A;
-locret_5B79:
   return;
 loc_5B7A:
   *(WORD*)&memory[0x59C0] = _dx;
@@ -9487,12 +9482,12 @@ loc_5BAA:
 
 void sub_5BBF()
 {
+sub_5BBF:
   if (memory[0x0] == 0)
-    goto locret_5BD0;
+    return;
   sub_5B63();
   if (*(WORD*)&memory[0x59BE] < 0x7c)
     goto sub_5BBF;
-locret_5BD0:
 }
 
 void sub_5BE0()
@@ -9526,8 +9521,10 @@ loc_5C0D:
   _cx = 0x1004;
   sub_2D9D();
 loc_5C36:
-  _bx = *(WORD*)&memory[0x5F60] - 0x0008;
-  if ((short)_bx < 0)
+  _bx = *(WORD*)&memory[0x5F60];
+  flags.carry = _bx < 0x0008;
+  _bx -= 0x0008;
+  if (flags.carry)
     goto loc_5C51;
   if (_bx >= 0x0006)
     goto loc_5C51;
@@ -9546,7 +9543,7 @@ void sub_5C60()
   _interrupt(0x11);
   _al &= 0x30;
   if (_al != 0x30)
-    goto locret_5C95;
+    return;
   _ax = 0xb800;
   _ds = _ax;
   _ax = 0x55aa;
@@ -9563,12 +9560,10 @@ void sub_5C60()
   *(WORD*)&memory[0x10] = _ax;
   _ax = 0x0004;
   _interrupt(0x10);
-locret_5C95:
   return;
 loc_5C96:
   _si = 0x6112;
   sub_5C9E();
-loc_5C9C:
   goto loc_5C9C;
 }
 
@@ -9581,7 +9576,7 @@ void sub_5C9E()
 
 void sub_5CB0()
 {
-  _flags.direction = false;
+  flags.direction = false;
   *(WORD*)&memory[0x4] = 0;
   sub_1830();
   sub_2330();
@@ -9660,7 +9655,7 @@ loc_5D89:
 loc_5DA0:
   _ax += 0x0006;
   if (_dx > _ax)
-    goto locret_5DD3;
+    return;
 loc_5DA7:
   sub_53B0();
   sub_5DD4();
@@ -9675,12 +9670,11 @@ loc_5DA7:
   goto loc_5DCA;
 loc_5DC3:
   if (memory[0x6A8A] != 0)
-    goto locret_5DD3;
+    return;
 loc_5DCA:
   _ax = *(WORD*)&memory[0x6150];
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5D71;
-locret_5DD3:
 }
 
 void sub_5DD4()
@@ -9714,24 +9708,23 @@ loc_5E18:
 loc_5E1C:
   sub_13D8();
   if (_al == 0)
-    goto locret_5E2A;
+    return;
   *(WORD*)&memory[0x572] = 4;
   sub_8E5();
-locret_5E2A:
 }
 
 void sub_5E2B()
 {
-  _lodsb();
+sub_5E2B:
+  _lodsb<MemData, DirForward>();
   if (_al == 0x00)
-    goto locret_5E3A;
+    return;
   _push(_si);
   _bl = 0x02;
   _ah = 0x0e;
   _interrupt(0x10);
   _si = _pop();
   goto sub_5E2B;
-locret_5E3A:
 }
 
 void sub_5E3B()
@@ -9776,7 +9769,7 @@ void sub_5E70()
   _ah = 0x02;
   _interrupt(0x10);
   _si = 0x6d91;
-  _flags.direction = false;
+  flags.direction = false;
   sub_5E2B();
   _dx = 0x0c05;
   _bh = 0x00;
@@ -9787,7 +9780,7 @@ void sub_5E70()
     goto loc_5EBA;
   _si = 0x6dd3;
 loc_5EBA:
-  _flags.direction = false;
+  flags.direction = false;
   sub_5E2B();
   sub_5F97();
   _ax = 0xb800;
@@ -9814,6 +9807,7 @@ loc_5EE8:
 loc_5EF4:
   _ax = *(WORD*)&memory[0x693];
 loc_5EF7:
+  _DeadLoop();
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5EF7;
   if (!(memory[0x6C1] & 0x80))
@@ -9824,7 +9818,7 @@ loc_5EF7:
   goto loc_5F1C;
 loc_5F12:
   sub_5FE5();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_5EE8;
   memory[0x69B] = 1;
 loc_5F1C:
@@ -9838,6 +9832,7 @@ loc_5F1F:
 loc_5F26:
   _ax = *(WORD*)&memory[0x693];
 loc_5F29:
+  _DeadLoop();
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5F29;
   _ax = 0;
@@ -9911,16 +9906,16 @@ void sub_5FB1()
 
 void sub_5FCD()
 {
-  _flags.direction = false;
+  flags.direction = false;
   _ax = 0xb800;
   _es = _ax;
   _ax = 0;
   _di = _ax;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
 }
 
 void sub_5FE5()
@@ -9929,11 +9924,11 @@ void sub_5FE5()
   if (!(_ax & 0x1000))
     goto loc_5FF6;
   sub_600F();
-  if (!_flags.carry)
-    goto locret_600E;
+  if (!flags.carry)
+    return;
   sub_600F();
-  if (!_flags.carry)
-    goto locret_600E;
+  if (!flags.carry)
+    return;
 loc_5FF6:
   *(WORD*)&memory[0x6D8F] = 0x24;
   _cx = 0x0004;
@@ -9943,10 +9938,10 @@ loc_5FFF:
     goto loc_5FFF;
   _ax = *(WORD*)&memory[0x693];
 loc_6007:
+  _DeadLoop();
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_6007;
-  _flags.carry = true;
-locret_600E:
+  flags.carry = true;
 }
 
 void sub_600F()
@@ -9961,7 +9956,7 @@ loc_601B:
   _in(_al, _dx);
   if (_al & 0x03)
     goto loc_6025;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_6025:
   _ah = 0;
@@ -9969,18 +9964,18 @@ loc_6025:
   _dx -= *(WORD*)&memory[0x6DFA];
   if (_dx < 0x12)
     goto loc_601B;
-  _flags.carry = true;
+  flags.carry = true;
 }
 
 void sub_6040()
 {
-  _flags.direction = false;
+  flags.direction = false;
   _push(_ds);
   _es = _pop();
   _di = 0x0e;
   _cx = 0x24;
   _ax = 0;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   *(WORD*)&memory[0x6F24] = 0x25;
   _ax = 0xb800;
   _es = _ax;
@@ -10061,7 +10056,7 @@ void sub_6106()
 loc_6111:
   *(WORD*)&memory[0x70EE] = _dx;
   sub_62A6();
-  if (!_flags.carry)
+  if (!flags.carry)
     goto loc_6129;
   sub_11E3();
   sub_622B();
@@ -10118,8 +10113,9 @@ loc_61AB:
     goto loc_61D4;
   if (memory[0x70F6] == 1)
     goto loc_61C7;
+  flags.carry = *(WORD*)&memory[0x70F3] < 5;
   *(WORD*)&memory[0x70F3] -= 5;
-  if ((short)*(WORD*)&memory[0x70F3] < 0)
+  if (flags.carry)
     goto loc_61D4;
   goto loc_61DD;
 loc_61C7:
@@ -10136,7 +10132,7 @@ loc_61DD:
   sub_2CB0();
   *(WORD*)&memory[0x70FA] = _ax;
   sub_62A6();
-  if (_flags.carry)
+  if (flags.carry)
     goto loc_61D4;
   sub_6245();
   sub_622B();
@@ -10164,14 +10160,13 @@ loc_6217:
 void sub_622B()
 {
   if (memory[0x70F7] != 0)
-    goto locret_6244;
+    return;
   _ax = 0xb800;
   _es = _ax;
   _si = 0x70cc;
   _di = *(WORD*)&memory[0x70F8];
   _cx = 0x0802;
   sub_2D9D();
-locret_6244:
 }
 
 void sub_6245()
@@ -10184,22 +10179,23 @@ loc_624F:
     goto loc_625B;
   if (--_cx)
     goto loc_624F;
-locret_625A:
   return;
 loc_625B:
   _ax = *(WORD*)&memory[0x70F3];
   _cl = 0x04;
-  _ax = (_ax >> _cl) - 0x0002;
-  if ((short)_ax < 0)
-    goto locret_625A;
+  _ax >>= _cl;
+  flags.carry = _ax < 0x0002;
+  _ax -= 0x0002;
+  if (flags.carry)
+    return;
   if (_ax >= 0x10)
-    goto locret_625A;
+    return;
   _di = _ax;
   _dl = memory[ofs(_bx + 11227)];
   _dh = 0;
   _ax += _dx;
   if (_ax == *(WORD*)&memory[0x70EC])
-    goto locret_625A;
+    return;
   *(WORD*)&memory[0x70EC] = _ax;
   _si = _ax;
   memory[ofs(_si + 11234)] = memory[ofs(_si + 11234)] ^ 2;
@@ -10223,7 +10219,7 @@ void sub_62A6()
 {
   if (memory[0x70F2] != 0)
     goto loc_62AF;
-  _flags.carry = false;
+  flags.carry = false;
   return;
 loc_62AF:
   _ax = *(WORD*)&memory[0x70F3];
@@ -10234,8 +10230,8 @@ loc_62AF:
   _di = 0x18;
   _cx = 0x0e08;
   sub_2E29();
-  if (!_flags.carry)
-    goto locret_62EA;
+  if (!flags.carry)
+    return;
   memory[0x571] = 1;
   memory[0x576] = 2;
   memory[0x578] = 0x20;
@@ -10243,7 +10239,6 @@ loc_62AF:
   _ax = 0x091d;
   _bx = 0x0ce4;
   sub_593B();
-  _flags.carry = true;
-locret_62EA:
+  flags.carry = true;
 }
 

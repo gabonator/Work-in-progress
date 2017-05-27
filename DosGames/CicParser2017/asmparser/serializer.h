@@ -119,6 +119,15 @@ public:
 		return *this;
 	}
 
+	CSerializer& operator <<(bool& n)
+	{
+		if (pOutput)
+			pOutput->write(reinterpret_cast<const char*>(&n), sizeof(n));
+		if (pInput)
+			pInput->read(reinterpret_cast<char*>(&n), sizeof(n));
+		return *this;
+	}
+
 	CSerializer& operator <<(unsigned int& n)
 	{
 		if (pOutput)

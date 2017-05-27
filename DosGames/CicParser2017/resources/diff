@@ -1,0 +1,272 @@
+Comparing files output.cpp and APP.CPP
+***** output.cpp
+#include "app.h"
+
+***** APP.CPP
+#include "app.h"
+#include <Windows.h>
+
+*****
+
+***** output.cpp
+  _push(_si);
+  _rep_movsb<MemB800, MemB800, DirBackward>();
+  _si = _pop();
+***** APP.CPP
+  _push(_si);
+  _rep_movsb<MemB800, MemB800, DirAuto>(); // TODO: multiple dir options!!
+  _si = _pop();
+*****
+
+***** output.cpp
+  _cx = 0x0280;
+  _rep_movsb<MemB800, MemB800, DirBackward>();
+  _ds = _pop();
+***** APP.CPP
+  _cx = 0x0280;
+  _rep_movsb<MemB800, MemB800, DirAuto>(); // TODO: multiple dir options!
+  _ds = _pop();
+*****
+
+***** output.cpp
+  _al = memory[ofs(_bx)];
+  memory[adr(_es, _di)] = _al;
+  _bx += 0x0004;
+***** APP.CPP
+  _al = memory[ofs(_bx)];
+  _videoWrite8(_es, _di, _al);
+  //memory[adr(_es, _di)] = _al; // TODO:
+  _bx += 0x0004;
+*****
+
+***** output.cpp
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcr(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
+***** APP.CPP
+  flags.fromByte(_ah);
+  _rcr(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
+*****
+
+***** output.cpp
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcl(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
+***** APP.CPP
+  flags.fromByte(_ah);
+  _rcl(memory[ofs(_bx + 4118)], 1);
+  _ah = flags.toByte();
+*****
+
+***** output.cpp
+  _dl = 0x01;
+loc_892:
+  memory[0x571] = _dl;
+  _ax = *(WORD*)&memory[0x579] - *(WORD*)&memory[0x2650];
+  _dl = 0xff;
+  if (_ax > 0)
+    goto loc_8A5;
+  _dl = 0x01;
+  _ax = (~_ax);
+***** APP.CPP
+  _dl = 0x01;
+loc_892:        // TODO: biggest issue!!!
+  memory[0x571] = _dl;
+  _ax = *(WORD*)&memory[0x579];
+  flags.zero = *(WORD*)&memory[0x579] == *(WORD*)&memory[0x2650];
+  flags.carry = *(WORD*)&memory[0x579] < *(WORD*)&memory[0x2650];
+  _ax -= *(WORD*)&memory[0x2650];
+  _dl = 0xff;
+  /////////
+  if (!flags.zero && !flags.carry /*_ax > 0*/)  // JA after DEC POZOR
+    goto loc_8A5;  _dl = 0x01;
+  _ax = (~_ax);
+*****
+
+***** output.cpp
+  _dx = _ax;
+loc_1223:
+  sub_13B7();
+***** APP.CPP
+  _dx = _ax;
+  long l0 = GetTickCount();
+loc_1223: // TODO: time loop
+  sub_13B7();
+*****
+
+***** output.cpp
+    goto loc_1223;
+  return;
+***** APP.CPP
+    goto loc_1223;
+  long l1 = GetTickCount();
+  printf("waited %d ms\n", l1-l0);
+  return;
+*****
+
+***** output.cpp
+  _out(0x20, _al);
+  goto loc_1557;
+loc_158D:
+***** APP.CPP
+  _out(0x20, _al);
+  _ASSERT(0);
+  //goto loc_1557;
+loc_158D:
+*****
+
+***** output.cpp
+  flags.carry = true;
+  _ASSERT(0 /* check carry */); _rcr(_al, 1);
+  _ah = _al;
+***** APP.CPP
+  flags.carry = true;
+  _rcr(_al, 1);
+  _ah = _al;
+*****
+
+***** output.cpp
+  _ah = 0x00;
+  _al = _al + memory[ofs(_bx + 8065)];
+  _ASSERT(0 /* check carry */); _aaa();
+  memory[ofs(_bx + 8065)] = _al;
+***** APP.CPP
+  _ah = 0x00;
+  flags.carry = _al + memory[ofs(_bx + 8065)] >= 0x100; // TODO:
+  _al = _al + memory[ofs(_bx + 8065)];
+  _aaa();
+  memory[ofs(_bx + 8065)] = _al;
+*****
+
+***** output.cpp
+  _bx = _cx - 1;
+  _al = (memory[ofs(_bx + _di)]) + memory[ofs(_bx + _si)] + flags.carry; _ASSERT(0 /* add with carry */);
+  _ASSERT(0 /* check carry */); _aaa();
+  memory[ofs(_bx + _di)] = _al;
+***** APP.CPP
+  _bx = _cx - 1;
+  _al = (memory[ofs(_bx + _di)]) + memory[ofs(_bx + _si)] + flags.carry; 
+  _aaa();
+  memory[ofs(_bx + _di)] = _al;
+*****
+
+***** output.cpp
+loc_29E4:
+  memory[adr(_es, _di)] = _al;
+  _di = _di ^ 0x2000;
+***** APP.CPP
+loc_29E4:
+  _videoWrite8(_es, _di, _al);
+//  memory[adr(_es, _di)] = _al; // TODO:
+  _di = _di ^ 0x2000;
+*****
+
+***** output.cpp
+  _dx = 0x30c0;
+  _bx = *(WORD*)&memory[adr(_es, _di)];
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+***** APP.CPP
+  _dx = 0x30c0;
+  _bx = _videoRead16(_es, _di); // TODO
+//  _bx = *(WORD*)&memory[adr(_es, _di)];
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+*****
+
+***** output.cpp
+loc_2D44:
+  _bx = *(WORD*)&memory[adr(_es, _di)];
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+***** APP.CPP
+loc_2D44:
+  _bx = _videoRead16(_es, _di);
+//  _bx = *(WORD*)&memory[adr(_es, _di)]; // TODO:
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+*****
+
+***** output.cpp
+  _dx = *(WORD*)&memory[0x2AE5];
+  _dl = (_dl ^ _dh) >> 2;
+  _ASSERT(0 /* check carry */); _rcr(*(WORD*)&memory[0x2AE5], 1);
+  _dx = *(WORD*)&memory[0x2AE5];
+***** APP.CPP
+  _dx = *(WORD*)&memory[0x2AE5];
+  _dl = (_dl ^ _dh) >> 1;
+  flags.carry = _dl & 1; // TODO: manual change
+  _dl >>= 1;
+  _rcr(*(WORD*)&memory[0x2AE5], 1);
+  _dx = *(WORD*)&memory[0x2AE5];
+*****
+
+***** output.cpp
+loc_3374:
+  _bx = *(WORD*)&memory[adr(_es, _di)];
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+***** APP.CPP
+loc_3374:
+        _bx = _videoRead16(_es, _di);
+  //_bx = *(WORD*)&memory[adr(_es, _di)]; // TODO:
+  *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
+*****
+
+***** output.cpp
+loc_4FEA:
+  _bx = *(WORD*)&memory[adr(_es, _di)];
+  _lodsw<MemData, DirForward>();
+***** APP.CPP
+loc_4FEA:
+  _bx = _videoRead16(_es, _di); // TODO!!!
+  //_bx = *(WORD*)&memory[adr(_es, _di)];
+  _lodsw<MemData, DirForward>();
+*****
+
+***** output.cpp
+loc_59C5:
+  _Sleep(_cx);
+  sub_5B21();
+***** APP.CPP
+loc_59C5:
+  if (--_cx)
+    goto loc_59C5;
+  sub_5B21();
+*****
+
+***** output.cpp
+{
+  _al = 0xb6;
+***** APP.CPP
+{
+        return; // play tone
+  _al = 0xb6;
+*****
+
+***** output.cpp
+  sub_5C9E();
+  goto loc_5C9C;
+}
+***** APP.CPP
+  sub_5C9E();
+  _ASSERT(0);
+  while (1);
+  //goto loc_5C9C;
+}
+*****
+
+***** output.cpp
+loc_5FAA:
+  if (_ax == *(WORD*)&memory[0x693])
+***** APP.CPP
+loc_5FAA:
+  _DeadLoop(); // TODO: !!!!
+  if (_ax == *(WORD*)&memory[0x693])
+*****
+
+***** output.cpp
+loc_6007:
+  _DeadLoop();
+  if (_ax == *(WORD*)&memory[0x693])
+***** APP.CPP
+loc_6007:
+  if (_ax == *(WORD*)&memory[0x693])
+*****
+

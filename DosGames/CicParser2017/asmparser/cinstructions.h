@@ -16,9 +16,22 @@ class CCAssignment : public CCInstruction
 	string m_strInsertion;
 
 public:
-	CCAssignment(CValue& vTo, CValue& vFrom)
+	CCAssignment(shared_ptr<CIAssignment> pAssignment)
 	{
+		CValue& vTo = pAssignment->m_valueTo;
+		CValue& vFrom = pAssignment->m_valueFrom;
+
 		m_strDst = vTo.ToC();
+
+		if ( vFrom.m_eType == CValue::es_ptr && vFrom.GetRegisterLength() == CValue::r8 )
+		{
+			if ( pAssignment->m_analysis.m_es.GetValue() == 0xF000 && vFrom.m_nValue == 0xFFFE)
+			{
+				// F000:FFFE - BIOS - IBM computer type code
+				m_strSrc = "0xff";
+				return;
+			}
+		}
 		m_strSrc = vFrom.ToC();
 	}
 
@@ -192,9 +205,66 @@ class CCZeroArgOp : public CCInstruction
 	string m_strOperation;
 
 public:
+	static string RegToC(CStaticAnalysis::CPossibleValue& pv)
+	{
+		switch(pv.GetValue())
+		{
+			case -1: 
+				return "MemAuto";
+			case 0xb800: 
+				return "MemB800";
+			case 0xa000: 
+				return "MemA000";
+			case 0x0000: 
+				return "MemData";
+			default:
+				_ASSERT(0);
+		}
+		return "MemAuto";
+	}
+
+	static string DirToC(CStaticAnalysis::CPossibleValue& pv)
+	{
+		switch(pv.GetValue())
+		{
+			case -1: 
+				return "DirAuto";
+			case 0: 
+				return "DirForward";
+			case 1: 
+				return "DirBackward";
+			default:
+				_ASSERT(0);
+		}
+		return "DirAuto";
+	}
+
+	static string GetTemplate(CStaticAnalysis& anal, CIZeroArgOp::EType op)
+	{
+		string _ds = RegToC(anal.m_ds);
+		string _es = RegToC(anal.m_es);
+		string _dir = DirToC(anal.m_direction);
+
+		switch (op)
+		{
+		case CIZeroArgOp::lodsb: return "<" + _ds + ", " + _dir + ">"; break;
+		case CIZeroArgOp::stosb: return "<" + _es + ", " + _dir + ">"; break;
+		case CIZeroArgOp::lodsw: return "<" + _ds + ", " + _dir + ">"; break;
+		case CIZeroArgOp::stosw: return "<" + _es + ", " + _dir + ">"; break;
+		case CIZeroArgOp::movsb: return "<" + _es + ", " + _ds + ", " + _dir + ">"; break;
+		case CIZeroArgOp::movsw: return "<" + _es + ", " + _ds + ", " + _dir + ">"; break;
+		//case CIString::scasb: return ""; break;
+		//case CIString::scasw: return ""; break;
+		default:
+			_ASSERT(0);
+		}
+		return "";
+	}
+
 	CCZeroArgOp(shared_ptr<CIZeroArgOp> pInstruction)
 	{
 		//cli, sti, _std, stc, ctc, cld, aaa, cbw, lodsw, lodsb, stosw, stosb, movsw, movsb, clc, sahf, lahf, popf, pushf, xlat,
+
 
 		switch (pInstruction->m_eType)
 		{
@@ -207,12 +277,12 @@ public:
 		case CIZeroArgOp::lahf: m_strOperation = "_ah = flags.toByte()"; break;
 		case CIZeroArgOp::sahf: m_strOperation = "flags.fromByte(_ah)"; break;
 
-		case CIZeroArgOp::lodsb: m_strOperation = "_lodsb()"; break;
-		case CIZeroArgOp::stosb: m_strOperation = "_stosb()"; break;
-		case CIZeroArgOp::lodsw: m_strOperation = "_lodsw()"; break;
-		case CIZeroArgOp::stosw: m_strOperation = "_stosw()"; break;
-		case CIZeroArgOp::movsb: m_strOperation = "_movsb()"; break;
-		case CIZeroArgOp::movsw: m_strOperation = "_movsw()"; break;
+		case CIZeroArgOp::lodsb: m_strOperation = "_lodsb"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
+		case CIZeroArgOp::stosb: m_strOperation = "_stosb"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
+		case CIZeroArgOp::lodsw: m_strOperation = "_lodsw"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
+		case CIZeroArgOp::stosw: m_strOperation = "_stosw"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
+		case CIZeroArgOp::movsb: m_strOperation = "_movsb"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
+		case CIZeroArgOp::movsw: m_strOperation = "_movsw"+GetTemplate(pInstruction->m_analysis, pInstruction->m_eType)+"()"; break;
 
 		case CIZeroArgOp::pushf: m_strOperation = "_pushf()"; break;
 		case CIZeroArgOp::popf: m_strOperation = "_popf()"; break;
@@ -408,6 +478,7 @@ public:
 		case CIConditionalJump::jg: m_strCondition = "($type)$a > ($type)$b"; break;
 		case CIConditionalJump::jge: m_strCondition = "($type)$a >= ($type)$b"; break;
 		case CIConditionalJump::jle: m_strCondition = "($type)$a <= ($type)$b"; break;
+
 		case CIConditionalJump::jbe: m_strCondition = "$a <= $b"; break;
 		case CIConditionalJump::ja: m_strCondition = "$a > $b"; break;
 		default:
@@ -663,17 +734,22 @@ public:
 
 class CCCall : public CCInstruction
 {
-	CLabel m_strFunction;
+	//CLabel m_strFunction;
+	string m_strCall;
 
 public:
-	CCCall(shared_ptr<CICall> pCall) : m_strFunction("")
+	CCCall(shared_ptr<CICall> pCall)
 	{
-		m_strFunction = pCall->m_label;
+		m_strCall = pCall->m_label + "()";
+	}
+
+	CCCall(string strFunction) : m_strCall(strFunction)
+	{
 	}
 
 	virtual string ToString() override
 	{
-		return m_strFunction + "();";
+		return m_strCall + ";";
 	}
 };
 
@@ -844,6 +920,7 @@ class CCStringOp : public CCInstruction
 public:
 	string m_strRepeat;
 	string m_strOperation;
+	string m_strTemplate;
 
 public:
 	CCStringOp(shared_ptr<CIString> pInstruction)
@@ -869,11 +946,25 @@ public:
 		default:
 			_ASSERT(0);
 		}
+
+		switch (pInstruction->m_operation)		
+		{
+		case CIString::lodsb: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::lodsb); break;
+		case CIString::stosb: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::stosb); break;
+		case CIString::lodsw: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::lodsw); break;
+		case CIString::stosw: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::stosw); break;
+		case CIString::movsb: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::movsb); break;
+		case CIString::movsw: m_strTemplate = CCZeroArgOp::GetTemplate(pInstruction->m_analysis, CIZeroArgOp::movsw); break;
+		case CIString::scasb: m_strTemplate = ""; break;
+		case CIString::scasw: m_strTemplate = ""; break;
+		default:
+			_ASSERT(0);
+		}
 	}
 	
 	virtual string ToString() override
 	{
-		return "_" + m_strRepeat + "_" + m_strOperation + "();";
+		return "_" + m_strRepeat + "_" + m_strOperation + m_strTemplate + "();";
 	}
 };
 

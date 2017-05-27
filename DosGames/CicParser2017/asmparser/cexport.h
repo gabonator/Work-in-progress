@@ -93,7 +93,7 @@ public:
 
 		shared_ptr<CIAssignment> pAssignment = dynamic_pointer_cast<CIAssignment>(pInInstruction);
 		if (pAssignment)
-			pOutInstruction = make_shared<CCAssignment>( pAssignment->m_valueTo, pAssignment->m_valueFrom);
+			pOutInstruction = make_shared<CCAssignment>(pAssignment);
 
 		shared_ptr<CIAlu> pAlu = dynamic_pointer_cast<CIAlu>(pInInstruction);
 		if (pAlu)
@@ -661,6 +661,36 @@ public:
 		}
 	}
 
+	void OptimizeDeadLoops(vector<shared_ptr<CCInstruction>>& arrOutput)
+	{
+		for (int i=0; i<(int)arrOutput.size()-2; i++)
+		{
+			shared_ptr<CCLabel> pLabel = dynamic_pointer_cast<CCLabel>(arrOutput[i]);
+			if ( !pLabel )
+				continue;
+
+			shared_ptr<CCConditionalJump> pConditional = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i+1]);
+			if (!pConditional)
+				continue;
+			
+			if (pConditional->GetLabelLabel() && pConditional->GetLabel() == pLabel->GetLabel())
+			{
+				if (pConditional->m_strCondition == "--_cx") // loop
+				{
+					shared_ptr<CCCall> pSleepCall = make_shared<CCCall>("_Sleep(_cx)");
+					arrOutput.erase(arrOutput.begin()+i+1, arrOutput.begin()+i+2);
+					arrOutput.insert(arrOutput.begin()+i+1, pSleepCall);
+				} else
+				{
+					// dead loop betweem [i] and [i+1]
+					shared_ptr<CCCall> pDeadloopCall = make_shared<CCCall>("_DeadLoop()");
+					arrOutput.insert(arrOutput.begin()+i+1, pDeadloopCall);
+				}
+				i++;
+			}
+		}
+	}
+
 	void OptimizeUnreferenced(vector<shared_ptr<CCInstruction>>& arrOutput)
 	{
 		for (int i=0; i<(int)arrOutput.size()-1; i++)
@@ -972,6 +1002,7 @@ public:
 			
 			OptimizeRedirects(arrCFunction);		
 			OptimizeExits(arrCFunction);
+			OptimizeDeadLoops(arrCFunction);
 			OptimizeUnreferenced(arrCFunction);
 
 			osCode << "void " << pFunction->m_strName << "()" << endl << "{" << endl;

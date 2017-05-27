@@ -25,36 +25,39 @@ CTimer8254 m_Timer;
 void Sync()
 {
 	videoOutput.Tick(m_pVideo);
-
-	memory[4102] = rand()%3;
+	
+	//memory[4102] = rand()%3;
 	BOOL bAny = FALSE;
-	int keys[] = {VK_UP, VK_RIGHT, VK_LEFT, '?', '?', 'Y', 'N', 'K', 'H', 'T', 'A', 'S', 'R', VK_CONTROL, VK_DELETE, 0};
+	//0x6C3 .. 0x6C6
+	int keys[] = {'?', VK_UP, VK_RIGHT, VK_DOWN, VK_LEFT, '?', '?', '?', '?', '?', 'Y', 'N', 'K', 'H', 'T', 'A', 'S', 'R', VK_CONTROL, VK_DELETE, 0};
 	for (int i=0; keys[i]; i++)
 		if ( GetAsyncKeyState(keys[i]) )
 		{
-			memory[0x6BC+i] = 0x00; // Y, N
+			memory[0x6B7+i] = 0x00;
+			//memory[0x6BC+i] = 0x00; // Y, N
 			bAny = TRUE;
 		}
 		else
 		{
-			memory[0x6BC+i] = 0x80; // Y, N
+			memory[0x6B7+i] = 0x80;
+			//memory[0x6BC+i] = 0x80; // Y, N
 		}
 
 	if (bAny)
 		memory[0x693]++;
-/*
+
 	static LONG lOldTick = 0;
 	LONG lTick = GetTickCount();
 	if ( lOldTick == 0 )
 		lOldTick = lTick;
 
-	if ( lTick - lOldTick > 50)
+	if ( lTick - lOldTick > 30)
 	{
 		// 55f, 564
-		printf("pos: %d\n", memory[0x57C]);
+		//printf("x: %d dx: %d dy: %d\n", memory[0x57C], memory[0x698], memory[0x699]);
 		lOldTick = lTick;
 	}
-*/
+
 }
 
 void StackWrite(int nOffset, WORD nData)
@@ -307,7 +310,7 @@ WORD StackRead(int nOffset)
 	{
 		flags.fromByte(_pop());
 	}
-
+	/*
 	void _lodsb()
 	{
 		_ASSERT(flags.direction == false);
@@ -434,6 +437,54 @@ WORD StackRead(int nOffset)
 			_stosw();
 		_cx = 0;		
 	}
+	*/
+
+	void _Sleep(int n)
+	{
+		printf("sleep %d\n", n);
+		int f = 9;
+		_cx = 0;
+	}
+
+	BYTE MemData::Get8(WORD nAddr)
+	{
+		return memory[nAddr];
+	}
+	void MemData::Set8(WORD nAddr, BYTE nData)
+	{
+		memory[nAddr] = nData;
+	}
+	/*
+	WORD MemData::Get16(WORD nAddr)
+	{
+		return *(WORD*)&memory[nAddr];
+	}
+	void MemData::Set16(WORD nAddr, WORD nData)
+	{
+		*(WORD*)&memory[nAddr] = nData;
+	}*/
+
+	BYTE MemB800::Get8(WORD nAddr)
+	{
+		return m_pVideo->Read(0xb800*16 + nAddr);
+	}
+	void MemB800::Set8(WORD nAddr, BYTE nData)
+	{
+		m_pVideo->Write(0xb800*16 + nAddr, nData);
+	}
+	/*
+	WORD MemB800::Get16(WORD nAddr)
+	{
+		return 
+			m_pVideo->Read(0xb800*16 + nAddr) |
+			(m_pVideo->Read(0xb800*16 + nAddr+1)<<8);
+	}
+	void MemB800::Set16(WORD nAddr, WORD nData)
+	{
+		m_pVideo->Write(0xb800*16 + nAddr, nData & 0xff);
+		m_pVideo->Write(0xb800*16 + nAddr+1, nData >> 8);
+	}
+	*/
 
 	void _rcr(WORD& data, BYTE n)
 	{
@@ -491,6 +542,11 @@ WORD StackRead(int nOffset)
 		m_pVideo->Write(seg*16 + ofs, value);
 	}
 
+	void _DeadLoop()
+	{
+		Sleep(50);
+		Sync();
+	}
 //}
 
 int _tmain(int argc, _TCHAR* argv[])

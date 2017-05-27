@@ -62,6 +62,12 @@
     <ClInclude Include="cvalue.h">
       <Filter>code</Filter>
     </ClInclude>
+    <ClInclude Include="analysis.h">
+      <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="reganalysis.h">
+      <Filter>code</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

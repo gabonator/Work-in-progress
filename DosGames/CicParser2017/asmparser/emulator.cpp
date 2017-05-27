@@ -164,7 +164,7 @@ bool CIConditionalJump::SatisfiesCondition2(CMachine& m, CIConditionalJump::ETyp
 	case jbe: return m.m_nCmpOp1 <= m.m_nCmpOp2;
 	case jz: return m.m_nCmpOp1 == m.m_nCmpOp2;
 	case jnz: return m.m_nCmpOp1 != m.m_nCmpOp2;
-	case jnb: return m.m_nCmpOp1 >= m.m_nCmpOp2;
+	case jnb: return m.m_nCmpOp1 >= m.m_nCmpOp2; // TODO: TODO: Ak bolo pred tym odcitanie, tak potrebujeme vyhodnotit ci nastalo carry, nie ci MSB=1!
 	case jb: return m.m_nCmpOp1 < m.m_nCmpOp2;
 	case ja: return m.m_nCmpOp1 > m.m_nCmpOp2;
 	//case jb:
@@ -260,12 +260,18 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 		case CIAlu::Decrement:
 		case CIAlu::Sub:
 		case CIAlu::Add:
+			// pred opreaciou si treba poznacit cf, zf a tieto vyhodnotit! alley cat loc_892
+			_ASSERT(0);
+
 			_ASSERT(m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jns || m_eType == CIConditionalJump::jnz
 				 || m_eType == CIConditionalJump::jz || m_eType == CIConditionalJump::jb || m_eType == CIConditionalJump::jnb);
 			_ASSERT(pAlu->m_op1.GetRegisterLength() == CValue::r16 || pAlu->m_op1.GetRegisterLength() == CValue::r8);
 			
 			if ( pAlu->m_op1.GetRegisterLength() == CValue::r16 )
 			{
+				_ASSERT(m_eType != CIConditionalJump::jb && m_eType != CIConditionalJump::jnb);
+				// nesledujeme MSB, ale ci po odcitani bolo carry, potrebny insertiion pri SUB
+
 				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
 					bTest = ((signed short)m.GetValue(pAlu->m_op1)) < 0;
 
@@ -280,6 +286,8 @@ bool CIConditionalJump::EvalByPrevInstruction(CMachine& m, shared_ptr<CInstructi
 			} else 
 			if ( pAlu->m_op1.GetRegisterLength() == CValue::r8 )
 			{
+				_ASSERT(m_eType != CIConditionalJump::jb && m_eType != CIConditionalJump::jnb);
+
 				if ( m_eType == CIConditionalJump::js || m_eType == CIConditionalJump::jb )
 					bTest = ((signed char)m.GetValue(pAlu->m_op1)) < 0;
 

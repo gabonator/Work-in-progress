@@ -41,7 +41,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="asmhost.cpp">
+    <ClCompile Include="asmhost1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="code\app.cpp">

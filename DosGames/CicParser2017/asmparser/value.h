@@ -1,3 +1,5 @@
+class CStaticAnalysis;
+
 class CValue : public CSerializable
 {
 public:
@@ -641,4 +643,6 @@ public:
 	}
 
 	string ToC();
+	string GetC(CStaticAnalysis* pAnalysis);
+	string SetC(CStaticAnalysis* pAnalysis);
 };

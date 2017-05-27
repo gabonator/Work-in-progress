@@ -1,0 +1,111 @@
+Comparing files C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp and C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _push(_si);
+  _rep_movsb<MemB800, MemB800, DirBackward>();
+  _si = _pop();
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _push(_si);
+  _rep_movsb<MemB800, MemB800, DirAuto>();
+  _si = _pop();
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _cx = 0x0280;
+  _rep_movsb<MemB800, MemB800, DirBackward>();
+  _ds = _pop();
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _cx = 0x0280;
+  _rep_movsb<MemB800, MemB800, DirAuto>();
+  _ds = _pop();
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcr(memory[adr(_ds, _bx + 4118)], 1);
+  _ah = flags.toByte();
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  flags.fromByte(_ah);
+  _rcr(memory[adr(_ds, _bx + 4118)], 1);
+  _ah = flags.toByte();
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  flags.fromByte(_ah);
+  _ASSERT(0 /* check carry */); _rcl(memory[adr(_ds, _bx + 4118)], 1);
+  _ah = flags.toByte();
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  flags.fromByte(_ah);
+  _rcl(memory[adr(_ds, _bx + 4118)], 1);
+  _ah = flags.toByte();
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _out(0x20, _al);
+  goto loc_1557;
+loc_158D:
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _out(0x20, _al);
+  _ASSERT(0);
+  //goto loc_1557;
+loc_158D:
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  flags.carry = true;
+  _ASSERT(0 /* check carry */); _rcr(_al, 1);
+  _ah = _al;
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  flags.carry = true;
+  _rcr(_al, 1);
+  _ah = _al;
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _ah = 0x00;
+  _al = _al + memory[adr(_ds, _bx + 8065)];
+  _ASSERT(0 /* check carry */); _aaa();
+  memory[adr(_ds, _bx + 8065)] = _al;
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _ah = 0x00;
+  flags.carry = _al + memory[ofs(_bx + 8065)] >= 0x100; // TODO:
+  _al = _al + memory[adr(_ds, _bx + 8065)];
+  _aaa();
+  memory[adr(_ds, _bx + 8065)] = _al;
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _bx = _cx - 1;
+  _al = (memory[adr(_ds, _bx + _di)]) + memory[adr(_ds, _bx + _si)] + flags.carry; _ASSERT(0 /* add with carry */);
+  _ASSERT(0 /* check carry */); _aaa();
+  memory[adr(_ds, _bx + _di)] = _al;
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _bx = _cx - 1;
+  flags.carry = ((memory[adr(_ds, _bx + _di)]) + memory[adr(_ds, _bx + _si)] + flags.carry) >= 0x100;
+  _al = (memory[adr(_ds, _bx + _di)]) + memory[adr(_ds, _bx + _si)] + flags.carry;
+  _aaa();
+  memory[adr(_ds, _bx + _di)] = _al;
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+  _dx = *(WORD*)&memory[adr(_ds, 0x2AE5)];
+  _dl = (_dl ^ _dh) >> 2;
+  _ASSERT(0 /* check carry */); _rcr(*(WORD*)&memory[adr(_ds, 0x2AE5)], 1);
+  _dx = *(WORD*)&memory[adr(_ds, 0x2AE5)];
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+  _dx = *(WORD*)&memory[adr(_ds, 0x2AE5)];
+  _dl = (_dl ^ _dh) >> 1;
+  flags.carry = _dl & 1;        // TODO: manual
+  _dl = (_dl ^ _dh) >> 1;
+  _rcr(*(WORD*)&memory[adr(_ds, 0x2AE5)], 1);
+  _dx = *(WORD*)&memory[adr(_ds, 0x2AE5)];
+*****
+
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE\app.cpp
+{
+  _al = 0xb6;
+***** C:\DATA\DEVEL\VC\ASMHOST1\ASMHOST1\CODE4\APP.CPP
+{
+        return; // play tone
+  _al = 0xb6;
+*****
+

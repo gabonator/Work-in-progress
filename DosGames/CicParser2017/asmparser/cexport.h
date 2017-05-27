@@ -617,7 +617,7 @@ public:
 			if ( pSwitch )
 			{
 				if (find(pSwitch->m_arrLabels.begin(), pSwitch->m_arrLabels.end(), label) != pSwitch->m_arrLabels.end())
-					aux.push_back(i);;
+					aux.push_back(i);
 			}
 		}
 		return aux;
@@ -635,8 +635,8 @@ public:
 			}
 		}
 		// TODO asi skok na start
-		return 0;
-		_ASSERT(0);
+		//return 0;
+		cout << "Lost label " << label << endl;
 		return -1;
 	}
 
@@ -650,6 +650,10 @@ public:
 			{
 				// rename all jumps to pLabel to pNextJump->Target
 				// delete label pLabel,
+
+				if (pNextJump->GetLabelLabel() && pLabel->GetLabel() == pNextJump->GetLabel())
+					continue;
+
 				for (int j=0; j<(int)arrOutput.size(); j++)
 				{
 					shared_ptr<CCConditionalJump> pJump = dynamic_pointer_cast<CCConditionalJump>(arrOutput[j]);
@@ -663,7 +667,7 @@ public:
 
 	void OptimizeDeadLoops(vector<shared_ptr<CCInstruction>>& arrOutput)
 	{
-		for (int i=0; i<(int)arrOutput.size()-2; i++)
+		for (int i=0; i<(int)arrOutput.size()-1; i++)
 		{
 			shared_ptr<CCLabel> pLabel = dynamic_pointer_cast<CCLabel>(arrOutput[i]);
 			if ( !pLabel )
@@ -680,7 +684,16 @@ public:
 					shared_ptr<CCCall> pSleepCall = make_shared<CCCall>("_Sleep(_cx)");
 					arrOutput.erase(arrOutput.begin()+i+1, arrOutput.begin()+i+2);
 					arrOutput.insert(arrOutput.begin()+i+1, pSleepCall);
-				} else
+				} else if(pConditional->Unconditional())
+				{
+					// infinite loop, lets hope there are no references to the label!
+					_ASSERT(GetReferencesToLabel(arrOutput, pLabel->GetLabel()).size() == 1);
+
+					arrOutput.erase(arrOutput.begin()+i, arrOutput.begin()+i+2);
+					shared_ptr<CCCall> pDeadloopCall = make_shared<CCCall>("_InfiniteLoop()");
+					arrOutput.insert(arrOutput.begin()+i, pDeadloopCall);
+				}
+				else
 				{
 					// dead loop betweem [i] and [i+1]
 					shared_ptr<CCCall> pDeadloopCall = make_shared<CCCall>("_DeadLoop()");
@@ -704,7 +717,20 @@ public:
 					arrOutput.erase(arrOutput.begin()+i);
 					i--;
 				}
+				continue;
 			}
+
+			shared_ptr<CCConditionalJump> pConditional = dynamic_pointer_cast<CCConditionalJump>(arrOutput[i]);
+			if ( pConditional && pConditional->GetLabelLabel() )
+			{
+				int nRow = GetLabelRow(arrOutput, pConditional->GetLabel());
+				if (nRow == -1)
+				{
+					// TODO: What to do? need to be fixed manually
+					int f = 9;
+				}
+			}
+
 		}
 	}
 
@@ -1000,7 +1026,7 @@ public:
 			shared_ptr<CCLabel> pEntry = make_shared<CCLabel>(pFunction->m_strName);
 			arrCFunction.insert(arrCFunction.begin(), pEntry);
 			
-			OptimizeRedirects(arrCFunction);		
+			OptimizeRedirects(arrCFunction);	
 			OptimizeExits(arrCFunction);
 			OptimizeDeadLoops(arrCFunction);
 			OptimizeUnreferenced(arrCFunction);

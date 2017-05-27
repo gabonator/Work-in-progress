@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "app.h"
+#include <Windows.h>
 
 WORD word_code_13DF = 0;
 WORD word_code_13E1 = 0;
@@ -528,13 +529,13 @@ loc_5F3:
   _cx = 0x027f;
   _push(_di);
   _push(_si);
-  _rep_movsb();
+  _rep_movsb<MemB800, MemB800, DirAuto>(); // TODO: multiple dir options!!
   _si = _pop();
   _di = _pop();
   _si += 0x2000;
   _di += 0x2000;
   _cx = 0x0280;
-  _rep_movsb();
+  _rep_movsb<MemB800, MemB800, DirAuto>(); // TODO: multiple dir options!
   _ds = _pop();
   _di = *(WORD*)&memory[0x523];
   _bl = memory[0x525];
@@ -544,6 +545,7 @@ loc_5F3:
 loc_61B:
   _al = memory[ofs(_bx)];
   _videoWrite8(_es, _di, _al);
+  //memory[adr(_es, _di)] = _al; // TODO:
   _bx += 0x0004;
   _di = _di ^ 0x2000;
   if (_di & 0x2000)
@@ -606,7 +608,7 @@ void sub_67D()
   flags.direction = false;
   _cx = 0x20;
   _ax = 0xaaaa;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _di -= 0x40;
   _ax = 0x4444;
   *(WORD*)&memory[adr(_es, _di + 4)] = _ax;
@@ -640,7 +642,7 @@ loc_6D0:
   _cx = 0x10;
   _si = 0x0460;
 loc_6D6:
-  _rep_movsw();
+  _rep_movsw<MemData, MemData, DirForward>();
   memory[0x540] = 3;
 }
 
@@ -657,8 +659,8 @@ loc_6ED:
   _si = *(WORD*)&memory[ofs(_bx + 1232)];
   _cx = 0x0008;
 loc_6F6:
-  _lodsw();
-  _stosw();
+  _lodsw<MemData, DirForward>();
+  _stosw<MemData, DirForward>();
   _di += 0x0002;
   if (--_cx)
     goto loc_6F6;
@@ -783,13 +785,16 @@ loc_880:
   if (_al >= memory[0x2652])
     goto loc_892;
   _dl = 0x01;
-loc_892:
+loc_892:	// TODO: biggest issue!!!
   memory[0x571] = _dl;
-  _ax = *(WORD*)&memory[0x579] - *(WORD*)&memory[0x2650];
+  _ax = *(WORD*)&memory[0x579];
+  flags.zero = *(WORD*)&memory[0x579] == *(WORD*)&memory[0x2650];
+  flags.carry = *(WORD*)&memory[0x579] < *(WORD*)&memory[0x2650];
+  _ax -= *(WORD*)&memory[0x2650];
   _dl = 0xff;
-  if (_ax > 0)
-    goto loc_8A5;
-  _dl = 0x01;
+  /////////
+  if (!flags.zero && !flags.carry /*_ax > 0*/)  // JA after DEC POZOR
+    goto loc_8A5;  _dl = 0x01;
   _ax = (~_ax);
 loc_8A5:
   memory[0x56E] = _dl;
@@ -1092,9 +1097,7 @@ loc_B90:
   sub_13D8();
   if (_al == 0)
     goto loc_B90;
-loc_B95:
-  if (--_cx)
-    goto loc_B95;
+  _Sleep(_cx);
 loc_B97:
   sub_11E3();
   _ax = *(WORD*)&memory[0x563];
@@ -1309,9 +1312,7 @@ loc_DA8:
   if (flags.carry)
     goto loc_DDE;
   _cx = 0x0168;
-loc_DBC:
-  if (--_cx)
-    goto loc_DBC;
+  _Sleep(_cx);
   flags.carry = _bh < _al;
   _bh -= _al;
   if (_bh == 0)
@@ -1758,11 +1759,14 @@ loc_1210:
   sub_12C1();
   sub_13B7();
   _dx = _ax;
-loc_1223:
+  long l0 = GetTickCount();
+loc_1223: // TODO: time loop
   sub_13B7();
   _ax -= _dx;
   if (_ax < 0xf8ed)
     goto loc_1223;
+  long l1 = GetTickCount();
+  printf("waited %d ms\n", l1-l0);
   return;
 loc_122E:
   _dx = 0x0201;
@@ -1929,7 +1933,7 @@ void sub_13AA()
 {
   _ax = 0xf000;
   _es = _ax;
-  _al = 0xff; //memory[adr(_es, 65534)]; // TODO: analysis bios
+  _al = 0xff;
   memory[0x697] = _al;
 }
 
@@ -1977,7 +1981,7 @@ void sub_13E8()
   _di = 0x06b7;
   _cx = 0x16;
   _al = 0x80;
-  _rep_stosb();
+  _rep_stosb<MemData, DirForward>();
   _ax = (*(WORD*)&memory[adr(_es, 1683)]) - 0x70;
   *(WORD*)&memory[adr(_es, 1681)] = _ax;
   _ax = 0x40;
@@ -2143,7 +2147,7 @@ void sub_1572()
   _al = 0x20;
   _out(0x20, _al);
   _ASSERT(0);
-  //goto loc_1557; // TODO: wtf??
+  //goto loc_1557;
 loc_158D:
   if (memory[adr(_es, 1721)] & 0x80)
     goto loc_15A4;
@@ -2658,18 +2662,18 @@ loc_1A9A:
   _ax = (_ax << _cl) + 0x15e0;
   _si = _ax;
   _cx = 0x0004;
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
   return;
 loc_1AD2:
   _ax = 0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   return;
 loc_1AD7:
   _al = memory[0x166B] - memory[0x1668];
   _ah = 0x0a;
   _ax = (_ah * _al) + 0x2681;
   _si = _ax;
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
 }
 
 void sub_1AEA()
@@ -2843,7 +2847,7 @@ loc_1C8C:
 loc_1CA0:
   _ax = *(WORD*)&memory[0x1839];
   _cx = *(WORD*)&memory[0x1835] >> 3;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _cx = (*(WORD*)&memory[0x1835] >> 2) & 0xfe;
   _di = (_di - _cx) ^ 0x2000;
   if (_di & 0x2000)
@@ -3002,9 +3006,9 @@ void sub_1E17()
   _di = 0x0e;
   _cx = 0x60;
 loc_1E24:
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= *(WORD*)&memory[0x1C1B];
-  _stosw();
+  _stosw<MemData, DirForward>();
   if (--_cx)
     goto loc_1E24;
   _ax = 0xb800;
@@ -3834,7 +3838,7 @@ void sub_2690()
   _cx = 0x0007;
   _si = 0x1f82;
 loc_2698:
-  _lodsb();
+  _lodsb<MemData, DirAuto>();
   _bx = 0x0007 - _cx;
   if (--_cx && _al == memory[ofs(_bx + 8073)])
     goto loc_2698;
@@ -3845,7 +3849,7 @@ loc_26A7:
   _si = 0x1f82;
   _di = 0x1f89;
   _cx = 0x0007;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirAuto>();
 }
 
 void sub_26B3()
@@ -3885,7 +3889,7 @@ void sub_26E8()
   _es = _pop();
   _cx = 0x0007;
   _al = 0;
-  _rep_stosb();
+  _rep_stosb<MemData, DirAuto>();
 }
 
 void sub_26F2()
@@ -3908,7 +3912,7 @@ void sub_2706()
 loc_2709:
   _bx = _cx;
   _ah = 0x00;
-  flags.carry = _al + memory[ofs(_bx + 8065)] >= 0x100;
+  flags.carry = _al + memory[ofs(_bx + 8065)] >= 0x100; // TODO:
   _al = _al + memory[ofs(_bx + 8065)];
   _aaa();
   memory[ofs(_bx + 8065)] = _al;
@@ -3979,10 +3983,10 @@ void sub_2790()
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x50;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x50;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   *(WORD*)&memory[0x2654] = 0;
 loc_27B5:
   sub_2DFD();
@@ -4181,10 +4185,10 @@ void sub_29A0()
   flags.direction = false;
   _di = *(WORD*)&memory[0x267E] + 0x0284;
   _cx = 0x24;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = *(WORD*)&memory[0x267E] + 0x1184;
   _cx = 0x24;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = *(WORD*)&memory[0x267E] + 0x2284;
   _al = 0x2a;
   sub_29E1();
@@ -4198,6 +4202,7 @@ void sub_29E1()
   _cx = 0x5f;
 loc_29E4:
   _videoWrite8(_es, _di, _al);
+//  memory[adr(_es, _di)] = _al; // TODO:
   _di = _di ^ 0x2000;
   if (_di & 0x2000)
     goto loc_29F4;
@@ -4215,10 +4220,10 @@ void sub_2A00()
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   sub_2B9E();
   _bx = 0x28a0;
   _ax = 0;
@@ -4237,10 +4242,10 @@ void sub_2A30()
   _di = 0;
   _ax = 0xaaaa;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   sub_2B9E();
   _bx = 0x28a0;
   _ax = 0;
@@ -4343,7 +4348,7 @@ loc_2B39:
   *(WORD*)&memory[0x2ACE] = _cx;
 loc_2B4B:
   _cx = *(WORD*)&memory[0x2ACE];
-  _rep_movsb();
+  _rep_movsb<MemB800, MemData, DirForward>();
   _di = (_di - *(WORD*)&memory[0x2ACE]) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_2B62;
@@ -4406,10 +4411,10 @@ loc_2BD2:
   _ax = 0x5655;
   _cx = 0x0500;
   flags.direction = false;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x3180;
   _cx = 0x0500;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   *(WORD*)&memory[0x2AC2] = 10564;
 loc_2BEC:
   memory[0x2AC4] = 9;
@@ -4509,10 +4514,10 @@ loc_2CDA:
   _cl = memory[0x2AE0];
 loc_2CDE:
   _dx = 0x30c0;
-  _bx = _videoRead16(_es, _di);
-  //_bx = *(WORD*)&memory[adr(_es, _di)];
+  _bx = _videoRead16(_es, _di); // TODO
+//  _bx = *(WORD*)&memory[adr(_es, _di)];
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   *(WORD*)&memory[0x2AE3] = _ax;
 loc_2CEC:
   if (_ah & _dl)
@@ -4535,7 +4540,7 @@ loc_2D04:
   if (_dh & 0x03)
     goto loc_2CEC;
   _ax = (_ax & _bx) | *(WORD*)&memory[0x2AE3];
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_2CDE;
@@ -4559,11 +4564,11 @@ loc_2D40:
   _cl = memory[0x2AE0];
 loc_2D44:
   _bx = _videoRead16(_es, _di);
-  //_bx = *(WORD*)&memory[adr(_es, _di)];
+//  _bx = *(WORD*)&memory[adr(_es, _di)]; // TODO:
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_2D44;
@@ -4588,7 +4593,7 @@ void sub_2D70()
   _ch = 0;
 loc_2D84:
   _cl = memory[0x2AE0];
-  _rep_movsw();
+  _rep_movsw<MemData, MemData, DirForward>();
   _cl = memory[0x2AEB];
   *(WORD*)&memory[0x2AE9] += _cx;
   _si = *(WORD*)&memory[0x2AE9];
@@ -4605,7 +4610,7 @@ void sub_2D9D()
   _ch = 0;
 loc_2DA8:
   _cl = memory[0x2AE0];
-  _rep_movsw();
+  _rep_movsw<MemB800, MemData, DirForward>();
   _di = ((_di - *(WORD*)&memory[0x2AE0]) - *(WORD*)&memory[0x2AE0]) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_2DC3;
@@ -4624,7 +4629,7 @@ void sub_2DCA()
   _ch = 0;
 loc_2DD7:
   _cl = memory[adr(_es, 10976)];
-  _rep_movsw();
+  _rep_movsw<MemData, MemB800, DirForward>();
   _si = ((_si - *(WORD*)&memory[adr(_es, 10976)]) - *(WORD*)&memory[adr(_es, 10976)]) ^ 0x2000;
   if (_si & 0x2000)
     goto loc_2DF5;
@@ -4638,11 +4643,10 @@ loc_2DF5:
 void sub_2DFD()
 {
   _dx = *(WORD*)&memory[0x2AE5];
-  _dl = (_dl ^ _dh);
+  _dl = (_dl ^ _dh) >> 1;
+  flags.carry = _dl & 1; // TODO: manual change
   _dl >>= 1;
-  flags.carry = _dl & 1;
-  _dl >>= 1;
-  _rcr(*(WORD*)&memory[0x2AE5], 1); // TODO: automatic carry?
+  _rcr(*(WORD*)&memory[0x2AE5], 1);
   _dx = *(WORD*)&memory[0x2AE5];
 }
 
@@ -5237,12 +5241,12 @@ loc_334B:
 loc_3370:
   _cx = *(WORD*)&memory[0x3287];
 loc_3374:
-  _bx = _videoRead16(_es, _di);
-  //_bx = *(WORD*)&memory[adr(_es, _di)];
+	_bx = _videoRead16(_es, _di);
+  //_bx = *(WORD*)&memory[adr(_es, _di)]; // TODO:
   *(WORD*)&memory[adr(_ds, _bp + 0)] = _bx;
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax |= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   _bp += 0x0002;
   if (--_cx)
     goto loc_3374;
@@ -5310,7 +5314,7 @@ void sub_3405()
   _es = _pop();
   _di = 0x328e;
   _cx = 0x14;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   *(WORD*)&memory[0x32B6] = 0xff;
   *(WORD*)&memory[0x327A] = 0;
   *(WORD*)&memory[0x327D] = 0;
@@ -6003,9 +6007,9 @@ void sub_3A96()
   _si = 0x35e0;
   _cx = 0x1e;
 loc_3AA5:
-  _lodsw();
+  _lodsw<MemData, DirForward>();
   _ax &= _dx;
-  _stosw();
+  _stosw<MemData, DirForward>();
   if (--_cx)
     goto loc_3AA5;
 }
@@ -6129,7 +6133,7 @@ void sub_3BA3()
   _di = 0x0e;
   _si = _di;
   _cx = 0x20;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _di = *(WORD*)&memory[ofs(_bx + 14249)];
   _ax = 0xb800;
   _es = _ax;
@@ -7506,7 +7510,7 @@ void sub_48A1()
   _si = _di;
   _ax = 0xaaaa;
   _cx = 0x41;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _ax = 0xb800;
   _es = _ax;
   _di = *(WORD*)&memory[0x44DA];
@@ -7778,7 +7782,7 @@ void sub_4B47()
   _ax = 0;
   _di = 0x4441;
   _cx = 0x0c;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   _ax = 0xb800;
   _es = _ax;
   _bx = *(WORD*)&memory[0x8];
@@ -8233,7 +8237,7 @@ void sub_4FBB()
   _di = *(WORD*)&memory[ofs(_bx + 17832)];
   _si = 0x4548;
   _cx = 0x0c;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirForward>();
 }
 
 void sub_4FCD()
@@ -8245,7 +8249,7 @@ void sub_4FCD()
   _si = *(WORD*)&memory[ofs(_bx + 17832)];
   _di = 0x4548;
   _cx = 0x0c;
-  _rep_movsb();
+  _rep_movsb<MemData, MemData, DirForward>();
 }
 
 void sub_4FDF()
@@ -8257,10 +8261,11 @@ void sub_4FDF()
 loc_4FE7:
   _cx = 0x0003;
 loc_4FEA:
-  _bx = _videoRead16(_es, _di);
-  _lodsw();
+  _bx = _videoRead16(_es, _di); // TODO!!!
+  //_bx = *(WORD*)&memory[adr(_es, _di)];
+  _lodsw<MemData, DirForward>();
   _ax |= _bx;
-  _stosw();
+  _stosw<MemB800, DirForward>();
   if (--_cx)
     goto loc_4FEA;
   _di = (_di - 0x0006) ^ 0x2000;
@@ -8282,7 +8287,7 @@ void sub_5008()
   _ax = 0x5555;
 loc_5013:
   _cx = 0x0003;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = (_di - 0x0006) ^ 0x2000;
   if (_di & 0x2000)
     goto loc_5028;
@@ -9003,8 +9008,7 @@ void sub_576E()
     goto loc_577A;
   _cx >>= 1;
 loc_577A:
-  if (--_cx)
-    goto loc_577A;
+  _Sleep(_cx);
   if (memory[0x0] == 0)
     return;
   _al = 0xb6;
@@ -9426,10 +9430,7 @@ void sub_5B21()
 
 void sub_5B28()
 {
-  // play tone _data16get(0x592A) = divider, _data16get(0x592E) = duration
-  //_tone( *(WORD*)&memory[0x592A], *(WORD*)&memory[0x592E] );
-
-  return;
+	return; // play tone
   _al = 0xb6;
   _out(0x43, _al);
   _ax = *(WORD*)&memory[0x592A];
@@ -9582,7 +9583,8 @@ void sub_5C60()
 loc_5C96:
   _si = 0x6112;
   sub_5C9E();
-  while (1); // TODO: dead loop
+  _ASSERT(0);
+  while (1);
   //goto loc_5C9C;
 }
 
@@ -9735,7 +9737,7 @@ loc_5E1C:
 void sub_5E2B()
 {
 sub_5E2B:
-  _lodsb();
+  _lodsb<MemData, DirForward>();
   if (_al == 0x00)
     return;
   _push(_si);
@@ -9826,8 +9828,7 @@ loc_5EE8:
 loc_5EF4:
   _ax = *(WORD*)&memory[0x693];
 loc_5EF7:
-  Sync();
-  // TODO: dead loop
+  _DeadLoop();
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5EF7;
   if (!(memory[0x6C1] & 0x80))
@@ -9852,8 +9853,7 @@ loc_5F1F:
 loc_5F26:
   _ax = *(WORD*)&memory[0x693];
 loc_5F29:
-    Sync();
-  // TODO: dead loop
+  _DeadLoop();
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5F29;
   _ax = 0;
@@ -9910,8 +9910,7 @@ loc_5F9E:
 loc_5FA7:
   _ax = *(WORD*)&memory[0x693];
 loc_5FAA:
-  Sync();
-  // TODO: dead loop
+  _DeadLoop(); // TODO: !!!!
   if (_ax == *(WORD*)&memory[0x693])
     goto loc_5FAA;
 }
@@ -9935,10 +9934,10 @@ void sub_5FCD()
   _ax = 0;
   _di = _ax;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
   _di = 0x2000;
   _cx = 0x0fa0;
-  _rep_stosw();
+  _rep_stosw<MemB800, DirForward>();
 }
 
 void sub_5FE5()
@@ -9997,7 +9996,7 @@ void sub_6040()
   _di = 0x0e;
   _cx = 0x24;
   _ax = 0;
-  _rep_stosw();
+  _rep_stosw<MemData, DirForward>();
   *(WORD*)&memory[0x6F24] = 0x25;
   _ax = 0xb800;
   _es = _ax;

@@ -4,6 +4,8 @@
 class CInstruction : public CSerializable
 {
 public:
+	CStaticAnalysis m_analysis;
+
 	virtual ~CInstruction() {}
 	virtual void Eval(CMachine& m) { _ASSERT(0); }
 	static CInstruction* FromName(string strClassName);
@@ -135,7 +137,7 @@ public:
 
 	virtual void Serialize(CSerializer& s)
 	{
-		s << _enum(m_eType);
+		s << _enum(m_eType) << m_analysis;
 	}
 };
 
@@ -269,7 +271,7 @@ public:
 
 	virtual void Serialize(CSerializer& s)
 	{
-		s << _enum(m_rule) << _enum(m_operation);
+		s << _enum(m_rule) << _enum(m_operation) << m_analysis;
 	}
 };
 
@@ -291,7 +293,7 @@ public:
 
 	virtual void Serialize(CSerializer& s)
 	{
-		s << m_valueTo << m_valueFrom;
+		s << m_valueTo << m_valueFrom << m_analysis;
 	}
 };
 

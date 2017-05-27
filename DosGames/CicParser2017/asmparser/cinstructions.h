@@ -21,7 +21,7 @@ public:
 		CValue& vTo = pAssignment->m_valueTo;
 		CValue& vFrom = pAssignment->m_valueFrom;
 
-		m_strDst = vTo.ToC();
+		m_strDst = vTo.SetC(&pAssignment->m_analysis);
 
 		if ( vFrom.m_eType == CValue::es_ptr && vFrom.GetRegisterLength() == CValue::r8 )
 		{
@@ -32,7 +32,7 @@ public:
 				return;
 			}
 		}
-		m_strSrc = vFrom.ToC();
+		m_strSrc = vFrom.GetC(&pAssignment->m_analysis);
 	}
 
 	CCAssignment(shared_ptr<CIAlu> pAlu)
@@ -158,6 +158,13 @@ public:
 				return m_strDst + "--";
 				*/
 			return strInsertion + m_strDst + " " + arrMatches[0] + "= " + arrMatches[1] + ";";
+		}
+
+		if (m_strDst.find("($value)") != string::npos)
+		{
+			string strTemp = m_strDst;
+			CUtils::replaceOnce(strTemp, "($value)", m_strSrc);
+			return strInsertion + strTemp + ";";
 		}
 
 		return strInsertion + m_strDst + " = " + m_strSrc + ";";
@@ -540,7 +547,9 @@ public:
 			{
 			case CIConditionalJump::jz: m_strCondition = "$a == 0"; break;
 			case CIConditionalJump::jnz: m_strCondition = "$a != 0"; break;
-			case CIConditionalJump::ja: m_strCondition = "$a > 0"; break;
+			case CIConditionalJump::ja: 
+				pAlu->m_bExportInsertion = true;
+				m_strCondition = "!flags.carry && ($a != 0)"; break;
 			case CIConditionalJump::jb: 
 				pAlu->m_bExportInsertion = true;
 				m_strCondition = "flags.carry"; break;

@@ -37,17 +37,17 @@ string CValue::ToC()
 
 	case CValue::byteptrasword:
 	case CValue::wordptr:
-		ss << "*(WORD*)&memory[0x" << hex << uppercase << m_nValue << "]";
+		ss << "*(WORD*)&memory[adr(_ds, 0x" << hex << uppercase << m_nValue << ")]";
 		return ss.str();
 
 	case CValue::wordptrasbyte:
 	case CValue::byteptr:
 		// TODO: vsade pridat adr(_ds, ...)
-		ss << "memory[0x" << hex << uppercase << m_nValue << "]";
+		ss << "memory[adr(_ds, 0x" << hex << uppercase << m_nValue << ")]";
 		return ss.str();
 
 	case CValue::byteptrval:
-		return "memory[ofs(" + m_value->ToC() + ")]";
+		return "memory[adr(_ds, " + m_value->ToC() + ")]";
 
 	case CValue::bx_plus_si:
 		return "_bx + _si";
@@ -61,7 +61,7 @@ string CValue::ToC()
 		return "SEG_DATA";
 
 	case CValue::wordptrval:
-		ss << "*(WORD*)&memory[ofs(" << m_value->ToC() << ")]";
+		ss << "*(WORD*)&memory[adr(_ds, " << m_value->ToC() << ")]";
 		return ss.str();
 
 	case CValue::es_ptr_di:
@@ -137,4 +137,101 @@ string CValue::ToC()
 		_ASSERT(0);
 	}
 	return "?";
+}
+
+
+string CValue::GetC(CStaticAnalysis* pAnalysis)
+{
+	stringstream videoOffset;
+
+	switch (m_eType)
+	{
+	case CValue::byteptrasword:
+	case CValue::wordptr:
+	case CValue::byteptrval:
+	case CValue::ds_ptr_bp_plus:
+		//_ASSERT(pAnalysis->m_ds.GetValue() == 0x0000); // TODO: FIX IT!!!!!!!!!!
+		return ToC();
+
+	case CValue::es_ptr_di:
+		videoOffset << "_di";
+		break;
+
+	case CValue::es_ptr_di_plus:
+		videoOffset << "_di" << m_nValue;
+		break;
+
+	case CValue::es_ptr:
+		videoOffset << m_nValue;
+		break;
+
+	case CValue::wordptr_es:
+		videoOffset << m_nValue;
+		break;
+	}
+
+	if (videoOffset.str().empty())
+		return ToC();
+
+	if (pAnalysis->m_es.GetValue() != 0xb800 && pAnalysis->m_es.GetValue() != 0xa000)
+		return ToC();
+
+	stringstream result;
+	if (m_eRegLength == CValue::r8)
+		result << "_videoRead8(_esAssume(0x" << std::hex << pAnalysis->m_es.GetValue() << "), " << videoOffset.str() << ")";
+	else if (m_eRegLength == CValue::r16)
+		result << "_videoRead16(_esAssume(0x" << std::hex << pAnalysis->m_es.GetValue() << "), " << videoOffset.str() << ")";
+	else
+		_ASSERT(0);
+
+	return result.str();
+}
+
+string CValue::SetC(CStaticAnalysis* pAnalysis)
+{
+	stringstream videoOffset;
+
+	switch (m_eType)
+	{
+	case CValue::byteptrasword:
+	case CValue::wordptr:
+	case CValue::byteptrval:
+	case CValue::ds_ptr_bp_plus:
+		// TODO: the same with _ds!
+		//_ASSERT(pAnalysis->m_ds.GetValue() == 0x0000); //TODO: FIX IT!!!!! UNSURE ABOUT DS VALUE??? 
+		return ToC();
+
+	case CValue::es_ptr_di:
+		videoOffset << "_di";
+		break;
+
+	case CValue::es_ptr_di_plus:
+		videoOffset << "_di + 0x" << std::hex << m_nValue; // overflow?
+		break;
+
+	case CValue::es_ptr:
+		videoOffset << "0x" << std::hex << m_nValue;
+		break;
+
+	case CValue::wordptr_es:
+		videoOffset << "0x" << std::hex << m_nValue;
+		break;
+	}
+
+	if (videoOffset.str().empty())
+		return ToC();
+
+	if (pAnalysis->m_es.GetValue() != 0xb800 && pAnalysis->m_es.GetValue() != 0xa000)
+		return ToC();
+
+	stringstream result;
+	if (m_eRegLength == CValue::r8)
+		result << "_videoWrite8(_esAssume(0x" << std::hex << pAnalysis->m_es.GetValue() << "), " << videoOffset.str() << ", ($value))";
+	else if (m_eRegLength == CValue::r16)
+		result << "_videoWrite16(_esAssume(0x" << std::hex << pAnalysis->m_es.GetValue() << "), " << videoOffset.str() << ", ($value))";
+	else
+		_ASSERT(0);
+
+	return result.str();
+
 }

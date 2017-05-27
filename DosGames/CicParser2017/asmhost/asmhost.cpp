@@ -310,6 +310,19 @@ WORD StackRead(int nOffset)
 	{
 		flags.fromByte(_pop());
 	}
+	
+	int _esAssume(int x)
+	{
+		_ASSERT( _es == x );
+		return x;
+	}
+
+	void _InfiniteLoop()
+	{
+		_ASSERT(0);
+	}
+
+
 	/*
 	void _lodsb()
 	{

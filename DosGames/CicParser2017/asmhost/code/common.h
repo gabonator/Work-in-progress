@@ -57,6 +57,7 @@ template <class DST, class DIR> void _rep_stosw();
 
 void _Sleep(int);
 void _DeadLoop();
+void _InfiniteLoop();
 
 void _rcr(WORD&, BYTE);
 void _rcr(BYTE&, BYTE);
@@ -68,6 +69,7 @@ WORD _videoRead16(WORD, WORD);
 void _videoWrite8(WORD, WORD, BYTE);
 void Sync();
 
+int _esAssume(int);
 
 	struct MemData
 	{

@@ -70,6 +70,23 @@ void VideoUpdate()
 	videoOutput.Tick(m.m_pVideo);
 }
 
+void Test(CSourceParser& sp)
+{
+	CCExport e;
+	vector<shared_ptr<CInstruction>> arrFunction = e.GetSubCode(sp.m_arrCode, CLabel("sub_872"));
+
+	vector<shared_ptr<CCInstruction>> arrCFunction;
+	e.Convert(CLabel("sub_872"), arrFunction, arrCFunction);
+	e.Convert(CLabel("sub_872"), arrFunction, arrCFunction);
+			
+	e.OptimizeRedirects(arrCFunction);	
+	e.OptimizeExits(arrCFunction);
+	e.OptimizeDeadLoops(arrCFunction);
+	e.OptimizeUnreferenced(arrCFunction);
+
+	e.DumpProgram(cout, arrCFunction, 1);	
+}
+
 int main(int argc, char* argv[])
 {
 	CSourceParser sp;
@@ -90,6 +107,11 @@ int main(int argc, char* argv[])
 
 	//sp.Save("goose.cache");
 	//sp.Load("goose.cache");
+
+	if (0)
+	{
+		Test(sp);
+	}
 
 	if (1)
 	{

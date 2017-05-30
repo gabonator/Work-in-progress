@@ -1,0 +1,92 @@
+<canvas id="canvas" style="border:1px #808080 dashed; width:320px; height:200px;"></canvas><br>
+<textarea cols=40 rows=12 id="terminal"></textarea>
+
+<script language="javascript" src="data.js"></script>
+<script language="javascript" src="app.js"></script>
+<script language="javascript" src="cpu.js"></script>
+<script>
+var gen = start();
+
+setInterval(function()
+{
+  gen.next();
+}, 10);
+
+setInterval(function()
+{
+  display();
+}, 40);
+
+
+document.onkeyup   = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 0 ); }
+document.onkeydown = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 1 ); }
+
+function onKey( k, on )
+{
+  //int keys[] = {'?', VK_UP, VK_RIGHT, VK_DOWN, VK_LEFT, '?', '?', '?', '?', '?', 'Y', 'N', 'K', 'H', 'T', 'A', 'S', 'R', VK_CONTROL, VK_DELETE, 0};
+  var mapkeys = [' ', 38, 39, 40, 37, 0, 0, 0, 0, 0, 'Y', 'N', 'K', 'H', 'T', 'A', 'S', 'R', 'control', 'delete'];
+  var index = mapkeys.indexOf(k);
+  if ( index == -1 )
+    index = mapkeys.indexOf(String.fromCharCode(k));
+
+  if ( index != -1 )
+    memory[0x6B7+index] = on ? 0x00 : 0x80;
+  if ( on == 1 )
+    _memoryWrite16(0x693, _memoryRead16(0x693)+1);
+}
+
+
+  var raw = window.atob(__ds);
+  var rawLength = raw.length;
+  var i;
+  for(i = 0; i < rawLength; i++)
+    memory[i] = raw.charCodeAt(i);
+
+
+var can = document.getElementById("canvas");
+var ctx = can.getContext('2d');
+can.width = 320;
+can.height = 200;
+var imdata = ctx.createImageData(can.width, can.height);
+var cgaPal = [0xff000000, 0xffffff00, 0xffff00ff, 0xffffffff];
+
+
+var imview = new ArrayBuffer(imdata.data.length);
+var imview8 = new Uint8ClampedArray(imview);
+var imview32 = new Uint32Array(imview);
+
+
+function display()
+{
+  var rdi, wri = 0;
+  for (var y=0; y<100; y++)
+  {
+    for (var x=0; x<80; x++, rdi++)
+    {
+      var pix = video[rdi];
+      imview32[wri++] = cgaPal[pix >> 6];
+      imview32[wri++] = cgaPal[(pix >> 4)&3];
+      imview32[wri++] = cgaPal[(pix >> 2)&3];
+      imview32[wri++] = cgaPal[pix&3];
+    }
+
+    rdi -= 80;
+    rdi ^= 0x2000;
+	
+    for (var x=0; x<80; x++, rdi++)
+    {
+      var pix = video[rdi];
+      imview32[wri++] = cgaPal[pix >> 6];
+      imview32[wri++] = cgaPal[(pix >> 4)&3];
+      imview32[wri++] = cgaPal[(pix >> 2)&3];
+      imview32[wri++] = cgaPal[pix&3];
+    }
+
+    rdi ^= 0x2000;
+  }
+
+  imdata.data.set(imview8);
+  ctx.putImageData(imdata, 0, 0);
+}
+display();
+</script>

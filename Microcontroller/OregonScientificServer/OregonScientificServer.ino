@@ -1,9 +1,20 @@
-#define USE_OREGON  // flash:11% mem:12%
+/*
+ * Itead iboard 1.1
+ * 
+ * Programmer: Parallel progarmmer
+ * Processor: Atmel328 (328P)
+ * Board: Arduino Duemilanove or Diecimila
+ * 
+ * Pinout on board: DTR, GND, TX, RX, VDD 3.3, GND, NC
+ */
+
+ 
+//#define USE_OREGON  // flash:11% mem:12%
 //#define USE_OREGON_UDP
 //#define USE_ONEWIRE // flash:5% mem:1%
 #define USE_DHT22   // flash:3% mem:2%
-#define USE_BMP085  // flash:9% mem:2%
-//#define USE_PIR
+//#define USE_BMP085  // flash:9% mem:2%
+#define USE_PIR
 
 #include <SPI.h>
 #include <Ethernet.h>
@@ -28,11 +39,19 @@
 #include "OneWire.h"
 #endif
 
+
+#define MAC {0x00, 0x11, 0x11, 0x11, 0x22, 0x23 }; // Sklad
+
+#define REQ_SERVER "****"
+#define REQ_SCRIPT "/***/"
+
+
+/*
 #define MAC {0x01, 0x01, 0x02, 0x34, 0x56, 0x78 };
 
 #define REQ_SERVER "server.com"
 #define REQ_SCRIPT "/script/"
-
+*/
 byte mac[] = MAC;
 byte ip[] = { 192, 168, 1, 254 };
 
@@ -131,8 +150,8 @@ int SensorReport(EthernetClient& client)
   byte valid = 0;
 
   int nBytes = 0;
-  sprintf(report, "&uptime=&d", millis()/1000);
-  
+  sprintf(report, "&uptime=%d", millis()/1000);
+
   nBytes += strlen(report);
   client.print(report);
   
@@ -195,7 +214,7 @@ int SensorReport(EthernetClient& client)
 
   if (bmp.begin())
   {	      
-    float fPressure = bmp.readPressure() / 1000.0f; // QFE/hPa
+    float fPressure = bmp.readPressure() / 100.0f; // QFE/hPa
     float fTemp = bmp.readTemperature();
 
     if ( fPressure > 0.0f && fPressure < 20000.0f &&
@@ -229,6 +248,64 @@ int SensorReport(EthernetClient& client)
   Serial.print("[Oregon:");
   nBytes += OregonReport(client);
   Serial.print("] ");
+#endif
+
+#ifdef USE_ONEWIRE
+  // One wire
+  Serial.print("[Onewire:");
+  
+  // request temperature
+  if ( !wire.reset() )
+  {
+    Serial.print(" Error] ");
+  } else
+  {
+    typedef uint8_t DeviceAddress[8];
+    enum {
+      STARTCONVO = 0x44,  // Tells device to take a temperature reading and put it on the scratchpad
+      READSCRATCH = 0xBE,  // Read EEPROM
+    };
+  
+    wire.skip();
+    wire.write(STARTCONVO);
+  
+    // wait
+    delay(750);
+    
+    // scan bus
+    DeviceAddress deviceAddress;
+    wire.reset_search();
+    while (wire.search(deviceAddress))
+    {
+      if (wire.crc8(deviceAddress, 7) == deviceAddress[7]) // valid address
+      {        
+        valid |= 4;
+
+        nBytes += 4 + sizeof(DeviceAddress)*2 + 1 + 9*2;
+        client.print("&ow_");
+        for (byte i=0; i<sizeof(DeviceAddress); i++)
+        {
+          char* p = tohex(deviceAddress[i]); //wire.read());
+          client.print(p);
+          Serial.print(p);
+        }
+        client.print('=');
+        Serial.print('=');
+        
+        wire.reset();
+        wire.select(deviceAddress);
+        wire.write(READSCRATCH);
+        for (byte i=0; i<9; i++)
+        {
+          char* p = tohex(wire.read());
+          client.print(p);
+          Serial.print(p);
+        }
+        wire.reset();
+      }
+    }
+    Serial.print("] ");    
+  }
 #endif
   
   // status
@@ -295,7 +372,7 @@ void Restart()
 
 void InitEthernet()
 {
-  const long lDhcpTimeout = 30*1000;
+  const long lDhcpTimeout = 15*60*1000;
   
   Serial.print(F("Requesting IP from DHCP server... "));
 
@@ -333,7 +410,7 @@ byte GetServerIp()
 {
   int nDnsOk = 0;
 
-  for(byte nRetry=0; nRetry<3; nRetry++) 
+  for(byte nRetry=0; nRetry<20; nRetry++) 
   {
     DNSClient dns;    
     Serial.print("DNS search: ");
@@ -383,7 +460,7 @@ void loop()
   static unsigned long lLast = 0;
   unsigned long lTick = millis();
   
-  if ( lTick - lLast > lUploadInterval )
+  if ( lLast == 0 || lTick - lLast > lUploadInterval )
   {
     EthMakeRequest();
     lLast = lTick;
@@ -478,40 +555,38 @@ void EthMakeRequest()
     clientReq.println( F(" HTTP/1.1") );
     clientReq.print( F("Host: ") );
     clientReq.println( F(REQ_SERVER) );
-    clientReq.println( F("User-Agent: Wiznet W5100 (Itead Iboard 1.1) SensorBoard Collector2016a") );
-    clientReq.println( F("Connection: close") );
-    clientReq.print( F("Cookie: _boardVersion=16.5; _boardPlatform=Iboard11; _boardType=Collector2016a; "));
-    clientReq.print( F("_boardModules=")); 
-    #ifdef USE_OREGON
-      clientReq.print(F("oregon,"));
-    #endif
-    #ifdef USE_DHT22
-      clientReq.print(F("dht22,"));
-    #endif
-    #ifdef USE_BMP085
-      clientReq.print(F("bmp085,"));
-    #endif
-    #ifdef USE_ONEWIRE
-      clientReq.print(F("onewire,"));
-    #endif      
-    #ifdef USE_PIR
-      clientReq.print(F("pir,"));
-    #endif
-    clientReq.print( F("; ") );
-    clientReq.print( F("_boardId=") );
+    clientReq.println( F("Server: rio-gabo-guru 2017a") );
+    clientReq.print( F("User-Agent: Itead Iboard 1.1 (") );
+    //clientReq.print( F("Cookie: _boardVersion=16.5; _boardPlatform=Iboard11; _boardType=Collector2016a; "));
+    clientReq.print( F("#") );
     {
       byte mac[] = MAC;
       for ( int j = 0; j < 6; j++)
         clientReq.print( tohex(mac[j]) );
-    }
-    clientReq.println( F(";") );
+    }    
+    #ifdef USE_OREGON
+      clientReq.print(F(",oregon"));
+    #endif
+    #ifdef USE_DHT22
+      clientReq.print(F(",dht22"));
+    #endif
+    #ifdef USE_BMP085
+      clientReq.print(F(",bmp085"));
+    #endif
+    #ifdef USE_ONEWIRE
+      clientReq.print(F(",onewire"));
+    #endif      
+    #ifdef USE_PIR
+      clientReq.print(F(",pir"));
+    #endif
+    clientReq.println( F(")") );
     clientReq.println( F("Content-Type: application/x-www-form-urlencoded") );
     clientReq.println( F("Content-Length: 256") ); // !!!!
+    clientReq.println( F("Connection: close") );    
     clientReq.println();
 
     int nLen = SensorReport(clientReq);
 
-    //client.println( F("measure=1234") );
     clientReq.print( F("&dummy=") ); // !!!!
     nLen += 7;
 
@@ -560,9 +635,6 @@ void EthWebserver()
           client.println("Server working");          
           client.print("Built " __DATE__ " " __TIME__ "\n");
           SensorReport(client);
-          #ifdef USE_OREGON
-          OregonReport(client);
-          #endif
           break;
         }
         if (c == '\n') {

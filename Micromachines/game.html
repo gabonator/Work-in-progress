@@ -1,5 +1,6 @@
 <body>
-<div style="position: relative;">
+up/left/right = move, c = enable/disable clip, a = enable/disable ai
+<div id="canvas" style="position: relative;">
  <canvas id="map" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
  <canvas id="player" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
 </div>
@@ -11,6 +12,7 @@
 <script>
 
 var ai = true;
+var clip = true;
 
 var gamemap = {};
 var sprites = {};
@@ -25,8 +27,8 @@ function loadSprites()
   img.onload = function()
   {
     sprites.origin = this;
-    sprites.tilesX = this.width / 16;
-    sprites.tilesY = this.height / 16;
+    sprites.tilesX = this.width / 32;
+    sprites.tilesY = this.height / 32;
 
     loadVehicle();
   }
@@ -48,22 +50,40 @@ function loadVehicle()
 
 function buildMap()
 {
+  if (game.bin)
+  {
+    game.width = game.bin.charCodeAt(3);
+    game.height = game.bin.charCodeAt(1);
+//    game.map = game.bin.substr(4, game.width*game.height);
+//    game.tra = game.bin.substr(4+game.width*game.height, game.width*game.height);
+    game.map = [];
+    game.tra = [];
+    for (var y=0; y<game.height; y++)
+      for (var x=0; x<game.width; x++)
+      {
+        game.map[y*game.width+x] = game.bin.charCodeAt(4+x*game.width+y);
+        game.tra[y*game.width+x] = game.bin.charCodeAt(4+game.width*game.height+x*game.width+y);
+      }
+
+//console.log([game.width, game.height, game.width*game.height*2+4]);
+  }
+
   gamemap.element = document.getElementById("map");
 
   gamemap.can = gamemap.element; //document.createElement("canvas");
   gamemap.ctx = gamemap.can.getContext('2d');
-  gamemap.can.width = game.width * 16;
-  gamemap.can.height = game.height * 16;
-  gamemap.ctx.width = game.width * 16;
-  gamemap.ctx.height = game.height * 16;
+  gamemap.can.width = game.width * 32;
+  gamemap.can.height = game.height * 32;
+  gamemap.ctx.width = game.width * 32;
+  gamemap.ctx.height = game.height * 32;
 
   for (var y=0; y<game.height; y++)
     for (var x=0; x<game.width; x++)
     {
-      var spriteI = game.map.charCodeAt(y*game.width+x);
+      var spriteI = game.map[y*game.width+x];
       var spriteX = spriteI % sprites.tilesX;
       var spriteY = Math.floor(spriteI / sprites.tilesX);
-      gamemap.ctx.drawImage(sprites.origin, spriteX*16, spriteY*16, 16, 16, x*16, y*16, 16, 16);
+      gamemap.ctx.drawImage(sprites.origin, spriteX*32, spriteY*32, 32, 32, x*32, y*32, 32, 32);
     }
  
   vehicle.element = document.getElementById("player");
@@ -75,14 +95,16 @@ function buildMap()
   vehicle.ctx.height = 24;
 
   vehicle.angle = 0;
-  vehicle.x = 148;
-  vehicle.y = 148;
+  vehicle.x = 450;
+  vehicle.y = 450;
 
   vehicle.accel = false;
   vehicle.brake = false;
   vehicle.spd = 0;
   vehicle.vx = 0;
   vehicle.vy = 0;
+
+  initView();
 
   setInterval(function()
   {
@@ -102,10 +124,49 @@ function buildMap()
 
     moveVehicle();
     drawVehicle();
-  }, 50);
 
-  //drawVehicle();
-//  finish();
+    updateView();
+  }, 50);
+}
+
+var viewCanvas = {};
+
+function initView()
+{
+  if (clip)
+  {
+    viewCanvas.width = 400;
+    viewCanvas.height = 400;
+
+    viewCanvas.element = document.getElementById("canvas");
+    viewCanvas.element.style.overflow = "hidden"; 
+    viewCanvas.element.style.width = viewCanvas.width + "px";
+    viewCanvas.element.style.height = viewCanvas.height + "px";
+  } else
+  {
+    viewCanvas.element = document.getElementById("canvas");
+    viewCanvas.element.style.overflow = "visible"; 
+    gamemap.element.style.left = 0;
+    gamemap.element.style.top = 0;
+  }
+}
+
+function updateView()
+{
+  if (!clip || !viewCanvas.element)
+    return;
+
+  var targetVehicleX = viewCanvas.width/2 - 12;
+  var targetVehicleY = viewCanvas.width/2 - 12;
+
+  var moveX = targetVehicleX - vehicle.x;
+  var moveY = targetVehicleY - vehicle.y;
+
+  vehicle.element.style.left = targetVehicleX;
+  vehicle.element.style.top = targetVehicleY;
+
+  gamemap.element.style.left = moveX;
+  gamemap.element.style.top = moveY;
 }
 
 function angleDiff(a, b)
@@ -120,13 +181,13 @@ function angleDiff(a, b)
 
 function aiVehicle()
 {
-  var blkx = Math.floor(vehicle.x / 16);
-  var blky = Math.floor(vehicle.y / 16);
+  var blkx = Math.floor(vehicle.x / 32);
+  var blky = Math.floor(vehicle.y / 32);
 
   if (blkx < 0 || blky < 0 || blkx >= game.width || blky >= game.height)
     return;
 
-  var target = game.tra.charCodeAt(blky * game.width + blkx);
+  var target = game.tra[blky * game.width + blkx];
   var targetAngle = ((target-1) / 0x20)*360;
 
   var diff = angleDiff(vehicle.angle, targetAngle);
@@ -220,11 +281,6 @@ function drawVehicle()
 
 }
 
-function finish()
-{
-//  gamemap.element.src = gamemap.can.toDataURL();
-}
-
 document.onkeyup   = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 0 ); }
 document.onkeydown = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 1 ); }
 
@@ -233,6 +289,13 @@ function onKey( k, on )
 {
   if (k > 0 && k < 100)
     key.state[k] = on;
+  if (k == 65 & on) // 'a' 
+    ai = !ai;
+  if (k == 67 && on) // 'c'
+  {
+    clip = !clip;
+    initView();
+  }
 }
 
 </script>

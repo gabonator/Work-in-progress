@@ -1,0 +1,238 @@
+<body>
+<div style="position: relative;">
+ <canvas id="map" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+ <canvas id="player" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+</div>
+</body>
+
+<script src="beach4.js">
+</script>
+
+<script>
+
+var ai = true;
+
+var gamemap = {};
+var sprites = {};
+var vehicle = {};
+
+loadSprites();
+
+function loadSprites()
+{
+  var img = new Image();
+  img.src = game.tiles;
+  img.onload = function()
+  {
+    sprites.origin = this;
+    sprites.tilesX = this.width / 16;
+    sprites.tilesY = this.height / 16;
+
+    loadVehicle();
+  }
+}
+
+function loadVehicle()
+{
+  var img = new Image();
+  img.src = game.vehicle;
+  img.onload = function()
+  {
+    vehicle.origin = this;
+    vehicle.tilesX = this.width / 24;
+    vehicle.tilesY = this.height / 24;
+
+    buildMap();
+  }
+}
+
+function buildMap()
+{
+  gamemap.element = document.getElementById("map");
+
+  gamemap.can = gamemap.element; //document.createElement("canvas");
+  gamemap.ctx = gamemap.can.getContext('2d');
+  gamemap.can.width = game.width * 16;
+  gamemap.can.height = game.height * 16;
+  gamemap.ctx.width = game.width * 16;
+  gamemap.ctx.height = game.height * 16;
+
+  for (var y=0; y<game.height; y++)
+    for (var x=0; x<game.width; x++)
+    {
+      var spriteI = game.map.charCodeAt(y*game.width+x);
+      var spriteX = spriteI % sprites.tilesX;
+      var spriteY = Math.floor(spriteI / sprites.tilesX);
+      gamemap.ctx.drawImage(sprites.origin, spriteX*16, spriteY*16, 16, 16, x*16, y*16, 16, 16);
+    }
+ 
+  vehicle.element = document.getElementById("player");
+  vehicle.can = vehicle.element; //document.createElement("canvas");
+  vehicle.ctx = vehicle.can.getContext('2d');
+  vehicle.can.width = 24;
+  vehicle.can.height = 24;
+  vehicle.ctx.width = 24;
+  vehicle.ctx.height = 24;
+
+  vehicle.angle = 0;
+  vehicle.x = 148;
+  vehicle.y = 148;
+
+  vehicle.accel = false;
+  vehicle.brake = false;
+  vehicle.spd = 0;
+  vehicle.vx = 0;
+  vehicle.vy = 0;
+
+  setInterval(function()
+  {
+    if (key.state[key.kLeft] || key.state[key.kRight] || key.state[key.kUp])
+      ai = false;
+   
+    if (key.state[key.kLeft])    
+      vehicle.angle -= 5;
+
+    if (key.state[key.kRight])
+      vehicle.angle += 5;
+
+    vehicle.accel = key.state[key.kUp];
+
+    if (ai)
+      aiVehicle();
+
+    moveVehicle();
+    drawVehicle();
+  }, 50);
+
+  //drawVehicle();
+//  finish();
+}
+
+function angleDiff(a, b)
+{
+  var d = b-a;
+  if (d > 180)
+    d -= 360;
+  if (d < -180)
+    d += 360;
+  return d;
+}
+
+function aiVehicle()
+{
+  var blkx = Math.floor(vehicle.x / 16);
+  var blky = Math.floor(vehicle.y / 16);
+
+  if (blkx < 0 || blky < 0 || blkx >= game.width || blky >= game.height)
+    return;
+
+  var target = game.tra.charCodeAt(blky * game.width + blkx);
+  var targetAngle = ((target-1) / 0x20)*360;
+
+  var diff = angleDiff(vehicle.angle, targetAngle);
+
+  if (diff >= 5)
+    vehicle.angle += 5;
+
+  if (diff <= -5)
+    vehicle.angle -= 5;
+
+  vehicle.accel = Math.abs(diff) < 30;
+  vehicle.brake = Math.abs(diff) > 50;
+}
+
+function moveVehicle()
+{
+  if (vehicle.accel)
+  {
+    var k = 0.5;
+    vehicle.vy -= Math.cos(vehicle.angle/180*Math.PI) * k;
+    vehicle.vx += Math.sin(vehicle.angle/180*Math.PI) * k;
+  }
+
+  vehicle.x += vehicle.vx;
+  vehicle.y += vehicle.vy;
+
+  if (vehicle.brake)
+  {
+    vehicle.vx *= 0.4;
+    vehicle.vy *= 0.4;
+  } else
+  {
+    vehicle.vx *= 0.9;
+    vehicle.vy *= 0.9;
+  }
+
+  vehicle.element.style.left = vehicle.x - 12;
+  vehicle.element.style.top = vehicle.y - 12;
+
+  if (vehicle.angle >= 360) 
+    vehicle.angle -= 360;
+
+  if (vehicle.angle < 0) 
+    vehicle.angle += 360;
+}
+
+function drawVehicle()
+{
+  var angleI = Math.floor(vehicle.angle * 32 / 360) % 32;
+  var spriteI = angleI % 8;
+
+  if (typeof(vehicle.lastAngleI) != "undefined" && vehicle.lastAngleI == angleI)
+    return;
+
+  vehicle.lastAngleI = angleI;
+
+  vehicle.ctx.clearRect(0, 0, vehicle.ctx.width, vehicle.ctx.height);
+
+  switch (Math.floor(angleI/8))
+  {
+    case 0:
+      vehicle.ctx.drawImage(vehicle.origin, spriteI*24, 0*24, 24, 24, 0, 0, 24, 24);
+      break;
+
+    case 1:
+      spriteI = 8 - spriteI;
+      spriteX = spriteI % vehicle.tilesX;
+
+      vehicle.ctx.save();
+      vehicle.ctx.scale(1, -1);
+      vehicle.ctx.drawImage(vehicle.origin, spriteI*24, 0*24, 24, 24, 0, 0, 24, -24);
+      vehicle.ctx.restore();
+      break;
+
+    case 2:
+      vehicle.ctx.save();
+      vehicle.ctx.scale(-1, -1);
+      vehicle.ctx.drawImage(vehicle.origin, spriteI*24, 0*24, 24, 24, 0, 0, -24, -24);
+      vehicle.ctx.restore();
+      break;
+
+    case 3:
+      spriteI = 8 - spriteI;
+
+      vehicle.ctx.save();
+      vehicle.ctx.scale(-1, 1);
+      vehicle.ctx.drawImage(vehicle.origin, spriteI*24, 0*24, 24, 24, 0, 0, -24, 24);
+      vehicle.ctx.restore();
+      break;
+  }
+
+}
+
+function finish()
+{
+//  gamemap.element.src = gamemap.can.toDataURL();
+}
+
+document.onkeyup   = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 0 ); }
+document.onkeydown = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 1 ); }
+
+var key = { state:[], kUp: 38, kRight: 39, kDown: 40, kLeft: 37};
+function onKey( k, on )
+{
+  if (k > 0 && k < 100)
+    key.state[k] = on;
+}
+
+</script>

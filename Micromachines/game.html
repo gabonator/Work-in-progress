@@ -6,8 +6,10 @@ up/left/right = move, c = enable/disable clip, a = enable/disable ai
 </div>
 </body>
 
-<script src="beach4.js">
-</script>
+<script src="workshop3.js"></script>
+<script src="bathroom1.js"></script>
+<script src="kitchen1.js"></script>
+<script src="dining3.js"></script>
 
 <script>
 
@@ -52,17 +54,21 @@ function buildMap()
 {
   if (game.bin)
   {
-    game.width = game.bin.charCodeAt(3);
-    game.height = game.bin.charCodeAt(1);
+    game.width = game.bin.charCodeAt(1);
+    game.height = game.bin.charCodeAt(3);
+
+console.log([game.width.toString(16), game.height.toString(16)]);
 //    game.map = game.bin.substr(4, game.width*game.height);
 //    game.tra = game.bin.substr(4+game.width*game.height, game.width*game.height);
     game.map = [];
     game.tra = [];
+    game.col = [];
     for (var y=0; y<game.height; y++)
       for (var x=0; x<game.width; x++)
       {
-        game.map[y*game.width+x] = game.bin.charCodeAt(4+x*game.width+y);
-        game.tra[y*game.width+x] = game.bin.charCodeAt(4+game.width*game.height+x*game.width+y);
+        game.map[y*game.width+x] = game.bin.charCodeAt(4+x*game.height+y);
+        game.tra[y*game.width+x] = game.bin.charCodeAt(4+game.width*game.height+x*game.height+y);
+        game.col[y*game.width+x] = game.wrd.charCodeAt(4+game.width*game.height*2+(x*game.height+y)*2);
       }
 
 //console.log([game.width, game.height, game.width*game.height*2+4]);
@@ -77,6 +83,8 @@ function buildMap()
   gamemap.ctx.width = game.width * 32;
   gamemap.ctx.height = game.height * 32;
 
+  gamemap.ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+
   for (var y=0; y<game.height; y++)
     for (var x=0; x<game.width; x++)
     {
@@ -84,6 +92,8 @@ function buildMap()
       var spriteX = spriteI % sprites.tilesX;
       var spriteY = Math.floor(spriteI / sprites.tilesX);
       gamemap.ctx.drawImage(sprites.origin, spriteX*32, spriteY*32, 32, 32, x*32, y*32, 32, 32);
+      if (game.wrd)
+        gamemap.ctx.fillText(game.col[y*game.width+x], x*32+8, y*32+20);
     }
  
   vehicle.element = document.getElementById("player");

@@ -156,7 +156,6 @@ function buildMap()
     game.width = game.bin.charCodeAt(1);
     game.height = game.bin.charCodeAt(3);
 
-console.log([game.width.toString(16), game.height.toString(16)]);
 //    game.map = game.bin.substr(4, game.width*game.height);
 //    game.tra = game.bin.substr(4+game.width*game.height, game.width*game.height);
     game.map = [];
@@ -191,7 +190,7 @@ console.log([game.width.toString(16), game.height.toString(16)]);
       if (spriteI != 0)
         sprites.blit(gamemap.ctx, x, y, spriteI);
 
-//      continue;
+      continue;
       debugCollision(gamemap.ctx, x*32, y*32, game.col[y*game.width+x]);
       if (game.wrd && game.col[y*game.width+x] != 0x22 && game.col[y*game.width+x] != 0)
         gamemap.ctx.fillText(game.col[y*game.width+x].toString(16), x*32+8, y*32+20);
@@ -208,12 +207,14 @@ console.log([game.width.toString(16), game.height.toString(16)]);
   vehicle.angle = 0;
   vehicle.x = 350;
   vehicle.y = 350;
+  vehicle.z = 0;
 
   vehicle.accel = false;
   vehicle.brake = false;
   vehicle.spd = 0;
   vehicle.vx = 0;
   vehicle.vy = 0;
+  vehicle.vz = 0;
 
   initView();
 
@@ -255,6 +256,8 @@ console.log([game.width.toString(16), game.height.toString(16)]);
     for (var c in corns)
     {
       var corn = corns[c];
+      gamemap.ctx.clearRect(corn.x*32, corn.y*32, corn.l*32, 3*32);
+
       for (var i=0; i<corn.l; i++)
       {
         if (i==0)
@@ -294,9 +297,6 @@ function initView()
     viewCanvas.element.style.height = viewCanvas.height + "px";
   } else
   {
-//    viewCanvas.style.width = gamemap.can.width;
-//    viewCanvas.style.height = gamemap.can.height;
-
     viewCanvas.element = document.getElementById("canvas");
     viewCanvas.element.style.overflow = "visible"; 
     gamemap.element.style.left = 0;
@@ -315,8 +315,8 @@ function updateView()
   var moveX = targetVehicleX - vehicle.x + 12;
   var moveY = targetVehicleY - vehicle.y + 12;
 
-  vehicle.element.style.left = targetVehicleX;
-  vehicle.element.style.top = targetVehicleY;
+  vehicle.element.style.left = targetVehicleX - vehicle.z / 2;
+  vehicle.element.style.top = targetVehicleY - vehicle.z;
 
   gamemap.element.style.left = moveX;
   gamemap.element.style.top = moveY;
@@ -345,9 +345,9 @@ function aiVehicle()
     return;
 
   var target = game.tra[blky * game.width + blkx];
-  var targetAngle = ((target-1) / 0x20)*360;
+  var targetAngle = (((target-1)%0x20) / 0x20)*360;
 
-  var diff = angleDiff(vehicle.angle, targetAngle);
+  var diff = angleDiff(vehicle.angle, targetAngle);           
 
   if (diff >= 5)
     vehicle.angle += 5;
@@ -361,58 +361,99 @@ function aiVehicle()
 
 function moveVehicle()
 {
-  if (vehicle.accel)
+  var vector = {vx:0, vy:0};
+
+  if (vehicle.z > 0)
   {
-    var k = 0.6;
-    vehicle.vy -= Math.cos(vehicle.angle/180*Math.PI) * k;
-    vehicle.vx += Math.sin(vehicle.angle/180*Math.PI) * k;
+    vector = vehicle.savedvector;
+  } else
+  {
+    var speed = 0;
+    if (vehicle.accel)
+      speed = 0.6;
+    if (vehicle.brake)
+      speed = -0.3;
+
+    if (speed != 0)
+    {
+      vector.vy = -Math.cos(vehicle.angle/180*Math.PI) * speed;
+      vector.vx = +Math.sin(vehicle.angle/180*Math.PI) * speed;
+    }
   }
+
+  vehicle.vx += vector.vx;
+  vehicle.vy += vector.vy;
 
   if (vehicle.gravity)
   {
-    vehicle.vx += vehicle.gravity.x;
-    vehicle.vy += vehicle.gravity.y;
+    if (vehicle.gravity.x)
+      vehicle.vx += vehicle.gravity.x;
+    if (vehicle.gravity.y)
+      vehicle.vy += vehicle.gravity.y;
+    if (vehicle.gravity.z)
+    {
+      vehicle.vz = vehicle.gravity.z;
+      vehicle.savedvector = vector;
+    }
     vehicle.gravity = null;
   }
 
-  var movelen = Math.sqrt(vehicle.vx*vehicle.vx + vehicle.vy*vehicle.vy);
-  var moverem = movelen;
-
-  while (moverem > 0.001)
+  if (vehicle.z == 0)
   {
-    var tx = vehicle.vx / movelen * Math.min(1, moverem);
-    var ty = vehicle.vy / movelen * Math.min(1, moverem);
-    moverem -= 1;
+    var movelen = Math.sqrt(vehicle.vx*vehicle.vx + vehicle.vy*vehicle.vy);
+    var moverem = movelen;
 
-    var nx = vehicle.x + tx;
-    var ny = vehicle.y + ty;
-
-    if (!checkVehiclePosition(nx, ny))
+    while (moverem > 0.001)
     {
-      if (checkVehiclePosition(nx, vehicle.y))
-        ny = vehicle.y;
-      else if (checkVehiclePosition(vehicle.x, ny))
-        nx = vehicle.x;
-      else
-        break;
+      var tx = vehicle.vx / movelen * Math.min(1, moverem);
+      var ty = vehicle.vy / movelen * Math.min(1, moverem);
+      moverem -= 1;
+
+      var nx = vehicle.x + tx;
+      var ny = vehicle.y + ty;
+
+      if (!checkVehiclePosition(nx, ny, true))
+      {
+        if (checkVehiclePosition(nx, vehicle.y))
+          ny = vehicle.y;
+        else if (checkVehiclePosition(vehicle.x, ny))
+          nx = vehicle.x;
+        else
+          break;
+      }
+
+      vehicle.x = nx;
+      vehicle.y = ny;
     }
 
-    vehicle.x = nx;
-    vehicle.y = ny;
-  }
-
-  if (vehicle.brake)
-  {
-    vehicle.vx *= 0.4;
-    vehicle.vy *= 0.4;
+    // friction
+    vehicle.vx *= 0.9;
+    vehicle.vy *= 0.9;
   } else
   {
+    vehicle.x += vehicle.vx;
+    vehicle.y += vehicle.vy;
     vehicle.vx *= 0.9;
     vehicle.vy *= 0.9;
   }
 
-  vehicle.element.style.left = vehicle.x - 12;
-  vehicle.element.style.top = vehicle.y - 12;
+  // gravity
+  if (vehicle.z > 0.1 && vehicle.vz < 10.0)
+    vehicle.vz += 0.3;
+
+  vehicle.z -= vehicle.vz;
+  if (vehicle.z < 0)
+  {
+    vehicle.z = 0;
+    vehicle.vz *= -0.5;
+    if (Math.abs(vehicle.vz) < 1)
+      vehicle.vz = 0;
+  } 
+
+  debug("z="+vehicle.z.toFixed(1)+" vz="+vehicle.vz.toFixed(1)); 
+
+  vehicle.element.style.left = vehicle.x - 12 - vehicle.z / 2;
+  vehicle.element.style.top = vehicle.y - 12 - vehicle.z;
 
   if (vehicle.angle >= 360) 
     vehicle.angle -= 360;
@@ -421,20 +462,23 @@ function moveVehicle()
     vehicle.angle += 360;
 }
 
-function checkVehiclePosition(x, y)
+function checkVehiclePosition(x, y, applyChanges)
 {
   var col = getCollision(x, y);
 
-  debug("[" + (Math.floor(x) >> 5) + ", " + (Math.floor(y) >> 5) + "] " + col.block.toString(16) + " / " + col.collision.toString(16));
+  //debug("[" + (Math.floor(x) >> 5) + ", " + (Math.floor(y) >> 5) + "] " + col.block.toString(16) + " / " + col.collision.toString(16));
 
   switch (col.collision)
   {
-    case 0x27: vehicle.vx = -Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; return false;
-    case 0x28: vehicle.vx = +Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; return false;
-    case 0x25: vehicle.vy = -Math.abs(vehicle.vy)*0.8; vehicle.vy *= 0.8; return false;
-    case 0x2a: vehicle.vy = +Math.abs(vehicle.vy)*0.8; vehicle.vy *= 0.8; return false;
-    case 0x20: vehicle.vx *= -0.8; vehicle.vy *= -0.8; return false;
-    case 0x3d: vehicle.gravity = {x:0, y:0.25}; return true;
+    case 0x27: if (applyChanges) { vehicle.vx = -Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; } return false;
+    case 0x28: if (applyChanges) { vehicle.vx = +Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; } return false;
+    case 0x25: if (applyChanges) { vehicle.vy = -Math.abs(vehicle.vy)*0.8; vehicle.vx *= 0.8; } return false;
+    case 0x2a: if (applyChanges) { vehicle.vy = +Math.abs(vehicle.vy)*0.8; vehicle.vx *= 0.8; } return false;
+    case 0x20: if (applyChanges) { vehicle.vx *= -0.8; vehicle.vy *= -0.8; } return false;
+    case 0x3d: if (applyChanges) { vehicle.gravity = {x:0, y:0.25}; } return true;
+    case 0x22: if (applyChanges) { if (vehicle.z == 0) vehicle.gravity = {z:-1}; } return true;
+    case 0x45: if (applyChanges) { if (vehicle.z == 0) vehicle.gravity = {z:-1.5}; } return true;               
+    case 0x23: if (applyChanges) { if (vehicle.z == 0) vehicle.gravity = {z:-5}; } return true;
   }
 
   return true;

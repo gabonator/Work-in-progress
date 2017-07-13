@@ -1,14 +1,16 @@
 <body>
 up/left/right = move, c = enable/disable clip, a = enable/disable ai
+<div id="debug"></div>
 <div id="canvas" style="position: relative;">
  <canvas id="map" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
  <canvas id="player" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
 </div>
-</body>
 
-<script src="workshop3.js"></script>
+<script src="collision.js"></script>
+
 <script src="bathroom1.js"></script>
 <script src="kitchen1.js"></script>
+<script src="workshop3.js"></script>
 <script src="dining3.js"></script>
 
 <script>
@@ -19,7 +21,7 @@ var clip = true;
 var gamemap = {};
 var sprites = {};
 var vehicle = {};
-
+var background = {};
 loadSprites();
 
 function loadSprites()
@@ -31,8 +33,27 @@ function loadSprites()
     sprites.origin = this;
     sprites.tilesX = this.width / 32;
     sprites.tilesY = this.height / 32;
+    sprites.blit = function(ctx, x, y, i)
+    {
+      var spriteX = i % this.tilesX;
+      var spriteY = Math.floor(i / this.tilesX);
+      ctx.drawImage(this.origin, spriteX*32, spriteY*32, 32, 32, x*32, y*32, 32, 32);
+    }
 
     loadVehicle();
+
+    background.can = document.createElement("canvas");
+    background.ctx = background.can.getContext('2d');
+    background.can.width = 32;
+    background.can.height = 32;
+    background.ctx.width = 32;
+    background.ctx.height = 32;
+
+    sprites.blit(background.ctx, 0, 0, 256);
+
+    background.element = document.getElementById("canvas");
+    background.element.style.backgroundImage = //"url(resall/imgs/bathroom_.png)" 
+     "url(\""+background.can.toDataURL()+"\")";                                                                          
   }
 }
 
@@ -48,6 +69,84 @@ function loadVehicle()
 
     buildMap();
   }
+}
+
+var palette = [
+'000000', '800000', '008000', '808000', '000080', '800080', '008080', 'c0c0c0',
+'808080', 'ff0000', '00ff00', 'ffff00', '0000ff', 'ff00ff', '00ffff', 'ffffff',
+'000000', '00005f', '000087', '0000af', '0000d7', '0000ff', '005f00', '005f5f',
+'005f87', '005faf', '005fd7', '005fff', '008700', '00875f', '008787', '0087af',
+'0087d7', '0087ff', '00af00', '00af5f', '00af87', '00afaf', '00afd7', '00afff',
+'00d700', '00d75f', '00d787', '00d7af', '00d7d7', '00d7ff', '00ff00', '00ff5f',
+'00ff87', '00ffaf', '00ffd7', '00ffff', '5f0000', '5f005f', '5f0087', '5f00af',
+'5f00d7', '5f00ff', '5f5f00', '5f5f5f', '5f5f87', '5f5faf', '5f5fd7', '5f5fff',
+'5f8700', '5f875f', '5f8787', '5f87af', '5f87d7', '5f87ff', '5faf00', '5faf5f',
+'5faf87', '5fafaf', '5fafd7', '5fafff', '5fd700', '5fd75f', '5fd787', '5fd7af',
+'5fd7d7', '5fd7ff', '5fff00', '5fff5f', '5fff87', '5fffaf', '5fffd7', '5fffff',
+'870000', '87005f', '870087', '8700af', '8700d7', '8700ff', '875f00', '875f5f',
+'875f87', '875faf', '875fd7', '875fff', '878700', '87875f', '878787', '8787af',
+'8787d7', '8787ff', '87af00', '87af5f', '87af87', '87afaf', '87afd7', '87afff',
+'87d700', '87d75f', '87d787', '87d7af', '87d7d7', '87d7ff', '87ff00', '87ff5f',
+'87ff87', '87ffaf', '87ffd7', '87ffff', 'af0000', 'af005f', 'af0087', 'af00af',
+'af00d7', 'af00ff', 'af5f00', 'af5f5f', 'af5f87', 'af5faf', 'af5fd7', 'af5fff',
+'af8700', 'af875f', 'af8787', 'af87af', 'af87d7', 'af87ff', 'afaf00', 'afaf5f',
+'afaf87', 'afafaf', 'afafd7', 'afafff', 'afd700', 'afd75f', 'afd787', 'afd7af',
+'afd7d7', 'afd7ff', 'afff00', 'afff5f', 'afff87', 'afffaf', 'afffd7', 'afffff',
+'d70000', 'd7005f', 'd70087', 'd700af', 'd700d7', 'd700ff', 'd75f00', 'd75f5f',
+'d75f87', 'd75faf', 'd75fd7', 'd75fff', 'd78700', 'd7875f', 'd78787', 'd787af',
+'d787d7', 'd787ff', 'd7af00', 'd7af5f', 'd7af87', 'd7afaf', 'd7afd7', 'd7afff',
+'d7d700', 'd7d75f', 'd7d787', 'd7d7af', 'd7d7d7', 'd7d7ff', 'd7ff00', 'd7ff5f',
+'d7ff87', 'd7ffaf', 'd7ffd7', 'd7ffff', 'ff0000', 'ff005f', 'ff0087', 'ff00af',
+'ff00d7', 'ff00ff', 'ff5f00', 'ff5f5f', 'ff5f87', 'ff5faf', 'ff5fd7', 'ff5fff',
+'ff8700', 'ff875f', 'ff8787', 'ff87af', 'ff87d7', 'ff87ff', 'ffaf00', 'ffaf5f',
+'ffaf87', 'ffafaf', 'ffafd7', 'ffafff', 'ffd700', 'ffd75f', 'ffd787', 'ffd7af',
+'ffd7d7', 'ffd7ff', 'ffff00', 'ffff5f', 'ffff87', 'ffffaf', 'ffffd7', 'ffffff',
+'080808', '121212', '1c1c1c', '262626', '303030', '3a3a3a', '444444', '4e4e4e',
+'585858', '626262', '6c6c6c', '767676', '808080', '8a8a8a', '949494', '9e9e9e',
+'a8a8a8', 'b2b2b2', 'bcbcbc', 'c6c6c6', 'd0d0d0', 'dadada', 'e4e4e4', 'eeeeee'];
+
+for (var i=0; i<256; i++)
+  palette[i] = malpha(palette[i]);
+
+palette[0xff] = "rgba(0, 0, 0, 0)"; // nic
+palette[0x21] = "rgba(255, 0, 0, 0.0)"; // voda, prazdnota
+palette[0x27] = "rgba(0, 0, 0, 0.8)"; // stena zvysla  lava	
+palette[0x28] = "rgba(0, 0, 0, 0.8)"; // stena zvysla  prava
+palette[0x2A] = "rgba(0, 0, 0, 0.8)"; // stena vodorovna dolna
+palette[0x20] = "rgba(0, 0, 0, 0.5)"; // stena prava
+palette[0x2c] = "rgba(0, 0, 0, 0.5)"; // stena
+palette[0x2d] = "rgba(0, 0, 0, 0.5)"; // stena
+palette[0x25] = "rgba(0, 0, 0, 0.8)"; // stena dohora
+
+palette[0x22] = "rgba(0, 0, 255, 0.5)"; // skok
+palette[0x23] = "rgba(0, 0, 255, 0.8)"; // skok velky
+palette[0x45] = "rgba(0, 255, 255, 0.5)"; // skok
+
+palette[0x44] = "rgba(255, 255, 0, 0.5)"; // horuce?
+
+function debug(msg)
+{
+  document.getElementById("debug").innerHTML = msg;
+}
+
+function malpha(rgb)
+{
+  return "rgba("+parseInt("0x"+rgb.substr(0, 2))+", "+
+    parseInt("0x"+rgb.substr(2, 2))+", "+
+    parseInt("0x"+rgb.substr(4, 2))+", 0.1)";
+}
+
+function debugCollision(ctx, x, y, i)
+{
+  var old = ctx.fillStyle;
+
+  for (_x=0; _x<4; _x++)
+    for (_y=0; _y<4; _y++)
+    {
+      ctx.fillStyle = palette[collisions[0].charCodeAt(i*16+_y+(_x)*4)];
+      ctx.fillRect(x+_x*8, y+_y*8, 8, 8);
+    }
+  ctx.fillStyle = old;
 }
 
 function buildMap()
@@ -83,19 +182,21 @@ console.log([game.width.toString(16), game.height.toString(16)]);
   gamemap.ctx.width = game.width * 32;
   gamemap.ctx.height = game.height * 32;
 
-  gamemap.ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+  gamemap.ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
 
   for (var y=0; y<game.height; y++)
     for (var x=0; x<game.width; x++)
     {
       var spriteI = game.map[y*game.width+x];
-      var spriteX = spriteI % sprites.tilesX;
-      var spriteY = Math.floor(spriteI / sprites.tilesX);
-      gamemap.ctx.drawImage(sprites.origin, spriteX*32, spriteY*32, 32, 32, x*32, y*32, 32, 32);
-      if (game.wrd)
-        gamemap.ctx.fillText(game.col[y*game.width+x], x*32+8, y*32+20);
+      if (spriteI != 0)
+        sprites.blit(gamemap.ctx, x, y, spriteI);
+
+//      continue;
+      debugCollision(gamemap.ctx, x*32, y*32, game.col[y*game.width+x]);
+      if (game.wrd && game.col[y*game.width+x] != 0x22 && game.col[y*game.width+x] != 0)
+        gamemap.ctx.fillText(game.col[y*game.width+x].toString(16), x*32+8, y*32+20);
     }
- 
+
   vehicle.element = document.getElementById("player");
   vehicle.can = vehicle.element; //document.createElement("canvas");
   vehicle.ctx = vehicle.can.getContext('2d');
@@ -105,8 +206,8 @@ console.log([game.width.toString(16), game.height.toString(16)]);
   vehicle.ctx.height = 24;
 
   vehicle.angle = 0;
-  vehicle.x = 450;
-  vehicle.y = 450;
+  vehicle.x = 350;
+  vehicle.y = 350;
 
   vehicle.accel = false;
   vehicle.brake = false;
@@ -137,6 +238,45 @@ console.log([game.width.toString(16), game.height.toString(16)]);
 
     updateView();
   }, 50);
+
+  setInterval(function()
+  {
+    var t = Math.floor((new Date).getTime() / 300) % 4;
+    var imgs = [260 + t, 264 + t, 270 + t, 
+                280 + t, 284 + t, 290 + t,
+                300 + t, 304 + t, 310 + t];
+    var corns = [
+      {x:27, y:8, l:5}, 
+      {x:49, y:8, l:5},
+      {x:55, y:65, l:5},
+      {x:25, y:64, l:5}
+    ];
+
+    for (var c in corns)
+    {
+      var corn = corns[c];
+      for (var i=0; i<corn.l; i++)
+      {
+        if (i==0)
+        {
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 0, imgs[3]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 1, imgs[4]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 2, imgs[5]);
+        }
+        else if (i==corn.l-1)
+        {
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 0, imgs[6]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 1, imgs[7]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 2, imgs[8]);
+        } else
+        {
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 0, imgs[0]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 1, imgs[1]);
+          sprites.blit(gamemap.ctx, corn.x + i, corn.y + 2, imgs[2]);
+        }
+      }
+    }
+  }, 300);
 }
 
 var viewCanvas = {};
@@ -145,8 +285,8 @@ function initView()
 {
   if (clip)
   {
-    viewCanvas.width = 400;
-    viewCanvas.height = 400;
+    viewCanvas.width = 600;
+    viewCanvas.height = 600;
 
     viewCanvas.element = document.getElementById("canvas");
     viewCanvas.element.style.overflow = "hidden"; 
@@ -154,6 +294,9 @@ function initView()
     viewCanvas.element.style.height = viewCanvas.height + "px";
   } else
   {
+//    viewCanvas.style.width = gamemap.can.width;
+//    viewCanvas.style.height = gamemap.can.height;
+
     viewCanvas.element = document.getElementById("canvas");
     viewCanvas.element.style.overflow = "visible"; 
     gamemap.element.style.left = 0;
@@ -167,16 +310,20 @@ function updateView()
     return;
 
   var targetVehicleX = viewCanvas.width/2 - 12;
-  var targetVehicleY = viewCanvas.width/2 - 12;
+  var targetVehicleY = viewCanvas.height/2 - 12;
 
-  var moveX = targetVehicleX - vehicle.x;
-  var moveY = targetVehicleY - vehicle.y;
+  var moveX = targetVehicleX - vehicle.x + 12;
+  var moveY = targetVehicleY - vehicle.y + 12;
 
   vehicle.element.style.left = targetVehicleX;
   vehicle.element.style.top = targetVehicleY;
 
   gamemap.element.style.left = moveX;
   gamemap.element.style.top = moveY;
+  
+  background.element.style.backgroundPosition = 
+    (31 - Math.floor(vehicle.x / 2)%32) + "px " +
+    (31 - Math.floor(vehicle.y / 2)%32) + "px";
 }
 
 function angleDiff(a, b)
@@ -216,13 +363,43 @@ function moveVehicle()
 {
   if (vehicle.accel)
   {
-    var k = 0.5;
+    var k = 0.6;
     vehicle.vy -= Math.cos(vehicle.angle/180*Math.PI) * k;
     vehicle.vx += Math.sin(vehicle.angle/180*Math.PI) * k;
   }
 
-  vehicle.x += vehicle.vx;
-  vehicle.y += vehicle.vy;
+  if (vehicle.gravity)
+  {
+    vehicle.vx += vehicle.gravity.x;
+    vehicle.vy += vehicle.gravity.y;
+    vehicle.gravity = null;
+  }
+
+  var movelen = Math.sqrt(vehicle.vx*vehicle.vx + vehicle.vy*vehicle.vy);
+  var moverem = movelen;
+
+  while (moverem > 0.001)
+  {
+    var tx = vehicle.vx / movelen * Math.min(1, moverem);
+    var ty = vehicle.vy / movelen * Math.min(1, moverem);
+    moverem -= 1;
+
+    var nx = vehicle.x + tx;
+    var ny = vehicle.y + ty;
+
+    if (!checkVehiclePosition(nx, ny))
+    {
+      if (checkVehiclePosition(nx, vehicle.y))
+        ny = vehicle.y;
+      else if (checkVehiclePosition(vehicle.x, ny))
+        nx = vehicle.x;
+      else
+        break;
+    }
+
+    vehicle.x = nx;
+    vehicle.y = ny;
+  }
 
   if (vehicle.brake)
   {
@@ -242,6 +419,43 @@ function moveVehicle()
 
   if (vehicle.angle < 0) 
     vehicle.angle += 360;
+}
+
+function checkVehiclePosition(x, y)
+{
+  var col = getCollision(x, y);
+
+  debug("[" + (Math.floor(x) >> 5) + ", " + (Math.floor(y) >> 5) + "] " + col.block.toString(16) + " / " + col.collision.toString(16));
+
+  switch (col.collision)
+  {
+    case 0x27: vehicle.vx = -Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; return false;
+    case 0x28: vehicle.vx = +Math.abs(vehicle.vx)*0.8; vehicle.vy *= 0.8; return false;
+    case 0x25: vehicle.vy = -Math.abs(vehicle.vy)*0.8; vehicle.vy *= 0.8; return false;
+    case 0x2a: vehicle.vy = +Math.abs(vehicle.vy)*0.8; vehicle.vy *= 0.8; return false;
+    case 0x20: vehicle.vx *= -0.8; vehicle.vy *= -0.8; return false;
+    case 0x3d: vehicle.gravity = {x:0, y:0.25}; return true;
+  }
+
+  return true;
+}
+
+function getCollision(x, y)
+{
+  x = Math.floor(x);
+  y = Math.floor(y);
+
+  var blkx = x >> 5;
+  var blky = y >> 5;
+
+  if (blkx < 0 || blky < 0 || blkx >= game.width || blky >= game.height)
+    return {block:0x21, collision:0x22};
+
+  var subx = (x & 31) >> 3;
+  var suby = (y & 31) >> 3;
+  var target = game.col[blky * game.width + blkx];
+
+  return {block:target, collision:collisions[0].charCodeAt(target*16+suby+(subx)*4)};
 }
 
 function drawVehicle()

@@ -1,9 +1,12 @@
-<body>
+<body bgcolor=black text=white>
 up/left/right = move, c = enable/disable clip, a = enable/disable ai
 <div id="debug"></div>
 <div id="canvas" style="position: relative;">
  <canvas id="map" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
- <canvas id="player" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+<!--
+ <canvas id="player1" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+ <canvas id="player2" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+-->
 </div>
 
 <script src="collision.js"></script>
@@ -15,10 +18,752 @@ up/left/right = move, c = enable/disable clip, a = enable/disable ai
 
 <script>
 
+MicroCanvas = function(elementId)
+{
+  this.element = elementId ? document.getElementById(elementId) : document.createElement("canvas");
+  this.canvas = this.element;
+  this.context = this.canvas.getContext("2d");
+}
+
+MicroCanvas.prototype.setSize = function(width, height)
+{
+  this.canvas.width = width;
+  this.canvas.height = height;
+  this.context.width = width;
+  this.context.height = height;
+}
+
+MicroCanvas.prototype.clear = function(x, y, w, h)
+{
+  if (typeof(x) == "undefined")
+    this.context.clearRect(0, 0, this.context.width, this.context.height);
+  else
+    this.context.clearRect(x, y, w, h);
+}
+
+MicroMapResources = function()
+{
+  this.width = 0; 
+  this.height = 0;
+  this.mapTile = null;
+  this.mapTrace = null;
+  this.mapCollision = null;
+}
+
+MicroMapResources.prototype.load = function(data, collisionPreset, completion)
+{
+  // map
+  this.width = data.bin.charCodeAt(1);
+  this.height = data.bin.charCodeAt(3);
+
+  this.mapTrace = [];
+  this.mapCollision = [];
+  this.mapTile = [];
+
+  for (var y=0; y<this.height; y++)
+    for (var x=0; x<this.width; x++)
+    {
+      this.mapTile[y*this.width+x] = data.bin.charCodeAt(4+x*this.height+y);
+      this.mapTrace[y*this.width+x] = data.bin.charCodeAt(4+this.width*this.height+x*this.height+y);
+      this.mapCollision[y*this.width+x] = data.wrd.charCodeAt(4+this.width*this.height*2+(x*this.height+y)*2);
+    }
+
+  // sprites
+  var img = new Image();
+  img.src = data.tiles;
+  img.onload = (function()
+  {
+    this._.tiles = img;
+    this._.tileWidth = 32;
+    this._.tileHeight = 32;
+    this._.tilesX = this.img.width / this._.tileWidth;
+    this._.tilesY = this.img.height / this._.tileHeight;
+    completion();
+  }).bind({_:this, img:img});
+
+  // animations
+  this.animations = [
+      {type:"corn", x:27, y:8, w:5, h:3}, 
+      {type:"corn", x:49, y:8, w:5, h:3},
+      {type:"corn", x:55, y:65, w:5, h:3},
+      {type:"corn", x:25, y:64, w:5, h:3}];
+
+  // collision presets
+  this.collisionPreset = collisionPreset;
+}
+
+MicroMapResources.prototype.getBackgroundTileIndex = function()
+{
+  return 256;
+}
+
+MicroMapResources.prototype.getTile = function(x, y)
+{
+  if (x<0 || y<0 || x>this.width || y>this.height)
+    return 0;
+
+  return this.mapTile[y*this.width+x];
+}  
+
+MicroMapResources.prototype.getTrace = function(x, y)
+{
+  if (x<0 || y<0 || x>this.width || y>this.height)
+    return 0;
+
+  var trace = this.mapTrace[y*this.width+x];
+  var t = (((trace-1)%0x20) / 0x20)*360;
+  return (t+5)%360;
+}
+
+MicroMapResources.prototype.getCollision = function(x, y)
+{                 
+  x = Math.floor(x);
+  y = Math.floor(y);
+
+  var blkx = x >> 5;
+  var blky = y >> 5;
+
+  if (blkx < 0 || blky < 0 || blkx >= game.width || blky >= game.height)
+    return {block:0x21, collision:0x22};
+
+  var subx = (x & 31) >> 3;
+  var suby = (y & 31) >> 3;
+  var target = this.mapCollision[blky * this.width + blkx];
+
+  return {block:target, collision:this.collisionPreset.charCodeAt(target*16+suby+(subx)*4)};
+}
+
+
+MicroMapBackground = function(mapRenderer, elementId)
+{
+  var tile = mapRenderer.mapResources.getBackgroundTileIndex();
+  var image = mapRenderer.getTileAsImage(tile);
+
+  this.element = document.getElementById(elementId);
+  this.element.style.backgroundImage = "url(\""+image+"\")";
+  this.element.style.width = mapRenderer.mapResources.width * mapRenderer.mapResources.tileWidth;
+  this.element.style.height = mapRenderer.mapResources.height * mapRenderer.mapResources.tileHeight;
+}
+
+MicroMapBackground.prototype.setOffset = function(ofsx, ofsy)
+{
+  this.element.style.backgroundPosition = ofsx + "px " + ofsy + "px";
+}      
+
+MicroMapRenderer = function(mapResources)
+{
+  this.mapResources = mapResources;
+}
+
+MicroMapRenderer.prototype.render = function(canvas)
+{
+  canvas.setSize(this.mapResources.width * this.mapResources.tileWidth, 
+    this.mapResources.height * this.mapResources.tileHeight);
+
+  for (var y=0; y<this.mapResources.height; y++)
+    for (var x=0; x<this.mapResources.width; x++)
+    {
+      var spriteI = this.mapResources.getTile(x, y);
+      if (spriteI != 0)
+        this.blit(canvas, x, y, spriteI);
+    }
+}
+
+MicroMapRenderer.prototype.animate = function(canvas)
+{
+  var t = Math.floor((new Date).getTime() / 300) % 4;
+
+  var cornImgs = [260 + t, 264 + t, 270 + t, 
+                  280 + t, 284 + t, 290 + t,
+                  300 + t, 304 + t, 310 + t];
+
+  for (var i in this.mapResources.animations)
+  {
+    var anim = this.mapResources.animations[i];
+
+    if (anim.type == "corn")
+    {
+      canvas.clear(anim.x*32, anim.y*32, anim.w*32, anim.h*32);
+
+      for (var i=0; i<anim.w; i++)
+      {
+        if (i==0)
+        {
+          this.blit(canvas, anim.x + i, anim.y + 0, cornImgs[3]);
+          this.blit(canvas, anim.x + i, anim.y + 1, cornImgs[4]);
+          this.blit(canvas, anim.x + i, anim.y + 2, cornImgs[5]);
+        }
+        else if (i==anim.w-1)
+        {
+          this.blit(canvas, anim.x + i, anim.y + 0, cornImgs[6]);
+          this.blit(canvas, anim.x + i, anim.y + 1, cornImgs[7]);
+          this.blit(canvas, anim.x + i, anim.y + 2, cornImgs[8]);
+        } else
+        {
+          this.blit(canvas, anim.x + i, anim.y + 0, cornImgs[0]);
+          this.blit(canvas, anim.x + i, anim.y + 1, cornImgs[1]);
+          this.blit(canvas, anim.x + i, anim.y + 2, cornImgs[2]);
+        }
+      }
+    }
+  }
+}
+
+MicroMapRenderer.prototype.blit = function(canvas, x, y, tileId)
+{
+  var spriteX = tileId % this.mapResources.tilesX;
+  var spriteY = Math.floor(tileId / this.mapResources.tilesX);
+  canvas.context.drawImage(this.mapResources.tiles, spriteX*32, spriteY*32, 32, 32, x*32, y*32, 32, 32);
+}
+
+MicroMapRenderer.prototype.getTileAsImage = function(nTileId)
+{
+  var tempCanvas = new MicroCanvas();
+  tempCanvas.setSize(32, 32);
+
+  this.blit(tempCanvas, 0, 0, nTileId);
+
+  return tempCanvas.canvas.toDataURL();
+}
+
+MicroCar = function()
+{
+  this.angle = 0;
+  this.x = 0;
+  this.y = 0;
+  this.z = 0;
+
+  this.accel = false;
+  this.brake = false;
+  this.spd = 0;
+  this.vx = 0;
+  this.vy = 0;
+  this.vz = 0;
+
+  this.gravity = null;
+
+  this.image = null;
+  this.lastAngleI = -1;
+  this.alive = true;
+
+  this.kSpeed = 0.5 + Math.random() * 0.2;
+}
+
+MicroCar.prototype.load = function(image)
+{
+  var img = new Image();
+  img.src = image;
+  img.onload = (function()
+  {
+    this._.tiles = this.img;
+    this._.tileWidth = 24;
+    this._.tileHeight = 24;
+    this._.tilesX = this.width / this._.tileWidth;
+    this._.tilesY = this.height / this._.tileHeight;
+  }).bind({_:this, img:img});
+}
+
+MicroCar.prototype.setPosition = function(x, y)
+{
+  this.x = x;
+  this.y = y;
+}
+
+MicroCar.prototype.place = function(canvas, refx, refy)
+{
+  canvas.element.style.left = refx + this.x - this.tileWidth / 2 - this.z / 2;
+  canvas.element.style.top = refy + this.y - this.tileHeight / 2 - this.z;
+}
+
+MicroCar.prototype.render = function(canvas)
+{
+  this.place(canvas, 0, 0);
+
+  var angleI = Math.floor(this.angle * 32 / 360) % 32;
+
+  if (!this.alive)
+    angleI = Math.floor(Math.random() * 32);
+
+  var spriteI = angleI % 8;
+
+  if (this.lastAngleI == angleI)
+    return;
+
+  this.lastAngleI = angleI;
+
+  canvas.clear();
+
+  switch (Math.floor(angleI/8))
+  {
+    case 0:
+      canvas.context.drawImage(this.tiles, spriteI*24, 0*24, 24, 24, 0, 0, 24, 24);
+      break;
+
+    case 1:
+      spriteI = 8 - spriteI;
+      spriteX = spriteI % this.tilesX;
+
+      canvas.context.save();
+      canvas.context.scale(1, -1);
+      canvas.context.drawImage(this.tiles, spriteI*24, 0*24, 24, 24, 0, 0, 24, -24);
+      canvas.context.restore();
+      break;
+
+    case 2:
+      canvas.context.save();
+      canvas.context.scale(-1, -1);
+      canvas.context.drawImage(this.tiles, spriteI*24, 0*24, 24, 24, 0, 0, -24, -24);
+      canvas.context.restore();
+      break;
+
+    case 3:
+      spriteI = 8 - spriteI;
+
+      canvas.context.save();
+      canvas.context.scale(-1, 1);
+      canvas.context.drawImage(this.tiles, spriteI*24, 0*24, 24, 24, 0, 0, -24, 24);
+      canvas.context.restore();
+      break;
+  }
+}
+
+MicroCar.prototype.move = function(mapResources)
+{
+  if (!this.alive)
+    return;
+
+  var vector = {vx:0, vy:0};
+
+  if (this.z > 0)
+  {
+    vector = this.savedvector;
+  } else
+  {
+    var speed = 0;
+    if (this.accel)
+      speed = this.kSpeed;
+    if (this.brake)
+      speed = -0.3;
+
+    if (speed != 0)
+    {
+      vector.vy = -Math.cos(this.angle/180*Math.PI) * speed;
+      vector.vx = +Math.sin(this.angle/180*Math.PI) * speed;
+    }
+  }
+
+  this.vx += vector.vx;
+  this.vy += vector.vy;
+
+  if (this.gravity)
+  {
+    if (this.gravity.x)
+      this.vx += this.gravity.x;
+
+    if (this.gravity.y)
+      this.vy += this.gravity.y;
+
+    if (this.gravity.z)
+    {
+      this.vz = this.gravity.z;
+      this.savedvector = vector;
+    }
+
+    this.gravity = null;
+  }
+
+  if (this.z == 0)
+  {
+    var movelen = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+    var moverem = movelen;
+
+    while (moverem > 0.001)
+    {
+      var tx = this.vx / movelen * Math.min(1, moverem);
+      var ty = this.vy / movelen * Math.min(1, moverem);
+      moverem -= 1;
+
+      var nx = this.x + tx;
+      var ny = this.y + ty;
+
+      if (!this.checkPosition(mapResources, nx, ny, true))
+      {
+        if (this.checkPosition(mapResources, nx, this.y))
+          ny = this.y;
+        else if (this.checkPosition(mapResources, this.x, ny))
+          nx = this.x;
+        else
+          break;
+      }
+
+      this.x = nx;
+      this.y = ny;
+    }
+
+    // friction
+    this.vx *= 0.9;
+    this.vy *= 0.9;
+  } else
+  {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vx *= 0.9;
+    this.vy *= 0.9;
+  }
+
+  // gravity
+  if (this.z > 0.1 && this.vz < 10.0)
+    this.vz += 0.3;
+
+  this.z -= this.vz;
+  if (this.z < 0)
+  {
+    this.z = 0;
+    this.vz *= -0.5;
+    if (Math.abs(this.vz) < 1)
+      this.vz = 0;
+  } 
+
+  //debug("z="+vehicle.z.toFixed(1)+" vz="+vehicle.vz.toFixed(1)); 
+
+  if (this.angle >= 360) 
+    this.angle -= 360;
+
+  if (this.angle < 0) 
+    this.angle += 360;
+
+  if (!this.alive)
+    this.deadAt = new Date().getTime();
+}
+
+MicroCar.prototype.checkPosition = function(mapResources, x, y, applyChanges)
+{
+  var col = mapResources.getCollision(x, y);
+
+  //debug("[" + (Math.floor(x) >> 5) + ", " + (Math.floor(y) >> 5) + "] " + col.block.toString(16) + " / " + col.collision.toString(16));
+  if (applyChanges)
+    this.currentSpot = col;
+
+  switch (col.collision)
+  {
+    case 0x27: if (applyChanges) { this.vx = -Math.abs(this.vx)*0.8; this.vy *= 0.8; } return false;
+    case 0x28: if (applyChanges) { this.vx = +Math.abs(this.vx)*0.8; this.vy *= 0.8; } return false;
+    case 0x25: if (applyChanges) { this.vy = -Math.abs(this.vy)*0.8; this.vx *= 0.8; } return false;
+    case 0x2a: if (applyChanges) { this.vy = +Math.abs(this.vy)*0.8; this.vx *= 0.8; } return false;
+    case 0x20: if (applyChanges) { this.vx *= -0.8; this.vy *= -0.8; } return false;
+    case 0x3d: if (applyChanges) { this.gravity = {x:0, y:0.25}; } return true;
+    case 0x22: if (applyChanges) { if (this.z == 0) this.gravity = {z:-1}; } return true;
+    case 0x45: if (applyChanges) { if (this.z == 0) this.gravity = {z:-1.5}; } return true;               
+    case 0x23: if (applyChanges) { if (this.z == 0) this.gravity = {z:-5}; } return true;
+    case 0x21: if (applyChanges) { this.alive = false; } return true;
+  }
+
+  return true;
+}
+
+MicroCar.prototype.checkCollision = function(car)
+{
+  var radius = 10;
+
+  if (!this.alive || !car.alive)
+    return;
+
+  if ((this.x-car.x)*(this.x-car.x) + (this.y-car.y)*(this.y-car.y) > 4*radius*radius)
+    return;
+
+  var m1 = 1, m2 = 1, r1 = radius, r2 = radius;
+  var im1 = 1 / m1, im2 = 1 / m2;
+
+  var delta = {x:this.x-car.x, y:this.y-car.y};
+  delta.len = Math.sqrt(delta.x*delta.x + delta.y*delta.y);
+
+  var mtd = {l:r1 + r2 - delta.len};
+  mtd.x = delta.x / delta.len * mtd.l;
+  mtd.y = delta.y / delta.len * mtd.l;
+
+  this.x += mtd.x * im1 / (im1 + im2);
+  this.y += mtd.y * im1 / (im1 + im2);
+  car.x -= mtd.x * im2 / (im1 + im2);
+  car.y -= mtd.y * im2 / (im1 + im2);
+
+  mtd.x /= mtd.l;
+  mtd.y /= mtd.l;
+
+  var v = {x:this.vx - car.vx, y:this.vy - car.vy};
+  var vn = v.x * mtd.x + v.y * mtd.y;
+
+  if (vn > 0)
+    return;
+
+  var restitution = 0.8;
+  var i = -(1.0 + restitution) * vn / (im1 + im2);
+  var impulse = {x:mtd.x * i, y:mtd.y * i};
+
+  this.vx += impulse.x * im1;
+  this.vy += impulse.y * im1;
+  car.vx -= impulse.x * im2;
+  car.vy -= impulse.y * im2;
+}
+
+MicroCar.prototype.setControls = function(left, right, accel, brake)
+{
+  if (left)
+    this.angle -= 5;
+
+  if (right)
+    this.angle += 5;
+
+  this.accel = accel;
+  this.brake = brake;
+}
+
+MicroAi = function()
+{
+  this.evolve();
+  return;
+
+  this.constDiff = 5;// + Math.random()*5;
+  this.constAcc = 30; //25 + Math.random()*10;
+  this.constBra = 50; //45 + Math.random()*10;
+}
+
+MicroAi.prototype.evolve = function()
+{
+  this.constDiff = 5;
+  this.constAcc = 25 + Math.random()*10;
+  this.constBra = 40 + Math.random()*20;
+}
+
+MicroAi.prototype.update = function(car, mapResources)
+{
+  var blkx = Math.floor(car.x / 32);
+  var blky = Math.floor(car.y / 32);
+
+  var targetAngle = mapResources.getTrace(blkx, blky);
+
+  var diff = this.angleDiff(car.angle, targetAngle);           
+
+  this.right = diff >= this.constDiff;
+  this.left = diff <= this.constDiff;
+  this.accelerate = Math.abs(diff) < this.constAcc;
+  this.brake = Math.abs(diff) > this.constBra;
+}
+
+MicroAi.prototype.angleDiff = function(a, b)
+{
+  var d = b-a;
+  if (d > 180)
+    d -= 360;
+  if (d < -180)
+    d += 360;
+  return d;
+}
+
+
+MicroScene = function(mapResources)
+{
+  this.mapResources = mapResources;
+
+  this.scene = document.getElementById("canvas");
+  this.canvasInitialized = false;
+  this.width = 600;
+  this.height = 600;
+  this.cars = [];
+}
+
+MicroScene.prototype.addCar = function(vehicleImage, bot)
+{
+  var carCanvas = new MicroCanvas();
+  carCanvas.setSize(24, 24);
+  carCanvas.element.style = "position: absolute; left: 0; top: 0; z-index: 1;";
+
+  this.scene.appendChild(carCanvas.canvas);
+
+  var car = new MicroCar();
+  car.load(vehicleImage);
+  car.setPosition(200 + Math.random() * 100, 200 + Math.random() * 100);
+
+  if (bot)
+  {
+    var ai = new MicroAi();
+    car.ai = ai;
+  }
+
+  car.canvas = carCanvas;
+
+  this.cars.push(car);
+
+  return car;
+}
+
+MicroScene.prototype.updateView = function(canvas, background)
+{
+  if (!this.canvasInitialized)
+  {
+    this.canvasInitialized = true;
+
+//    background.element.canvas.setSize(600, 600);
+    background.element.style.overflow = "hidden"; 
+    background.element.style.width = this.width + "px";
+    background.element.style.height = this.height + "px";
+  }
+
+  var refCar = this.cars[0];
+  var mapOffsetX = this.width/2 - refCar.x;
+  var mapOffsetY = this.height/2 - refCar.y;
+
+  canvas.element.style.left = mapOffsetX;
+  canvas.element.style.top = mapOffsetY;
+
+  for (var i in this.cars)
+    this.cars[i].place(this.cars[i].canvas, mapOffsetX, mapOffsetY);
+
+  background.setOffset(mapOffsetX / 2, mapOffsetY / 2);
+}
+
+MicroScene.prototype.updateCars = function()
+{
+  for (var i in this.cars)
+  {
+    var car = this.cars[i];
+
+    if (car.ai)
+    {
+      car.ai.update(car, this.mapResources);
+      car.setControls(car.ai.left, car.ai.right, car.ai.accelerate, car.ai.brake);
+    }
+    else
+    {
+      car.setControls(key.state[key.kLeft], key.state[key.kRight], key.state[key.kUp], false);
+    }
+
+    car.move(this.mapResources);
+  }
+
+  for (var i = 0; i<this.cars.length; i++)
+    for (var j = i+1; j<this.cars.length; j++)
+      this.cars[i].checkCollision(this.cars[j]);
+}
+
+MicroScene.prototype.renderCars = function()
+{
+  for (var i in this.cars)
+  {
+    this.cars[i].render(this.cars[i].canvas);
+  }
+}
+
+MicroScene.prototype.checkAlive = function()
+{
+  var now = new Date().getTime();
+
+  for (var i in this.cars)
+  {
+    var car = this.cars[i];
+    if (!car.lastAlive)
+      car.lastAlive = [];
+
+    if (car.alive && car.currentSpot && car.currentSpot.collision == 0xff)
+    { 
+      car.lastAlive.push({x:car.x, y:car.y, angle:car.angle});
+
+      if (car.lastAlive.length > 5)
+        car.lastAlive.shift();
+    } else 
+    if (!car.alive && car.lastAlive.length > 0 && now - car.deadAt > 3000)
+    {
+      var last = car.lastAlive[0];
+
+      for (var j=car.lastAlive.length-1; j>=0; j--)
+        if ( //car.lastAlive[j].currentSpot == 0xff && 
+            (Math.abs(car.x - car.lastAlive[j].x) > 50 || 
+             Math.abs(car.y - car.lastAlive[j].y) > 50) )
+        {
+          last = car.lastAlive[j];
+          break;
+        }
+
+      car.x = last.x;
+      car.y = last.y;
+      car.vx = 0;
+      car.vy = 0;
+
+//      car.angle = mapResources.getTrace(Math.floor(car.x / 32), Math.floor(car.y / 32));
+      car.angle = last.angle;
+      car.alive = true;
+
+      car.ai.evolve();
+    }
+  }  
+}
+// ------------------------
+
+var mapCanvas = new MicroCanvas("map");
+var mapResources = new MicroMapResources();
+var mapRenderer;
+var mapBackground;
+
+var scene;
+
+mapResources.load(game, collisions[0], function()
+{
+  scene = new MicroScene(mapResources);
+  scene.addCar(game.vehicle);
+  scene.addCar(game.vehicle, true);
+  scene.addCar(game.vehicle, true);
+  scene.addCar(game.vehicle, true);
+  scene.addCar(game.vehicle, true);
+  scene.addCar(game.vehicle, true);
+  scene.addCar(game.vehicle, true);
+
+  mapRenderer = new MicroMapRenderer(mapResources);
+  mapRenderer.render(mapCanvas);
+
+  mapBackground = new MicroMapBackground(mapRenderer, "canvas");
+
+  setInterval(function()
+  {
+    mapRenderer.animate(mapCanvas);
+  }, 300);
+
+  setInterval(function()
+  {
+    scene.updateCars();
+    scene.renderCars();
+//    scene.updateView(mapCanvas, mapBackground);
+//    scene.setView(mapCanvas, mapBackground, cars[0]);
+  }, 30);
+
+  setInterval(function()
+  {
+    scene.checkAlive();
+  }, 1000);
+  
+});
+
+
+document.onkeyup   = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 0 ); }
+document.onkeydown = function ( e ) { onKey( ( window.event ) ? event.keyCode : e.keyCode, 1, event.key ); }
+
+var key = { state:[], kUp: 38, kRight: 39, kDown: 40, kLeft: 37};
+function onKey( k, on, kk )
+{
+  if (!key.state[k] && on)
+  {
+    switch (kk)
+    {
+      case 'v': scene.toggleView();
+    }
+  }
+  if (k > 0 && k < 100)
+    key.state[k] = on;
+}
+
+/*
 var ai = true;
 var clip = true;
 
-var gamemap = {};
+var gamemap = {};   	
 var sprites = {};
 var vehicle = {};
 var background = {};
@@ -565,5 +1310,5 @@ function onKey( k, on )
     initView();
   }
 }
-
+*/
 </script>

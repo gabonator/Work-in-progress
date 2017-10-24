@@ -1,0 +1,5 @@
+---
+applications:
+- name:    goodnewsbygoodguys
+  random-route: true
+  memory:  128M

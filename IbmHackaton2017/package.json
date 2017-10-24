@@ -1,0 +1,24 @@
+{
+  "name": "bluemix-hello-node",
+  "version": "0.0.0",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "cf-deployment-tracker-client": "*",
+    "commander": "^2.6.0",
+    "concat-stream": "^1.6.0",
+    "express": "^4.14.1",
+    "http-post": "^0.1.1",
+    "http-proxy": "^1.8.1",
+    "inbox": "^1.1.59",
+    "watson-developer-cloud": "^2.41.1"
+  },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IBM-Bluemix/bluemix-hello-node.git"
+  }
+}

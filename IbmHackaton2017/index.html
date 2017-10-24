@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Website CSS style -->
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Website Font style -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+<link rel="stylesheet" href="login.css">
+<link rel="stylesheet" href="switcher.css">
+
+<!-- Google Fonts -->
+<link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+
+<title>Good news by good guys</title>
+</head>
+
+<style>
+#postman {position:absolute;
+padding-top:50px;
+padding-left:20px;
+}
+
+img.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  z-index:0;
+}
+
+.up {
+  z-index:2;
+}
+
+.vcenter {
+  min-height: 12em;
+  display: table-cell;
+  vertical-align: middle;
+}
+.init {
+  display:none;
+}
+.oinit { opacity:0 }
+</style>
+
+
+<body>
+  <div class="sky init">
+    <div class="rainy">
+      <section class="rain"></section>
+      <div class="clouds_two"></div>
+      <div class="clouds_one"></div>
+    </div>
+
+    <div class="sun init">
+        <div class="ray_box">
+            <div class="ray ray1"></div>
+            <div class="ray ray2"></div>
+            <div class="ray ray3"></div>
+            <div class="ray ray4"></div>
+            <div class="ray ray5"></div>
+            <div class="ray ray6"></div>
+            <div class="ray ray7"></div>
+            <div class="ray ray8"></div>
+            <div class="ray ray9"></div>
+            <div class="ray ray10"></div>
+        </div>
+    </div>
+
+    <div class="happy oinit">You are happy now!</div>                                                                                    
+    <div class="unhappy oinit">Tap below to activate happy mode</div>
+    <link async href="http://fonts.googleapis.com/css?family=Arvo" data-generated="http://enjoycss.com" rel="stylesheet" type="text/css"/>
+
+    <div class="tbutton oinit">
+      <div class="trigger"></div>
+      <svg version="1.1" id="tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      	 viewBox="0 0 37 37" style="enable-background:new 0 0 37 37;" xml:space="preserve">
+      <path class="circ path" style="fill:none;stroke:#000;stroke-width:3;stroke-linejoin:round;stroke-miterlimit:10;" d="
+      	M30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z"
+      	/>
+      <path class="contour" style="fill:none;stroke:#000;stroke-width:3;stroke-linejoin:round;stroke-miterlimit:10;" d="
+      	M30.5,6.5L30.5,6.5c6.6,6.6,6.6,17.4,0,24l0,0c-6.6,6.6-17.4,6.6-24,0l0,0c-6.6-6.6-6.6-17.4,0-24l0,0C13.1-0.2,23.9-0.2,30.5,6.5z"
+      	/>
+      <polyline class="tick path" style="fill:none;stroke:#000;stroke-width:3;stroke-linejoin:round;stroke-miterlimit:10;" points="11.6,20 15.9,24.2 26.4,13.8 "/>
+      <polyline class="contour" style="fill:none;stroke:#000;stroke-width:3;stroke-linejoin:round;stroke-miterlimit:10;" points="11.6,20 15.9,24.2 26.4,13.8 "/>
+
+      </svg>
+    </div>
+  </div>               
+
+  <div class="login init">
+    <img id="postman" src="res/postman.png" class="center">
+    <div class="row main">
+      <div class="main-login main-center up">
+        <h4><b>Good news</b> by Good guys</h4>
+        <div class="info" id="errorMessage">&nbsp;&nbsp;&nbsp;Please log in into your mailbox, Good news application will filter your messages into two groups - good ones and bad ones. Then it is up to you and
+            your mood which messages you will read at first...<br>&nbsp;&nbsp;&nbsp;You can deactivate this service anytime by logging here again</div>
+
+        <form id="login" method="post" action="switch.html">
+
+          <div class="form-group">
+          <label for="name" class="cols-sm-2 control-label">Your email</label>
+          <div class="cols-sm-10">
+          <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+          <input type="text" class="form-control" name="name" id="name"  placeholder="someone@gmail.com"/>
+          </div>
+          </div>
+          </div>
+
+          <div class="form-group">
+          <label for="password" class="cols-sm-2 control-label">Password</label>
+          <div class="cols-sm-10">
+          <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+          <input type="password" class="form-control" name="password" id="password"  placeholder="Enter your Password"/>
+          </div>
+          </div>
+          </div>
+
+          <div class="form-group">
+          <label for="email" class="cols-sm-2 control-label">Your Email server</label>
+          <div class="cols-sm-10">
+          <div class="input-group">
+          <span class="input-group-addon"><i class="fa fa-envelope fa" aria-hidden="true"></i></span>
+          <input type="text" class="form-control" name="server" id="email" value="imap.gmail.com" placeholder="Imap serevr"/>
+          </div>
+          </div>
+          </div>
+
+          <div class="form-group">
+          <input type="submit" id="button" class="btn btn-primary btn-lg btn-block login-button" value="Log in">
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<script>
+  var credentials = {};
+
+  function onFormSubmit(data, handler)
+  {
+    credentials = {};
+    for (var i in data)
+      credentials[data[i].name] = data[i].value;
+
+    $.ajax({
+      type: 'POST',
+      data: JSON.stringify(credentials),
+      contentType: 'application/json',
+      url: '/connect',
+      success: function(data) {
+
+        data = JSON.parse(data);
+        console.log('connect success: ' + data.success + " enabled:" + data.enabled);
+        if (data.success)
+        {
+          if (data.enabled)
+            handler(true);
+          else
+            handler(false);
+        } else
+        {
+          $("#errorMessage").html("<font color=yellow><b>Cannot connect, please verify your credentials</b></font>")
+        }
+    }});
+  }
+
+  function onActivate(handler)
+  {
+    console.log("activating....");
+
+    $.ajax({
+      type: 'POST',
+      data: JSON.stringify(credentials),
+      contentType: 'application/json',
+      url: '/enable',
+      success: function(data) {
+        data = JSON.parse(data);
+        console.log('enable success: ' + data.success);
+        playHappySong();
+        handler(data.success);
+      }
+    });
+  }
+
+  function onDeactivate(handler)
+  {
+    console.log("deactivating....");
+
+    $.ajax({
+      type: 'POST',
+      data: JSON.stringify(credentials),
+      contentType: 'application/json',
+      url: '/disable',
+      success: function(data) {
+        data = JSON.parse(data);
+        console.log('disable success: ' + data.success);
+        handler(data.success);
+      }
+    });
+  }
+
+</script>
+<script src="switcher.js"></script>
+<script src="happysong.js"></script>
+
+</html>

@@ -1,20 +1,27 @@
 /*
  * Itead iboard 1.1
  * 
- * Programmer: Parallel progarmmer
+ * Programmer: Parallel programmer
  * Processor: Atmel328 (328P)
  * Board: Arduino Duemilanove or Diecimila
  * 
  * Pinout on board: DTR, GND, TX, RX, VDD 3.3, GND, NC
  */
 
- 
 //#define USE_OREGON  // flash:11% mem:12%
 //#define USE_OREGON_UDP
 //#define USE_ONEWIRE // flash:5% mem:1%
-#define USE_DHT22   // flash:3% mem:2%
+//#define USE_DHT22   // flash:3% mem:2%
 //#define USE_BMP085  // flash:9% mem:2%
-#define USE_PIR
+//#define USE_PIR
+
+
+#define MAC {0x01, 0x01, 0x02, 0x34, 0x56, 0x78 };
+#define REQ_SERVER "server.com"
+#define REQ_SCRIPT "/script/"
+
+#include "private.h"
+#include "uptime.h"
 
 #include <SPI.h>
 #include <Ethernet.h>
@@ -36,22 +43,12 @@
 #endif
 
 #ifdef USE_ONEWIRE
-#include "OneWire.h"
+#define ONEWIRE_CRC8_TABLE 0
+#define ONEWIRE_CRC16 0
+#include <OneWire.h>
 #endif
 
 
-#define MAC {0x00, 0x11, 0x11, 0x11, 0x22, 0x23 }; // Sklad
-
-#define REQ_SERVER "****"
-#define REQ_SCRIPT "/***/"
-
-
-/*
-#define MAC {0x01, 0x01, 0x02, 0x34, 0x56, 0x78 };
-
-#define REQ_SERVER "server.com"
-#define REQ_SCRIPT "/script/"
-*/
 byte mac[] = MAC;
 byte ip[] = { 192, 168, 1, 254 };
 
@@ -150,7 +147,7 @@ int SensorReport(EthernetClient& client)
   byte valid = 0;
 
   int nBytes = 0;
-  sprintf(report, "&uptime=%d", millis()/1000);
+  sprintf(report, "&uptime=%d", CalculateUptimeSeconds());
 
   nBytes += strlen(report);
   client.print(report);
@@ -372,7 +369,7 @@ void Restart()
 
 void InitEthernet()
 {
-  const long lDhcpTimeout = 15*60*1000;
+  const long lDhcpTimeout = 30*60*1000;
   
   Serial.print(F("Requesting IP from DHCP server... "));
 

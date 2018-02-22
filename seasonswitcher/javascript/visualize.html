@@ -1,0 +1,65 @@
+<script src="astro.js"></script>
+<img id="map" src="">
+
+<script>
+var map = document.getElementById("map");
+
+map.width=1200;
+map.height=600;
+map.offsetLeft;
+map.offsetTop;
+
+function dot(x, y, c, t)
+{
+  var block = document.createElement("div"); 
+  block.style.position = "absolute";
+  block.style.left = map.offsetLeft + map.width*(x+180)/360;
+  block.style.top = map.offsetTop + map.height*(90-y)/180;
+  block.style.width = 4;
+  block.style.height = 4;
+  block.style.background = c;
+  block.title = t;
+
+  document.body.insertBefore(block, map); 
+}
+
+function daynight(pos, date, time, tzo)
+{
+  var sunrise = new Astro().CalculateSunrise(date, pos);
+  sunrise.info = isNaN(sunrise.sunrise) ? "" : (sunrise.current + ": " + sunrise.localSunrise + " - " + sunrise.localSunset);  
+  return sunrise;
+}
+
+// visualize.html#20180221T0400
+var matches = document.location.hash.match("#(\\d{4})(\\d{2})(\\d{2})T(\\d{2})(\\d{2})");
+var d;
+
+if (matches)
+  d = new Date(Date.UTC(matches[1], matches[2]-1, matches[3], matches[4], matches[5], 0));
+else
+  d = new Date();
+
+var pad2 = (v) => ("0"+v).substr(-2);
+
+var pos = {long:x, lat:y}; 
+var date = {day:d.getUTCDate(), month:d.getUTCMonth()+1, year:d.getUTCFullYear()};
+var time = {hour:d.getUTCHours(), minute:d.getUTCMinutes()};
+
+map.src = "https://www.timeanddate.com/scripts/sunmap.php?iso="+
+  date.year+pad2(date.month)+pad2(date.day)+"T"+pad2(time.hour)+pad2(time.minute);
+
+console.log(d);
+console.log(map.src);
+
+for (var x=-180; x<180; x+=5)
+  for (var y=-90; y<=90; y+=5)
+  {
+    var da = daynight({long:x, lat:y}, d, time, d.getTimezoneOffset());
+    if (da.info)
+      dot(x, y, (da.current == "SunStateDay" || da.current == "PolarDay") ? "#00ff00" : "#ff0000", da.info);
+    else
+      dot(x, y, "#b0b0b0", "");
+  }
+
+  console.log(new Astro().CalculateSunrise(d, {long:17.733766, lat:48.286168}));
+</script>

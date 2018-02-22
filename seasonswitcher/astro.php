@@ -91,10 +91,14 @@ class Astro
       $dfo = -$dfo;
 
     $fo = tan( $dbDeclin + $dfo ) * tan( $dbLat * $RADS );
-    if ( $fo > 0.99999 ) 
-      $fo = 1.0; // avoid overflow
 
-    $fo = asin( $fo ) + M_PI / 2.0;
+    if ( $fo > 0.99999 ) 
+      $fo = M_PI;
+    else if ( fo < -0.99999 ) 
+      $fo = 0.0;
+    else
+      $fo = asin( $fo ) + M_PI / 2.0;
+
     return $fo;
   }
 
@@ -109,27 +113,29 @@ class Astro
     $sunrise["date"] = $date;
     $sunrise["season"] = ["spring", "summer", "autumn", "winter"][floor($sunrise["phase"]/90)];
 
+    $dbCurrentTime = $time["hour"] + $time["minute"] / 60.0;
+    $sunrise["currentTime"] = $dbCurrentTime + $sunrise["timezone"];
+
     if ( $sunrise["daylen"] < 0.0001 )
       $sunrise["current"] = "polar_night";
     else if ( $sunrise["daylen"] > 23.999 )
       $sunrise["current"] = "polar_day";
-
-    $dbCurrentTime = $time["hour"] + $time["minute"] / 60.0;
-    $sunrise["currentTime"] = $dbCurrentTime + $sunrise["timezone"];
-
-    if ( $sunrise["sunset"] > $sunrise["sunrise"] )
-    {
-      if ( $dbCurrentTime > $sunrise["sunrise"] && $dbCurrentTime <= $sunrise["sunset"])
-        $sunrise["current"] = "day";
-      else
-        $sunrise["current"] = "night";
-    } 
     else
     {
-      if ( $dbCurrentTime > $sunrise["sunset"] && $dbCurrentTime <= $sunrise["sunrise"])
-        $sunrise["current"] = "night";
+      if ( $sunrise["sunset"] > $sunrise["sunrise"] )
+      {
+        if ( $dbCurrentTime > $sunrise["sunrise"] && $dbCurrentTime <= $sunrise["sunset"])
+          $sunrise["current"] = "day";
+        else
+          $sunrise["current"] = "night";
+      } 
       else
-        $sunrise["current"] = "day";
+      {
+        if ( $dbCurrentTime > $sunrise["sunset"] && $dbCurrentTime <= $sunrise["sunrise"])
+          $sunrise["current"] = "night";
+        else
+          $sunrise["current"] = "day";
+      }
     }
     return $sunrise;
   }

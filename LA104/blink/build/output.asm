@@ -122,7 +122,7 @@ Disassembly of section .text:
  80081fe:	9301      	str	r3, [sp, #4]
  8008200:	e7eb      	b.n	80081da <main+0x12>
  8008202:	bf00      	nop
- 8008204:	0001869f 	.word	0x0001869f
+ 8008204:	000f423f 	.word	0x000f423f
 
 08008208 <Dummy_Handler>:
  8008208:	4770      	bx	lr

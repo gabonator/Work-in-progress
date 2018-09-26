@@ -3,10 +3,6 @@
 
 // Blinks led diode conneted to P1 pin
 
-extern u8 _vectors[];
-
-void pinWrite(int nPort, int nPin, int nValue);
-
 int main(void)
 { 
   volatile unsigned long i;
@@ -19,10 +15,10 @@ int main(void)
 //    pinWrite(1, 11, 1); // 48 P2 T24_RX3_SDA2_PB11  
 
     pinWrite(1, 10, 1); // PB10 - P1
-    for (i=0; i<100000; i++);
+    for (i=0; i<1000000; i++);
 
     pinWrite(1, 10, 0); // PB10 - P1
-    for (i=0; i<100000; i++);
+    for (i=0; i<1000000; i++);
   }
 
   return 0;

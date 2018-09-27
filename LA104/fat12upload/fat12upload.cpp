@@ -17,13 +17,11 @@
 #include "fat.h"
 #include "direntry.h"
 
-#define DEBUG
+//#define dprintf(...)
+#define dprintf printf
 #define MAXPATHLEN 255
 
-bool dooverwrite = true;
-bool doformat = false;
-bool docopy = true;
-int __target = 2;
+int __target = -1;
 
 void _readdi(int fdi, direntry& dirent, int direntofs, bool);
 
@@ -76,12 +74,12 @@ uint16_t get_fat_entry(uint16_t clusternum,
     offset = bpb->bpbResSectors * bpb->bpbBytesPerSec * bpb->bpbSecPerClust 
 	+ (3 * (clusternum/2));
 
-    printf("Get fat entry %d at %x...", clusternum, offset);	
+    dprintf("Get fat entry 0x%x at 0x%x...", clusternum, offset);	
 
     lseek(fd, offset, SEEK_SET);
 
-    unsigned char sector[4] = {0};
-    if (read(fd, sector, 4) != 4 || errno != 0)
+    unsigned char sector[3] = {0};
+    if (read(fd, sector, 3) != 3 || errno != 0)
       fprintf(stderr, "Read error!\n");
 
     switch(clusternum % 2) {
@@ -97,7 +95,7 @@ uint16_t get_fat_entry(uint16_t clusternum,
 	value = b2 << 4 | ((0xf0 & b1) >> 4);
 	break;
     }
-    printf(" => %x\n", value);
+    dprintf(" => 0x%x\n", value);
     return value;
 }
 
@@ -112,24 +110,19 @@ void set_fat_entry(uint16_t clusternum, uint16_t value,
     offset = bpb->bpbResSectors * bpb->bpbBytesPerSec * bpb->bpbSecPerClust 
 	+ (3 * (clusternum/2));
 
-    printf("Set fat entry %d at %x value %x...", clusternum, offset, value);	
+    dprintf("Set fat entry 0x%x at 0x%x value 0x%x...\n", clusternum, offset, value);	
 
     lseek(fdi, offset, SEEK_SET);
 
     unsigned char sector[3] = {0};
     if (read(fdi, sector, 3) != 3 || errno != 0)
       fprintf(stderr, "Read error!\n");
-//    printf("(rd 0x%x %02x %02x %02x)", offset, sector[0], sector[1], sector[2]);
 
     switch(clusternum % 2) {
     case 0:
 	p1 = &sector[0]; //image_buf + offset;
 	p2 = &sector[1]; //image_buf + offset + 1;
 	/* mjh: little-endian CPUs are really ugly! */
-
-
-	//  00 01 02 
-        //  Aa Ba bb
 	*p1 = (uint8_t)(0xff & value);
 	*p2 = (uint8_t)((0xf0 & (*p2)) | (0x0f & (value >> 8)));
 	break;
@@ -142,14 +135,11 @@ void set_fat_entry(uint16_t clusternum, uint16_t value,
 	break;
     }
 
-//    printf("(wr 0x%x %02x %02x %02x)", offset, sector[0], sector[1], sector[2]);
     lseek(fdi, offset, SEEK_SET);
 
     if (write(fdi, sector, 3) != 3 || errno != 0)
       fprintf(stderr, "Write error!\n");
-
 }
-
 
 struct bpb33* check_bootsector(int fd)
 {
@@ -160,7 +150,7 @@ struct bpb33* check_bootsector(int fd)
     unsigned char sector0[512] = {0};
     if (read(fd, sector0, 512) != 512 || errno != 0)
     {
-      fprintf(stderr, "Read error!\n");
+        fprintf(stderr, "Read error!\n");
         return NULL;
     }
 
@@ -168,9 +158,7 @@ struct bpb33* check_bootsector(int fd)
 
     if (bootsect->bsJump[0] == 0xe9 ||
 	(bootsect->bsJump[0] == 0xeb && bootsect->bsJump[2] == 0x90)) {
-#ifdef DEBUG
-	printf("Good jump inst\n");
-#endif
+	dprintf("Good jump inst\n");
     } else {
 	fprintf(stderr, "illegal boot sector jump inst: %x%x%x\n", 
 		bootsect->bsJump[0], bootsect->bsJump[1], 
@@ -178,16 +166,12 @@ struct bpb33* check_bootsector(int fd)
         return NULL;
     } 
 
-#ifdef DEBUG
-    printf("OemName: %s\n", bootsect->bsOemName);
-#endif
+    dprintf("OemName: %s\n", bootsect->bsOemName);
 
     if (bootsect->bsBootSectSig0 == BOOTSIG0
 	&& bootsect->bsBootSectSig0 == BOOTSIG0) {
 	//Good boot sector sig;
-#ifdef DEBUG
-	printf("Good boot sector signature\n");
-#endif
+	dprintf("Good boot sector signature\n");
     } else {
 	fprintf(stderr, "Boot boot sector signature %x%x\n", 
 		bootsect->bsBootSectSig0, 
@@ -211,17 +195,14 @@ struct bpb33* check_bootsector(int fd)
     bpb2->bpbFATsecs = getushort(bpb->bpbFATsecs);
     bpb2->bpbHiddenSecs = getushort(bpb->bpbHiddenSecs);
     
-
-#ifdef DEBUG
-    printf("Bytes per sector: %d\n", bpb2->bpbBytesPerSec);
-    printf("Sectors per cluster: %d\n", bpb2->bpbSecPerClust);
-    printf("Reserved sectors: %d\n", bpb2->bpbResSectors);
-    printf("Number of FATs: %d\n", bpb->bpbFATs);
-    printf("Number of root dir entries: %d\n", bpb2->bpbRootDirEnts);
-    printf("Total number of sectors: %d\n", bpb2->bpbSectors);
-    printf("Number of sectors per FAT: %d\n", bpb2->bpbFATsecs);
-    printf("Number of hidden sectors: %d\n", bpb2->bpbHiddenSecs);
-#endif
+    dprintf("Bytes per sector: %d\n", bpb2->bpbBytesPerSec);
+    dprintf("Sectors per cluster: %d\n", bpb2->bpbSecPerClust);
+    dprintf("Reserved sectors: %d\n", bpb2->bpbResSectors);
+    dprintf("Number of FATs: %d\n", bpb->bpbFATs);
+    dprintf("Number of root dir entries: %d\n", bpb2->bpbRootDirEnts);
+    dprintf("Total number of sectors: %d\n", bpb2->bpbSectors);
+    dprintf("Number of sectors per FAT: %d\n", bpb2->bpbFATsecs);
+    dprintf("Number of hidden sectors: %d\n", bpb2->bpbHiddenSecs);
 
     return bpb2;
 }
@@ -233,10 +214,8 @@ int root_dir_addr(int fd, struct bpb33* bpb)
 	(bpb->bpbBytesPerSec 
 	 * (bpb->bpbResSectors + (bpb->bpbFATs * bpb->bpbFATsecs)));
 
-//    printf("Root dir at %x\n", offset);
     return offset;
 }
-
 
 int cluster_to_addr_i(uint16_t cluster, int fd, 
 			 struct bpb33* bpb)
@@ -257,25 +236,22 @@ int cluster_to_addr_i(uint16_t cluster, int fd,
 uint8_t *cluster_to_addr(uint16_t cluster, int fd, 
 			 struct bpb33* bpb)
 {
-    printf("Cluster %d", cluster);
+    dprintf("Cluster %d", cluster);
 
     int offset = cluster_to_addr_i(cluster, fd,bpb);
 
-    printf(", reading at %x...", offset);
+    dprintf(", reading at %x...", offset);
 
     static unsigned char sector[512] = {0};
     lseek(fd, offset, SEEK_SET);
     if (read(fd, sector, 512) != 512 || errno != 0)
       fprintf(stderr, "Read error!\n");
-    printf(" ok\n");
+    dprintf(" ok\n");
     return sector;
 }
 
-
-
 #define FIND_FILE 0
 #define FIND_DIR 1
-
 
 void listfiles(uint16_t cluster, int fd, struct bpb33* bpb)
 {
@@ -284,26 +260,23 @@ void listfiles(uint16_t cluster, int fd, struct bpb33* bpb)
     int d;
     struct direntry dirent;
     uint16_t dir_cluster;
-    printf("Listing files at cluster %d\n", cluster);
+    dprintf("Listing files at cluster %d\n", cluster);
     int offset = cluster_to_addr_i(cluster, fd, bpb);
  
     /* find the first dirent in this directory */
-
-    while (1) {
-
+    while (1) 
+    {
 	for (d = 0; d < bpb->bpbBytesPerSec * bpb->bpbSecPerClust; 
 	     d += sizeof(struct direntry) /*, offset += sizeof(struct direntry)*/) 
         {
-
-      _readdi(fd, dirent, offset, false);
+            _readdi(fd, dirent, offset, false);
 
 	    if (dirent.deName[0] == SLOT_EMPTY) {
 		/* we failed to find the file */
 		return;
 	    }
 
-//printf("pos:%d, direntname:%d\n", d, dirent.deName[0]);
-printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
+  printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
   dirent.deName[0],  dirent.deName[1],  dirent.deName[2],  dirent.deName[3],
   dirent.deName[4],  dirent.deName[5],  dirent.deName[6],  dirent.deName[7],
   dirent.deExtension[0],  dirent.deExtension[1],  dirent.deExtension[2],
@@ -336,7 +309,7 @@ printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, hi
 
 }
 
-/*struct direntry* */ int find_file(char *infilename, uint16_t cluster,
+/*struct direntry* */ int find_file(const char *infilename, uint16_t cluster,
 			   int find_mode,
 			   int fd, struct bpb33* bpb)
 {
@@ -346,11 +319,9 @@ printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, hi
     struct direntry dirent;
     uint16_t dir_cluster;
     char fullname[13];
-    printf("Scanning file at cluster %d\n", cluster);
+    dprintf("Scanning file at cluster %d\n", cluster);
     int offset = cluster_to_addr_i(cluster, fd, bpb);
  
-//    dirent = (struct direntry*)cluster_to_addr(cluster, fd, bpb);
-
     /* first we need to split the file name we're looking for into the
        first part of the path, and the remainder.  We hunt through the
        current directory for the first part.  If there's a remainder,
@@ -391,26 +362,11 @@ printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, hi
 	/* hunt a cluster for the relevant dirent.  If we reach the
 	   end of the cluster, we'll need to go to the next cluster
 	   for this directory */
-//printf("bpbBytesPerSec:%d, bpbSecPerClust:%d\n", bpb->bpbBytesPerSec, bpb->bpbSecPerClust);
 	for (d = 0; d < bpb->bpbBytesPerSec * bpb->bpbSecPerClust; 
 	     d += sizeof(struct direntry) /*, offset += sizeof(struct direntry)*/) 
         {
+            _readdi(fd, dirent, offset, true );
 
-      _readdi(fd, dirent, offset, true );
-/*
-//printf("pos:%d, direntname:%d\n", d, dirent.deName[0]);
-printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
-  dirent.deName[0],  dirent.deName[1],  dirent.deName[2],  dirent.deName[3],
-  dirent.deName[4],  dirent.deName[5],  dirent.deName[6],  dirent.deName[7],
-  dirent.deExtension[0],  dirent.deExtension[1],  dirent.deExtension[2],
-  dirent.deAttributes,
-  dirent.deLowerCase, 
-  dirent.deCHundredth, dirent.deCTime[0], dirent.deCTime[1], dirent.deCDate[0], dirent.deCDate[1],
-  dirent.deHighClust[0], dirent.deHighClust[1],
-  dirent.deMTime[0], dirent.deMTime[1],  dirent.deMDate[0], dirent.deMDate[1],
-  dirent.deStartCluster[0], dirent.deStartCluster[1],
-  dirent.deFileSize[3], dirent.deFileSize[2], dirent.deFileSize[1], dirent.deFileSize[0]);
-*/
 	    if (dirent.deName[0] == SLOT_EMPTY) {
 		/* we failed to find the file */
 		return NULL;
@@ -421,7 +377,6 @@ printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, hi
 		continue;
 	    }
 	    get_name(fullname, &dirent);
-//	 printf("comp %s=%s\n", fullname, seek_name);
 
 	    if (strcasecmp(fullname, seek_name)==0) {
 		/* found it! */
@@ -452,16 +407,13 @@ printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, hi
 	    offset += sizeof(direntry);
 	} else {
 	    cluster = get_fat_entry(cluster, fd, bpb);
-            printf("Scanning file at NEXT cluster %d\n", cluster);
+            dprintf("Scanning file at NEXT cluster %d\n", cluster);
 
             offset = cluster_to_addr_i(cluster, fd, bpb);
-//	    dirent = (struct direntry*)cluster_to_addr(cluster, 
-//						       fd, bpb);
 	}
     }
 }
 
-int topclust = 0;
 uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb, 
 		      uint32_t *size)
 {
@@ -470,28 +422,25 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
     size_t bytes;
     uint16_t start_cluster = 0;
     uint16_t prev_cluster = 0;
-//    int lastWritten = 0x13;
     int lastWritten = __target;
 
     clust_size = bpb->bpbSecPerClust * bpb->bpbBytesPerSec;
     total_clusters = bpb->bpbSectors / bpb->bpbSecPerClust;
     buf = (uint8_t*)malloc(clust_size);
 
-//int _base = 15;
-    while(1) {
-
-    memset(buf, 0, clust_size);
+    while(1) 
+    {
+        memset(buf, 0, clust_size);
 
 	/* read a block of data, and store it */
 	bytes = fread(buf, 1, clust_size, fd);
 	if (bytes > 0) {
-//printf("read %d bytes - ", (int)bytes);
 	    *size += bytes;
 
 	    /* find a free cluster */
 
 	    for (i = 2; i < total_clusters; i++) {
-	        if (dooverwrite)
+	        if (lastWritten != -1)
                 {
                   if (i > lastWritten)
                   {
@@ -504,73 +453,40 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
 		}
 	    }
 
-//i = _base++;
 	    if (i == total_clusters) {
 		/* oops - we ran out of disk space */
 		fprintf(stderr, "No more space in filesystem\n");
 		/* we should clean up here, rather than just exit */ 
 		exit(1);
 	    }
-printf("Found free cluster %d\n", i);
+
+            dprintf("Found free cluster %d\n", i);
 
 	    /* remember the first cluster, as we need to store this in
 	       the dirent */
 	    if (start_cluster == 0) {
 		start_cluster = i;
-topclust = i;
 	    } else {
 		/* link the previous cluster to this one in the FAT */
 		assert(prev_cluster != 0);
 		set_fat_entry(prev_cluster, i, fdi, bpb);
 	    }
 	    /* make sure we've recorded this cluster as used */
-//TODO
 	    set_fat_entry(i, FAT12_MASK&CLUST_EOFS, fdi, bpb);
-//	    set_fat_entry(i, FAT12_MASK&CLUST_EOFE, fdi, bpb);
 
 	    /* copy the data into the cluster */
             assert(clust_size == 512);
-//	    memcpy(cluster_to_addr_(i, fdi, bpb), buf, clust_size);
 
             int targetOfs = cluster_to_addr_i(i, fdi, bpb);
 
-            printf("Writing %d bytes cluster %x at %x... ", clust_size, i, targetOfs);
+            dprintf("Writing %d bytes cluster %x at %x... ", clust_size, i, targetOfs);
 
             lseek(fdi, targetOfs+0*0x400, SEEK_SET); // WTF?????????
             if (write(fdi, buf, clust_size) != clust_size || errno != 0)
               fprintf(stderr, "Write error!\n");
-
-//printf("(sleeping)");
-//usleep(0);
-/*
-             for (int q=0; q<512; q+=32)
-{
-            if (write(fdi, buf+q, 32) != 32 || errno != 0)
-              fprintf(stderr, "Write error!\n");
-}
-*/
-//            fsync(fdi);
-
-/*
-            unsigned char verify[512];
-            printf("Verifying at %x...", targetOfs);
-
-            lseek(fdi, targetOfs, SEEK_SET);
-            if (read(fdi, verify, 512) != 512 || errno != 0)
-              fprintf(stderr, "Read error!\n");
-
-            for (int j=0; j<20; j++)
-              printf("%c", verify[j]);
-
-            for (int j=0; j<512; j++)
-              if (verify[j] != buf[j])
-              {
-                 printf("%03x: %02x %02x\n", j, buf[j], verify[j]);
-              }
-*/
-            printf(" ok\n");
-
+            dprintf(" ok\n");
 	}
+
 	if (bytes < clust_size) {
 	    /* We didn't real a full cluster, so we either got a read
 	       error, or reached end of file.  We exit anyway */
@@ -584,7 +500,7 @@ topclust = i;
 }
 
 /* write the values into a directory entry */
-void write_dirent(struct direntry *dirent, char *filename, 
+void write_dirent(struct direntry *dirent, const char *filename, 
 		   uint16_t start_cluster, uint32_t size)
 {
     char *p, *p2;
@@ -631,100 +547,34 @@ void write_dirent(struct direntry *dirent, char *filename,
     dirent->deAttributes = ATTR_ARCHIVE;
     putushort(dirent->deStartCluster, start_cluster);
     putulong(dirent->deFileSize, size);
-
-/*
-printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
-  dirent.deName[0],  dirent.deName[1],  dirent.deName[2],  dirent.deName[3],
-  dirent.deName[4],  dirent.deName[5],  dirent.deName[6],  dirent.deName[7],
-  dirent.deExtension[0],  dirent.deExtension[1],  dirent.deExtension[2],
-  dirent.deAttributes,
-  dirent.deLowerCase, 
-  dirent.deCHundredth, dirent.deCTime[0], dirent.deCTime[1], dirent.deCDate[0], dirent.deCDate[1],
-  dirent.deHighClust[0], dirent.deHighClust[1],
-  dirent.deMTime[0], dirent.deMTime[1],  dirent.deMDate[0], dirent.deMDate[1],
-  dirent.deStartCluster[0], dirent.deStartCluster[1],
-  dirent.deFileSize[3], dirent.deFileSize[2], dirent.deFileSize[1], dirent.deFileSize[0]);
-*/
-
-/*
-  dirent->deLowerCase = 0x18;
-  dirent->deCHundredth = 0x02;
-*/
-  dirent->deCTime[0] = 0xd9;
-  dirent->deCTime[1] = 0xa0;
-  dirent->deCDate[0] = 0x37;
-  dirent->deCDate[1] = 0x4d;
-
-  dirent->deMTime[0] = 0x04;
-  dirent->deMTime[1] = 0xb3;
-  dirent->deMDate[0] = 0x36;
-  dirent->deMDate[1] = 0x4d;
-
-// OUTPUT  .RDY attr:20 low:18, crea:5ad09d 374d, high:0000, modif:804e 374d, start:0f00 size:0000087b
-// OUTPUT  .ERR attr:20 low:0, crea:000000 0000, high:0000, modif:0001 0000, start:1400 size:00000733
-// OUTPUT  .ERR attr:20 low:12, crea:5ad09d 374d, high:0000, modif:804f 374d, start:0f00 size:00000733
-// OUTPUT  .ERR attr:20 low:18, crea:5ad09d 374d, high:0000, modif:804f 374d, start:0f00 size:00000733
-
-// OUT     .RDY attr:20 low:18, crea:bfa3a0 374d, high:0000, modif:04b3 364d, start:1e00 size:000009c8
-// OUT2    .RDY attr:20 low:18, crea:02d9a0 374d, high:0000, modif:04b3 364d, start:2800 size:000009c8
-
-// OUTPUT  .ERR attr:20 low:18, crea:02d9a0 374d, high:0000, modif:04b4 364d, start:0f00 size:0000087b
-    /* a real filesystem would set the time and date here, but it's
-       not necessary for this coursework */
-
-/*
-OUT1    .RDY attr:20 low:18, crea:9b34ae 374d, high:0000, modif:04b3 364d, start:0f00 size:000009c8
-OUT2    .RDY attr:20 low:18, crea:6636ae 374d, high:0000, modif:04b3 364d, start:1400 size:000009c8
-OUT3    .RDY attr:20 low:18, crea:1a38ae 374d, high:0000, modif:04b3 364d, start:1900 size:000009c8
-OUT4    .RDY attr:20 low:18, crea:9e39ae 374d, high:0000, modif:04b3 364d, start:1e00 size:000009c8
-
-*/
 }
 
 void _readdi(int fdi, direntry& dirent, int direntofs, bool verb)
 {
-       if (verb)
-        printf("Read direntry at %x", direntofs);
-        lseek(fdi, direntofs, SEEK_SET);
-        if (read(fdi, &dirent, sizeof(direntry)) != sizeof(direntry) || errno != 0)
-          fprintf(stderr, "Read error! errno=%d \n", errno);
-       if (verb)
-        printf(" ok\n");
+    dprintf("Read direntry at %x", direntofs);
+    lseek(fdi, direntofs, SEEK_SET);
+    if (read(fdi, &dirent, sizeof(direntry)) != sizeof(direntry) || errno != 0)
+        fprintf(stderr, "Read error! errno=%d \n", errno);
+    dprintf(" ok\n");
 }
 
 void _writedi(int fdi, direntry& dirent, int direntofs)
 {
-        printf("Updating direntry at %x", direntofs);
-        lseek(fdi, direntofs, SEEK_SET);
-        if (write(fdi, &dirent, sizeof(direntry)) != sizeof(direntry) || errno != 0)
-          fprintf(stderr, "Write error!\n");
-        printf(" ok\n");
+    dprintf("Updating direntry at %x", direntofs);
+    lseek(fdi, direntofs, SEEK_SET);
+    if (write(fdi, &dirent, sizeof(direntry)) != sizeof(direntry) || errno != 0)
+        fprintf(stderr, "Write error!\n");
+    dprintf(" ok\n");
 }
 
-void create_dirent(int direntofs, char *filename, 
+void create_dirent(int direntofs, const char *filename, 
 		   uint16_t start_cluster, uint32_t size,
 		   int fdi, struct bpb33* bpb)
 {
     direntry dirent;
 
-    if (dooverwrite)
+    while(1) 
     {
-       // skip volume label
-       direntofs += sizeof(direntry);
-       write_dirent(&dirent, filename, start_cluster, size);
-       _writedi(fdi, dirent, direntofs);
-
-       direntofs += sizeof(direntry);
-       memset((uint8_t*)&dirent, 0, sizeof(struct direntry));
-       dirent.deName[0] = SLOT_EMPTY;
-       _writedi(fdi, dirent, direntofs);
-       return;
-    }
-
-//TODO:
-	direntofs += sizeof(direntry)*10;
-
-    while(1) {
         _readdi(fdi, dirent, direntofs, true);
 
 	if (dirent.deName[0] == SLOT_EMPTY) {
@@ -754,12 +604,10 @@ void create_dirent(int direntofs, char *filename,
     }
 }
 
-void copyin(char *infilename, char* outfilename,
+void copyin(const char *infilename, const char* outfilename,
 	     int fdi, struct bpb33* bpb)
 {
-//    struct direntry *dirent = (direntry*)NULL;
-int direntofs = 0;
-
+    int direntofs = 0;
 
     FILE *fd;
     uint16_t start_cluster;
@@ -769,14 +617,9 @@ int direntofs = 0;
     direntofs = find_file(outfilename, 0, FIND_FILE, fdi, bpb);
     if (direntofs != 0) {
 	fprintf(stderr, "File %s already exists\n", outfilename);
-//	exit(1);
+	exit(1);
     }
 
-printf("=============== BEFORE\n");
-listfiles(0, fdi, bpb);
-printf("===============\n");
-
-printf("out:%s\n", outfilename);
     /* find the dirent of the directory to put the file in */
     direntofs = find_file(outfilename, 0, FIND_DIR, fdi, bpb);
     if (direntofs == 0) {
@@ -790,259 +633,93 @@ printf("out:%s\n", outfilename);
 	fprintf(stderr, "Can't open file %s to copy data in\n",
 		infilename);
 	exit(1); 
-   }
+    }
 
-//format
-if (doformat)
-{
-    // clear second file record
-    direntry dirent;
-    memset((uint8_t*)&dirent, 0, sizeof(struct direntry));
-    dirent.deName[0] = SLOT_EMPTY;
-    _writedi(fdi, dirent, 16416);
-
-    int total_clusters = bpb->bpbSectors / bpb->bpbSecPerClust;
-    for (int i = 2; i < total_clusters; i++) 
-      set_fat_entry(i, CLUST_FREE, fdi, bpb);
-}
-/*
-  {uint8_t tabbuf[16];
-  lseek(fdi, 0x1015, SEEK_SET);
-  read(fdi, tabbuf, 16);
-  printf("pre-table: ");
-  for (int i=0; i<16; i++)
-    printf("%02x ", tabbuf[i]);
-  printf("\n");}
-*/
-if (docopy)
-{
     /* do the actual copy in*/
     start_cluster = copy_in_file(fd, fdi, bpb, &size);
 
     /* create the directory entry */
     create_dirent(direntofs, outfilename, start_cluster, size, fdi, bpb);
-      set_fat_entry(0, 0xfff, fdi, bpb);
-//    for (int i = 7; i < 20; i++) 
-//      set_fat_entry(i, 0, fdi, bpb);
-
-/*
-printf("=============== AFTER\n");
-listfiles(0, fdi, bpb);
-printf("===============\n");
-*/
-}    
-
-    for (int i = 0; i < 20; i++) 
-      get_fat_entry(i,  fdi, bpb);
-
-if (0)
-{
-
-  {uint8_t tabbuf[16];
-  lseek(fdi, 0x1015, SEEK_SET);
-  read(fdi, tabbuf, 16);
-  printf("post-table: ");
-  for (int i=0; i<16; i++)
-    printf("%02x ", tabbuf[i]);
-  printf("\n");}
-
-    for (int i = 0; i < 20; i++) 
-      get_fat_entry(i, fdi, bpb);
-
-    int offset = cluster_to_addr_i(0xf, fdi, bpb);
-printf("Check for cluster 0x0f at %0x\n", offset);
-unsigned char buffer[128];
-	        lseek(fdi, offset, SEEK_SET);
-        if (read(fdi, buffer, sizeof(buffer)) != sizeof(buffer) || errno != 0)
-          fprintf(stderr, "read error\n");
-
-  for (int i =0; i<50; i++)
-    printf("%c", buffer[i]);
-  printf("\n");
-}
-
     fclose(fd);
 }
 
-int is_end_of_file(uint16_t cluster) {
-    if (cluster >= (FAT12_MASK & CLUST_EOFS)
-	&& cluster <= (FAT12_MASK & CLUST_EOFE)) {
-	return true;
-    } else 
-	return false;
-}
-bool ilnum(char c)
+bool checkCompatibility(int fdi, bpb33* bpb)
 {
-  return isalnum(c) || c == ' ' || c == 0x0d || c== 0x0a || c == ':';
-}
-void copy_out_file(uint16_t cluster, uint32_t bytes_remaining,
-		   int fdi, struct bpb33* bpb)
-{
-    int total_clusters, clust_size;
-
-    clust_size = bpb->bpbSecPerClust * bpb->bpbBytesPerSec;
-    total_clusters = bpb->bpbSectors / bpb->bpbSecPerClust;
-    if (cluster == 0) {
-	fprintf(stderr, "Bad file termination\n");
-	return;
-    } else if (is_end_of_file(cluster)) {
-	return;	
-    } else if (cluster > total_clusters) {
-	abort(); /* this shouldn't be able to happen */
+    if (bpb->bpbBytesPerSec != 512 || bpb->bpbSecPerClust != 1 || bpb->bpbSectors != 4096)
+    {
+      fprintf(stderr, "Incompatible device\n");
+      return false;
     }
-
-    /* map the cluster number to the data location */
-    int offset = cluster_to_addr_i(cluster, fdi, bpb);
-    printf("\nCluster %x at %x ===============\n", cluster, offset);
-    if (bytes_remaining <= clust_size) {
-	/* this is the last cluster */
-
-	unsigned char buffer[512] = {0};
-	lseek(fdi, offset, SEEK_SET);
-        if (read(fdi, buffer, bytes_remaining) != bytes_remaining || errno != 0)
-          fprintf(stderr, "read error\n");
-        for (int i=0; i<bytes_remaining; i++)
-          printf("%c", ilnum(buffer[i]) ? buffer[i] : '?');
-    printf("\n Dump finished===============\n\n\n");
-    } else {                                   
-	/* more clusters after this one */
-
-	unsigned char buffer[512];
-	lseek(fdi, offset, SEEK_SET);
-        if (read(fdi, buffer, 512) != 512 || errno != 0)
-          fprintf(stderr, "read error\n");
-        for (int i=0; i<512; i++)
-          printf("%c", ilnum(buffer[i]) ? buffer[i] : '?');
-
-	/* recurse, continuing to copy */
-	copy_out_file(get_fat_entry(cluster, fdi, bpb), 
-		      bytes_remaining - clust_size, fdi, bpb);
-    }
-    return;
+    int offset = cluster_to_addr_i(0, fdi, bpb);
+    direntry dirent; 
+    _readdi(fdi, dirent, offset, false);
+    return memcmp(dirent.deName, "DFU V", 5) == 0;
 }
-
-
 
 int main(int argc, const char * argv[]) 
 {
-    int fd = open("/dev/disk2", O_RDWR);
-//fcntl(fd, F_NOCACHE, 1);
-    printf("descriptor: %d err:%d\n", fd, errno);
-    if (fd<0)
+    if (argc < 3)
     {
-      fprintf(stderr, "Failed to open disk\n");
+      printf("Usage:\n");
+      printf("\n");
+      printf("  sudo ./fat12upload /dev/disk2 info\n");
+      printf("  sudo ./fat12upload /dev/disk2 ls\n");
+      printf("  sudo ./fat12upload /dev/disk2 cp from.xyz to.xyz -1\n");
       return 1;
     }
 
-if (argc==2)
-{
-docopy = false;
-}
-if (argc==3)
-{
- __target =atoi(argv[2]);
-printf("target = %x\n", __target);
-}
+    int fd = open(argv[1], O_RDWR);
+    if (fd<0)
+    {
+      fprintf(stderr, "Failed to open disk '%s', errno:%d\n", argv[1], errno);
+      return 1;
+    }
 
     bpb33* bpb = 0;
-
     bpb = check_bootsector(fd);
-    if (bpb)
-//      copyin((char*)"output.hex", (char*)"output02.hex", fd, bpb);
-//      copyin((char*)"output.hex", (char*)"zerox.err", fd, bpb);
-      copyin((char*)"output.hex", (char*)"nieco.hex", fd, bpb);
-//    fsync(fd);
 
-//    close(fd);
-if (1 && docopy)
-{
-//    fd = open("/dev/disk2", O_RDWR);
-    printf("Dumping....\n");
-    copy_out_file(topclust, 0x733, fd, bpb);
+    if (strcmp(argv[2], "info") == 0)
+    {
+       printf("Device: %s\n", argv[1]);
+       printf("Bytes per sector: %d\n", bpb->bpbBytesPerSec);
+       printf("Sectors per cluster: %d\n", bpb->bpbSecPerClust);
+       printf("Reserved sectors: %d\n", bpb->bpbResSectors);
+       printf("Number of root dir entries: %d\n", bpb->bpbRootDirEnts);
+       printf("Total number of sectors: %d\n", bpb->bpbSectors);
+       printf("Number of sectors per FAT: %d\n", bpb->bpbFATsecs);
+       printf("Number of hidden sectors: %d\n", bpb->bpbHiddenSecs);
+    } else
+    if (strcmp(argv[2], "ls") == 0)
+    {
+      listfiles(0, fd, bpb);
+    } else
+    if (strcmp(argv[2], "cp") == 0 && argc == 4)
+    { 
+      if (checkCompatibility(fd, bpb))
+        copyin(argv[3], argv[3], fd, bpb);
+    } else
+    if (strcmp(argv[2], "cp") == 0 && argc == 5)
+    { 
+      if (checkCompatibility(fd, bpb))
+        copyin(argv[3], argv[4], fd, bpb);
+    } else
+    if (strcmp(argv[2], "cp") == 0 && argc == 6)
+    { 
+      __target = atoi(argv[5]);
+      if (checkCompatibility(fd, bpb))
+        copyin(argv[3], argv[4], fd, bpb);
+    } else
+    if (strcmp(argv[2], "fat") == 0)
+    { 
+      for (int i=0; i<32; i++)
+        get_fat_entry(i,  fd, bpb);
+    } else
+    {
+      fprintf(stderr, "Noting to do.\n");
+    }
 
-}
     close(fd);
+    free(bpb);
 
-    fd = open("/dev/disk2", O_RDWR);
-
-if (1 && docopy)
-{
-    printf("Dumping. after close...\n");
-    copy_out_file(topclust, 0x733, fd, bpb);
-}
-//    printf("Dumping....\n");
-//    copy_out_file(0x0f, 0x87b, fd, bpb);
-
-            unsigned char verify[512];
-
-int vo = cluster_to_addr_i(topclust, fd, bpb);
-printf("at %x:\n", vo);
-            lseek(fd, vo, SEEK_SET);
-            if (read(fd, verify, 512) != 512 || errno != 0)
-              fprintf(stderr, "Read error!\n");
-  for (int k=0; k<512; k++)
-    printf("%c", ilnum(verify[k]) ? verify[k] : '?');
-  printf("\n");
-
-close(fd);
-
-/*
-int targetOfs = 0x9a00;
-for (int i=0; i<10; i++)
-{
-printf("--------pass %d--------\n",i);
-
-    int fd = open("/dev/disk2", O_RDWR);
-
-            unsigned char verify[256];
-
-for(int j=0x9a00; j<0x9a00+16*0x100; j+=0x100)
-{
-            printf("p %d, at %x...", i, j);
-
-            lseek(fd, j, SEEK_SET);
-            if (read(fd, verify, 256) != 256 || errno != 0)
-              fprintf(stderr, "Read error!\n");
-  for (int k=0; k<20; k++)
-    printf("%c", verify[k]);
-  printf("\n");
-}
-
-
- char buffer[32];// = "Blbosticka prepisujem!";
-sprintf(buffer, "Blbosticka %d...", i);
-  int rewro = 0x9a00+i*256+ 0x0400;
-  printf("Rewriting at %x message: %s\n", rewro, buffer);
-	        lseek(fd, rewro, SEEK_SET);
-        if (write(fd, buffer, sizeof(buffer)) != sizeof(buffer) || errno != 0)
-          fprintf(stderr, "write error\n");
-printf("\n");
-//  usleep(1000);
-    close(fd);
-//usleep(1000*50);
-}
-*/
     return 0;
 }
-
-
-/*
-
-Listing files at cluster 0
-Root dir at 4000
-DFU V3_6.1_D attr:08 low:0, crea:000000 0000, high:0000, modif:188d dd40, start:0000 size:00000000
-B Inf.o      attr:0f low:0, crea:727200 6d00, high:7400, modif:6900 6f00, start:0000 size:0000006e
-Syst.e       attr:0f low:0, crea:726d00 2000, high:6f00, modif:6c00 7500, start:0000 size:0065006d
-SYSTEM~1.    attr:16 low:0, crea:5e6370 5d45, high:0000, modif:6470 5d45, start:0200 size:00000000
-A._.T.r      attr:0f low:0, crea:7f6100 7300, high:6500, modif:7300 0000, start:0000 size:ffffffff
-~1      .TRA attr:22 low:0, crea:4a8a5a 7945, high:0000, modif:8a5a 7945, start:0500 size:00001000
-?RASHE~1.EFM attr:12 low:0, crea:478a5a 7945, high:0000, modif:8a5a 7945, start:0400 size:00000000
-A.Tra.s      attr:0f low:0, crea:256800 6500, high:0000, modif:ffff ffff, start:0000 size:ffffffff
-TRASHE~1.    attr:12 low:0, crea:478a5a 7945, high:0000, modif:8a5a 7945, start:0400 size:00000000
-A.fse.v      attr:0f low:0, crea:da6500 6e00, high:7300, modif:6400 0000, start:0000 size:ffffffff
-FSEVEN~1.    attr:12 low:0, crea:4d8a5a 7945, high:0000, modif:8a5a 7945, start:0d00 size:00000000
-TEST    .RDY attr:20 low:0, crea:c3c4b1 374d, high:0000, modif:97b2 374d, start:0f00 size:0000006b
-
-
-
-*/

@@ -18,3 +18,5 @@ To use this tool:
 
 To flash firmware, place your build into file called "output.hex" and call "sudo /.fat12upload a 17",
 to list the filesystem call "sudo /.fat12upload a". The device is expected to be at path /dev/disk2.
+
+Problems: currently it can only upload files smaller than 3584 byes (7 sectors)

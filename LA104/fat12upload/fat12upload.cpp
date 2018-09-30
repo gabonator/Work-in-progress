@@ -1,21 +1,16 @@
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
 #include <stdio.h>                     
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
 #include <ctype.h>
-
 #include <strings.h>
-#include "bpb.h"
-#include "bootsect.h"
-#include "fat.h"
-#include "direntry.h"
+
+#include "fat12structs.h"
 
 //#define dprintf(...)
 #define dprintf printf
@@ -136,6 +131,11 @@ void set_fat_entry(uint16_t clusternum, uint16_t value,
     }
 
     lseek(fdi, offset, SEEK_SET);
+
+    if (write(fdi, sector, 3) != 3 || errno != 0)
+      fprintf(stderr, "Write error!\n");
+
+    lseek(fdi, offset + 0x1800, SEEK_SET); // fat 2
 
     if (write(fdi, sector, 3) != 3 || errno != 0)
       fprintf(stderr, "Write error!\n");
@@ -276,7 +276,7 @@ void listfiles(uint16_t cluster, int fd, struct bpb33* bpb)
 		return;
 	    }
 
-  printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
+  printf("%c%c%c%c%c%c%c%c.%c%c%c attr:%02x low:%x, crea:%02x%02x%02x %02x%02x, high:%02x%02x, modif:%02x%02x %02x%02x, a:%02x%02x, start:%02x%02x size:%02x%02x%02x%02x\n",
   dirent.deName[0],  dirent.deName[1],  dirent.deName[2],  dirent.deName[3],
   dirent.deName[4],  dirent.deName[5],  dirent.deName[6],  dirent.deName[7],
   dirent.deExtension[0],  dirent.deExtension[1],  dirent.deExtension[2],
@@ -285,6 +285,7 @@ void listfiles(uint16_t cluster, int fd, struct bpb33* bpb)
   dirent.deCHundredth, dirent.deCTime[0], dirent.deCTime[1], dirent.deCDate[0], dirent.deCDate[1],
   dirent.deHighClust[0], dirent.deHighClust[1],
   dirent.deMTime[0], dirent.deMTime[1],  dirent.deMDate[0], dirent.deMDate[1],
+  dirent.deADate[0], dirent.deADate[1],
   dirent.deStartCluster[1], dirent.deStartCluster[0],
   dirent.deFileSize[3], dirent.deFileSize[2], dirent.deFileSize[1], dirent.deFileSize[0]);
 
@@ -422,11 +423,13 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
     size_t bytes;
     uint16_t start_cluster = 0;
     uint16_t prev_cluster = 0;
-    int lastWritten = __target;
+    int lastWritten = __target-1;
 
     clust_size = bpb->bpbSecPerClust * bpb->bpbBytesPerSec;
     total_clusters = bpb->bpbSectors / bpb->bpbSecPerClust;
     buf = (uint8_t*)malloc(clust_size);
+
+    *size = 0;
 
     while(1) 
     {
@@ -440,7 +443,7 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
 	    /* find a free cluster */
 
 	    for (i = 2; i < total_clusters; i++) {
-	        if (lastWritten != -1)
+	        if (__target != -1)
                 {
                   if (i > lastWritten)
                   {
@@ -466,13 +469,15 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
 	       the dirent */
 	    if (start_cluster == 0) {
 		start_cluster = i;
+          	set_fat_entry(i, FAT12_MASK&CLUST_EOFE, fdi, bpb);
+
 	    } else {
 		/* link the previous cluster to this one in the FAT */
 		assert(prev_cluster != 0);
+    	        set_fat_entry(i, FAT12_MASK&CLUST_EOFE, fdi, bpb);
 		set_fat_entry(prev_cluster, i, fdi, bpb);
 	    }
 	    /* make sure we've recorded this cluster as used */
-	    set_fat_entry(i, FAT12_MASK&CLUST_EOFS, fdi, bpb);
 
 	    /* copy the data into the cluster */
             assert(clust_size == 512);
@@ -480,12 +485,12 @@ uint16_t copy_in_file(FILE* fd, int fdi, struct bpb33* bpb,
             int targetOfs = cluster_to_addr_i(i, fdi, bpb);
 
             dprintf("Writing %d bytes cluster %x at %x... ", clust_size, i, targetOfs);
-
-            lseek(fdi, targetOfs+0*0x400, SEEK_SET); // WTF?????????
+            lseek(fdi, targetOfs, SEEK_SET);
             if (write(fdi, buf, clust_size) != clust_size || errno != 0)
               fprintf(stderr, "Write error!\n");
+
             dprintf(" ok\n");
-	}
+ 	}
 
 	if (bytes < clust_size) {
 	    /* We didn't real a full cluster, so we either got a read
@@ -547,6 +552,10 @@ void write_dirent(struct direntry *dirent, const char *filename,
     dirent->deAttributes = ATTR_ARCHIVE;
     putushort(dirent->deStartCluster, start_cluster);
     putulong(dirent->deFileSize, size);
+
+    dirent->deCHundredth = 0x16; dirent->deCTime[0] = 0xcf; dirent->deCTime[1] = 0x96; dirent->deCDate[0] = 0x3c; dirent->deCDate[1] = 0x4d;
+    dirent->deMTime[0] = 0xcb; dirent->deMTime[1] = 0x96;  dirent->deMDate[0] = 0x3c; dirent->deMDate[1] = 0x4d;
+    dirent->deADate[0] = 0x3c; dirent->deADate[1] = 0x4d;
 }
 
 void _readdi(int fdi, direntry& dirent, int direntofs, bool verb)
@@ -593,7 +602,7 @@ void create_dirent(int direntofs, const char *filename,
 
 	    return;
 	}
-	if (dirent.deName[0] == SLOT_DELETED) {
+	if (0 && dirent.deName[0] == SLOT_DELETED) {
 	    /* we found a deleted entry - we can just overwrite it */
 	    write_dirent(&dirent, filename, start_cluster, size);
 	    _writedi(fdi, dirent, direntofs);
@@ -634,12 +643,19 @@ void copyin(const char *infilename, const char* outfilename,
 		infilename);
 	exit(1); 
     }
-
+/*
+    fseek(fd, 0, SEEK_END);
+    size = ftell(fd);
+    rewind(fd);
+    start_cluster = __target;
+    set_fat_entry(start_cluster, FAT12_MASK&CLUST_EOFE, fdi, bpb);
+*/
     /* do the actual copy in*/
     start_cluster = copy_in_file(fd, fdi, bpb, &size);
 
     /* create the directory entry */
     create_dirent(direntofs, outfilename, start_cluster, size, fdi, bpb);
+
     fclose(fd);
 }
 
@@ -669,6 +685,9 @@ int main(int argc, const char * argv[])
     }
 
     int fd = open(argv[1], O_RDWR);
+    fcntl(fd, F_NOCACHE, 1);
+//    setvbuf(fileno(fd), NULL, _IONBF, 0);
+
     if (fd<0)
     {
       fprintf(stderr, "Failed to open disk '%s', errno:%d\n", argv[1], errno);
@@ -691,7 +710,10 @@ int main(int argc, const char * argv[])
     } else
     if (strcmp(argv[2], "ls") == 0)
     {
-      listfiles(0, fd, bpb);
+      int root = 0;
+      if (argc == 4)
+        root = atoi(argv[3]);
+      listfiles(root, fd, bpb);
     } else
     if (strcmp(argv[2], "cp") == 0 && argc == 4)
     { 
@@ -711,11 +733,52 @@ int main(int argc, const char * argv[])
     } else
     if (strcmp(argv[2], "fat") == 0)
     { 
-      for (int i=0; i<32; i++)
-        get_fat_entry(i,  fd, bpb);
+      int n = 32;
+      if (argc == 4)
+        n = atoi(argv[3]);
+      for (int i=0; i<n; i++)
+        printf("cluster 0x%x: %0x\n", i, get_fat_entry(i, fd, bpb));
+    } else
+    if (strcmp(argv[2], "read") == 0 && argc == 4)
+    {
+      int cluster = atoi(argv[3]);
+ 
+      int offset = cluster_to_addr_i(cluster, fd, bpb);
+      printf("Reading cluster 0x%x at 0x%0x:\n", cluster, offset);
+      lseek(fd, offset, SEEK_SET);
+
+      unsigned char sector[512] = {0};
+      if (read(fd, sector, 512) != 512 || errno != 0)
+      {
+          fprintf(stderr, "Read error!\n");
+          return NULL;
+      }
+
+      for (int i=0; i<512; i++)
+      {
+        char c = sector[i];
+        printf("%c", (isprint(c) || c == 0x0d || c == 0x0a) ? c : '?');
+      }
+      printf("\n");
+    } else 
+    if (strcmp(argv[2], "clfat") == 0)
+    {
+      int total_clusters = bpb->bpbSectors / bpb->bpbSecPerClust;
+      for (int i=1; i<total_clusters; i++)
+        set_fat_entry(i, 0, fd, bpb);
+    } else
+    if (strcmp(argv[2], "cldir") == 0)
+    {
+      direntry dirent; 
+      memset((uint8_t*)&dirent, 0, sizeof(struct direntry));
+      dirent.deName[0] = SLOT_EMPTY;
+
+      int root = cluster_to_addr_i(0, fd, bpb);
+      for (int i=1; i<20; i++)
+	_writedi(fd, dirent, root + i*sizeof(direntry));
     } else
     {
-      fprintf(stderr, "Noting to do.\n");
+      fprintf(stderr, "Nothing to do.\n");
     }
 
     close(fd);

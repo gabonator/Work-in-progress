@@ -10,13 +10,24 @@ To use this tool:
     * run 'sudo vifs'
     * add similar line as this 'UUID=0C6BB56F-CEA7-3564-A81A-FB98D5C3BC33 none msdos rw,noauto'
     * run 'sudo automount -vc'
-    * run 'fat12upload /dev/disk2 info' to verify if the path is correct (TBD)
-    * run 'fat12upload /dev/disk2 cp myfile.hex myfile.hex' (TBD)
-    * if it does not work, try 'fat12upload /dev/disk2 format' and then copy again (TBD)
-    * or try 'fat12upload /dev/disk2 ovr myfile.hex myfile.hex' (TBD)
+    * run 'sudo ./fat12upload /dev/disk2 cp myfile.hex myfile.hex 18' to upload the file starting at cluster 18
 
+Calling this utility forces creation of new file at specified cluster. After writing all data clusters,
+directory entry is added to root folder.
 
-To flash firmware, place your build into file called "output.hex" and call "sudo /.fat12upload a 17",
-to list the filesystem call "sudo /.fat12upload a". The device is expected to be at path /dev/disk2.
+Other methods:
+    * run 'sudo ./fat12upload /dev/disk2 info' to verify if the device path is correct
+    * run 'sudo ./fat12upload /dev/disk2 cp myfile.hex myfile.hex'
+    * run 'sudo ./fat12upload /dev/disk2 cp myfile.hex myfile.hex 18' to upload the file starting at cluster 18
+    * run 'sudo ./fat12upload /dev/disk2 fat' to show fat table
+    * run 'sudo ./fat12upload /dev/disk2 clfat' to clear fat table
+    * run 'sudo ./fat12upload /dev/disk2 ls' to list root folder
+    * run 'sudo ./fat12upload /dev/disk2 ls 2' to list folder at cluster 2
+    * run 'sudo ./fat12upload /dev/disk2 cldir' to clear root folder
+    * run 'sudo ./fat12upload /dev/disk2 read 16' to show contents of sector 16 (0x10)
 
-Problems: currently it can only upload files smaller than 3584 byes (7 sectors)
+Problems: 
+    * currently it can only upload files smaller than 3584 byes (7 sectors) for some unknown reason
+
+Credits:
+    * based on this project: https://github.com/qihaiyan/fat12.git

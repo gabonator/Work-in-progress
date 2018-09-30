@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "Disk.h"
-#include "Bios.h"
+#include "AppBios.h"
 #include "Ext_Flash.h"
 #include "stm32f10x_spi.h"
 #include "stm32f10x_flash.h"

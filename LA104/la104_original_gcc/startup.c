@@ -91,7 +91,6 @@ void WEAK DMA2_Channel2_IRQHandler(void);
 void WEAK DMA2_Channel3_IRQHandler(void);
 void WEAK DMA2_Channel4_5_IRQHandler(void);
 
-void WEAK SysTickHandler(void);
 void WEAK USB_HP_CAN_TX_IRQHandler(void);
 void WEAK USB_LP_CAN_RX0_IRQHandler(void);
 void WEAK CAN_RX1_IRQHandler(void);
@@ -110,7 +109,7 @@ void (* const g_pfnVectors[])(void) = {
     (intfunc)((unsigned long)&_estack), /* The stack pointer after relocation */
 Reset_Handler, NMIException, HardFaultException,
 MemManageException, BusFaultException, UsageFaultException, 0, 0,
-0, 0, SVCHandler, DebugMonitor, 0, PendSVC, SysTickHandler,
+0, 0, SVCHandler, DebugMonitor, 0, PendSVC, SysTick_Handler,
 WWDG_IRQHandler, PVD_IRQHandler, TAMPER_IRQHandler, RTC_IRQHandler,
 FLASH_IRQHandler, RCC_IRQHandler, EXTI0_IRQHandler,
 EXTI1_IRQHandler, EXTI2_IRQHandler, EXTI3_IRQHandler,
@@ -164,7 +163,7 @@ void Reset_Handler(void) {
 #pragma weak SVC_Handler		= Default_Handler
 #pragma weak DebugMon_Handler		= Default_Handler
 #pragma weak PendSV_Handler		= Default_Handler
-//#pragma weak SysTick_Handler		= Default_Handler
+//#pragma weak SysTick_Handler		= Default_Handler // TODO!
 #pragma weak WWDG_IRQHandler		= Default_Handler
 #pragma weak PVD_IRQHandler		= Default_Handler
 #pragma weak TAMPER_IRQHandler		= Default_Handler
@@ -226,7 +225,6 @@ void Reset_Handler(void) {
 #pragma weak DMA2_Channel3_IRQHandler	= Default_Handler
 #pragma weak DMA2_Channel4_5_IRQHandler	= Default_Handler
 
-#pragma weak SysTickHandler             = Dummy_Handler
 #pragma weak USB_HP_CAN_TX_IRQHandler   = Dummy_Handler
 #pragma weak USB_LP_CAN_RX0_IRQHandler  = Dummy_Handler
 #pragma weak CAN_RX1_IRQHandler         = Dummy_Handler

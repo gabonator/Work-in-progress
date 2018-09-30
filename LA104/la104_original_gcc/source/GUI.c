@@ -4,7 +4,7 @@
  * Author      : 
  * History     :
 *******************************************************************************/
-#include "Bios.h"
+#include "AppBios.h"
 #include "GUI.h"
 #include "Font.h"
 #include "Interrupt.h"

@@ -6,7 +6,7 @@
 *******************************************************************************/
 #include <string.h>
 #include "FAT12.h"
-#include "Bios.h"
+#include "AppBios.h"
 #include "Func.h"
 #include "Ext_Flash.h"
 

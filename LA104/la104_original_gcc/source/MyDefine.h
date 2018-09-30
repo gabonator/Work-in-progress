@@ -7,7 +7,7 @@ typedef uint64_t u64;
 #include "STM32F10x.h"
 #include <string.h>
 #include "Analyze.h"
-#include "Bios.h"
+#include "AppBios.h"
 #include "Ctrl.h"
 #include "Disk.h"
 #include "Ext_Flash.h"

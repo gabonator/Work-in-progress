@@ -13,6 +13,9 @@ u16  BeepCnt, LastEnc, LastKey, KeyHold, gKeyActv, Counter, gmS;
 u32  VbtySum = 4200 * 64;
 vu16 Dly_mS;
 
+// TODO!
+
+#if 0
 void NMIException(void)
 { }
 
@@ -47,6 +50,7 @@ void SVCHandler(void)
 
 void PendSVC(void)
 { }
+#endif
 
 /*******************************************************************************
  * FunctionName : SysTick_Handler
@@ -55,43 +59,46 @@ void PendSVC(void)
 void SysTick_Handler(void)
 {
     u16 InputSt, EncdInp, EncActP, EncActN;
+for (int q=0; q<10; q++){
     if(gFullmS > 0) gFullmS--;
     if(Dly_mS > 0) Dly_mS--;
     gmS++;
+}
     Counter++;
-    if(Counter % 2 == 0)                                  // 编码器采样周期 2mS
+    if(Counter % 2 == 0)                                  // 
     {
-        InputSt = __Bios(KEYnDEV, BITMAP);                // 读入按键及编码器状态
+        InputSt = __Bios(KEYnDEV, BITMAP);                // 
         EncdInp = InputSt & ENCDBIT;
-        EncActP = EncdInp & ~LastEnc;                     // 编码器输入正跳变
-        EncActN = ~EncdInp & LastEnc;                     // 编码器输入负跳变
+        EncActP = EncdInp & ~LastEnc;                     // 
+        EncActN = ~EncdInp & LastEnc;                     // 
         LastEnc = EncdInp;
         if(EncActN & ENC1a) gKeyActv |= (EncdInp & ENC1b) ? ENCD_1p : ENCD_1n;
         if(EncActP & ENC1b) gKeyActv |= (EncdInp & ENC1a) ? ENCD_1p : ENCD_1n;
         if(EncActN & ENC2a) gKeyActv |= (EncdInp & ENC2b) ? ENCD_2n : ENCD_2p;
         if(EncActP & ENC2b) gKeyActv |= (EncdInp & ENC2a) ? ENCD_2n : ENCD_2p;
-        if(Counter % 32 == 0)                              // 按键采样周期 32mS
+        if(Counter % 32 == 0)                              // 
         {
-            KeyHold  = InputSt & KEYSBIT;                  // 识别按键保持状态
-            gKeyActv |= (~KeyHold & LastKey) << 4;         // 识别按键按下跳变
-            gKeyActv |= (KeyHold & ~LastKey) << 8;         // 识别按键释放跳
+            KeyHold  = InputSt & KEYSBIT;                  // 识
+            gKeyActv |= (~KeyHold & LastKey) << 4;         // 识
+            gKeyActv |= (KeyHold & ~LastKey) << 8;         // 识
             LastKey  = KeyHold;
 
-            VbtySum += __Bios(PWRCTRL, VBTYmV) - VbtySum / 64; // VBAT 平滑滤波
+            VbtySum += __Bios(PWRCTRL, VBTYmV) - VbtySum / 64; // VBAT 平
             gBatVol = GetBatteryVol();
         }
         if(BeepCnt > 1) BeepCnt -= 2;
-        else  __Bios(BUZZDEV, DSBL);                       // 关闭蜂鸣器
+        else  __Bios(BUZZDEV, DSBL);                       // 
     }
     if(Counter > 5000) Counter = 0;
     if(gmS >= 1000)
     {
         gmS = 0;
-        if((gItemParam[STANDBY] != 0) && (gStandbyCnt > 0)) gStandbyCnt--;   // 待机记时
-        if((gItemParam[POWEROFF] != 0) && (gAutoPwrCnt > 0)) gAutoPwrCnt--;  // 自动关机记时
+        if((gItemParam[STANDBY] != 0) && (gStandbyCnt > 0)) gStandbyCnt--;   // 
+        if((gItemParam[POWEROFF] != 0) && (gAutoPwrCnt > 0)) gAutoPwrCnt--;  // 
         gUSB_Vol = Get_USB_Vol();
         gBatFlag = 1;
     }
+
 }
 
 /*******************************************************************************
@@ -102,11 +109,11 @@ void SysTick_Handler(void)
 void Beep_mS(u32 mS)
 {
     BeepCnt = mS;
-    __Bios(BUZZDEV, ENBL);                              // 打开蜂鸣器
-    __Bios(BUZZDEV, gItemParam[VOLUME] * 10);           // 蜂鸣器音量
+    __Bios(BUZZDEV, ENBL);                              // 
+    __Bios(BUZZDEV, gItemParam[VOLUME] * 10);           // 
 }
 
-
+#if 0
 void WWDG_IRQHandler(void)
 { }
 
@@ -292,3 +299,4 @@ void DMA2_Channel4_5_IRQHandler(void)
 
 
 /********************************* END OF FILE ********************************/
+#endif

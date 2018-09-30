@@ -9,7 +9,7 @@ extern vu16 Dly_mS;
 
 void Beep_mS(u32 mS);
 
-
+/*
 void NMIException(void);
 void HardFaultException(void);
 void MemManageException(void);
@@ -80,7 +80,7 @@ void DMA2_Channel2_IRQHandler(void);
 void DMA2_Channel3_IRQHandler(void);
 void DMA2_Channel4_5_IRQHandler(void);
 
-
+*/
 
 #endif
 /********************************* END OF FILE ********************************/

@@ -1,7 +1,6 @@
 #include "Menu.h"
 #include "MyDefine.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 u8   SmallWin[SW_WIDTH];

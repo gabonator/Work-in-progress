@@ -13,9 +13,6 @@ u16  BeepCnt, LastEnc, LastKey, KeyHold, gKeyActv, Counter, gmS;
 u32  VbtySum = 4200 * 64;
 vu16 Dly_mS;
 
-// TODO!
-
-#if 0
 void NMIException(void)
 { }
 
@@ -50,7 +47,6 @@ void SVCHandler(void)
 
 void PendSVC(void)
 { }
-#endif
 
 /*******************************************************************************
  * FunctionName : SysTick_Handler
@@ -59,11 +55,9 @@ void PendSVC(void)
 void SysTick_Handler(void)
 {
     u16 InputSt, EncdInp, EncActP, EncActN;
-for (int q=0; q<10; q++){
     if(gFullmS > 0) gFullmS--;
     if(Dly_mS > 0) Dly_mS--;
     gmS++;
-}
     Counter++;
     if(Counter % 2 == 0)                                  // 
     {
@@ -113,7 +107,6 @@ void Beep_mS(u32 mS)
     __Bios(BUZZDEV, gItemParam[VOLUME] * 10);           // 
 }
 
-#if 0
 void WWDG_IRQHandler(void)
 { }
 
@@ -296,7 +289,4 @@ void DMA2_Channel3_IRQHandler(void)
 void DMA2_Channel4_5_IRQHandler(void)
 { }
 
-
-
 /********************************* END OF FILE ********************************/
-#endif

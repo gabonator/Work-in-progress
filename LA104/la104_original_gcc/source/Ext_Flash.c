@@ -5,7 +5,7 @@
  * History     :
 *******************************************************************************/
 #include <string.h>
-#include <stdio.h>
+#include "MyDefine.h"
 #include "Disk.h"
 #include "AppBios.h"
 #include "Ext_Flash.h"

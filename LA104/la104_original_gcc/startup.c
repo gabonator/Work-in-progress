@@ -1,9 +1,3 @@
-//#include "stm32f10x_lib.h"
-
-typedef void( *const intfunc )( void );
-
-#define WEAK __attribute__ ((weak))
-
 extern unsigned long _etext;
 extern unsigned long _sidata;
 extern unsigned long _sdata;
@@ -11,14 +5,51 @@ extern unsigned long _edata;
 extern unsigned long _sbss;
 extern unsigned long _ebss;
 extern unsigned long _estack;
-
-void Reset_Handler(void) __attribute__((__interrupt__));
-void __Init_Data(void);
-void Default_Handler(void);
-
 extern int main(void);
-extern void __libc_init_array(void);
 
+void __Init_Data(void) {
+	unsigned long *src, *dst;
+	/* copy the data segment into ram */
+
+/*
+
+  TODO: HUGE NOTICE: WTF!!!! I dont understand what are the 8 bytes at the beginning of _sidata!!!!!!
+  It just need to be skipped to work
+
+*/
+	src = &_sidata+2; 
+	dst = &_sdata;
+	if (src != dst)
+		while(dst < &_edata)
+			*(dst++) = *(src++);
+
+	/* zero the bss segment */
+	dst = &_sbss;
+	while(dst < &_ebss)
+		*(dst++) = 0;
+}
+
+void Reset_Handler(void) 
+{
+	/* Initialize data and bss */
+	__Init_Data();
+	main();
+	while(1) {}
+}
+
+void Dummy_Handler(void)
+{
+}
+
+void Default_Handler(void) 
+{
+  while (1) {}
+}
+
+
+#define WEAK __attribute__ ((weak))
+
+// TODO: ambigous names!
 void WEAK NMI_Handler(void);
 void WEAK HardFault_Handler(void);
 void WEAK MemManage_Handler(void);
@@ -29,6 +60,16 @@ void WEAK SVC_Handler(void);
 void WEAK DebugMon_Handler(void);
 void WEAK PendSV_Handler(void);
 void WEAK SysTick_Handler(void);
+
+// TODO: ambigous names!
+void WEAK DebugMonitor(void);
+void WEAK SVCHandler(void);
+void WEAK PendSVC(void);
+void WEAK NMIException(void);
+void WEAK HardFaultException(void);
+void WEAK MemManageException(void);
+void WEAK BusFaultException(void);
+void WEAK UsageFaultException(void);
 
 void WEAK WWDG_IRQHandler(void);
 void WEAK PVD_IRQHandler(void);
@@ -50,7 +91,7 @@ void WEAK DMA1_Channel6_IRQHandler(void);
 void WEAK DMA1_Channel7_IRQHandler(void);
 void WEAK ADC1_2_IRQHandler(void);
 void WEAK USB_HP_CAN1_TX_IRQHandler(void);
-void WEAK USB_LP_CAN1_RX0_IRQHandler(void);
+void WEAK USB_LP_CAN1_RX0_IRQHandler(void);  
 void WEAK CAN1_RX1_IRQHandler(void);
 void WEAK CAN1_SCE_IRQHandler(void);
 void WEAK EXTI9_5_IRQHandler(void);
@@ -91,19 +132,8 @@ void WEAK DMA2_Channel2_IRQHandler(void);
 void WEAK DMA2_Channel3_IRQHandler(void);
 void WEAK DMA2_Channel4_5_IRQHandler(void);
 
-void WEAK USB_HP_CAN_TX_IRQHandler(void);
-void WEAK USB_LP_CAN_RX0_IRQHandler(void);
-void WEAK CAN_RX1_IRQHandler(void);
-void WEAK CAN_SCE_IRQHandler(void);
-void WEAK DebugMonitor(void);
-void WEAK SVCHandler(void);
-void WEAK PendSVC(void);
-void WEAK NMIException(void);
-void WEAK HardFaultException(void);
-void WEAK MemManageException(void);
-void WEAK BusFaultException(void);
-void WEAK UsageFaultException(void);
 
+typedef void( *const intfunc )( void );
 __attribute__ ((section(".isr_vectors")))
 void (* const g_pfnVectors[])(void) = {
     (intfunc)((unsigned long)&_estack), /* The stack pointer after relocation */
@@ -117,8 +147,8 @@ EXTI4_IRQHandler, DMA1_Channel1_IRQHandler,
 DMA1_Channel2_IRQHandler, DMA1_Channel3_IRQHandler,
 DMA1_Channel4_IRQHandler, DMA1_Channel5_IRQHandler,
 DMA1_Channel6_IRQHandler, DMA1_Channel7_IRQHandler,
-ADC1_2_IRQHandler, USB_HP_CAN_TX_IRQHandler,
-USB_LP_CAN_RX0_IRQHandler, CAN_RX1_IRQHandler, CAN_SCE_IRQHandler,
+ADC1_2_IRQHandler, USB_HP_CAN1_TX_IRQHandler,
+USB_LP_CAN1_RX0_IRQHandler, CAN1_RX1_IRQHandler, CAN1_SCE_IRQHandler,
 EXTI9_5_IRQHandler, TIM1_BRK_IRQHandler, TIM1_UP_IRQHandler,
 TIM1_TRG_COM_IRQHandler, TIM1_CC_IRQHandler, TIM2_IRQHandler,
 TIM3_IRQHandler, TIM4_IRQHandler, I2C1_EV_IRQHandler,
@@ -134,28 +164,7 @@ DMA2_Channel2_IRQHandler, DMA2_Channel3_IRQHandler,
 DMA2_Channel4_5_IRQHandler
 };
 
-void __Init_Data(void) {
-	unsigned long *src, *dst;
-	/* copy the data segment into ram */
-	src = &_sidata;
-	dst = &_sdata;
-	if (src != dst)
-		while(dst < &_edata)
-			*(dst++) = *(src++);
-
-	/* zero the bss segment */
-	dst = &_sbss;
-	while(dst < &_ebss)
-		*(dst++) = 0;
-}
-
-void Reset_Handler(void) {
-	/* Initialize data and bss */
-	__Init_Data();
-	main();
-	while(1) {}
-}
-
+// TODO: ambigous names!
 #pragma weak MMI_Handler		= Default_Handler
 #pragma weak MemManage_Handler		= Default_Handler
 #pragma weak BusFault_Handler		= Default_Handler
@@ -163,7 +172,8 @@ void Reset_Handler(void) {
 #pragma weak SVC_Handler		= Default_Handler
 #pragma weak DebugMon_Handler		= Default_Handler
 #pragma weak PendSV_Handler		= Default_Handler
-//#pragma weak SysTick_Handler		= Default_Handler // TODO!
+
+#pragma weak SysTick_Handler		= Default_Handler
 #pragma weak WWDG_IRQHandler		= Default_Handler
 #pragma weak PVD_IRQHandler		= Default_Handler
 #pragma weak TAMPER_IRQHandler		= Default_Handler
@@ -185,7 +195,7 @@ void Reset_Handler(void) {
 #pragma weak ADC1_2_IRQHandler		= Default_Handler
 #pragma weak USB_HP_CAN1_TX_IRQHandler	= Default_Handler
 #pragma weak USB_LP_CAN1_RX0_IRQHandler	= Default_Handler
-#pragma weak CAN1_RX1_IRQHandler	= Default_Handler
+#pragma weak CAN1_RX1_IRQHandler	= Default_Handler 
 #pragma weak CAN1_SCE_IRQHandler	= Default_Handler
 #pragma weak EXTI9_5_IRQHandler		= Default_Handler
 #pragma weak TIM1_BRK_IRQHandler	= Default_Handler
@@ -225,6 +235,7 @@ void Reset_Handler(void) {
 #pragma weak DMA2_Channel3_IRQHandler	= Default_Handler
 #pragma weak DMA2_Channel4_5_IRQHandler	= Default_Handler
 
+// TODO: ambigous names!
 #pragma weak USB_HP_CAN_TX_IRQHandler   = Dummy_Handler
 #pragma weak USB_LP_CAN_RX0_IRQHandler  = Dummy_Handler
 #pragma weak CAN_RX1_IRQHandler         = Dummy_Handler
@@ -232,18 +243,10 @@ void Reset_Handler(void) {
 #pragma weak DebugMonitor               = Dummy_Handler
 #pragma weak SVCHandler                 = Dummy_Handler
 #pragma weak PendSVC                    = Dummy_Handler
+
+// TODO: ambigous names!
 #pragma weak NMIException               = Default_Handler
 #pragma weak HardFaultException         = Default_Handler
 #pragma weak MemManageException         = Default_Handler
 #pragma weak BusFaultException          = Default_Handler
 #pragma weak UsageFaultException        = Default_Handler
-
-
-void Dummy_Handler(void)
-{
-}
-
-void Default_Handler(void) 
-{
-	while (1) {}
-}

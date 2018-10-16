@@ -1,1 +1,1 @@
-g++ fat12upload.cpp -o fat12upload
+g++ dfuload.cpp -o dfuload

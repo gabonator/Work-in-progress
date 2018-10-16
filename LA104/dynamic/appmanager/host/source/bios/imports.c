@@ -1,8 +1,7 @@
-#include "imports.h"
+//#include "imports.h"
+#include <stdint.h>
 
-extern "C" {
-ui32  __Bios(ui8 Item, ui32 Var);
-}
+uint32_t __Bios(uint8_t Item, uint32_t Var);
 
 #define INIT            0xFFFF0000
 #define ENBL 1
@@ -88,13 +87,13 @@ enum
     EXT_TXD, // ??? PIO ???     Var: PIOCFG+PinDef      Rtn: SUCC
 };
 
-void Set_Posi(ui16 x, ui16 y)
+void Set_Posi(uint16_t x, uint16_t y)
 {
     __Bios(PIXEL_X, x);
     __Bios(PIXEL_Y, y);
 }
 
-void Set_Pixel(ui16 Color)
+void Set_Pixel(uint16_t Color)
 {
     __Bios(WrPIXEL, Color);
 }

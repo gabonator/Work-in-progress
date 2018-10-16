@@ -1,12 +1,7 @@
 #include "Manager.h"
 #include "library/elf.h"
 #include "framework/BufferedIo.h"
-
-uint32_t GetProcAddress(char* symbol)
-{
-  // TODO:!
-  return 0;
-}
+#include "Shared.h"
 
 bool CWndUserManager::ElfGetInterpreter( char* strName, char* strInterpreter )
 {

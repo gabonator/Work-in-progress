@@ -1,13 +1,9 @@
 #include "Bios.h"
 #include "imports.h"
 
-#define FLASH_PAGE       0x0800
-#define SEC_SIZE         4096
-#define SEC_AMNT         2048
-#include "fatfs/Ext_Flash.c"
-
 extern "C" 
 {
+  #include "fatfs/Ext_Flash.h"
   #include "fatfs/ff.c"
 
   DSTATUS disk_initialize(BYTE drv)

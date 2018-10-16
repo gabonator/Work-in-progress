@@ -1,9 +1,20 @@
 #include "Bios.h"
 
 extern "C" volatile uint32_t gCounter;
+extern "C" volatile uint32_t Dly_mS;
+
+extern "C" 
+void Delay_mS(uint32_t mS)
+{
+    Dly_mS = mS;
+    while(Dly_mS)
+    {};
+}
+
 
 void BIOS::SYS::DelayMs(int intervalMs)
 {
+  Delay_mS(intervalMs);
   // TODO: implement
 }
 

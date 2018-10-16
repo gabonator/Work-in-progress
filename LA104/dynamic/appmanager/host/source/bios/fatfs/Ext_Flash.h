@@ -5,6 +5,10 @@
 #define SPIx            SPI1
 #define PAGE_SIZE       256 
 
+#define FLASH_PAGE       0x0800
+#define SEC_SIZE         4096
+#define SEC_AMNT         2048
+
 u8   ExtFlashSendByte(u8 byte);
 u8   FLASH_Prog(u32 Addr, u16 Data);
 void FLASH_Erase(u32 Addr);

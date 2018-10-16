@@ -22,6 +22,9 @@
 #define WIP_Flag   0x01     /* Write In Progress (WIP) flag */
 #define TMAX       100000   /* */
 
+extern void ExtFlash_CS_LOW(void);
+extern void ExtFlash_CS_HIGH(void);
+
 u8   ExtFlashReadByte(void);
 u8   ExtFlashSendByte(u8 byte);
 void ExtFlashWrCtrl(u8 Cmd);

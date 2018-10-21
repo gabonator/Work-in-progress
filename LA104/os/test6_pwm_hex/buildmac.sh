@@ -11,3 +11,8 @@ arm-none-eabi-objcopy -O binary ./output.elf ./output.bin
 arm-none-eabi-objcopy -O ihex ./output.elf ./output.hex
 arm-none-eabi-readelf -all output.elf > output.txt
 arm-none-eabi-objdump -d -S output.elf > output.asm
+
+find . -type f -name '*.o' -delete
+find . -type f -name '*.d' -delete
+
+cp output.hex 6pwm.hex

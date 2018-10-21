@@ -14,4 +14,7 @@ arm-none-eabi-objcopy -O ihex ./output.elf ./output.hex
 arm-none-eabi-readelf -all output.elf > output.txt
 arm-none-eabi-objdump -d -S output.elf > output.asm
 
-../../../elfstrip/elfstrip output.elf outmin.elf
+find . -type f -name '*.o' -delete
+find . -type f -name '*.d' -delete
+
+../../../tools/elfstrip/elfstrip output.elf 1noimp.elf

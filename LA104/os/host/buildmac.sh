@@ -12,7 +12,10 @@ arm-none-eabi-g++ -Wall -Os -Werror -fno-common -mcpu=cortex-m3 -mthumb -msoft-f
 arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -o output.elf -nostartfiles -T ../app.ld ./main.o ./startup.o ./interrupt.o ./sys.o ./Wnd.o ./lcd.o ./memory.o ./fat.o ./key.o ./Utils.o ./dbg.o ./spf.o ./Execute.o ./Serialize.o ./imports.o ./stm32f10x_flash.o ./stm32f10x_spi.o ./stm32f10x_rcc.o ./Manager.o ./usb_init.o ./USB_scsi.o ./Disk.o ./USB_bot.o ./usb_mem.o ./usb_regs.o ./system_stm32f10x.o ./USB_prop.o ./usb_core.o ./usb_int.o ./USB_istr.o ./USB_desc.o ./USB_pwr.o ./Ext_Flash.o ./Gui.o ./stm32f10x_gpio.o ./stm32f10x_tim.o ./gpio.o
 
 arm-none-eabi-objcopy -O binary ./output.elf ./output.bin
-arm-none-eabi-objcopy -O ihex ./output.elf ./output.hex
+arm-none-eabi-objcopy -O ihex ./output.elf ./manager.hex
 
 arm-none-eabi-readelf -all output.elf > output.txt
 arm-none-eabi-objdump -d -S output.elf > output.asm
+
+find . -type f -name '*.o' -delete
+find . -type f -name '*.d' -delete

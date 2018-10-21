@@ -1,1 +1,1 @@
-sudo ../fat12upload/dfuload /dev/disk2 cp ./build/output.hex
+sudo ../tools/dfuload/dfuload /dev/disk2 cp ./build/output.hex

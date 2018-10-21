@@ -10,5 +10,8 @@ arm-none-eabi-gcc -fPIC -mcpu=cortex-m3 -mthumb -o output.elf -nostartfiles -T .
 
 arm-none-eabi-objdump -d -S output.elf > output.asm
 
-../../../elfstrip/elfstrip output.elf snake.elf
+find . -type f -name '*.o' -delete
+find . -type f -name '*.d' -delete
+
+../../../tools/elfstrip/elfstrip output.elf 4snake.elf
 #../../../elfdump/elfdump snake.elf

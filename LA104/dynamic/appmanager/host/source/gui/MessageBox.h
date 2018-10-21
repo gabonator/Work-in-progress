@@ -18,7 +18,7 @@ public:
 			StopModal();	// will destroy this window
 		}
 
-		CWnd::Create(strCaption, CWnd::WsVisible, CRect(40, 100, 360, 160), pParent);
+		CWnd::Create(strCaption, CWnd::WsVisible, CRect(40, 100, BIOS::LCD::Width-40, 160), pParent);
 		StartModal();
 		BIOS::SYS::Beep(100);
 		SetTimer(3000);

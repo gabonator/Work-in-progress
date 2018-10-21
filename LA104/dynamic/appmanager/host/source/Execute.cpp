@@ -1,6 +1,7 @@
 #include "Manager.h"
 #include "library/elf.h"
 #include "framework/BufferedIo.h"
+#include "gui/Gui.h"
 #include "Shared.h"
 
 bool CWndUserManager::ElfGetInterpreter( char* strName, char* strInterpreter )
@@ -197,7 +198,7 @@ void CWndUserManager::ElfExecute( char* strName )
 	int nStringTableOfs = elfSection.offset;
 	int nStringTableLen = elfSection.size;
 
-	char strSymbolNames[128];
+	char strSymbolNames[400]; // too small!
 
 /*
 	_ASSERT( nStringTableLen < 128 );
@@ -222,9 +223,10 @@ void CWndUserManager::ElfExecute( char* strName )
 		SecStringTab = 11,
 		SecInit = 12,
 		SecStrTab = 13,
-		SecSymTab = 14
+		SecSymTab = 14,
+		SecRoData = 15
 	};
-	const char* arrSecNames[] = {"none", ".text", ".data", ".bss", ".plt", ".got", ".dynamic", ".dynstr", ".dynsym", ".rel.plt", ".interp", ".shstrtab", ".init_array", ".strtab", ".symtab"};
+	const char* arrSecNames[] = {"none", ".text", ".data", ".bss", ".plt", ".got", ".dynamic", ".dynstr", ".dynsym", ".rel.plt", ".interp", ".shstrtab", ".init_array", ".strtab", ".symtab", ".rodata"};
 
 	int arrSectionIndex[COUNT(arrSecNames)];
 	int arrSectionOffset[COUNT(arrSecNames)];
@@ -261,6 +263,15 @@ void CWndUserManager::ElfExecute( char* strName )
 		}
 
 		if ( strncmp( strSectionName, ".data", 5 ) == 0 )
+		{
+			BIOS::DBG::Print("%s>", strSectionName);
+			// flash data
+			FlashData( fw, elfSection );
+			BIOS::DBG::Print("\n");
+			continue;
+		}
+
+		if ( strncmp( strSectionName, ".rodata", 7 ) == 0 )
 		{
 			BIOS::DBG::Print("%s>", strSectionName);
 			// flash data

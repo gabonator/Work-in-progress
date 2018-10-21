@@ -16,14 +16,3 @@ arm-none-eabi-objdump -d -S output.elf > output.asm
 # sudo vifs, sudo automount -vc
 # UUID=0C6BB56F-CEA7-3564-A81A-FB98D5C3BC33 none msdos rw,noauto
 
-cd ..
-#mkdir fs
-sudo mount -t msdos /dev/disk2 fs
-touch fs/.metadata_never_index
-ls -a fs/
-cat fs/output.rdy
-rm fs/output.rdy
-#rm -r "fs/System Volume Information"
-cp build/output.hex fs/output.hex
-sudo umount fs
-#rm -r fs

@@ -60,5 +60,4 @@ private:
 	// fpga
 	bool FpgaGetInfo(char* strFile, ui32& dwBegin, ui32& dwEnd);
 	bool FpgaLoad( char* strName );
-
 };

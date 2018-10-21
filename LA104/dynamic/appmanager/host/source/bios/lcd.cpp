@@ -2,6 +2,7 @@
 #include "imports.h"
 #include "font.h"
 
+#define FLIP(y) (BIOS::LCD::Height-1-(y))
 // TODO: global namespace
 int _DrawChar(int x, int y, unsigned short clrf, unsigned short clrb, char ch);
 
@@ -15,6 +16,10 @@ void BIOS::LCD::Clear(unsigned short clr)
 
 void BIOS::LCD::Bar(int x1, int y1, int x2, int y2, unsigned short clr)
 {
+  int t = FLIP(y1)+1;
+  y1 = FLIP(y2)+1;
+  y2 = t;
+
   for(int x=x1; x<x2; x++)
     for(int y=y1; y<y2; y++)
     {
@@ -30,13 +35,13 @@ void BIOS::LCD::Bar(const CRect& rc, unsigned short clr)
 
 void BIOS::LCD::PutPixel(int x, int y, unsigned short clr)
 {
-  Set_Posi(x, y);
+  Set_Posi(x, FLIP(y));
   Set_Pixel(clr);
 }
 
 void BIOS::LCD::PutPixel(const CPoint& cp, unsigned short clr)
 {
-  Set_Posi(cp.x, cp.y);
+  Set_Posi(cp.x, FLIP(cp.y));
   Set_Pixel(clr);
 }
 
@@ -80,23 +85,23 @@ int _DrawChar(int x, int y, unsigned short clrf, unsigned short clrb, char ch)
 	{
 		for (ui8 _y=0; _y<14; _y++)
 		{
-			ui8 col = ~*pFont++;
+			ui8 col = *pFont++;
 	
 			for (ui8 _x=0; _x<8; _x++, col <<= 1)
-				if ( (col & 128) == 0 )
+				if ( col & 128 )
 					BIOS::LCD::PutPixel(x+_x, y+_y, clrb);
 		}
 	} else
 	{
 		for (ui8 _y=0; _y<14; _y++)
 		{
-			ui8 col = ~*pFont++;
+			ui8 col = *pFont++;
 	
 			for (ui8 _x=0; _x<8; _x++, col <<= 1)
 				if ( col & 128 )
-					BIOS::LCD::PutPixel(x+_x, y+_y, clrf);
-				else
 					BIOS::LCD::PutPixel(x+_x, y+_y, clrb);
+				else
+					BIOS::LCD::PutPixel(x+_x, y+_y, clrf);
 		}
 	}
 	return 8;
@@ -137,4 +142,65 @@ uint8_t _Round(int x, int y)
 	if ( !(x&~3) && !(y&~3) )
 		return r[(y<<2)|x];
 	return 0;
+}
+
+void BIOS::LCD::BufferBegin(const CRect& rc, ui8 nMode)
+{
+  Set_Block(rc.left, FLIP(rc.bottom)+1, rc.right, FLIP(rc.top)+1);
+}
+
+void BIOS::LCD::BufferPush(ui16 clr)
+{
+  Set_Pixel(clr);
+}
+
+void BIOS::LCD::BufferEnd()
+{
+}
+
+int BIOS::LCD::Draw(int x, int y, unsigned short clrf, unsigned short clrb, const char *p)
+{
+	int h = *p++;
+//	y+=h-1;
+	for (int _x=0; _x<80; _x++)
+		for (int _y=0; _y<h; _y++)
+		{
+			unsigned char d = *p++; //[_x*h+_y];
+			if (!d)
+				return _x;
+			if ( d & 4 )
+			{
+				if (clrf != RGBTRANS)
+					PutPixel(x+_x, y+_y, clrf);
+			}
+			else
+			{
+				if (clrb != RGBTRANS)
+					PutPixel(x+_x, y+_y, clrb);
+			}
+		}
+	return 8;
+}
+
+void BIOS::LCD::Pattern(int x1, int y1, int x2, int y2, const ui16 *pat, int l)
+{
+//  if (x2 > 320)
+//    return;
+  Set_Area(x1, y1, x2, y2);
+
+  const ui16* patb = pat;
+  const ui16* pate = patb + l;
+
+  for (int y=y1; y<y2; y++)
+    for (int x=x1; x<x2; x++)
+    {
+      Set_Pixel(*pat);
+      if (++pat == pate) 
+        pat = patb;
+    }
+}
+
+void BIOS::LCD::Shadow(int x1, int y1, int x2, int y2, unsigned int nColor)
+{
+  _ASSERT(0);
 }

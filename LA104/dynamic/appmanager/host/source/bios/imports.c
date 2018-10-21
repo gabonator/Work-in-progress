@@ -1,8 +1,10 @@
 //#include "imports.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 uint32_t __Bios(uint8_t Item, uint32_t Var);
 
+#define BITMAP          0xFFFC0000
 #define INIT            0xFFFF0000
 #define ENBL 1
 #define DSBL            0
@@ -108,4 +110,33 @@ void ExtFlash_CS_HIGH(void)
 {
     __Bios(FLSHDEV, ENBL);
 //  GPIO_SetBits(DISK_nSS1_PORT,   DISK_nSS1_PIN);
+}
+
+void Set_Block(int x1, int y1, int x2, int y2)
+{
+  __Bios(BLOCK_X, (x2-1) | (x1 << 16));
+  __Bios(BLOCK_Y, (y2-1) | (y1 << 16));
+}
+
+uint32_t _Keys()
+{
+  return __Bios(KEYnDEV, BITMAP);
+}
+
+void Beep(bool b)
+{
+  if (b)
+  {
+    __Bios(BUZZDEV, ENBL);
+    __Bios(BUZZDEV, 100);
+  } else
+  {
+    __Bios(BUZZDEV, DSBL);
+  }
+}
+
+void Set_Area(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+{
+  __Bios(BLOCK_X, (x2-1) | (x1 << 16));
+  __Bios(BLOCK_Y, (y2-1) | (y1 << 16));
 }

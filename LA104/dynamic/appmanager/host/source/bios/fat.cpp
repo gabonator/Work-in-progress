@@ -21,8 +21,7 @@ extern "C"
   {
       if (drv != 0 || count == 0) return RES_PARERR;
       // TODO: check for usb conflict??
-      ExtFlashDataRd(buff, sector * 512, count);
-      
+      ExtFlashDataRd(buff, sector * BIOS::FAT::SectorSize, count * BIOS::FAT::SectorSize);
       return RES_OK;
   }
 
@@ -48,6 +47,15 @@ extern "C"
     // TODO:!
     return RES_PARERR;
   }
+/*
+Bytes per sector: 4096
+Sectors per cluster: 1
+Reserved sectors: 1
+Number of root dir entries: 512
+Total number of sectors: 2048
+Number of sectors per FAT: 1
+Number of hidden sectors: 0
+*/
 
   DRESULT disk_ioctl(BYTE drv, BYTE ctrl, void *buff)
   {
@@ -59,12 +67,14 @@ extern "C"
       }
       else if (ctrl == GET_SECTOR_COUNT)
       {
-          *(DWORD*)buff = 4096;
+//          *(DWORD*)buff = 4096;
+          *(DWORD*)buff = 2048;
           return RES_OK;
       }
       else if (ctrl == GET_SECTOR_SIZE || ctrl == GET_BLOCK_SIZE)
       {
-          *(DWORD*)buff = 512;
+//          *(DWORD*)buff = 512;
+          *(DWORD*)buff = BIOS::FAT::SectorSize;
           return RES_OK;
       }
       else
@@ -131,6 +141,8 @@ namespace BIOS
 	if ( nIoMode == BIOS::FAT::IoRead )
 	{
 	    FRESULT r = f_open(&g_file, strName, FA_READ | FA_OPEN_EXISTING);
+
+		BIOS::DBG::Print("OPEN RESULT=%d\n", r);
 		return Result(r);
 	}
         return BIOS::FAT::EIntError;
@@ -139,15 +151,15 @@ namespace BIOS
     EResult Read(ui8* pSectorData)
     {
       ui32 rcount;
-      FRESULT r = f_read(&g_file, pSectorData, 512, &rcount);
+      FRESULT r = f_read(&g_file, pSectorData, BIOS::FAT::SectorSize, &rcount);
       return Result(r);
     }
 
     EResult Write(ui8* pSectorData)
     {
       ui32 wcount;
-      FRESULT r = f_write(&g_file, pSectorData, 512, &wcount);    
-      if (wcount != 512)
+      FRESULT r = f_write(&g_file, pSectorData, BIOS::FAT::SectorSize, &wcount);    
+      if (wcount != BIOS::FAT::SectorSize)
         return EDiskFull; // Disk is full
       return Result(r);
     }

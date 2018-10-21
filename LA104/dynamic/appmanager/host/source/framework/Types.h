@@ -6,8 +6,9 @@
 #include "../library/spf.h"
 #include "Rgb.h"
 
-//#define _ASSERT assert
-#define _ASSERT(e) {if(!(e)) {while (1);}}
+void _HandleAssertion(const char*, int, const char*);
+#define _STR(x) #x
+#define _ASSERT(e) {if(!(e)) _HandleAssertion(__FILE__, __LINE__, _STR(e)); }
 #define ToWord(a, b) (ui16)(((a)<<8)|(b))
 #define ToDword(a, b, c, d) (ui32)((ToWord(d, c)<<16)|ToWord(b,a))
 //#define NULL nullptr

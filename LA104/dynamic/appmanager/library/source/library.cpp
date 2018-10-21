@@ -33,6 +33,12 @@ namespace BIOS
 
     // TODO: duplicity?
     void Pattern(int x1, int y1, int x2, int y2, const ui16 *pat, int l) {}
+    int Draw(int x, int y, unsigned short clrf, unsigned short clrb, const char *p) { return 0; }
+  }
+
+  namespace KEY
+  {
+    EKey GetKey() { return None; }
   }
 
   namespace DBG
@@ -65,4 +71,20 @@ namespace BIOS
     EResult OpenDir(char* strPath) { return EOk; }
     EResult FindNext(TFindFile* pFile) { return EOk; }
   }
+
+  namespace GPIO
+  {
+    void DigitalWrite(EPin pin, bool value) {}
+    bool DigitalRead(EPin pin) { return false; }
+    void AnalogWrite(EPin pin, int value) {}
+    int AnalogRead(EPin pin) { return 0; }
+    void PinMode(EPin pin, EMode mode) {}
+  }
+
+}
+
+namespace GUI
+{
+  void Background(CRect& rc, uint32_t clr1, uint32_t clr2) {}
+  void Window(const CRect& rcRect, uint16_t clr) {}
 }

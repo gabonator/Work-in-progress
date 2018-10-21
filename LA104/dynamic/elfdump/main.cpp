@@ -61,11 +61,14 @@ class CFlasherCode : public CFlasherProto
 {
     int memSize;
     uint8_t* pMemory;
-    
+    uint32_t base;
+
 public:
     CFlasherCode()
     {
-        memSize = 0x10000;
+        base = 0;
+//        base = 0x20005000;
+        memSize = 0x2000;
         pMemory = new uint8_t[memSize];
         memset(pMemory, 0, sizeof(memSize));
     }
@@ -137,19 +140,29 @@ public:
     
     virtual ui8 ReadByte( ui32 addr )
     {
-        addr -= 0x20005000;
+/*
+        addr -= base;
         assert(addr < memSize);
         return pMemory[addr];
+*/
+        return 0;
     }
     
     virtual void WriteByte( ui32 addr, ui8 data )
     {
-        addr -= 0x20005000;
+/*
+        if (base == 0)
+        {
+          printf("Setting emulation base addr: %08x\n", addr);
+          base = addr;
+        }
+        addr -= base;
         assert(addr < memSize);
         pMemory[addr] = data;
+*/
     }
 };
-
+#if 0
 class CFlasherArm : public CFlasherProto
 {
     bool Verify( CBufferedReader2& f, Elf32_Shdr& elfSection )
@@ -311,6 +324,7 @@ public:
         return 0;
     }
 };
+#endif
 
 bool CWndUserManager_ElfGetInterpreter( char* strName, char* strInterpreter )
 {
@@ -394,9 +408,10 @@ void CWndUserManager_ElfExecute( char* strName, CFlasherProto& flash )
         SecStringTab = 11,
         SecInit = 12,
         SecStrTab = 13,
-        SecSymTab = 14
+        SecSymTab = 14,
+        SecSymRodata = 15
     };
-    const char* arrSecNames[] = {"none", ".text", ".data", ".bss", ".plt", ".got", ".dynamic", ".dynstr", ".dynsym", ".rel.plt", ".interp", ".shstrtab", ".init_array", ".strtab", ".symtab"};
+    const char* arrSecNames[] = {"none", ".text", ".data", ".bss", ".plt", ".got", ".dynamic", ".dynstr", ".dynsym", ".rel.plt", ".interp", ".shstrtab", ".init_array", ".strtab", ".symtab", ".rodata"};
     
     int arrSectionIndex[COUNT(arrSecNames)];
     int arrSectionOffset[COUNT(arrSecNames)];
@@ -436,7 +451,7 @@ void CWndUserManager_ElfExecute( char* strName, CFlasherProto& flash )
             continue;
         }
         
-        if ( strncmp( strSectionName, ".data", 5 ) == 0 )
+        if ( strncmp( strSectionName, ".data", 5 ) == 0 || strncmp( strSectionName, ".rodata", 7 ) == 0)
         {
             printf("// %s\n", strSectionName);
             BIOS::DBG::Print("%s>", strSectionName);
@@ -560,9 +575,9 @@ void CWndUserManager_ElfExecute( char* strName, CFlasherProto& flash )
                     }
                     _ASSERT(dwProcAddr);
                     
-                    ui32 dwOld = flash.ReadDword(elfRelocation.r_offset);
+//                    ui32 dwOld = flash.ReadDword(elfRelocation.r_offset);
                     flash.WriteDword(elfRelocation.r_offset, dwProcAddr);
-                    ui32 dwNew = flash.ReadDword(elfRelocation.r_offset);
+//                    ui32 dwNew = flash.ReadDword(elfRelocation.r_offset);
                     
                     //printf("// %08x: old %08x new %08x\n", elfRelocation.r_offset, dwOld, dwNew);
                 }
@@ -628,9 +643,10 @@ void CWndUserManager_ElfExecute( char* strName, CFlasherProto& flash )
 
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
+    if (argc < 2)
+      return 1;
     CFlasherCode flasher;
-    char *src = "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/client/build/mainss.elf";
+    char *src = (char*)argv[1]; //"/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/client/build/mainss.elf";
     CWndUserManager_ElfExecute(src, flasher);
     return 0;
 }

@@ -2,10 +2,10 @@
 MEMORY
 {
   rom (rx) : ORIGIN = 0x08008000, LENGTH = 160K
-  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 16K
+  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 40K
 }
 
-_estack = ORIGIN(ram)+LENGTH(ram)-0x100;
+_estack = ORIGIN(ram)+LENGTH(ram)-0x600;
 
 /* Linker script for Olimex STM32-H103 eval board.
  *
@@ -28,34 +28,37 @@ _estack = ORIGIN(ram)+LENGTH(ram)-0x100;
  */
 
 SECTIONS
-  {
-    .  = 0x0;          /* From 0x00000000 */
+{
+  .  = 0x0;          /* From 0x00000000 */
 
-    .bios 0x08000100 (NOLOAD) : {
-      BIOS.o
-    }
+  .bios 0x08000100 (NOLOAD) : {
+    BIOS.o
+  }
 
-    .text : {
-      _vectors = .;
-      *(.isr_vectors)      /* Vector table */
-      *(.text*)        /* Program code */
-      *(.rodata*)      /* Read only data */
-      _etext = .;
-      _sidata = _etext;
-    } >rom
+  .text : {
+    _vectors = .;
+    *(.isr_vectors)      /* Vector table */
+    *(.text*)        /* Program code */
+    *(.rodata*)      /* Read only data */
 
-    .  = 0x20000000;   /* From 0x20000000 */      
+    . = ALIGN(4);
 
-    .data : {
-      _sdata = . ;
-      *(.data)        /* Data memory */
-      _edata = .;
-    } >ram AT > rom
+    _etext = .;
+    _sidata = _etext;
+  } >rom
+
+  .  = 0x20000000;   /* From 0x20000000 */      
+
+  .data : {
+    _sdata = . ;
+    *(.data)        /* Data memory */
+    _edata = .;
+  } >ram AT >rom
 
   .bss : {
     _sbss = .;
     *(.bss)         /* Zero-filled run time allocate data memory */
     _ebss = .;
-    } >ram AT > rom
-  }  
+  } >ram AT >rom
+}  
 /*========== end of file ==========*/

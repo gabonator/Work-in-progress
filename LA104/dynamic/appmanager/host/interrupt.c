@@ -1,40 +1,11 @@
 #include <stdint.h>
-
-volatile uint32_t gCounter = 0;
-volatile uint32_t Dly_mS = 0;
-
-void SysTick_Handler(void)
-{
-  // TODO: check timer init
-  gCounter++;
-  if (Dly_mS)
-    Dly_mS--;
-}
-
-void USB_LP_CAN1_RX0_IRQHandler(void)
-{
-// TODO: implement usb conn
-//    USB_Istr();
-}
-
-
 #include "source/usb/Disk.h"
 #include "lib/STM32_USB-FS-Device_Driver/inc/usb_core.h"
 #include "lib/STM32_USB-FS-Device_Driver/inc/usb_init.h"
+#include "USB_istr.h"
 #include "system_stm32f10x.h"
+#include <stdbool.h>
 
-//TODO: implement live usb conn
-ui32  __Bios(ui8 Item, ui32 Var);
-
-void DiskConfig(void)
-{
-    USB_Init();
-    Disk_Init();
-//    Init_Fat_Value();
-}
-
-void Hardware_Init(void)
-{
 enum
 {
     SYSINFO, // ????????      Var: PRDT_SN  ???????  Rtn: (u16)???????
@@ -118,6 +89,32 @@ enum
 #define ENBL 1
 #define DSBL            0
 
+void dbgPrint(const char* msg, ...);
+
+
+volatile uint32_t gCounter = 0;
+volatile uint32_t Dly_mS = 0;
+volatile uint32_t gBeepCounter = 0;
+
+//void USB_LP_CAN1_RX0_IRQHandler(void)
+void USB_LP_CAN_RX0_IRQHandler(void)
+{
+    USB_Istr();
+}
+
+ui32  __Bios(ui8 Item, ui32 Var);
+
+void DiskConfig(void)
+{
+    USB_Init();
+    Disk_Init();
+//    Init_Fat_Value();
+}
+#define BITMAP          0xFFFC0000
+
+void Hardware_Init(void)
+{
+
     __Bios(PWRCTRL, INIT);        // 
     __Bios(KEYnDEV, INIT);        // 
     __Bios(NIVCPTR, 0x8000);      // 
@@ -129,4 +126,85 @@ enum
     __Bios(USBDEV, INIT);         // USB
     DiskConfig();                 // 
     __Bios(IN_PORT, INIT);        // DAC
+}
+
+
+volatile char lastChar = 0;
+char GetLastChar()
+{
+  char t = lastChar;
+  lastChar = 0;
+  return t;
+}
+
+void Beep(bool);
+
+void SysTickHandler(void)
+{
+  gCounter++;
+  if (Dly_mS)
+    Dly_mS--;
+
+  if (gBeepCounter)
+  {
+    if (!--gBeepCounter)
+      Beep(false);
+  }
+
+  // keyboard
+  uint16_t keysReg = ~__Bios(KEYnDEV, BITMAP);
+
+  // yYxX 1111  1111 DCBA 
+  uint8_t encX = (keysReg >> 12) & 3;
+  uint8_t encY = (keysReg >> 14) & 3;
+  uint8_t keys = keysReg & 0x0f;
+
+  static uint8_t encXold = -1, encYold = -1, keysOld = -1;
+  if (encXold == -1)
+  {
+    encXold = encX;
+    encYold = encY;
+    keysOld = keys;
+  }
+  static int8_t encTable[16] = {
+//     [0b0001] = 1, // 11 -> 10
+     [0b0111] = 1, // 10 -> 00
+     [0b1100] = 1, // 00 -> 11
+     [0b0011] = -1, // 10 -> 11
+//     [0b1101] = -1, // 00 -> 10
+     [0b0100] = -1, // 11 -> 00
+  };
+
+  if (encX != encXold)
+  {
+    int8_t diff = encTable[(encXold << 2) | encX];
+    if (diff>0)
+      lastChar = '+'; 
+    else if (diff<0)
+      lastChar = '-'; 
+    encXold = encX;
+  }
+
+  if (encY != encYold)
+  {
+    int8_t diff = encTable[(encYold << 2) | encY];
+    if (diff>0)
+      lastChar = '>'; 
+    else if (diff<0)
+      lastChar = '<'; 
+    encYold = encY;
+  }
+
+  if (keysOld != keys)
+  {
+    if (keys & 0b0001)
+      lastChar = '1';
+    if (keys & 0b0010)
+      lastChar = '2';
+    if (keys & 0b0100)
+      lastChar = '3';
+    if (keys & 0b1000)
+      lastChar = '4';
+    keysOld = keys;
+  }
 }

@@ -9,6 +9,7 @@ namespace BIOS
     int Execute(uint32_t addr);
     void Beep(int intervalMs);
     void DelayMs(int intervalMs);
+    void DelayUs(int intervalUs);
   }
 
   namespace LCD
@@ -43,11 +44,13 @@ namespace BIOS
 
     // TODO: duplicity?
     void Pattern(int x1, int y1, int x2, int y2, const ui16 *pat, int l);
+    int Draw(int x, int y, unsigned short clrf, unsigned short clrb, const char *p);
   }
 
   namespace KEY
   {
-    enum { KeyDown, KeyUp, KeyEscape, KeyEnter };
+    enum EKey { None, Down, Up, Left, Right, F1, F2, F3, F4, Escape = F2, Enter = F1 };
+    EKey GetKey();
   }
 
   namespace DBG
@@ -115,5 +118,18 @@ namespace BIOS
 	
     EResult OpenDir(char* strPath);
     EResult FindNext(TFindFile* pFile);
+  }
+
+  namespace GPIO
+  {
+    enum EPin {P1, P2, P3, P4};
+    enum EMode {Input = 1, Output = 2, Pwm = 4, PullUp = 8, PullDown = 16};
+    const int AnalogRange = 1024;
+
+    void DigitalWrite(EPin pin, bool value);
+    bool DigitalRead(EPin pin);
+    void AnalogWrite(EPin pin, int value);
+    int AnalogRead(EPin pin);
+    void PinMode(EPin pin, EMode mode);
   }
 }

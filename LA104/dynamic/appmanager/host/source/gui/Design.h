@@ -1,6 +1,7 @@
 #pragma once
 #include "../framework/Types.h"
 
+// TODO: Remove and merge with Gui!
 class CDesignNice
 {
 public:

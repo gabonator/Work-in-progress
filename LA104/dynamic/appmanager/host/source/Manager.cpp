@@ -1,5 +1,6 @@
 #include "Manager.h"
 
+#include "gui/Gui.h"
 #include "framework/Utils.h"
 #include "framework/BufferedIo.h"
 #include "framework/Serialize.h"
@@ -7,6 +8,28 @@
 #include "library/elf.h"
 
 #define MaxLines 14
+
+const char CShapes_sel_left[] =
+"\x0e"
+"              "
+"              "
+"              "
+"              "
+"  ..........  "
+" ............ "
+".............."
+"..............";
+
+const char CShapes_sel_right[] =
+"\x0e"
+".............."
+".............."
+" ............ "
+"  ..........  "
+"              "
+"              "
+"              "
+"              ";
 
 char tolower(char c)
 {
@@ -29,7 +52,7 @@ int stricmp(const char* s1, const char* s2) {
     (int) tolower((unsigned char) *s2);
 }
 
-int nSelected = -1;
+int nSelected = 0;
 int nScroll = 0;
 
 const int commonBufferSize = 1024*2;
@@ -50,6 +73,7 @@ void CWndUserManager::InitFileList()
 
 void CWndUserManager::LoadModuleList()
 {
+/*
 	CBufferedReader2 fMods;
 	if ( fMods.Open((char*)"modules.dat") )
 	{
@@ -76,10 +100,12 @@ void CWndUserManager::LoadModuleList()
 		}
 		fMods.Close();
 	}
+*/
 }
 
 void CWndUserManager::SaveModuleList()
 {
+/*
 	CBufferedWriter2 fMods;
 	if ( fMods.Open((char*)"modules.dat") )
 	{
@@ -94,13 +120,14 @@ void CWndUserManager::SaveModuleList()
 		}
 		fMods.Close();
 	}
+*/
 }
 
 bool CWndUserManager::LoadFileList(char* strPath)
 {
 	if ( BIOS::FAT::OpenDir(strPath) != BIOS::FAT::EOk )
 	{
-		BIOS::DBG::Print("error open\n");
+//		BIOS::DBG::Print("error open\n");
 		return false;
 	}
 
@@ -140,7 +167,7 @@ CWndUserManager::CWndUserManager()
 
 void CWndUserManager::Create(CWnd *pParent, ui16 dwFlags)
 {
-	CWnd::Create("CWndManager", dwFlags, CRect(0, 16, 400, 240), pParent);
+	CWnd::Create("CWndManager", dwFlags, CRect(0, 16, BIOS::LCD::Width, BIOS::LCD::Height), pParent);
 	InitFileList();
 }
 
@@ -179,8 +206,6 @@ void DrawDelimLines(int y, ui16 clr)
 	BIOS::LCD::Bar( rcLine, clr );
 	rcLine.Offset(10*8, 0);
 	BIOS::LCD::Bar( rcLine, clr );
-	rcLine.Offset(10*6-4, 0);
-	BIOS::LCD::Bar( rcLine, clr );
 }
 
 void CWndUserManager::OnPaint()
@@ -188,10 +213,28 @@ void CWndUserManager::OnPaint()
 	if ( HasFocus() && nSelected == -1 )
 		nSelected = 0; // enters the list
 
-	BIOS::LCD::Bar( m_rcClient.left, m_rcClient.top, m_rcClient.right-8, m_rcClient.top + 20, RGB565(0000b0) );
-	int y = 20;
+	CRect rcTop(0, 0, BIOS::LCD::Width, 16);
+	GUI::Background(rcTop, RGB565(101010), RGB565(404040));
 
-	BIOS::LCD::Print( 4, y, RGB565(ffff00), RGB565(0000b0), "     Name       Size     Date    Time");
+        int x = 0, y = 0;
+        x += BIOS::LCD::Print(x, 0, RGB565(000000), RGB565(b0b0b0), " File Manager");
+        x += BIOS::LCD::Draw( x, 0, RGB565(b0b0b0), RGBTRANS, CShapes_sel_right);
+
+        x += 8;
+        x += BIOS::LCD::Draw( x, 0, RGB565(b0b0b0), RGBTRANS, CShapes_sel_left);
+        x += BIOS::LCD::Print(x, 0, RGB565(000000), RGB565(b0b0b0), "/");
+        x += BIOS::LCD::Print(x, 0, RGB565(000000), RGB565(b0b0b0), m_strCurrentPath);
+        x += BIOS::LCD::Draw( x, 0, RGB565(b0b0b0), RGBTRANS, CShapes_sel_right);
+
+//	CRect rcBack( m_rcClient.left, m_rcClient.top, m_rcClient.right-8, m_rcClient.top + 20);
+//	Background(rcBack, RGB565(404040), RGB565(101010));
+//	Background(rcBack, RGB565(404040), RGB565(404040));
+//	BIOS::LCD::Bar( m_rcClient.left, m_rcClient.top, m_rcClient.right-8, m_rcClient.top + 20, RGB565(0000b0) );
+	y = 16;
+
+	CRect rcHeading(0, y, BIOS::LCD::Width-8, y+16);
+	GUI::Background(rcHeading, RGB565(202020), RGB565(202020));
+	BIOS::LCD::Print( 4, y, RGB565(ffff00), RGBTRANS, "     Name       Size     Date    Time");
 	DrawDelimLines(y, RGB565(0fffff));
 	y += 14;
 
@@ -212,21 +255,30 @@ void CWndUserManager::OnPaint()
 	}
 	for ( ; i < MaxLines; i++)
 	{
-		BIOS::LCD::Bar( 0, y, /*320*/400-8, y+14, RGB565(0000b0) );
+//		BIOS::LCD::Bar( 0, y, /*320*/400-8, y+14, RGB565(0000b0) );
+          CRect rcBack( 0, y, /*320*/BIOS::LCD::Width-8, y+14);
+
+	  GUI::Background(rcBack, RGB565(101010), RGB565(404040));
+
 		DrawDelimLines(y, RGB565(0fffff));
 		y += 14;
 	}
 	DrawProgress();
+
+        CRect rcBack( 0, y, /*320*/BIOS::LCD::Width, y+14);
+	GUI::Background(rcBack, RGB565(404040), RGB565(404040));
+	BIOS::LCD::Print( 4, y, RGB565(808080), RGBTRANS, "Built: " __DATE__ " " __TIME__);
 }
 
 void CWndUserManager::DrawProgress()
 {
 	// update scroll pos
-	CRect rcProgress(400-8, m_rcClient.top, 400, m_rcClient.bottom-10);
-	BIOS::LCD::Bar( rcProgress, RGB565(0000b0) );
+	CRect rcProgress(BIOS::LCD::Width-8, m_rcClient.top, BIOS::LCD::Width, m_rcClient.top + (1+MaxLines)*14);
+	GUI::Background(rcProgress, RGB565(101010), RGB565(404040));
+//	BIOS::LCD::Bar( rcProgress, RGB565(0000b0) );
 	int nPercentTop = 0;
 	int nPercentBottom = 1024;
-	ui16 clr = RGB565(b0b0b0);
+	ui16 clr = RGB565(808080);
 	if ( m_arrFiles.GetSize() > MaxLines )
 	{
 		nPercentTop = nScroll * 1024 / m_arrFiles.GetSize();
@@ -239,16 +291,16 @@ void CWndUserManager::DrawProgress()
 	rcRange.top = rcProgress.top + rcProgress.Height() * nPercentTop / 1024;
 	rcRange.bottom = rcProgress.top + rcProgress.Height() * nPercentBottom / 1024;
 	BIOS::LCD::Bar( rcRange, clr );
-	BIOS::LCD::PutPixel( rcRange.left, rcRange.top, RGB565(0000b0) );
-	BIOS::LCD::PutPixel( rcRange.right-1, rcRange.top, RGB565(0000b0) );
-	BIOS::LCD::PutPixel( rcRange.left, rcRange.bottom-1, RGB565(0000b0) );
-	BIOS::LCD::PutPixel( rcRange.right-1, rcRange.bottom-1, RGB565(0000b0) );
+//	BIOS::LCD::PutPixel( rcRange.left, rcRange.top, RGB565(0000b0) );
+//	BIOS::LCD::PutPixel( rcRange.right-1, rcRange.top, RGB565(0000b0) );
+//	BIOS::LCD::PutPixel( rcRange.left, rcRange.bottom-1, RGB565(0000b0) );
+//	BIOS::LCD::PutPixel( rcRange.right-1, rcRange.bottom-1, RGB565(0000b0) );
 }
 
 void CWndUserManager::DrawLine(int nLine, bool bHighlight)
 {
 	BIOS::FAT::TFindFile& fileInfo = m_arrFiles[nLine];
-	DrawLine( fileInfo, 34+(nLine-nScroll)*14, bHighlight );
+	DrawLine( fileInfo, 30+(nLine-nScroll)*14, bHighlight );
 }
 
 bool CWndUserManager::FixScrollPosition()
@@ -301,14 +353,26 @@ void CWndUserManager::DrawLine( BIOS::FAT::TFindFile& fileInfo, int y, bool bSel
 	if ( fileInfo.nAtrib & BIOS::FAT::EHidden )
 		clr = RGB565(00b0b0);
 	ui16 clrBack = bSelected ? RGB565(00b0b0) : RGB565(0000b0);
-	BIOS::LCD::Bar( 0, y, /*320*/400-8, y+14, clrBack );
+
+        CRect rcBack( 0, y, /*320*/BIOS::LCD::Width-8, y+14);
+
+	if (bSelected)
+        {
+	  GUI::Background(rcBack, RGB565(004040), RGB565(007070));
+	} else {
+	  GUI::Background(rcBack, RGB565(101010), RGB565(404040));
+//  	  BIOS::LCD::Bar( 0, y, /*320*/400-8, y+14, clrBack );
+  	}
+        clrBack = RGBTRANS;
 
 	if ( stricmp( strExt, "hex" ) == 0 || stricmp( strExt, "elf" ) == 0 || 
 		 stricmp( strExt, "adr" ) == 0 || stricmp( strExt, "exe" ) == 0 )
 	{
 		clr = RGB565(00ff00);
 	}
-		
+	if (bDir)
+          clr = RGB565(ffffff);
+	
 	BIOS::LCD::Print( 4, y, clr, clrBack, strFile);
 	if ( strExt[0] )
 		BIOS::LCD::Print( 4+9*8+4, y, clr, clrBack, strExt);
@@ -334,27 +398,12 @@ void CWndUserManager::DrawLine( BIOS::FAT::TFindFile& fileInfo, int y, bool bSel
 		BIOS::LCD::Print( 4+32*8+4, y, clr, clrBack, strAux);
 	}
 	
-	if ( CheckModule( fileInfo.strName, fileInfo.nFileLength, strAux ) )
-	{
-		BIOS::LCD::Print( 4+39*8, y, clr, clrBack, strAux);
-	} else
-	if ( fileInfo.nAtrib & (BIOS::FAT::EReadOnly | BIOS::FAT::EHidden | BIOS::FAT::ESystem) )
-	{
-		strcpy(strAux, "RHS");
-		if ( (~fileInfo.nAtrib) & BIOS::FAT::EReadOnly )
-			strAux[0] = ' ';
-		if ( (~fileInfo.nAtrib) & BIOS::FAT::EHidden )
-			strAux[1] = ' ';
-		if ( (~fileInfo.nAtrib) & BIOS::FAT::ESystem )
-			strAux[2] = ' ';
-		BIOS::LCD::Print( 4+39*8, y, clr, clrBack, strAux);
-	}
 	DrawDelimLines(y, clr);
 }
 
 void CWndUserManager::OnKey(ui16 nKey)
 {
-	if ( nKey == BIOS::KEY::KeyDown ) 
+	if ( nKey == BIOS::KEY::Down ) 
 	{
 		if ( nSelected + 1 < m_arrFiles.GetSize() )
 		{
@@ -373,13 +422,17 @@ void CWndUserManager::OnKey(ui16 nKey)
 			}
 		}
 	}
-	if ( nKey == BIOS::KEY::KeyUp ) 
+	if ( nKey == BIOS::KEY::Up ) 
 	{
+/*
 		nSelected--;
 		if ( nSelected == -1 )
 			CWnd::OnKey( nKey );
 		else
+*/
+		if (nSelected > 0)
 		{
+			nSelected--;
 			if ( FixScrollPosition() )
 			{
 				KillTimer();
@@ -394,7 +447,7 @@ void CWndUserManager::OnKey(ui16 nKey)
 			}
 		}
 	}
-	if ( nKey == BIOS::KEY::KeyEnter )
+	if ( nKey == BIOS::KEY::Enter )
 	{
 		if ( m_arrFiles[nSelected].nAtrib & BIOS::FAT::EDirectory )
 		{
@@ -564,6 +617,8 @@ void CWndUserManager::Exec(char* strPath, char* strFile, int nLength)
 	if ( eType == EElf )
 	{
 		ElfExecute( strFullName );
+                Invalidate();
+/*
 		return;
 
 		ui32 dwEntry, dwBegin, dwEnd;
@@ -599,6 +654,9 @@ void CWndUserManager::Exec(char* strPath, char* strFile, int nLength)
 				{
 					//CCookies::SetCookie( (char*)"gui.manager.last", strFullName ); 
 					//Settings.Save();
+BIOS::DBG::Print("Entry=%08x\n", dwEntry);
+BIOS::SYS::DelayMs(5000);
+
 					BIOS::SYS::Execute( dwEntry );
 					// on win32 it continues... file buffer was corrupted by linear flashing
 					Invalidate();
@@ -606,6 +664,7 @@ void CWndUserManager::Exec(char* strPath, char* strFile, int nLength)
 			} else
 				m_wndMessage.Show(this, "Manager", "Module conflict, won't load", RGB565(FFFF00));
 		}
+*/
 	}
 	if ( eType == EHex )
 	{
@@ -635,6 +694,8 @@ void CWndUserManager::Exec(char* strPath, char* strFile, int nLength)
 			{
 				//CCookies::SetCookie( (char*)"gui.manager.last", strFullName ); 
 				//Settings.Save();
+BIOS::DBG::Print("Entry=%08x\n", dwEntry);
+
 				BIOS::SYS::Execute( dwEntry );
 				// on win32 it continues...
 				Invalidate();
@@ -673,12 +734,40 @@ void CWndUserManager::Exec(char* strPath, char* strFile, int nLength)
 	}
 }
 
+
+// duplicate code from Execute.cpp
+void FlashRam(uint32_t addr, uint8_t* data, uint32_t len)
+{
+	ui8* pWriteTo = (ui8*)addr;
+	while (len--)
+		*pWriteTo++ = *data++;
+}
+
+void FlashRom(uint32_t addr, uint8_t* data, uint32_t len)
+{
+	BIOS::MEMORY::LinearProgram(addr, data, len);
+}
+
+bool FlashData(uint32_t addr, uint8_t* data, uint32_t len)
+{
+	if ( (addr >> 24) == 0x20 )
+	{
+		FlashRam( addr, data, len );
+	} else
+	if ( (addr >> 24) == 0x08 )
+	{
+		FlashRom( addr, data, len );
+	} else
+		_ASSERT(!!!"Unrecognized memory location");
+
+	return true;
+}
+
 bool CWndUserManager::HexLoad(char* strFile)
 {
 	CBufferedReader2 fw;
 	if ( !fw.Open( strFile ) )
 		return false;
-
 	IHexRecord irec;	
 	uint16_t addressOffset = 0x00;
 	uint32_t address = 0x0;
@@ -692,7 +781,7 @@ bool CWndUserManager::HexLoad(char* strFile)
 		{
 			case IHEX_TYPE_00:    /**< Data Record */
 				address = (((uint32_t) addressOffset) << 16 )+ irec.address;
-				err = !BIOS::MEMORY::LinearProgram( address, irec.data, irec.dataLen );
+				err = !FlashData(address, irec.data, irec.dataLen); //!BIOS::MEMORY::LinearProgram( address, irec.data, irec.dataLen );
 
 				if(err)
 				{
@@ -729,7 +818,10 @@ bool CWndUserManager::HexGetInfo(char* strFile, ui32& dwEntry, ui32& dwBegin, ui
 {
 	CBufferedReader2 fw;
 	if ( !fw.Open( strFile ) )
+{
+//		BIOS::DBG::Print("open '%s' failed\n", strFile);
 		return false;
+}
 
 	IHexRecord irec;	
 	uint16_t addressOffset = 0x00;
@@ -777,6 +869,7 @@ bool CWndUserManager::HexGetInfo(char* strFile, ui32& dwEntry, ui32& dwBegin, ui
 	dwEntry = dwAddrLow;
 	dwBegin = dwAddrLow;
 	dwEnd = dwAddrHigh;
+
 	return true;
 }
 
@@ -986,6 +1079,7 @@ bool CWndUserManager::ElfGetInfo(char* strFile, ui32& dwEntry, ui32& dwBegin, ui
 
 bool CWndUserManager::CheckModule( char* strName, int nLength, char* strLoaded )
 {
+/*
 	strcpy( strLoaded, "" );
 	for ( int i=0; i < m_arrLoaded.GetSize(); i++)
 	{
@@ -1040,10 +1134,13 @@ bool CWndUserManager::CheckModule( char* strName, int nLength, char* strLoaded )
 		break;
 	}
 	return strLoaded[0] != 0;
+*/
+  return false;
 }
 
 void CWndUserManager::AddModule( char* strName, int nLength, ui32 dwEntry, ui32 dwBegin, ui32 dwEnd )
 {
+/*
 	for ( int i=0; i < m_arrLoaded.GetSize(); i++)
 		_ASSERT( stricmp(strName, m_arrLoaded[i].strFileName) != 0 );
 
@@ -1055,10 +1152,13 @@ void CWndUserManager::AddModule( char* strName, int nLength, ui32 dwEntry, ui32 
 	mod.dwEnd = dwEnd;
 	mod.dwEntry = dwEntry;
 	m_arrLoaded.Add( mod );
+*/
 }
 
 bool CWndUserManager::IsModuleLoaded( char* strName, int nLength, ui32 dwEntry, ui32 dwBegin, ui32 dwEnd )
 {
+return false;
+/*
 	for ( int i=0; i < m_arrLoaded.GetSize(); i++)
 	{
 		TLoadedModule& mod = m_arrLoaded[i]; 
@@ -1069,10 +1169,13 @@ bool CWndUserManager::IsModuleLoaded( char* strName, int nLength, ui32 dwEntry, 
 		}
 	}
 	return false;
+*/
 }
 
 bool CWndUserManager::CheckModuleConflict( ui32 dwBegin, ui32 dwEnd )
 {
+return true;
+/*
 	// check whether not loading into slot1!
 	if (!( dwBegin < 0x0800C000 || dwEnd >= 0x08014000 ))
 		return false;
@@ -1088,4 +1191,5 @@ bool CWndUserManager::CheckModuleConflict( ui32 dwBegin, ui32 dwEnd )
 		}
 	}
 	return true; // true means ready for flashing
+*/
 }

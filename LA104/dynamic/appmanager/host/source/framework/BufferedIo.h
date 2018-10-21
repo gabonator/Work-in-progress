@@ -183,6 +183,9 @@ public:
 
 		if ( BIOS::FAT::Open( strName, BIOS::FAT::IoRead ) != BIOS::FAT::EOk )
 			return false;
+
+		BIOS::DBG::Print("reading...\n");
+
 		return BIOS::FAT::Read( m_pData ) == BIOS::FAT::EOk;
 	}
 	ui32 GetFileSize()

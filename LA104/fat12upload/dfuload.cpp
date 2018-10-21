@@ -217,14 +217,18 @@ int main(int argc, const char * argv[])
         fill_clusters(source, fd, bpb);
 	_writedi(fd, dirent, direntofs);
 
+      fprintf(stderr, "Closing data ");
         fclose(source);
+      fprintf(stderr, "Ok\n");
       }
     } else
     {
       fprintf(stderr, "Nothing to do.\n");
     }
 
+      fprintf(stderr, "Closing disk ");
     close(fd);
+      fprintf(stderr, "Ok\n");
     free(bpb);
 
     return 0;

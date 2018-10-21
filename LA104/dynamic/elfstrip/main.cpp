@@ -405,6 +405,11 @@ CElf::CElfSection CElf::GetSection(CString strName)
     for (int i=0; i<m_arrSection.GetSize(); i++)
         if ( CString(m_arrSection[i].m_strName) == strName )
             return m_arrSection[i];
+
+    printf("Cant find section '%s', available sections:\n", strName.GetBuffer());
+    for (int i=0; i<m_arrSection.GetSize(); i++)
+      printf("  %d: %s\n", i, m_arrSection[i].m_strName);
+
     _ASSERT(0);
     return CElfSection();
 }
@@ -850,14 +855,17 @@ CElf::CElfSection CreateSymTab( CElf::CElfSection sec, CElf::CElfSection nam )
 //#define out "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/build/mainss.elf"
 
 
-#define src "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/build/mains.elf" //argv[1]
-#define out "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/build/mainss.elf"
+//#define src "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/build/mains.elf" //argv[1]
+//#define out "/Users/gabrielvalky/Documents/git/Work-in-progress/LA104/dynamic/advancedapp/build/mainss.elf"
+
+#define src argv[1]
+#define out argv[2]
 
 //int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 {
-    //if (argc < 2)
-//        return 1;
+    if (argc < 2)
+        return 1;
     
     CElf elfIn;
     elfIn.Load(src);
@@ -894,6 +902,12 @@ int main(int argc, char* argv[])
             if ( CString(elfIn.GetSection(i).m_strName).Left(5) == _T(".data") )
                 elfOut << elfIn.GetSection(i);
     }
+    if ( elfIn.HasSection(".rodata") )
+    {
+        for (int i=0; i<elfIn.GetSections(); i++)
+            if ( CString(elfIn.GetSection(i).m_strName).Left(7) == _T(".rodata") )
+                elfOut << elfIn.GetSection(i);
+    }
     //elfOut << elfIn.GetSectionMerged(".data");
     if ( elfIn.HasSection(".bss") )
     {
@@ -907,23 +921,31 @@ int main(int argc, char* argv[])
     
     if ( elfIn.HasSection(".plt") )
         elfOut << elfIn.GetSection(".plt"); // code
-    if ( elfIn.HasSection(".got") )
-        elfOut << elfIn.GetSection(".got"); // table of pointers to functions, OS should fill these with real addresses
     if ( elfIn.HasSection(".rel.plt") )
         elfOut << elfIn.GetSection(".rel.plt"); // for OS pairing process
+    // got will be placed in RAM to be easily relocated. Flash as last section
+    if ( elfIn.HasSection(".got") )
+        elfOut << elfIn.GetSection(".got"); // table of pointers to functions, OS should fill these with real addresses
     
     if ( elfIn.HasSection(".dynsym") && elfIn.GetSection(".dynsym").m_Header.size > 0 )
-        elfOut << elfIn.GetSection(".dynsym"); // for OS pairing process
+    {
+        CElf::CElfSection sDynSym = elfIn.GetSection(".dynsym"); // for OS pairing process
+        sDynSym.m_Header.addr = 0; // override load ptr, do not load
+        elfOut << sDynSym;
+    }
     if ( elfIn.HasSection(".rel.plt") )
-        elfOut << elfIn.GetSection(".dynstr"); // for OS pairing process
+    {
+        CElf::CElfSection sDynStr = elfIn.GetSection(".dynstr"); // for OS pairing process
+        sDynStr.m_Header.addr = 0; // override load ptr, do not load
+        elfOut << sDynStr;
+    }
     
     //    if ( elfIn.HasSection(".dynamic") )
     //        elfOut << elfIn.GetSection(".dynamic");
-    
     if ( elfIn.HasSection(".symtab") )
     {
         CElf::CElfSection sTab = CreateSymTab( elfIn.GetSection(".symtab"), elfIn.GetSection(".strtab") );
-        if ( sTab.m_pDataPtr )
+        if ( sTab.m_pDataPtr ) // tu je ulozeny iba _stack
             elfOut << sTab;
     }
     
@@ -935,7 +957,7 @@ int main(int argc, char* argv[])
     if ( elfOut.HasSection( ".rel.plt" ) && elfOut.HasSection( ".dynsym" ) )
         elfOut.PairSection( ".rel.plt", ".dynsym");
     
-    if ( elfIn.HasSection(".symtab") )
+    if ( elfIn.HasSection(".symtab") && elfOut.HasSection(".symtab"))
     {
         elfOut.BuildNames( elfIn.GetSection(".strtab"), elfOut.GetSection(".symtab") );
         elfOut.PairSection( ".symtab", ".strtab");
@@ -947,232 +969,3 @@ int main(int argc, char* argv[])
     //elf.Process();
     //elf.Save(out);
 }
-
-#if 0
-typedef Elf32_Ehdr elfHeader;
-typedef Elf32_Phdr programHeader;
-
-Elf32_Ehdr outHdr;
-Elf32_Phdr outProg[8];
-int outCount = 0;
-
-/* Section header.  */
-
-
-typedef Elf32_Shdr sectionHeader;
-
-sectionHeader secMapping;
-
-int Parse_ELF_Executable(void* exeFileData)
-{
-    //var declaration
-    int i;
-    
-    //map an elfHeader to the exeFileData
-    elfHeader* eh = (elfHeader*) exeFileData;
-    //check the elf-identification
-    if(eh->ident[0] != 0x7F &&
-       eh->ident[1] != 'E' &&
-       eh->ident[2] != 'L' &&
-       eh->ident[3] != 'F')
-    {
-        //TODO is it necessary, that the other bytes are checked too?
-        printf("\nnot an executable file\n");
-        return 0;
-    }
-    if(eh->ident[4] == 0 ||
-       eh->ident[4] == 2)
-    {
-        printf("\ninvalid class or 64bit object\n");
-        return 0;
-    }
-    
-    memcpy(&outHdr, eh, sizeof(elfHeader));
-    outHdr.phnum = 0;
-    outHdr.phoff = sizeof(elfHeader);
-    outHdr.shnum = 0;
-    outHdr.shoff = 0;
-    
-    //check header for correct data
-    /*if(eh->type != 2)
-     { //executable type - first we only implement exec files
-     Print("\nunimplemented executable type: %d\n", eh->type);
-     return ENOEXEC;
-     }*/
-    /*if(eh->machine != 2)
-     { //machine type - we implement this on x86 machines
-     Print("\nunsupported machine type: %d\n", eh->machine);
-     return ENOEXEC;
-     }*/
-    
-    printf("num segments = %d\n", eh->phnum);
-    printf("entry addr = %08x\n", eh->entry);
-    
-    //fill in data to exeFormat
-    //- set nr. of exeSegments
-    //- get exeSegments
-    if(eh->phoff == 0)
-    {
-        printf("\nno program header available\n");
-        return 0;
-    }
-    
-    outCount = 0;
-    int nextProgramHeaderOffset = (eh->phoff);
-    unsigned long lLastOffset = 0;
-    for(i=0; i<eh->phnum; i++)
-    {
-        if(i >= 128)
-        { //the number of segments must be less or equals the maximum numbers set for the exeFormat
-            printf("\nmaximum number of segments exceeded\n");
-            return 0;
-        }
-        
-        //map the programHeader to the exeFileData
-        programHeader* ph = (programHeader*) ((char*)exeFileData+nextProgramHeaderOffset);
-        
-        printf("Program %d: ", i);
-        
-        switch (ph->vaddr)
-        {
-            case 0x20003000: printf("RAM"); break;
-            case 0x0804C000: printf("ROM"); break;
-            case 0x0800C000: printf("ENTRY-SLOT1"); break;
-            case 0x08014000: printf("ENTRY-SLOT2"); break;
-            case 0x0801C000: printf("ENTRY-SLOT3"); break;
-            case 0x08024000: printf("ENTRY-SLOT4"); break;
-                
-        }
-        printf("\n");
-        printf("  type %d (%s)\n", ph->type, ph->type == 1 ? "LOAD" : "?");
-        printf("  offset %d\n", ph->offset);
-        printf("  lengthInFile %d\n", ph->filesz);
-        printf("  startAddress %08x\n", ph->vaddr);
-        printf("  sizeInMemory %d\n", ph->memsz);
-        printf("  protFlags %d %c%c%c\n", ph->flags, (ph->flags & 1) ? 'X' : ' ', (ph->flags & 2) ? 'W' : ' ', (ph->flags & 4) ? 'R' : ' ');
-        
-        if ( ph->offset == 0 || ph->paddr == lLastOffset )
-        {
-            printf("  - SKIPPING -\n");
-        } else {
-            memcpy(&outProg[outCount++], ph, sizeof(programHeader));
-            lLastOffset = ph->paddr; // ignore bss section
-        }
-#if DUMP
-        int nOfs = ph->offset;
-        char strName[] = "dump\\dump0.pro";
-        strName[9] = '0' + i;
-        FILE *f = fopen(strName, "wb");
-        fwrite( (char*)exeFileData+nOfs, ph->filesz, 1, f);
-        fclose(f);
-#endif
-        //get the address of the next programHeader
-        nextProgramHeaderOffset += eh->phentsize;
-    }
-#if DUMP
-    int nextSectionHeaderOffset = (eh->shoff);
-    for(i=0; i<eh->shnum; i++)
-    {
-        if(i >= 128)
-        { //the number of segments must be less or equals the maximum numbers set for the exeFormat
-            printf("\nmaximum number of section exceeded\n");
-            return 0;
-        }
-        
-        //map the programHeader to the exeFileData
-        sectionHeader* ph = (sectionHeader*) ((char*)exeFileData+nextSectionHeaderOffset);
-        if ( i== eh->shtrndx )
-            memcpy(&secMapping, ph, sizeof(sectionHeader));
-        
-        printf("Section %d\n", i);
-        
-        printf("  addr 0x%08x\n", ph->addr);
-        printf("  offset %d\n", ph->offset);
-        printf("  size %d\n", ph->size);
-        
-        
-        int nOfs = ph->offset;
-        char strName[] = "dump\\dump0.sec";
-        strName[9] = 'A' + i;
-        FILE *f = fopen(strName, "wb");
-        fwrite( (char*)exeFileData+nOfs, ph->size, 1, f);
-        fclose(f);
-        //get the address of the next programHeader
-        nextSectionHeaderOffset += eh->shentsize;
-    }
-#endif
-    outHdr.phnum  = outCount;
-    return 1;
-}
-
-//#define src "C:\\Data\\Devel\\Github\\ds203\\Resources\\SampleAppDyn\\bin\\APP_2.elf"
-//#define out "C:\\Data\\Devel\\Github\\ds203\\Resources\\SampleAppDyn\\bin\\APP_2o.elf"
-//#define src argv[1]
-//#define out argv[2]
-//#define src "C:\\Data\\Devel\\Github\\ds203\\Resources\\SampleAppDyn\\bin\\APP_2.elf"
-//#define out "C:\\Data\\Devel\\Github\\ds203\\Resources\\SampleAppDyn\\bin\\APP_2o.elf"
-
-//int _tmain(int argc, _TCHAR* argv[])
-int main(int argc, char* argv[])
-{
-    /*
-     if (argc<3)
-     {
-     printf("error.\n");
-     return 1;
-     }*/
-    FILE* f = fopen(src, "rb");
-    
-    // set the file pointer to end of file
-    fseek( f, 0, SEEK_END );
-    // get the file size
-    int nSize= ftell( f );
-    rewind(f);
-    
-    unsigned char* buf = (unsigned char*)malloc(nSize);
-    fread(buf, 1, nSize, f);
-    fclose(f);
-    
-    Parse_ELF_Executable(buf);
-    
-    outHdr.shnum = 0;
-    outHdr.shtrndx = 0;
-    /*
-     int nMapOfs = secMapping.offset;
-     int nMapSiz = secMapping.size;
-     
-     int nLastPrg = sizeof(Elf32_Ehdr) + outCount*sizeof(Elf32_Phdr);
-     outHdr.shoff = nLastPrg;
-     nLastPrg += + sizeof(Elf32_Shdr);
-     
-     for (int i=0; i<outCount; i++)
-     nLastPrg += outProg[i].filesz;
-     secMapping.offset = nLastPrg;
-     */
-    // realign;
-    f = fopen(out, "wb");
-    fwrite(&outHdr, sizeof(Elf32_Ehdr), 1, f);
-    int nOffset = sizeof(Elf32_Ehdr) + outCount*sizeof(Elf32_Phdr) /*+ sizeof(Elf32_Shdr)*/;
-    int nOldOfs[8], nOldSize[8];
-    for (int i=0; i<outCount; i++)
-    {
-        nOldOfs[i] = outProg[i].offset;
-        nOldSize[i] = outProg[i].filesz;
-        outProg[i].offset = nOffset;
-        nOffset += outProg[i].filesz;
-        fwrite(&outProg[i], sizeof(Elf32_Phdr), 1, f);
-    }
-    //fwrite(&secMapping, sizeof(secMapping), 1, f);
-    for (int i=0; i<outCount; i++)
-    {
-        fwrite(buf + nOldOfs[i], nOldSize[i], 1, f);
-    }
-    //fwrite(buf + nMapOfs, nMapSiz, 1, f);
-    
-    fclose(f);
-    
-    free(buf);
-    return 0;
-}
-
-#endif

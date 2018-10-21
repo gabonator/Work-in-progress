@@ -114,7 +114,7 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 
 /*virtual*/ void CWnd::OnKey(ui16 nKey)
 {
-	if ( nKey & BIOS::KEY::KeyDown )
+	if ( nKey & BIOS::KEY::Down )
 	{
 		_ASSERT( m_pFocus == this ); // ja mam focus!
 		CWnd *pFocus = _GetNextActiveWindow();
@@ -135,7 +135,7 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 		}
 	}
 
-	if ( nKey & BIOS::KEY::KeyUp )
+	if ( nKey & BIOS::KEY::Up )
 	{
 		_ASSERT( m_pFocus == this ); 
 		CWnd *pFocus = _GetPrevActiveWindow();
@@ -159,7 +159,7 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 		}
 	}
 
-	if ( nKey & BIOS::KEY::KeyEscape )
+	if ( nKey & BIOS::KEY::Escape )
 	{
 		if(m_pParent && m_pParent->m_pParent) {
 			CWnd *pFocus = m_pParent->m_pParent->m_pFirst;

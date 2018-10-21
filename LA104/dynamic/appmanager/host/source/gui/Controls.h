@@ -67,7 +67,7 @@ public:
 	}
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyEscape )
+		if ( nKey & BIOS::KEY::Escape )
 			m_pParent->SendMessage( m_pParent, ToWord('e', 'x'), 0 );
 		CWnd::OnKey(nKey);
 	}
@@ -148,7 +148,7 @@ public:
 
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyEnter )
+		if ( nKey & BIOS::KEY::Enter )
 		{
 			SendMessage(m_pParent, ToWord('m', 'o'), 0);
 		}
@@ -359,19 +359,19 @@ public:
 
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyLeft && (*m_pProvider)-1 == CValueProvider::Yes )
+		if ( nKey & BIOS::KEY::Left && (*m_pProvider)-1 == CValueProvider::Yes )
 		{
 			(*m_pProvider)--;
 			Invalidate();
 			SendMessage(m_pParent, ToWord('u', 'p'), 0);
 		}
-		if ( nKey & BIOS::KEY::KeyRight && (*m_pProvider)+1 == CValueProvider::Yes )
+		if ( nKey & BIOS::KEY::Right && (*m_pProvider)+1 == CValueProvider::Yes )
 		{
 			(*m_pProvider)++;
 			Invalidate();
 			SendMessage(m_pParent, ToWord('u', 'p'), 0);
 		}
-		if ( nKey & BIOS::KEY::KeyEnter  )
+		if ( nKey & BIOS::KEY::Enter  )
 		{
 			// is that provider enumerator ?
 			if ( m_pProvider->Get() !=	CValueProvider::Invalid )
@@ -490,21 +490,21 @@ public:
 
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyLeft && (*m_pProvider)-1 != CValueProvider::No )
+		if ( nKey & BIOS::KEY::Left && (*m_pProvider)-1 != CValueProvider::No )
 		{
 			(*m_pProvider)--;
 			Invalidate();
 		}
-		if ( nKey & BIOS::KEY::KeyRight && (*m_pProvider)+1 != CValueProvider::No )
+		if ( nKey & BIOS::KEY::Right && (*m_pProvider)+1 != CValueProvider::No )
 		{
 			(*m_pProvider)++;
 			Invalidate();
 		}
-		if ( nKey & BIOS::KEY::KeyEnter  )
+		if ( nKey & BIOS::KEY::Enter  )
 		{
 			SendMessage(m_pParent, ToWord('o', 'k'), 0);
 		}
-		if ( nKey & BIOS::KEY::KeyEscape  )
+		if ( nKey & BIOS::KEY::Escape  )
 		{
 			m_pProvider->Set(m_nOldValue);
 			SendMessage(m_pParent, ToWord('e', 'x'), 0);
@@ -557,13 +557,13 @@ public:
 
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyLeft && *m_pProvider - 1 == CValueProvider::Yes )
+		if ( nKey & BIOS::KEY::Left && *m_pProvider - 1 == CValueProvider::Yes )
 		{
 			(*m_pProvider)--;
 			Invalidate();
 			SendMessage(m_pParent, ToWord('i', 'u'), NULL);
 		}
-		if ( nKey & BIOS::KEY::KeyRight && *m_pProvider + 1 == CValueProvider::Yes )
+		if ( nKey & BIOS::KEY::Right && *m_pProvider + 1 == CValueProvider::Yes )
 		{
 			(*m_pProvider)++;
 			Invalidate();
@@ -608,20 +608,21 @@ public:
 
 	virtual void OnKey(ui16 nKey)
 	{
-		if ( nKey & BIOS::KEY::KeyLeft && (*m_pProvider)-1 != CValueProvider::No )
+		if ( nKey & BIOS::KEY::Left && (*m_pProvider)-1 != CValueProvider::No )
 		{
 			(*m_pProvider)--;
 			GetParent()->Invalidate();
 			m_pParent->SendMessage(m_pParent->m_pParent, ToWord('u', 'p'), 0);
 		}
-		if ( nKey & BIOS::KEY::KeyRight && (*m_pProvider)+1 != CValueProvider::No )
+		if ( nKey & BIOS::KEY::Right && (*m_pProvider)+1 != CValueProvider::No )
 		{
 			(*m_pProvider)++;
 			GetParent()->Invalidate();
 			//Invalidate();
 			m_pParent->SendMessage(m_pParent->m_pParent, ToWord('u', 'p'), 0);
 		}
-		if ( nKey & (BIOS::KEY::KeyUp | BIOS::KEY::KeyDown) )
+//TODO: key masking not valid anymore
+		if ( nKey & (BIOS::KEY::Up | BIOS::KEY::Down) )
 		{
 			CWnd* pSafeFocus = GetFocus();
 			CListItem::OnKey( nKey );
@@ -630,7 +631,7 @@ public:
 			return;
 		}
 
-		if ( nKey & BIOS::KEY::KeyEscape )
+		if ( nKey & BIOS::KEY::Escape )
 		{
 			// TODO: escape doesnt work
 			//m_pParent->SendMessage( m_pParent->m_pParent, ToWord('e', 'x'), 0 );

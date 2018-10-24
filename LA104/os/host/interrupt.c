@@ -208,3 +208,14 @@ void SysTickHandler(void)
     keysOld = keys;
   }
 }
+
+extern void UartPushByte(uint8_t data);
+
+void USART3_IRQHandler(void)
+{
+  if ((USART3->SR & USART_FLAG_RXNE) != (u16)RESET)
+  {
+    UartPushByte(USART_ReceiveData(USART3));
+  }
+}
+

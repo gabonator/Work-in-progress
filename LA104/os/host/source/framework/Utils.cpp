@@ -104,6 +104,7 @@ bool ishex(char c)
 	tmp[3] = 0;
 	return tmp;
 }
+#if 0
 /*static*/ char* CUtils::FormatVoltage( float fV, int nChars )
 {
 	sprintf(tmp, "%f", fV );
@@ -206,7 +207,7 @@ bool ishex(char c)
 	tmp[3] = 0;
 	return tmp;
 }
-
+#endif
 ui16 CUtils::InterpolateColor( ui16 clrA, ui16 clrB, int nLevel )
 {
 	int br = Get565R(clrB)*nLevel;

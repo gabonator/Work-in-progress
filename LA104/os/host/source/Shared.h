@@ -17,6 +17,7 @@ uint32_t GetProcAddress(char* symbol)
   while (*symbol >= '0' && *symbol <= '9')
     symbol++;
 
+
   if (strcmp(symbol, "BackgroundER5CRectmm") == 0)
     return (uint32_t)static_cast<void(*)(CRect&, unsigned long, unsigned long)>(GUI::Background);
   if (strcmp(symbol, "WindowERK5CRectt") == 0)
@@ -93,6 +94,24 @@ uint32_t GetProcAddress(char* symbol)
     return (uint32_t)static_cast<bool(*)(BIOS::GPIO::EPin)>(BIOS::GPIO::DigitalRead);
   if (strcmp(symbol, "GPIO12DigitalWriteENS0_4EPinEb") == 0)
     return (uint32_t)static_cast<void(*)(BIOS::GPIO::EPin, bool)>(BIOS::GPIO::DigitalWrite);
+  if (strcmp(symbol, "GPIO3I2C11RequestFromEhh") == 0)
+    return (uint32_t)static_cast<bool(*)(unsigned char, unsigned char)>(BIOS::GPIO::I2C::RequestFrom);
+  if (strcmp(symbol, "GPIO3I2C15EndTransmissionEv") == 0)
+    return (uint32_t)static_cast<bool(*)()>(BIOS::GPIO::I2C::EndTransmission);
+  if (strcmp(symbol, "GPIO3I2C17BeginTransmissionEh") == 0)
+    return (uint32_t)static_cast<bool(*)(unsigned char)>(BIOS::GPIO::I2C::BeginTransmission);
+  if (strcmp(symbol, "GPIO3I2C4ReadEv") == 0)
+    return (uint32_t)static_cast<uint8_t(*)()>(BIOS::GPIO::I2C::Read);
+  if (strcmp(symbol, "GPIO3I2C5WriteEh") == 0)
+    return (uint32_t)static_cast<bool(*)(unsigned char)>(BIOS::GPIO::I2C::Write);
+  if (strcmp(symbol, "GPIO4UART4ReadEv") == 0)
+    return (uint32_t)static_cast<uint8_t(*)()>(BIOS::GPIO::UART::Read);
+  if (strcmp(symbol, "GPIO4UART5SetupEiNS1_7EConfigE") == 0)
+    return (uint32_t)static_cast<void(*)(int, BIOS::GPIO::UART::EConfig)>(BIOS::GPIO::UART::Setup);
+  if (strcmp(symbol, "GPIO4UART5WriteEh") == 0)
+    return (uint32_t)static_cast<void(*)(unsigned char)>(BIOS::GPIO::UART::Write);
+  if (strcmp(symbol, "GPIO4UART9AvailableEv") == 0)
+    return (uint32_t)static_cast<bool(*)()>(BIOS::GPIO::UART::Available);
   if (strcmp(symbol, "GPIO7PinModeENS0_4EPinENS0_5EModeE") == 0)
     return (uint32_t)static_cast<void(*)(BIOS::GPIO::EPin, BIOS::GPIO::EMode)>(BIOS::GPIO::PinMode);
   if (strcmp(symbol, "MEMORY11LinearStartEv") == 0)

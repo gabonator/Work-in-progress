@@ -34,7 +34,7 @@ void BIOS::DBG::Print(const char * format, ...)
 
 	for ( bbuf = buf; *bbuf; bbuf++ )
 	{
-		if ( *bbuf == '\n' || px >= BIOS::LCD::Width )
+		if ( *bbuf == '\n' || px >= BIOS::LCD::Width-4 )
 		{
 			px = 0;
 			py+=14;

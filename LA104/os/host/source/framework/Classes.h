@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "Ringbuf.h"
 
 class CPoint {
 public:

@@ -13,9 +13,10 @@ public:
 	static ui32 htoi(char *str);
 	static char* itoa(si16 i);
 	static char* itoa2(ui8 n);
-	static char* ftoa(float f);
+//	static char* ftoa(float f);
 	static char tohex(ui8 n);
 	static char* clrhex(ui16 c);
+/*
 	static char* MidiNote(int n);
 	static char* FormatVoltage( float fV, int nChars=8 );
 	static char* FormatFrequency( float fF, int nChars=8 );
@@ -35,6 +36,7 @@ public:
 			return;
 		}
 	}
+*/
 	static unsigned int Random()
 	{
 		// our initial starting seed is 5323

@@ -79,8 +79,25 @@ namespace BIOS
     void AnalogWrite(EPin pin, int value) {}
     int AnalogRead(EPin pin) { return 0; }
     void PinMode(EPin pin, EMode mode) {}
-  }
 
+    namespace I2C
+    {
+      bool BeginTransmission(uint8_t address) {return false;}
+      bool RequestFrom(uint8_t address, uint8_t bytes) {return false;}
+      bool Write(uint8_t data) {return false;}
+      uint8_t Read() {return 0;}
+      bool EndTransmission() {return false;}
+    }
+
+    namespace UART
+    {
+      void Setup(int baudrate, EConfig config) {}
+      bool Available() {return false;}
+      uint8_t Read() {return 0;}
+      void Write(uint8_t) {}
+    }
+
+  }
 }
 
 namespace GUI

@@ -3,9 +3,9 @@
 /*static*/ CWnd* 							CWnd::m_pTop = NULL;
 /*static*/ ui16 							CWnd::m_nInstances = 0;
 /*static*/ CWnd* 							CWnd::m_pFocus = NULL;
-/*static*/ CWnd::CTimer 					CWnd::m_arrTimers_[16];
+/*static*/ CWnd::CTimer 					CWnd::m_arrTimers_[8];
 /*static*/ CArray<CWnd::CTimer> 			CWnd::m_arrTimers;
-/*static*/ CWnd::CModal						CWnd::m_arrModals_[8];
+/*static*/ CWnd::CModal						CWnd::m_arrModals_[4];
 /*static*/ CArray<CWnd::CModal> 			CWnd::m_arrModals;
 /*static*/ CRect 							CWnd::m_rcOverlay;
 /*static*/ CRect 							CWnd::m_rcOverlayStack;
@@ -114,14 +114,14 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 
 /*virtual*/ void CWnd::OnKey(ui16 nKey)
 {
-	if ( nKey & BIOS::KEY::Down )
+	if ( nKey == BIOS::KEY::Down )
 	{
 		_ASSERT( m_pFocus == this ); // ja mam focus!
 		CWnd *pFocus = _GetNextActiveWindow();
 		
 		// cycle items, when there are no more window, jump to first possible
-		if ( !pFocus )
-			pFocus = _GetFirstActiveWindow();
+		//if ( !pFocus )
+		//	pFocus = _GetFirstActiveWindow();
 
 		if (pFocus)
 		{
@@ -135,14 +135,14 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 		}
 	}
 
-	if ( nKey & BIOS::KEY::Up )
+	if ( nKey == BIOS::KEY::Up )
 	{
 		_ASSERT( m_pFocus == this ); 
 		CWnd *pFocus = _GetPrevActiveWindow();
 
 		// cycle items
-		if ( !pFocus )
-			pFocus = _GetLastActiveWindow();
+		//if ( !pFocus )
+		//	pFocus = _GetLastActiveWindow();
 
 		if (pFocus)
 		{
@@ -159,7 +159,7 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 		}
 	}
 
-	if ( nKey & BIOS::KEY::Escape )
+	if ( nKey == BIOS::KEY::Escape )
 	{
 		if(m_pParent && m_pParent->m_pParent) {
 			CWnd *pFocus = m_pParent->m_pParent->m_pFirst;
@@ -239,7 +239,17 @@ void CWnd::Create( const char* pszId, ui16 dwFlags, const CRect& rc, CWnd* pPare
 
 void CWnd::SetFocus()
 {
-	m_pFocus = this;
+    CWnd *pChild = m_pFirst;
+    while (pChild)
+    {
+        if ((pChild->m_dwFlags & WsVisible) && !(pChild->m_dwFlags & WsNoActivate))
+        {
+            m_pFocus = pChild;
+            return;
+        }
+        pChild = pChild->m_pNext;
+    }
+    m_pFocus = this;
 }
 
 ui8 CWnd::HasFocus()
@@ -264,18 +274,18 @@ void CWnd::SendMessage(CWnd* pTarget, ui16 code, ui32 data)
 	pTarget->OnMessage(this, code, data);
 }
 
-void CWnd::ShowWindow(ui8 sh)
+void CWnd::ShowWindow(bool b)
 {
-	if ( sh == SwShow )
+	if (b)
 	{
 		if ( !(m_dwFlags & WsVisible) )
-			OnMessage( this, ToWord('S', 'H'), 1 ); 
+            WindowMessage(WmWillShow, 0);
 		m_dwFlags |= WsVisible;
 	}
 	else
 	{
 		if ( m_dwFlags & WsVisible )
-			OnMessage( this, ToWord('S', 'H'), 0 ); 
+            WindowMessage(WmWillShow, 0);
 		m_dwFlags &= ~WsVisible;
 	}
 }
@@ -362,7 +372,10 @@ void CWnd::_UpdateTimers()
 		if ( /*(si32)(nTick - timer.m_nLast)*/ nTick > timer.m_nNext )
 		{
 			// enable resident timers ?
-			_ASSERT( timer.m_pWnd->m_dwFlags & CWnd::WsVisible );
+			//_ASSERT( timer.m_pWnd->m_dwFlags & CWnd::WsVisible );
+            if (!(timer.m_pWnd->m_dwFlags & CWnd::WsVisible))
+                continue;
+            
 			timer.m_pWnd->OnTimer();
 			timer.m_nNext = BIOS::SYS::GetTick() + timer.m_nInterval;
 		}
@@ -401,7 +414,7 @@ void CWnd::StartModal( CWnd* pwndChildFocus /*= NULL*/ )
 
 	m_rcOverlay |= m_rcClient;
 
-	ShowWindow( SwShow );
+	ShowWindow( true );
 	Invalidate();	
 }
 

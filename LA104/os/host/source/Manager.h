@@ -17,6 +17,7 @@ class CWndUserManager : public CWnd
 	CArray<TLoadedModule> m_arrLoaded;
 
 	CWndMessageBox		m_wndMessage;	
+	uint32_t		m_dwExecuteAddress;
 
 public:
 	CWndUserManager();
@@ -25,6 +26,7 @@ public:
 	virtual void OnTimer();
 	virtual void OnMessage(CWnd* pSender, ui16 code, ui32 data);
 	virtual void OnKey(ui16 nKey);
+	uint32_t GetExecutionEntry();
 
 private:
 	void InitFileList();
@@ -51,7 +53,7 @@ private:
 	bool ElfLoad( char* strName );
 
 	bool ElfGetInterpreter( char* strName, char* strInterpreter );
-	void ElfExecute( char* strName );
+	uint32_t ElfExecute( char* strName );
 
 	// hex
 	bool HexGetInfo( char* strName, ui32& dwEntry, ui32& dwBegin, ui32& dwEnd );

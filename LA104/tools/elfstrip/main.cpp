@@ -886,11 +886,14 @@ int main(int argc, char* argv[])
     // .plt - actual code referring to function addresses at .rel.plt
     // .got - at this memory location the addresses being paired with real function locations are placed, here .rel.plt points
     
-    
-    if ( elfIn.HasSection(".dynstr") )
-        DumpSym( elfIn.GetSection(".dynsym"), elfIn.GetSection(".dynstr") );
-    if ( elfIn.HasSection(".rel.plt") )
-        DumpRel( elfIn.GetSection(".rel.plt"), elfIn.GetSection(".dynstr") );
+
+    if (0)
+    {
+      if ( elfIn.HasSection(".dynstr") )
+          DumpSym( elfIn.GetSection(".dynsym"), elfIn.GetSection(".dynstr") );
+      if ( elfIn.HasSection(".rel.plt") )
+          DumpRel( elfIn.GetSection(".rel.plt"), elfIn.GetSection(".dynstr") );
+    }
     //elfIn.GetSection(".rel.plt").Export("relplt.x");
     
     CElf elfOut;

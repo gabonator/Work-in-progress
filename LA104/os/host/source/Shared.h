@@ -10,6 +10,10 @@ uint32_t GetProcAddress(char* symbol)
   {
     symbol += 7;
   } else
+  if (strncmp(symbol, "_Z", 2) == 0)
+  {
+    symbol += 2;
+  } else
   {
     return 0;
   }
@@ -18,6 +22,8 @@ uint32_t GetProcAddress(char* symbol)
     symbol++;
 
 
+  if (strcmp(symbol, "sprintfPcPKcz") == 0)
+    return (uint32_t)static_cast<int(*)(char*, char const*, ...)>(sprintf);
   if (strcmp(symbol, "BackgroundER5CRectmm") == 0)
     return (uint32_t)static_cast<void(*)(CRect&, unsigned long, unsigned long)>(GUI::Background);
   if (strcmp(symbol, "WindowERK5CRectt") == 0)

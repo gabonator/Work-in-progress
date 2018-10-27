@@ -47,6 +47,8 @@ public:
 		WmTick = 3,
 		WmBroadcast = 4,
 //		WmMouse = 8,
+        WmWillShow = 16,
+        WmWillHide = 32,
 
 		// Window style
 		WsHidden = 0,
@@ -55,10 +57,7 @@ public:
 		WsNeedRedraw = 4,
 		WsModal = 8,
 		WsTick = 16,
-		WsListener = 32,
-		
-		SwShow = 1,
-		SwHide = 0
+		WsListener = 32
 	};
 
 public:
@@ -66,9 +65,9 @@ public:
 	static CWnd*	m_pFocus;
 	static ui16		m_nInstances;
 
-	static CTimer	m_arrTimers_[16];
-	static CModal	m_arrModals_[8];
-	static CArray<CTimer>	m_arrTimers;
+	static CTimer	m_arrTimers_[8];
+	static CModal	m_arrModals_[4];
+	static CArray<CTimer> m_arrTimers;
 	static CArray<CModal> m_arrModals;
 	static CRect m_rcOverlay;
 	static CRect m_rcOverlayStack;
@@ -102,7 +101,7 @@ public:
 	CWnd* GetActiveWindow();
 	void Invalidate();
 	void SendMessage(CWnd* pTarget, ui16 code, ui32 data);
-	void ShowWindow(ui8 sh);
+	void ShowWindow(bool bShow);
 	void SetTimer(ui32 nInterval);
 	void KillTimer();
 	void StartModal(CWnd* pwndChildFocus = NULL);

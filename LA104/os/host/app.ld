@@ -5,7 +5,7 @@ MEMORY
   ram (rwx) : ORIGIN = 0x20000000, LENGTH = 40K
 }
 
-_estack = ORIGIN(ram)+LENGTH(ram)-0x600;
+_estack = ORIGIN(ram)+LENGTH(ram)-0x100;
 
 /* Linker script for Olimex STM32-H103 eval board.
  *
@@ -38,11 +38,11 @@ SECTIONS
   .text : {
     _vectors = .;
     *(.isr_vectors)      /* Vector table */
+    _stext = .;
     *(.text*)        /* Program code */
     *(.rodata*)      /* Read only data */
 
     . = ALIGN(4);
-
     _etext = .;
     _sidata = _etext;
   } >rom

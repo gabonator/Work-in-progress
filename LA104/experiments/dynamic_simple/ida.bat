@@ -1,1 +1,0 @@
-start C:\Programs\Devel\IDA\idag.exe  bin\mains.elf 

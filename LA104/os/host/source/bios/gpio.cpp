@@ -235,6 +235,11 @@ namespace I2C
     return Dly_mS == 0;
   }
 
+  void er(const char* m)
+  {
+    BIOS::DBG::Print("#%s", m);
+  }
+
   void i2c_init()
   {
       // Initialization struct
@@ -277,7 +282,10 @@ namespace I2C
   void i2c_start()
   {
       // Wait until I2Cx is not busy anymore
-      while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY));
+      SetTimeout(2000);
+      while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY))
+        if (Timeout()) {er("b1"); return;}
+      
    
       // Generate start condition
       I2C_GenerateSTART(I2Cx, ENABLE);
@@ -285,7 +293,8 @@ namespace I2C
       // Wait for I2C EV5. 
       // It means that the start condition has been correctly released 
       // on the I2C bus (the bus is free, no other devices is communicating))
-      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT));
+      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT))
+        if (Timeout()) {er("b2"); return;}
   }
    
   void i2c_stop()
@@ -293,7 +302,9 @@ namespace I2C
       // Generate I2C stop condition
       I2C_GenerateSTOP(I2Cx, ENABLE);
       // Wait until I2C stop condition is finished
-      while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_STOPF));
+      SetTimeout(100);
+      while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_STOPF))
+        if (Timeout()) {er("e1"); return;};
   }
    
   void i2c_address_direction(uint8_t address, uint8_t direction)
@@ -303,16 +314,19 @@ namespace I2C
    
       // Wait for I2C EV6
       // It means that a slave acknowledges his address
-      SetTimeout(100);
+      SetTimeout(1000);
       if (direction == I2C_Direction_Transmitter)
       {
           while (!I2C_CheckEvent(I2Cx,
-              I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) && !Timeout());
+              I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+            if (Timeout()) {er("a1"); return;};
+
       }
       else if (direction == I2C_Direction_Receiver)
       { 
           while (!I2C_CheckEvent(I2Cx,
-              I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED) && !Timeout());
+              I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
+            if (Timeout()) {er("a2"); return;};
       }
   }
    
@@ -323,8 +337,9 @@ namespace I2C
       // Wait for I2C EV8_2.
       // It means that the data has been physically shifted out and 
       // output on the bus)
-      SetTimeout(100);
-      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED) && !Timeout());
+      SetTimeout(500);
+      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+            if (Timeout()) {er("t1"); return;};
   }
    
   uint8_t i2c_receive_ack()
@@ -333,8 +348,9 @@ namespace I2C
       I2C_AcknowledgeConfig(I2Cx, ENABLE);
       // Wait for I2C EV7
       // It means that the data has been received in I2C data register
-      SetTimeout(100);
-      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) && !Timeout());
+      SetTimeout(500);
+      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED))
+            if (Timeout()) {er("r1"); return 0x00;};
    
       // Read and return data byte from I2C data register
       return I2C_ReceiveData(I2Cx);
@@ -346,8 +362,9 @@ namespace I2C
       I2C_AcknowledgeConfig(I2Cx, DISABLE);
       // Wait for I2C EV7
       // It means that the data has been received in I2C data register
-      SetTimeout(100);
-      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) && !Timeout());
+      SetTimeout(500);
+      while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED))
+            if (Timeout()) {er("r2"); return 0x00;};
    
       // Read and return data byte from I2C data register
       return I2C_ReceiveData(I2Cx);

@@ -38,7 +38,7 @@ void __attribute__((naked)) HardFaultException()
 
 void __irq__ print_hardfault()
 {    
-    BIOS::LCD::Clear(0);
+//    BIOS::LCD::Clear(0);
     _fprintf(stderr, "\n\n   HARDFAULT   \n");
     _fprintf(stderr, "SP:%08x PC:%08x LR:%08x\n",
             (uint32_t)SP, *(SP + 6), *(SP + 5));

@@ -82,11 +82,7 @@ void sdl_loop()
     {
         if (SDL_KEYDOWN == event.type)
             lastKey = event.key.keysym.scancode;
-        
-        //            if ( SDL_KEYDOWN == event.type && SDL_SCANCODE_LEFT == event.key.keysym.scancode )
-        //                snake.WindowMessage(CWnd::WmKey, BIOS::KEY::KeyLeft);
-        //            if ( SDL_KEYDOWN == event.type && SDL_SCANCODE_RIGHT == event.key.keysym.scancode )
-        //                snake.WindowMessage(CWnd::WmKey, BIOS::KEY::KeyRight);
+
         if( ( SDL_QUIT == event.type ) ||
            ( SDL_KEYDOWN == event.type && SDL_SCANCODE_ESCAPE == event.key.keysym.scancode ) )
         {

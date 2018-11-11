@@ -1,0 +1,11 @@
+BEGIN;801180030;HELAGO-CZ, s.r.o.;VWR;ORDERS;20180122;102511;
+HEAD;801180030;20180122;;CZK;
+SOLDTO;26000611;HELAGO-CZ, s.r.o.
+SHIPTO;26000611;HELAGO-CZ, s.r.o.;;;;;Kladská 1082;;;;;Hradec Králové 3;500 03;CZ;odbyt@helago-cz.cz;495 768 317
+LINE;000001;331325000500.;331325000500.;Střička bezpečnostní úzkohrdlá, LDPE, s potiskem, Aceton, 500 ml;10.000;;20180122;;
+LINE;000002;331325020500.;331325020500.;Střička bezpečnostní úzkohrdlá, LDPE, s potiskem, Ethanol, 500 ml;10.000;;20180122;;
+LINE;000003;331325060500.;331325060500.;Střička bezpečnostní úzkohrdlá, LDPE, s potiskem, destil. voda, 500 ml;10.000;;20180122;;
+LINE;000004;336707095088.;336707095088.;Střička, LDPE, čirá s trubičkou, 500ml;10.000;;20180122;;
+LINE;000005;331325030250.;331325030250.;Střička bezpečnostní úzkohrdlá, LDPE, s potiskem, Isopropanol, 250 ml;10.000;;20180122;;
+LINE;000006;331325030500.;331325030500.;Střička bezpečnostní úzkohrdlá, LDPE, s potiskem, Isopropanol, 500 ml;10.000;;20180122;;
+END;801180030

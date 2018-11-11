@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<biztalk_1><header><delivery><message><messageID></messageID><sent></sent>
+<subject></subject></message><to><address/><state><referenceID></reference
+ID><handle></handle><process></process><ediid>63073242</ediid></state></to
+><from><address/><state><referenceID></referenceID><handle></handle><proce
+ss></process><ediid>25963961</ediid></state></from></delivery><manifest><d
+ocument><userdocid>801180030</userdocid><name>xml_document</name></documen
+t></manifest></header><body><xml_document
+xmlns="http://editel.cz/schemas/2002/orders.xdr"><form_header><userdocid>8
+01180030</userdocid><document_date>2018-01-22</document_date><delivery_dat
+e>1900-01-01</delivery_date><buyer_ean>25963961</buyer_ean><buyer_name>HEL
+AGO-CZ,
+s.r.o.</buyer_name><delivery_ean>63073242</delivery_ean><delivery_name>VWR
+International
+s.r.o.</delivery_name><supplier_ean>63073242</supplier_ean><supplier_name>
+VWR International
+s.r.o.</supplier_name></form_header><line_items><item><item_number>1</item
+_number><article_ean>331325000500</article_ean><article_name>Střička
+bezpečnostní úzkohrdlá, LDPE, s potiskem, Aceton, 500
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka bezpečnostní úzkohrdlá, LDPE, s potiskem, Aceton, 500
+ml</specification></item><item><item_number>2</item_number><article_ean>33
+1325020500</article_ean><article_name>Střička bezpečnostní úzkohrdlá,
+LDPE, s potiskem, Ethanol, 500
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka bezpečnostní úzkohrdlá, LDPE, s potiskem, Ethanol, 500
+ml</specification></item><item><item_number>3</item_number><article_ean>33
+1325060500</article_ean><article_name>Střička bezpečnostní úzkohrdlá,
+LDPE, s potiskem, destil. voda, 500
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka bezpečnostní úzkohrdlá, LDPE, s potiskem, destil. voda, 500
+ml</specification></item><item><item_number>4</item_number><article_ean>33
+6707095088</article_ean><article_name>Střička, LDPE, čirá s trubičkou, 500
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka, LDPE, čirá s trubičkou, 500
+ml</specification></item><item><item_number>5</item_number><article_ean>33
+1325030250</article_ean><article_name>Střička bezpečnostní úzkohrdlá,
+LDPE, s potiskem, Isopropanol, 250
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka bezpečnostní úzkohrdlá, LDPE, s potiskem, Isopropanol, 250
+ml</specification></item><item><item_number>6</item_number><article_ean>33
+1325030500</article_ean><article_name>Střička bezpečnostní úzkohrdlá,
+LDPE, s potiskem, Isopropanol, 500
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>Stři
+čka bezpečnostní úzkohrdlá, LDPE, s potiskem, Isopropanol, 500
+ml</specification></item></line_items></xml_document></body></biztalk_1>

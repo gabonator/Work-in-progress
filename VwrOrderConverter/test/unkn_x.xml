@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><order:orderMessage xmlns:order="urn:gs1:ecom:order:xsd:3" xmlns:sh="http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:gs1:ecom:order:xsd:3 ../Schemas/gs1/ecom/Order.xsd">
+    <sh:StandardBusinessDocumentHeader>
+		<sh:HeaderVersion>1.0</sh:HeaderVersion>
+		<sh:Sender>
+			<sh:Identifier Authority="GS1"/>
+			<sh:ContactInformation>
+				<sh:Contact>Galejová Kamila</sh:Contact>
+				<sh:EmailAddress>kamila.galejova@fno.cz</sh:EmailAddress>
+				<sh:FaxNumber>+420 597 372 372</sh:FaxNumber>
+				<sh:TelephoneNumber>+420 597 372 374</sh:TelephoneNumber>
+				<sh:ContactTypeIdentifier>Buyer</sh:ContactTypeIdentifier>
+			</sh:ContactInformation>
+		</sh:Sender>
+		<sh:Receiver>
+			<sh:Identifier Authority="GS1"/>
+			<sh:ContactInformation>
+				<sh:Contact>Jan Novák</sh:Contact>
+				<sh:EmailAddress>jan.novak@hartmann-rico.com</sh:EmailAddress>
+				<sh:FaxNumber>+420 021 372 372</sh:FaxNumber>
+				<sh:TelephoneNumber>+420 021 372 374</sh:TelephoneNumber>
+				<sh:ContactTypeIdentifier>Seller</sh:ContactTypeIdentifier>
+			</sh:ContactInformation>
+		</sh:Receiver>
+		<sh:DocumentIdentification>
+			<sh:Standard>GS1</sh:Standard>
+			<sh:TypeVersion>3.3</sh:TypeVersion>
+			<sh:InstanceIdentifier>100002</sh:InstanceIdentifier>
+			<sh:Type/>
+			<sh:MultipleType>false</sh:MultipleType>
+			<sh:CreationDateAndTime>2018-04-16T12:00:01.000-05:00</sh:CreationDateAndTime>
+		</sh:DocumentIdentification>
+	</sh:StandardBusinessDocumentHeader>
+    <order>
+        <creationDateTime>2018-04-16T12:00:01.000-05:00</creationDateTime>
+        <documentStatusCode></documentStatusCode>
+        <orderIdentification>
+            <entityIdentification>1884</entityIdentification>
+            <contentOwner>
+                <gln>8595003200001</gln>
+            </contentOwner>
+        </orderIdentification>
+        <orderTypeCode>SZM</orderTypeCode>
+        <isApplicationReceiptAcknowledgementRequired>false</isApplicationReceiptAcknowledgementRequired>
+        <orderInstructionCode></orderInstructionCode>
+        <additionalOrderInstruction languageCode="en">Prosím o dodání…</additionalOrderInstruction>
+        <note languageCode="en">viz požadavek vrchní sestry</note>
+        <buyer>
+            <gln>8595003200001</gln>
+        </buyer>
+        <seller>
+            <gln>8595003200004</gln>
+        </seller>
+        <orderLogisticalInformation>
+            <shipTo>
+                Odbor zásobování - úsek zdravotnických potřeb
+            </shipTo>
+            <orderLogisticalDateInformation>
+                <requestedDeliveryDateTime>IHNED</requestedDeliveryDateTime>
+            </orderLogisticalDateInformation>
+        </orderLogisticalInformation>
+        <paymentTerms>
+            <paymentTermsEventCode></paymentTermsEventCode>
+            <paymentTermsTypeCode></paymentTermsTypeCode>
+            <proximoCutOffDay>120</proximoCutOffDay>
+        </paymentTerms>
+        <quoteNumber>
+            <entityIdentification>15/0592/14</entityIdentification>
+        </quoteNumber>
+        <orderLineItem>
+            <lineItemNumber>104</lineItemNumber>
+            <requestedQuantity measurementUnitCode="EA">16</requestedQuantity>
+            <netAmount currencyCode="EUR">3200.00</netAmount>
+            <netPrice currencyCode="EUR">200.00</netPrice>
+            <note languageCode="en">zelený</note>
+            <transactionalTradeItem>
+                <gtin>40987650000223</gtin>
+            </transactionalTradeItem>
+            <leviedDutyFeeTax>
+                <dutyFeeTaxAmount currencyCode="EUR">672.00</dutyFeeTaxAmount>
+                <dutyFeeTaxBasisAmount currencyCode="EUR">3872.00</dutyFeeTaxBasisAmount>
+                <dutyFeeTaxPercentage>21.00</dutyFeeTaxPercentage>
+                <dutyFeeTaxTypeCode>VAT</dutyFeeTaxTypeCode>
+                <extension/>
+            </leviedDutyFeeTax>
+        </orderLineItem>
+        <orderLineItem>
+            <lineItemNumber>131</lineItemNumber>
+            <requestedQuantity measurementUnitCode="EA">30</requestedQuantity>
+            <additionalOrderLineInstruction languageCode="en">modrý</additionalOrderLineInstruction>
+            <netAmount currencyCode="EUR">6000.00</netAmount>
+            <netPrice currencyCode="EUR">200.00</netPrice>
+            <transactionalTradeItem>
+                <gtin>40987650000346</gtin>
+            </transactionalTradeItem>
+            <leviedDutyFeeTax>
+                <dutyFeeTaxAmount currencyCode="EUR">1260.00</dutyFeeTaxAmount>
+                <dutyFeeTaxBasisAmount currencyCode="EUR">7260.00</dutyFeeTaxBasisAmount>
+                <dutyFeeTaxPercentage>21.00</dutyFeeTaxPercentage>
+                <dutyFeeTaxTypeCode>VAT</dutyFeeTaxTypeCode>
+                <extension/>
+            </leviedDutyFeeTax>
+        </orderLineItem>
+    </order>
+</order:orderMessage>

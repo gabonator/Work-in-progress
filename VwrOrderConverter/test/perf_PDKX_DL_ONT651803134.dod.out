@@ -1,0 +1,9 @@
+BEGIN;ONT651803134;Perfect;VWR;ORDERS;20180913;102511;
+HEAD;ONT651803134;20180913;;CZK;
+SOLDTO;26002813;Perfect
+SHIPTO;26005857;Perfect Distribution a.s. Airport Logistic Park;;;;;Kněževes 185;;;;;Kněževes;252 68;CZ;libuse.styskalova@pfd.agel.cz;+420 606 784 687
+LINE;000001;FLME25135;FLME25135;Nadobka 30ml na odber stolice s lopatkou sterilni (bal=50ks);4.000;;20180913;2.58;10.32
+LINE;000002;EXAT125101;EXAT125101;Teplomer chladnickovy -30+40°C, plastova deska, 53x25mm (EXAT125101);9.000;;20180913;32.10;288.90
+LINE;000003;FLME25303;FLME25303;Nadoba sberna na moc/24 hod. - PE 2l, s vickem (FLME25303);2.000;;20180913;29.00;58.00
+LINE;000004;129-0324;129-0324;Sacek na vzorky se zipem a kapsou, PE, 200x300mm, 1000ks (129-0324);1.000;;20180913;2645.00;2645.00
+END;ONT651803134

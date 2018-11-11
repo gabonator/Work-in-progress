@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-2" ?> <order  order_id="8172842425" order_cen="" date_cre="2018-08-22" provider_id="63073242" partner_id="19010290" branch_id="500000" compensation="0" text="">
+<items>
+<item qty="3.00" price="23.00" prod_id="710149" prod_title="Kádinka vysoká  150ml          153" code_pdk="4207149" code_apa="4207149" code_sukl="" code_ean="N"/>
+<item qty="120.00" price="30.30" prod_id="712878" prod_title="Láhev na moč mužská z PH  modré víčko 1l  VITRUM" code_pdk="2482843" code_apa="2482843" code_sukl="" code_ean="N"/>
+<item qty="4.00" price="90.10" prod_id="713915" prod_title="Miska třecí drsná pr. 8,1 cm 211a/1/0 " code_pdk="N" code_apa="" code_sukl="" code_ean="N"/>
+<item qty="6.00" price="29.60" prod_id="716622" prod_title="Střička UH 250 ml + uzávěr (skleň.kolínko)" code_pdk="N" code_apa="" code_sukl="" code_ean="N"/>
+<item qty="8.00" price="43.20" prod_id="710944" prod_title="Tlouček drsný 213a/1      115mm" code_pdk="8911423" code_apa="8911423" code_sukl="" code_ean="N"/>
+<item qty="6.00" price="49.70" prod_id="710393" prod_title="Tlouček drsný 213a/2     135mm" code_pdk="8911415" code_apa="8911415" code_sukl="" code_ean="N"/>
+</items>
+</order>

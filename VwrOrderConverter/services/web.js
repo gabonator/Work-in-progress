@@ -3,6 +3,8 @@
 // npm install xml2json
 // npm install encoding
 
+process.title = "vierka vwr";
+
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const app = express();
@@ -10,26 +12,7 @@ const app = express();
 var converter = require("../converter.js");
 
 app.use(fileUpload());
-/*
-function verify(buffer)
-{
-  var ver = require("fs").readFileSync("verify");
 
-  if (ver.length != buffer.length) 
-  {
-    console.log("current len " + buffer.length + " verify len " + ver.length);
-    throw "verify failed different length";
-  }
-
-  for (var i=0; i<ver.length; i++)
-    if (ver[i] != buffer[i])
-    {
-      console.log("diff:" + ver[i] + " / " + buffer[i] + " at " + i);
-      throw "verify failed";
-    }
-    console.log("verify " + ver.length + " bytes ok");
-}
-*/
 function _toString(buffer)
 {
   var textIn = "";

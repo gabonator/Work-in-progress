@@ -26,7 +26,6 @@ function convert(json)
     messages: []
   };
 
-console.log(formHeader.buyer_name);
   if (formHeader.buyer_name != "HELAGO-CZ, s.r.o.")
   {
     result.messages.push("Warning: customer name differs from HELAGO ("+formHeader.buyer_name+")");

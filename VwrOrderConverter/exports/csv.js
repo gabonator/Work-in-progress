@@ -7,7 +7,7 @@ function toCsv(data)
   print(["HEAD", data.header.documentId, data.header.purchaseTimestamp, "", "CZK", ""]);
   print(["SOLDTO", data.header.partnerIdSold, data.header.partnerName]);
   print(["SHIPTO", data.header.partnerIdShip, 
-         data.header.address[0], "", "", "", "", 
+         data.header.address[0], "", "", "", //"", 
          data.header.address[1], "", "", "", "", 
          data.header.address[2], data.header.address[3], data.header.address[4], 
          data.header.contact[0], data.header.contact[1]]);

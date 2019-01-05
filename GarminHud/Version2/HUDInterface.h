@@ -50,7 +50,8 @@ public:
 		None = 0,
 		Metres = 1,
 		Kilometres = 3,
-		Miles = 5
+		Miles = 5,
+		Foot = 8
 	} eUnits;
 	typedef enum {
 		DotsRight = 0x01,

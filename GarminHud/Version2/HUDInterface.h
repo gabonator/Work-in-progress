@@ -27,6 +27,7 @@ protected:
 	virtual int SendPacket(const unsigned char* pBuf, int nLen) = 0;
 public:
 	typedef enum {
+		Down = 0x01,
 		SharpRight = 0x02,
 		Right = 0x04,
 		EasyRight = 0x08,

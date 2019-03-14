@@ -23,7 +23,7 @@ function convert(data)
   }
 
   var partners = {
-    "ONT33" : {
+    "ONT33,ONTS1,ONTS2,ONTS3,ONTS4,ONTS5,ONTS6,ONTS7,ONTS8,ONTS9,ONTS0" : {
       partnerIdSold: "26002813",
       partnerIdShip: "26006315",
       partnerName: "Perfect",
@@ -557,6 +557,9 @@ var conversionTable = {
 
 
 var quantityTable = {
+"VIT624703102150":100,
+"VIT-112-2371":100,
+/*
 "BRA8728828F":100,
 "PHA713865":10,
 "VIT-112-2371":100,
@@ -609,4 +612,5 @@ var quantityTable = {
 "VITFLME21361":500,
 "VITMMMAK102":20,
 "VITMMMAK113KS":5
+*/
 }

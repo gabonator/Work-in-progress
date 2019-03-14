@@ -9,10 +9,10 @@ function convert(json)
     id: "pharmos xml",
     header: {
       documentId: json.order.order_id,  
-      purchaseTimestamp: json.order.date_cre,
+      purchaseTimestamp: json.order.date_cre.split("-").join(""),
       partnerIdSold: "26002042",
       partnerIdShip: "26005965",
-      partnerName: "Pharmos, a.s.",
+      partnerName: "Pharmos",
       address: ["Pharmos, a.s. Brandýsek", "Slánská 79", "Brandýsek", "273 41", "CZ"],
       contact: ["marie.baladova@pharmos.cz", "312 777 057"]
     },

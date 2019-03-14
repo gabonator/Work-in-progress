@@ -16,8 +16,8 @@ fs.readdirSync(normalizedPath).forEach(function(file)
   if (file.indexOf(".out") != -1)
     return;
 
-  if (file.indexOf("perf") == -1)
-    return;
+//  if (file.indexOf("perf") == -1)
+//    return;
 
   var fileIn = path.join(normalizedPath, file);
   var fileOut = fileIn + ".out";

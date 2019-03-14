@@ -19,7 +19,7 @@ function toCsv(data)
     print([
       "LINE", 
       ("000000" + (i+1)).substr(-6),
-      item.ean,
+      "",
       item.ean,
       item.name,
       parseFloat(item.quantity).toFixed(3),

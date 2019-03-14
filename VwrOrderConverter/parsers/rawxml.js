@@ -4,7 +4,7 @@ var encoding = require("encoding");
 function processXml(xmlData)
 {
   // TODO auto iso?
-  xmlData = encoding.convert(xmlData, "UTF-8", "ISO-8859-2").toString();
+//  xmlData = encoding.convert(xmlData, "UTF-8", "ISO-8859-2").toString();
   var json;
 
   try 
@@ -14,6 +14,8 @@ function processXml(xmlData)
   catch (e)
   {
   }
+require("fs").writeFileSync("out", JSON.stringify(json), "utf-8")
+//console.log(JSON.stringify(json));
 
   return json;
 }

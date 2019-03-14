@@ -14,13 +14,16 @@ function convert(data)
   if (typeof(data) != "object" || !data.length || data.length < 2)
     return false;
 
-  var partner = data.shift();
+  var partner = data[0];
   var partnerKey = partner[3].substr(0, 5);
 
   if (!data) 
   {
     return false;
   }
+
+  if (data[0].length < 13)
+    return false;
 
   var partners = {
     "ONT33,ONTS1,ONTS2,ONTS3,ONTS4,ONTS5,ONTS6,ONTS7,ONTS8,ONTS9,ONTS0" : {
@@ -55,6 +58,7 @@ function convert(data)
     items: [],
     messages: []
   };
+
   for (var pid in partners)
   {
     if (pid.indexOf(partnerKey) != -1)
@@ -67,9 +71,12 @@ function convert(data)
 
   if (!result.header.partnerIdShip)
   {
-    console.log("Partner no match");
+    console.log("Error, cannot match partner id " + partnerKey);
+    result.messages.push("Error, cannot match partner id " + partnerKey);
     return false;
   }
+
+  data.shift();
 
   for (i in data)
   {

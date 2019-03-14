@@ -25,7 +25,6 @@ function processXml(xmlData)
   catch (e)
   {
   }
-
   return json;
 }
 

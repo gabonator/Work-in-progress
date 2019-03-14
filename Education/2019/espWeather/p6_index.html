@@ -1,0 +1,77 @@
+<html>
+<body>
+<style>
+#container {
+    min-width: 310px;
+    height: 400px;
+    margin: 0 auto;
+}
+</style>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<div id="container"></div>
+<script>
+
+var chart = Highcharts.chart('container', {
+  chart: {
+    type: 'spline'
+  },
+  time: {
+    useUTC: false
+  },
+  title: {
+    text: 'Meranie teploty v realnom case'
+  },
+  xAxis: {
+    type: 'datetime'
+  },
+  yAxis: {
+    title: {
+      text: 'Teplota'
+    }
+  },
+  series: [{
+    name: 'Meranie teploty',
+  }]
+});
+
+function loadScript(url)
+{
+  var head = document.getElementsByTagName('head')[0];
+
+  var script = document.createElement('script');
+  script.id = "remote_script";
+  script.type = 'text/javascript';
+  script.src = url; 
+
+  for (var i=0; i<head.childNodes.length; i++)
+  {
+    if ( head.childNodes[i].nodeName == "SCRIPT" && head.childNodes[i].id == "remote_script" )
+    {
+      head.removeChild(head.childNodes[i]);
+      break;
+    }
+  }
+
+  head.appendChild(script);
+}
+
+function pridajBod(hodnota)
+{
+  var timestamp = (new Date()).getTime();
+  chart.series[0].addPoint([timestamp, hodnota]);
+}
+
+function meranie(teplota, vlhkost)
+{
+  console.log(teplota);
+  pridajBod(teplota);
+}
+
+setInterval( ()=>
+{
+  loadScript("http://192.168.1.131/meranie");
+}, 2000);
+</script>
+</body>
+</html>

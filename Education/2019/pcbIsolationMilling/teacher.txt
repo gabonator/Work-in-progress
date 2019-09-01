@@ -1,0 +1,23 @@
+RCL:
+3x ﻿R-EU_0207/10 (R-EU_) (Version 14)
+1x ﻿CPOL-EUE3.5-8 (CPOL-EU) (Version 21)
+
+> Search potentiometer
+1x Piher/PC16S
+0x ﻿TRIM_EU-CIP20C-4MM (TRIM_EU-) (Version 1)+
+
+> Search led,  LED/LED3MM
+1x ﻿LED3MM (LED) (Version 7)
+
+> Search battery
+1x ﻿AB9V (Version 1)	
+
+> Search Pin
+MA03-1
+
+> Search *555 (custom model)
+NE555N
+https://github.com/sparkfun/SparkFun-Eagle-Libraries
+
+> Search 1N4148
+1x ﻿1N4148DO35-10 (1N4148) (Version 2)

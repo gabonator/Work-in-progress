@@ -1,6 +1,6 @@
 # Jednoduchy plosny spoj
 
-![Schema](schema.png)
+![Schema](schema.jpg)
 
 Linka na stiahnutie [Autodesk eagle](https://www.autodesk.com/products/eagle/free-download)
 

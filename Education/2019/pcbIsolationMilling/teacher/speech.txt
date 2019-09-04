@@ -1,0 +1,64 @@
+1.
+Dnes vam poviem zopar slov o tom, ako sa da skonstruovat plosny spoj. Neostaneme len pri teorii, ale pocas workshopu si vysksusame takyto jednoduchy spoj navrhnut, vyrobit a nasledne ho aj osadime suciastkami a vyskusame. 
+
+2. 
+- Najprv je nejaky napad - napriklad, chcem si vyrobit generator zvuku imitujuci zvuk policajnej sireny, ktory by sme si chceli nainstalovat do auta
+- ak sa da, spravime si prieskum ako dany problem riesia ostatni
+- z mnozstva schem si vyberieme to riesenie, ktore nam vyhovuje najviac
+- Zacneme prototypovanim na kontaktnom poli (ukazka). Overime funkcnost zariadenia, ci nahodou autor nevypublikoval schemu aj s chybami.
+- Vidime, ze v tomto pripade je zariadenie skonstrovane na napajanie 9V, no autobateria ma napatie ine, vie niekto ake? (Q) Druhy nedostatok zapojenia je to, ze reproduktor je pripojeny priamo na vystupny pin casovaca NE555, a ten ma prudove obmedzenie maximalne 300mA, takze maximalny vykon ktory by sme tlacili do reproduktora by bol kolko? (Q) U=9V, I=0.3A, P=U*I=2.7W. Takuto sirenu by sme poriadne nepoculi, takze porozmyslame ze by sme medzi obvod 555 a reproduktor vlozili vykonovy zosilnovac... 
+
+- dajme tomu, ze zariadenie mame overene, funguje presne podla nasich predstav, dalsie zmeny nie su potrebne. Rozmyslame, ze by sme chceli vyrobit 20 kusov, no suciastky nastrkane do kontaktneho pola su zbytocne rozmerene a zaroven by pri menej opatrnom narabani mohli suciastky z pola povypadavat. Aky postup navrhujete? (Q) 1.dat do krabicky a zaliat epoxidom, 2. vrabcie hniezdo, 3. plosny spoj
+
+3.
+- Niektore jednoduche konstrukcie vieme zletovat vo forme vrabcieho hniezda, kedy kompomnenty vzajomne zletujeme v priestore. Vlavo hore vidime blikac s casovacom 555, podobny tomu, ktory si dnes skonstruujeme
+- Niekedy takato forma moze prerast do umeleckeho diela ako na obrazku napravo. Jedna sa o dosku kompatibilnu arduino UNO 
+
+4.
+- Hadajte co vidime na obrazku? (Q)
+- Jedna sa o televizny primac spred 50tich rokov
+- Tu citime potrebu ineho pristupu, samotny proces vyroby a ozivenia takehoto zariadenia musi byt velmi komplikovany, a to ani nehovorime a servisovatelnosti, ak sa taketo zariadenie pokazi
+- Hladame teda riesenie, ktorym zjednodusime proces vyroby, s ohladom na maximalnu automatizaciu vyroby, kontrolu kvality a naslednu servisovatelnost
+
+5.
+Tuto sa dostavame ku predmetu naseho workshopu - doska klonu arduina, kde su citatalne oznacene vsetky komponenty, co zjednodusje osadzovanie ako aj testovanie
+Jedna o obostranny plosny spoj (doska plosneho spoja, DPS) alebo printed circuit board.
+Najjednoduchsie konstruckie si vystacia s jednostrannym plosnym spojom a pri komplikovanejsich zariadeniach ako su pocitace a telefony, ktore pouzivaju procesor a pamate a siroke datove zbernice sa nevyhneme pouzitiu viacerych vrstiev
+
+6.
+Kedysi sa plosne spoje kreslili rucne vo forme velkej predlohy, ktore sa potom foto cestou zredukovala na skutocnu velkost. Dnes nam pri navrhu asistuju pocitacove softwary.
+Jednym z nich je aj Autodesk Eagle. Vpravo dole mame adresu, kde si ho mozete stiahnut, kto ho este nema nainstalovany, tak teraz je najvhodnejsia doba, coskoro ho budeme potrebovat.
+V pozadi vidime editor schemy a napravo navrh plosneho spoja.
+Niektore softy umoznuju aj simulaciu obvodov v casovej alebo frekvencnej oblasti, simulaciu rozlozenia tepla, atd… Samozrejmostou je aj export 3D modelu
+
+7.
+Ak uz mame plosny spoj navrhnuty, nastava otazka ako ho vyrobit?
+Zakladnym materialom je tzv. kuprexit. Je to doska zo sklenenych vlaken zaliata v epoxide a na povrchu je prilepena medena folia.
+Chemickym alebo mechanickym sposobom systematicky odstranime med v miestach kde ju nepotrebujeme a tym ziskame sustavu vodivych cesticiek na nevodivej doske.
+Pri konvecnych metodach vyroby DPS vytlacime predlohu na papier alebo priehladnu foliu. Jednodnou z metod je transferova metoda, kde pomocou tepla a tlaku prenesieme obrazec vytlaceny na naserovej tlaciarni na ocisteny a odmasteny kuprexit. Lepsou metodou je vyroba fotocestou, kedy na ocisteny kuprexid nanesieme tzv. fotorezist. Je to chemikalia ktora je citliva na oziarenie
+
+...
+
+RCL:
+3x ﻿R-EU_0207/10 (R-EU_) (Version 14)
+1x ﻿CPOL-EUE3.5-8 (CPOL-EU) (Version 21)
+
+> Search potentiometer
+1x Piher/PC16S
+0x ﻿TRIM_EU-CIP20C-4MM (TRIM_EU-) (Version 1)+
+
+> Search led,  LED/LED3MM
+1x ﻿LED3MM (LED) (Version 7)
+
+> Search battery
+1x ﻿AB9V (Version 1)	
+
+> Search Pin
+MA03-1
+
+> Search *555 (custom model)
+NE555N
+https://github.com/sparkfun/SparkFun-Eagle-Libraries
+
+> Search 1N4148
+1x ﻿1N4148DO35-10 (1N4148) (Version 2)

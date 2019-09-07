@@ -71,7 +71,7 @@ function convert(data)
     });
   }
 
-  console.log(result.items);
+//  console.log(result.items);
 
   return result;
 }

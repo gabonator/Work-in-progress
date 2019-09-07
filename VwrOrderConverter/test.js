@@ -13,10 +13,10 @@ function _toString(buffer)
 
 fs.readdirSync(normalizedPath).forEach(function(file) 
 {
-  if (file.indexOf(".out") != -1)
+  if (file.charAt(0) == "." || file.indexOf(".out") != -1)
     return;
 
-//  if (file.indexOf("perf") == -1)
+//  if (file.indexOf("spol") == -1)
 //    return;
 
   var fileIn = path.join(normalizedPath, file);
@@ -29,12 +29,14 @@ fs.readdirSync(normalizedPath).forEach(function(file)
     file:file, 
     parser:(dataOut ? dataOut.parser : null), 
     test:"not available",
-    messages:dataOut ? dataOut.messages : null};
+    messages:dataOut ? dataOut.messages : null,
+    items:dataOut ? dataOut.input.items.length : 0};
 
   if (dataVerify && dataOut)
   {
-    report.test = (dataVerify == dataOut.result) ? "OK" : "failed!"
 //    fs.writeFileSync(fileOut+"_err", dataOut.result);
+//process.exit();
+    report.test = (dataVerify == dataOut.result) ? "OK" : "failed!"
   }
   if (!dataVerify && dataOut)
   {

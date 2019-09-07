@@ -60,7 +60,7 @@ app.post('/', function(req, res)
   {
     res.writeHead(200, {
         'Content-Type': "text/plain",
-        'Content-disposition': 'attachment;filename=' + fileName,
+        'Content-disposition': 'attachment;filename*=UTF-8\'\''+encodeURIComponent(fileName),
         'Content-Length': newBuffer.length
     });
     res.end(newBuffer);

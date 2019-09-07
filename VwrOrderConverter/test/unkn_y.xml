@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-16"?>
+<MessageParts xmlns="http://schemas.microsoft.com/dynamics/2008/01/documents/Message">
+  <PurchaseRequisition xmlns="http://schemas.microsoft.com/dynamics/2008/01/documents/PurchaseRequisition">
+    <DocPurpose>Original</DocPurpose>
+    <SenderId>spol</SenderId>
+    <VendPurchOrderJour class="entity">
+      <_DocumentHash>6650c5f6586f0b01d3d0e2297dcd30b4</_DocumentHash>
+      <AddressCode>00011789</AddressCode>
+      <Amount>12.10</Amount>
+      <AmountPurchaseOrder>Yes</AmountPurchaseOrder>
+      <CountryRegionId>CZ</CountryRegionId>
+      <CurrencyCode>CZK</CurrencyCode>
+      <DeliveryAddress>Kekulova/Sklářská
+400 32  Ústí nad Labem</DeliveryAddress>
+      <DeliveryCity>Ústí nad Labem</DeliveryCity>
+      <DeliveryCountryRegionId>CZ</DeliveryCountryRegionId>
+      <DeliveryDate>2018-09-27</DeliveryDate>
+      <DeliveryName>Spolek pro chemickou a hutní výrobu, akciová společnost</DeliveryName>
+      <DeliveryState>42</DeliveryState>
+      <DeliveryStreet>Kekulova/Sklářská</DeliveryStreet>
+      <DeliveryType>None</DeliveryType>
+      <DeliveryZipCode>400 32</DeliveryZipCode>
+      <Dimension>
+        <element />
+        <element>10107</element>
+        <element />
+        <element />
+      </Dimension>
+      <ExchRate>100.000000000000</ExchRate>
+      <InclTax>No</InclTax>
+      <InterCompanyPosted>No</InterCompanyPosted>
+      <InvoiceAccount>D99999</InvoiceAccount>
+      <LanguageId>CS</LanguageId>
+      <OrderAccount>D99999</OrderAccount>
+      <ParmId>7422494</ParmId>
+      <PurchaseOrderId>SP18-11265</PurchaseOrderId>
+      <PurchId>N18-12285</PurchId>
+      <PurchOrderDate>2018-09-27</PurchOrderDate>
+      <PurchOrderDocNum>N18-12285-1</PurchOrderDocNum>
+      <Qty>1.000</Qty>
+      <RecId>5638094388</RecId>
+      <RecVersion>328110075</RecVersion>
+      <SalesOrderbalance>10.00</SalesOrderbalance>
+      <Status>Created</Status>
+      <SumTax>2.10</SumTax>
+      <Triangulation>No</Triangulation>
+      <VendGroup>TUZ</VendGroup>
+      <VendPurchOrderTrans class="entity">
+        <CurrencyCode>CZK</CurrencyCode>
+        <DeliveryDate>2018-09-27</DeliveryDate>
+        <Dimension>
+          <element />
+          <element>10107</element>
+          <element />
+          <element>SPO</element>
+        </Dimension>
+        <EmplEDIOffice>10107</EmplEDIOffice>
+        <InventDimId>DIM000012</InventDimId>
+        <InventQty>1.00</InventQty>
+        <InventTransId>ID03273170</InventTransId>
+        <ItemId>00000131</ItemId>
+        <LineAmount>10.00</LineAmount>
+        <LineNum>1.0000000000</LineNum>
+        <Name>Spona Herkules</Name>
+        <OrigPurchId>N18-12285</OrigPurchId>
+        <PriceUnit>1.00</PriceUnit>
+        <PurchaseOrderId>SP18-11265</PurchaseOrderId>
+        <purchId>N18-12285</purchId>
+        <PurchOrderDate>2018-09-27</PurchOrderDate>
+        <PurchUnit>ks</PurchUnit>
+        <Qty>1.000</Qty>
+        <RecId>5638291159</RecId>
+        <RecVersion>2009222564</RecVersion>
+        <TaxAmount>2.10</TaxAmount>
+        <TaxGroup>CZN</TaxGroup>
+        <TaxItemGroup>PZ</TaxItemGroup>
+        <InventReportDimHistory class="entity">
+          <InventDimId>DIM000012</InventDimId>
+          <InventTransId>ID03273170</InventTransId>
+          <Qty>1.00</Qty>
+          <RecId>5641081764</RecId>
+          <RecVersion>1</RecVersion>
+          <TransactionLogType>PurchPurchaseOrder</TransactionLogType>
+          <TransRefId>SP18-11265</TransRefId>
+          <InventDim class="entity">
+            <inventDimId>DIM000012</inventDimId>
+            <InventLocationId>218</InventLocationId>
+            <RecId>5637156172</RecId>
+            <RecVersion>1</RecVersion>
+          </InventDim>
+        </InventReportDimHistory>
+      </VendPurchOrderTrans>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637145109</RecId>
+        <RecVersion>92304435</RecVersion>
+        <RemarkVariantId>Doprava</RemarkVariantId>
+        <Txt>Potvrzením této objednávky smluvní strany uzavírají Smlouvu o silniční přepravě věci v souladu s ustanoveními § 2555 a násl. zákona č. 89/2012 Sb., občanský zákoník. Smluvní strany prohlašují, že pro případ potvrzení této objednávky zahraničním dopravcem se předmětné právní jednání řídí českým právním řádem, a to zejména zákonem č. 89/2012 Sb., občanský zákoník.
+
+Děkuji a prosím o potvrzení objednávky a přistavení vozidla k nakládce - VJEZDOVÁ VRÁTNICE křižovatka ul. SKLÁŘSKÁ / KEKULOVA max do 11 hodin. Řidič musí být po dobu nakládky a vykládky prováděné v areálu závodu řádně ustrojen a vybaven ochrannými pomůckami odpovídajícími povaze nakládané/vykládané látky.
+
+  Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+  Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+ Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+
+
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637145359</RecId>
+        <RecVersion>1299482859</RecVersion>
+        <RemarkVariantId>Suroviny</RemarkVariantId>
+        <Txt> V případě prodlení Dodavatele s dodáním Produktů, je Dodavatel povinen zaplatit SPOLKU smluvní pokutu ve výši 0.05 % z ceny nedodaných Produktů za každý den prodlení, včetně dne dodání Produktů. Tím není dotčeno právo SPOLKU na náhradu škody.
+
+Vztah založený touto objednávkou se řídí Všeobecnými nákupními podmínkami Spolku pro chemickou a hutní výrobu, akciová společnost (umístěných na http://www.spolchemie.cz/cs/kestazeni). Žádáme o potvrzení této objednávky.
+
+Na všech dokumentech musí být uvedeno číslo naší objednávky a plný název firmy: Spolek pro chemickou a hutní výrobu, akciová společnost. Avízo o expedici zboží a atest zašlete na fax 0420 477 164 679 nebo emailem. Vykládka zboží je možná pouze v pracovních dnech od 6. do 13.00 hodin. Na faktuře uveďte původ zboží.
+Dodavatel je povinen informovat o změnách surovin nebo technologie, které mohou mít vliv na kvalitu dodávaného výrobku nebo služby. 
+Pokud je zboží dodáváno na paletách, musí být na dodacím listě uveden počet a druh palet. S první dodávkou a následně při každé aktualizaci nám zasílejte bezpečnostní dokumentaci. Prohlášení o splnění podmínek uvedení obalu na trh (Dle zákona č. 477/2001 Sb.) přiložte ke každé dodávce. Značení a balení látek musí být v souladu s nařízením evropského parlamentu a rady č. 1272/2008.
+
+Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+Dodavatel není oprávněn práva a/nebo nároky vzniklé na základě této objednávky nebo v souvislosti s ní postoupit, zastavit nebo započíst proti pohledávkám za SPOLKEM bez předchozího písemného souhlasu SPOLKU. Za písemnou formu nebude pro tento účel považována výměna emailových, či jiných elektronických zpráv.
+ Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637146609</RecId>
+        <RecVersion>1127579436</RecVersion>
+        <RemarkVariantId>Služby</RemarkVariantId>
+        <Txt>Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+  Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+  Dodavatel není oprávněn práva a/nebo nároky vzniklé na základě této objednávky nebo v souvislosti s ní postoupit, zastavit nebo započíst proti pohledávkám za SPOLKEM bez předchozího písemného souhlasu SPOLKU. Za písemnou formu nebude pro tento účel považována výměna emailových, či jiných elektronických zpráv.
+  Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637146610</RecId>
+        <RecVersion>713251641</RecVersion>
+        <RemarkVariantId>Materiál</RemarkVariantId>
+        <Txt>Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+ Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+ Dodavatel není oprávněn práva a/nebo nároky vzniklé na základě této objednávky nebo v souvislosti s ní postoupit, zastavit nebo započíst proti pohledávkám za SPOLKEM bez předchozího písemného souhlasu SPOLKU. Za písemnou formu nebude pro tento účel považována výměna emailových, či jiných elektronických zpráv.
+  Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637154609</RecId>
+        <RecVersion>533242570</RecVersion>
+        <RemarkVariantId>Suroviny-RS</RemarkVariantId>
+        <Txt> V případě prodlení Dodavatele s dodáním Produktů, je Dodavatel povinen zaplatit SPOLKU smluvní pokutu ve výši 0.05 % z ceny nedodaných Produktů za každý den prodlení, včetně dne dodání Produktů. 
+
+ Vztah založený touto objednávkou se řídí Všeobecnými nákupními podmínkami Spolku pro chemickou a hutní výrobu, akciová společnost (umístěných na http://www.spolchemie.cz/cs/kestazeni). Žádáme o potvrzení této objednávky.
+
+ Na všech dokumentech musí být uvedeno číslo naší objednávky a plný název firmy: Spolek pro chemickou a hutní výrobu, akciová společnost. Avízo o expedici zboží a atest zašlete na fax 0420 477 164 679 nebo emailem. Vykládka zboží je možná pouze v pracovních dnech od 6. do 13.00 hodin. Na faktuře uveďte původ zboží.
+
+ O případné změně technologie nás neprodleně informujte. V případě, pokud je zboží dodáváno na paletách, musí být na dodacím listě uveden počet a druh palet. S první dodávkou a následně při každé aktualizaci nám zasílejte bezpečnostní dokumentaci. Prohlášení o splnění podmínek uvedení obalu na trh (Dle zákona č. 477/2001 Sb.) přiložte ke každé dodávce. Značení a balení látek musí být v souladu s nařízením evropského parlamentu a rady č. 1272/2008.
+
+ Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+  Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+ Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637154859</RecId>
+        <RecVersion>1704890367</RecVersion>
+        <RemarkVariantId>Obaly-RS</RemarkVariantId>
+        <Txt>V případě prodlení Dodavatele s dodáním Produktů, je Dodavatel povinen zaplatit SPOLKU smluvní pokutu ve výši 0.05 % z ceny nedodaných Produktů za každý den prodlení, včetně dne dodání Produktů. 
+
+ Vztah založený touto objednávkou se řídí Všeobecnými nákupními podmínkami Spolku pro chemickou a hutní výrobu, akciová společnost (umístěných na http://www.spolchemie.cz/cs/kestazeni). Žádáme o potvrzení této objednávky.
+
+ Na všech dokumentech musí být uvedeno číslo naší objednávky a plný název firmy: Spolek pro chemickou a hutní výrobu, akciová společnost. Avízo o expedici zboží a atest zašlete na fax 0420 477 164 679 nebo emailem. Vykládka zboží je možná pouze v pracovních dnech od 6. do 13.00 hodin. Na faktuře uveďte původ zboží.
+
+ O případné změně technologie nás neprodleně informujte. V případě, pokud je zboží dodáváno na paletách, musí být na dodacím listě uveden počet a druh palet. S první dodávkou a následně při každé aktualizaci nám zasílejte bezpečnostní dokumentaci. Prohlášení o splnění podmínek uvedení obalu na trh (Dle zákona č. 477/2001 Sb.) přiložte ke každé dodávce. Značení a balení látek musí být v souladu s nařízením evropského parlamentu a rady č. 1272/2008.
+
+ Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+  Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech.
+ Dodavatel není oprávněn práva a/nebo nároky vzniklé na základě této objednávky nebo v souvislosti s ní postoupit, zastavit nebo započíst proti pohledávkám za SPOLKEM bez předchozího písemného souhlasu SPOLKU. Za písemnou formu nebude pro tento účel považována výměna emailových, či jiných elektronických zpráv.
+ Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+
+
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637154861</RecId>
+        <RecVersion>2075204662</RecVersion>
+        <RemarkVariantId>Obaly</RemarkVariantId>
+        <Txt>V případě prodlení Dodavatele s dodáním Produktů, je Dodavatel povinen zaplatit SPOLKU smluvní pokutu ve výši 0.05 % z ceny nedodaných Produktů za každý den prodlení, včetně dne dodání Produktů. 
+
+ Vztah založený touto objednávkou se řídí Všeobecnými nákupními podmínkami Spolku pro chemickou a hutní výrobu, akciová společnost (umístěných na http://www.spolchemie.cz/cs/kestazeni). Žádáme o potvrzení této objednávky.
+
+ Na všech dokumentech musí být uvedeno číslo naší objednávky a plný název firmy: Spolek pro chemickou a hutní výrobu, akciová společnost. Avízo o expedici zboží a atest zašlete na fax 0420 477 164 679 nebo emailem. Vykládka zboží je možná pouze v pracovních dnech od 6. do 13.00 hodin. Na faktuře uveďte původ zboží.
+
+ O případné změně technologie nás neprodleně informujte. V případě, pokud je zboží dodáváno na paletách, musí být na dodacím listě uveden počet a druh palet. S první dodávkou a následně při každé aktualizaci nám zasílejte bezpečnostní dokumentaci. Prohlášení o splnění podmínek uvedení obalu na trh (Dle zákona č. 477/2001 Sb.) přiložte ke každé dodávce. Značení a balení látek musí být v souladu s nařízením evropského parlamentu a rady č. 1272/2008.
+
+ Tento návrh na uzavření smlouvy, všechny k němu připojené dokumenty, jakož i veškeré další informace, které dodavatel obdrží od objednatele týkající se objednatele a jeho obchodní činnosti, včetně jednání o uzavření smlouvy, jsou důvěrné a jako takové nemohou být bez výslovného souhlasu objednatele prozrazeny třetí osobě ani použity v rozporu s jejich účelem pro potřeby dodavatele.
+  Přijetí nabídky s dodatkem nebo odchylkou, ani když podstatně nemění podmínky nabídky, je vyloučeno. Smlouva je uzavřena teprve výslovným dosažením shody o všech jejích náležitostech. 
+ Dodavatel není oprávněn práva a/nebo nároky vzniklé na základě této objednávky nebo v souvislosti s ní postoupit, zastavit nebo započíst proti pohledávkám za SPOLKEM bez předchozího písemného souhlasu SPOLKU. Za písemnou formu nebude pro tento účel považována výměna emailových, či jiných elektronických zpráv.
+ Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637155859</RecId>
+        <RecVersion>1778733339</RecVersion>
+        <RemarkVariantId>Investice</RemarkVariantId>
+        <Txt>Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637155860</RecId>
+        <RecVersion>560503685</RecVersion>
+        <RemarkVariantId>Údržba-RS</RemarkVariantId>
+        <Txt>Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637155861</RecId>
+        <RecVersion>1877947989</RecVersion>
+        <RemarkVariantId>Údržba</RemarkVariantId>
+        <Txt>Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637155862</RecId>
+        <RecVersion>793604389</RecVersion>
+        <RemarkVariantId>Služby-RS</RemarkVariantId>
+        <Txt>Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637155863</RecId>
+        <RecVersion>600113241</RecVersion>
+        <RemarkVariantId>Doprava-RS</RemarkVariantId>
+        <Txt>Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+      <FormLetterRemarks class="entity">
+        <FormLetter>PurchPurchaseOrder</FormLetter>
+        <LanguageId>CS</LanguageId>
+        <RecId>5637156109</RecId>
+        <RecVersion>1768425627</RecVersion>
+        <RemarkVariantId>Materiál-RS</RemarkVariantId>
+        <Txt>  Kupující se jakožto správce osobních údajů, které mu budou na základě této smlouvy prodávajícím poskytnuty, zavazuje, že bude tyto osobní údaje zpracovávat v souladu s právními předpisy, především Nařízením Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES.
+Obecné informace související se zpracováním osobních údajů prodávajícího jsou uveřejněny na internetových stránkách kupujícího http://www.spolchemie.cz/cs/zasady-zpracovani-osobnich-udaju , přičemž prodávající prohlašuje, že si tyto zásady přečetl a s jejich obsahem je řádně srozuměn.
+</Txt>
+      </FormLetterRemarks>
+    </VendPurchOrderJour>
+  </PurchaseRequisition>
+</MessageParts>

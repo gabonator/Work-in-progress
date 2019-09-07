@@ -4,7 +4,8 @@ var par = [require("./parsers/rawxml.js").parse,
 var imp = [require("./imports/helago.js").import,
            require("./imports/pharmos.js").import,
            require("./imports/perfect.js").import,
-           require("./imports/bamed.js").import];
+           require("./imports/bamed.js").import,
+           require("./imports/spol.js").import];
 var exp = [require("./exports/csv.js").export];
 
 function convert(data)

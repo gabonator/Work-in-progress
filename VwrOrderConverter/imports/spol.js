@@ -23,12 +23,12 @@ function convert(json)
     header: {
       documentId: documentId,  
       purchaseTimestamp: purchaseTimestamp,
-      partnerIdSold: "26000???",
-      partnerIdShip: "26000???",
+      partnerIdSold: "26000135",
+      partnerIdShip: "26000135",
       partnerName: OrderJour.DeliveryName,
       address: [OrderJour.DeliveryName, OrderJour.DeliveryStreet, OrderJour.DeliveryCity, 
                 OrderJour.DeliveryZipCode, OrderJour.DeliveryCountryRegionId],
-      contact: ["????@email.cz", "??? ??? ???"]
+      contact: ["korinkova@spolchemie.cz", "477 164 632"]
     },
     items: [],
     messages: []

@@ -1,5 +1,8 @@
 # Laser projector reverse engineering
 
+![Projector](projector.jpg)
+![Internal wiring](inside.jpg)
+
 - Product name: AUCD 1W DMX ILDA Bluetooth RGB Animation Laser Projector DJ Party Stage Lighting  
 - Bluetooth ID: DQF6 xxxx
 - Bluetooth operation video: https://www.youtube.com/watch?v=8_6Ns_fSROs

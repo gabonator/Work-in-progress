@@ -1,0 +1,316 @@
+{"comName":"Active Electronics Co.,Ltd.","deviceType":"LS01","languageTag":"","channelList":
+[
+ {"channelItemList":[
+   {"name":"Black out A&B","value":0,"minValue":0,"maxValue":0},
+   {"name":"Auto","value":1,"minValue":1,"maxValue":99},
+   {"name":"Sound","value":100,"minValue":100,"maxValue":199},
+   {"name":"Reserved","value":200,"minValue":200,"maxValue":254},
+   {"name":"Black out A","value":255,"minValue":255,"maxValue":255}
+   ],  "channelName":"Black out","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Trans","value":0,"minValue":0,"maxValue":49},
+   {"name":"Turn back","value":50,"minValue":50,"maxValue":100},
+   {"name":"Away","value":100,"minValue":100,"maxValue":149},
+   {"name":"Reserved","value":150,"minValue":150,"maxValue":255}
+   ],"channelName":"Outside & Size","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Gallery-1","value":0,"minValue":0,"maxValue":15},
+   {"name":"Gallery-2","value":16,"minValue":16,"maxValue":31},
+   {"name":"Gallery-3","value":32,"minValue":32,"maxValue":47},
+   {"name":"Gallery-4","value":48,"minValue":48,"maxValue":63},
+   {"name":"Gallery-5","value":64,"minValue":64,"maxValue":79},
+   {"name":"Gallery-6","value":80,"minValue":80,"maxValue":95},
+   {"name":"Gallery-7","value":96,"minValue":96,"maxValue":111},
+   {"name":"Gallery-8","value":112,"minValue":112,"maxValue":127},
+   {"name":"Gallery-9","value":128,"minValue":128,"maxValue":143},
+   {"name":"Gallery-10","value":144,"minValue":144,"maxValue":159},
+   {"name":"Gallery-11","value":160,"minValue":160,"maxValue":175},
+   {"name":"Gallery-12","value":176,"minValue":176,"maxValue":191},
+   {"name":"Gallery-13","value":192,"minValue":192,"maxValue":207},
+   {"name":"Gallery-14","value":208,"minValue":208,"maxValue":223},
+   {"name":"Gallery-15","value":224,"minValue":224,"maxValue":239},
+   {"name":"Gallery-0","value":240,"minValue":240,"maxValue":255}
+   ],"channelName":"Gallery select","channelValue":0},
+
+ {"channelItemList":[
+   ],"channelName":"Pattern","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Normal","value":0,"minValue":0,"maxValue":0},
+   {"name":"Zoom1","value":1,"minValue":1,"maxValue":31},
+   {"name":"Zoom2","value":32,"minValue":32,"maxValue":63},
+   {"name":"Zoom3","value":64,"minValue":64,"maxValue":95},
+   {"name":"Zoom4","value":96,"minValue":96,"maxValue":127},
+   {"name":"Zoom5","value":128,"minValue":128,"maxValue":159},
+   {"name":"Zoom6","value":160,"minValue":160,"maxValue":191},
+   {"name":"Zoom7","value":192,"minValue":192,"maxValue":223},
+   {"name":"Zoom8","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Zoom","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Angle","value":0,"minValue":0,"maxValue":63},
+   {"name":"Spin1","value":64,"minValue":64,"maxValue":95},
+   {"name":"Spin2","value":96,"minValue":96,"maxValue":127},
+   {"name":"Spin3","value":128,"minValue":128,"maxValue":159},
+   {"name":"Spin4","value":160,"minValue":160,"maxValue":191},
+   {"name":"Spin5","value":192,"minValue":192,"maxValue":223},
+   {"name":"Spin6","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Spin","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"X-Position","value":0,"minValue":0,"maxValue":63},
+    {"name":"X-Move1","value":64,"minValue":64,"maxValue":95},
+    {"name":"X-Move2","value":96,"minValue":96,"maxValue":127},
+    {"name":"X-Move3","value":128,"minValue":128,"maxValue":159},
+    {"name":"X-Move4","value":160,"minValue":160,"maxValue":191},
+    {"name":"X-Move5","value":192,"minValue":192,"maxValue":223},
+    {"name":"X-Move6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"X-Move","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Y-Position","value":0,"minValue":0,"maxValue":63},
+    {"name":"Y-Move1","value":64,"minValue":64,"maxValue":95},
+    {"name":"Y-Move2","value":96,"minValue":96,"maxValue":127},
+    {"name":"Y-Move3","value":128,"minValue":128,"maxValue":159},
+    {"name":"Y-Move4","value":160,"minValue":160,"maxValue":191},
+    {"name":"Y-Move5","value":192,"minValue":192,"maxValue":223},
+    {"name":"Y-Move6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Y-Move","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"X-Size","value":0,"minValue":0,"maxValue":63},
+    {"name":"X-Zoom1","value":64,"minValue":64,"maxValue":95},
+    {"name":"X-Zoom2","value":96,"minValue":96,"maxValue":127},
+    {"name":"X-Zoom3","value":128,"minValue":128,"maxValue":159},
+    {"name":"X-Zoom4","value":160,"minValue":160,"maxValue":191},
+    {"name":"X-Zoom5","value":192,"minValue":192,"maxValue":223},
+    {"name":"X-Zoom6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"X-Zoom","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Y-Size","value":0,"minValue":0,"maxValue":63},
+    {"name":"Y-Zoom1","value":64,"minValue":64,"maxValue":95},
+    {"name":"Y-Zoom2","value":96,"minValue":96,"maxValue":127},
+    {"name":"Y-Zoom3","value":128,"minValue":128,"maxValue":159},
+    {"name":"Y-Zoom4","value":160,"minValue":160,"maxValue":191},
+    {"name":"Y-Zoom5","value":192,"minValue":192,"maxValue":223},
+    {"name":"Y-Zoom6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Y-Zoom","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Normal","value":0,"minValue":0,"maxValue":0},
+    {"name":"Color Len","value":1,"minValue":1,"maxValue":255}
+    ],"channelName":"Segment Color","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Normal","value":0,"minValue":0,"maxValue":7},
+    {"name":"Red","value":8,"minValue":8,"maxValue":15},
+    {"name":"Yellow","value":16,"minValue":16,"maxValue":23},
+    {"name":"Green","value":24,"minValue":24,"maxValue":31},
+    {"name":"Indigo","value":32,"minValue":32,"maxValue":39},
+    {"name":"Blue","value":40,"minValue":40,"maxValue":47},
+    {"name":"Purple","value":48,"minValue":48,"maxValue":55},
+    {"name":"White","value":56,"minValue":56,"maxValue":63},
+    {"name":"RGB-Change","value":64,"minValue":64,"maxValue":95},
+    {"name":"YIP-Change","value":96,"minValue":96,"maxValue":127},
+    {"name":"RYGIBPW-Change","value":128,"minValue":128,"maxValue":159},
+    {"name":"Color-Change","value":160,"minValue":160,"maxValue":191},
+    {"name":"Roll Color1","value":192,"minValue":192,"maxValue":223},
+    {"name":"Roll Color2","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Change color","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Normal","value":0,"minValue":0,"maxValue":63},
+    {"name":"Display black Line","value":64,"minValue":64,"maxValue":127},
+    {"name":"Display All Line","value":128,"minValue":128,"maxValue":159},
+    {"name":"Reserved","value":160,"minValue":160,"maxValue":255}
+    ],"channelName":"Gloss","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Extend value","value":0,"minValue":0,"maxValue":255}
+    ],"channelName":"Extend value","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Positive","value":0,"minValue":0,"maxValue":31},
+    {"name":"Negative","value":32,"minValue":32,"maxValue":63},
+    {"name":"Extend1","value":64,"minValue":64,"maxValue":95},
+    {"name":"Extend2","value":96,"minValue":96,"maxValue":127},
+    {"name":"Extend3","value":128,"minValue":128,"maxValue":159},
+    {"name":"Extend4","value":160,"minValue":160,"maxValue":191},
+    {"name":"Extend5","value":192,"minValue":192,"maxValue":223},
+    {"name":"Extend6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Extend effect","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Curve value","value":0,"minValue":0,"maxValue":255}
+    ],"channelName":"Curve value","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Filter1","value":0,"minValue":0,"maxValue":19},
+    {"name":"Filter2","value":20,"minValue":20,"maxValue":39},
+    {"name":"Filter3","value":40,"minValue":40,"maxValue":59},
+    {"name":"Filter4","value":60,"minValue":60,"maxValue":79},
+    {"name":"Filter5","value":80,"minValue":80,"maxValue":99},
+    {"name":"Filter6","value":100,"minValue":100,"maxValue":119},
+    {"name":"Filter7","value":120,"minValue":120,"maxValue":139},
+    {"name":"Filter8","value":140,"minValue":140,"maxValue":159},
+    {"name":"Filter9","value":160,"minValue":160,"maxValue":179},
+    {"name":"Filter10","value":180,"minValue":180,"maxValue":199},
+    {"name":"Filter11","value":200,"minValue":200,"maxValue":219},
+    {"name":"Filter12","value":220,"minValue":220,"maxValue":239},
+    {"name":"Filter13","value":240,"minValue":240,"maxValue":255}
+    ],"channelName":"Filter & Screen size","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Black out B","value":0,"minValue":0,"maxValue":0},
+    {"name":"Auto","value":1,"minValue":1,"maxValue":99},
+    {"name":"Sound","value":100,"minValue":100,"maxValue":199},
+    {"name":"Reserved","value":200,"minValue":200,"maxValue":254},
+    {"name":"Reserved","value":255,"minValue":255,"maxValue":255}
+    ],"channelName":"Black out","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Trans","value":0,"minValue":0,"maxValue":49},
+    {"name":"Turn back","value":50,"minValue":50,"maxValue":100},
+    {"name":"Away","value":100,"minValue":100,"maxValue":149},
+    {"name":"Reserved","value":150,"minValue":150,"maxValue":255}
+    ],"channelName":"Outside & Size","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"positive","value":0,"minValue":0,"maxValue":99},
+    {"name":"negative","value":100,"minValue":100,"maxValue":199},
+    {"name":"Reserved","value":200,"minValue":200,"maxValue":255}
+    ],"channelName":"Array angle","channelValue":0},
+
+ {"channelItemList":[
+    ],"channelName":"Pattern","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Normal","value":0,"minValue":0,"maxValue":0},
+    {"name":"Zoom1","value":1,"minValue":1,"maxValue":31},
+    {"name":"Zoom2","value":32,"minValue":32,"maxValue":63},
+    {"name":"Zoom3","value":64,"minValue":64,"maxValue":95},
+    {"name":"Zoom4","value":96,"minValue":96,"maxValue":127},
+    {"name":"Zoom5","value":128,"minValue":128,"maxValue":159},
+    {"name":"Zoom6","value":160,"minValue":160,"maxValue":191},
+    {"name":"Zoom7","value":192,"minValue":192,"maxValue":223},
+    {"name":"Zoom8","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Zoom","channelValue":0},
+
+ {"channelItemList":[
+    {"name":"Angle","value":0,"minValue":0,"maxValue":63},
+    {"name":"Spin1","value":64,"minValue":64,"maxValue":95},
+    {"name":"Spin2","value":96,"minValue":96,"maxValue":127},
+    {"name":"Spin3","value":128,"minValue":128,"maxValue":159},
+    {"name":"Spin4","value":160,"minValue":160,"maxValue":191},
+    {"name":"Spin5","value":192,"minValue":192,"maxValue":223},
+    {"name":"Spin6","value":224,"minValue":224,"maxValue":255}
+    ],"channelName":"Spin","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"X-Position","value":0,"minValue":0,"maxValue":63},
+   {"name":"X-Move1","value":64,"minValue":64,"maxValue":95},
+   {"name":"X-Move2","value":96,"minValue":96,"maxValue":127},
+   {"name":"X-Move3","value":128,"minValue":128,"maxValue":159},
+   {"name":"X-Move4","value":160,"minValue":160,"maxValue":191},
+   {"name":"X-Move5","value":192,"minValue":192,"maxValue":223},
+   {"name":"X-Move6","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"X-Move","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Y-Position","value":0,"minValue":0,"maxValue":63},
+   {"name":"Y-Move1","value":64,"minValue":64,"maxValue":95},
+   {"name":"Y-Move2","value":96,"minValue":96,"maxValue":127},
+   {"name":"Y-Move3","value":128,"minValue":128,"maxValue":159},
+   {"name":"Y-Move4","value":160,"minValue":160,"maxValue":191},
+   {"name":"Y-Move5","value":192,"minValue":192,"maxValue":223},
+   {"name":"Y-Move6","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Y-Move","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"X-Size","value":0,"minValue":0,"maxValue":63},
+   {"name":"X-Zoom1","value":64,"minValue":64,"maxValue":95},
+   {"name":"X-Zoom2","value":96,"minValue":96,"maxValue":127},
+   {"name":"X-Zoom3","value":128,"minValue":128,"maxValue":159},
+   {"name":"X-Zoom4","value":160,"minValue":160,"maxValue":191},
+   {"name":"X-Zoom5","value":192,"minValue":192,"maxValue":223},
+   {"name":"X-Zoom6","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"X-Zoom","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Y-Size","value":0,"minValue":0,"maxValue":63},
+   {"name":"Y-Zoom1","value":64,"minValue":64,"maxValue":95},
+   {"name":"Y-Zoom2","value":96,"minValue":96,"maxValue":127},
+   {"name":"Y-Zoom3","value":128,"minValue":128,"maxValue":159},
+   {"name":"Y-Zoom4","value":160,"minValue":160,"maxValue":191},
+   {"name":"Y-Zoom5","value":192,"minValue":192,"maxValue":223},
+   {"name":"Y-Zoom6","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Y-Zoom","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Normal","value":0,"minValue":0,"maxValue":0},
+   {"name":"Color Len","value":1,"minValue":1,"maxValue":255}
+   ],"channelName":"Segment Color","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Normal","value":0,"minValue":0,"maxValue":7},
+   {"name":"Red","value":8,"minValue":8,"maxValue":15},
+   {"name":"Yellow","value":16,"minValue":16,"maxValue":23},
+   {"name":"Green","value":24,"minValue":24,"maxValue":31},
+   {"name":"Indigo","value":32,"minValue":32,"maxValue":39},
+   {"name":"Blue","value":40,"minValue":40,"maxValue":47},
+   {"name":"Purple","value":48,"minValue":48,"maxValue":55},
+   {"name":"White","value":56,"minValue":56,"maxValue":63},
+   {"name":"RGB-Change","value":64,"minValue":64,"maxValue":95},
+   {"name":"YIP-Change","value":96,"minValue":96,"maxValue":127},
+   {"name":"RYGIBPW-Change","value":128,"minValue":128,"maxValue":159},
+   {"name":"Color-Change","value":160,"minValue":160,"maxValue":191},
+   {"name":"Roll Color1","value":192,"minValue":192,"maxValue":223},
+   {"name":"Roll Color2","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Change color","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Normal","value":0,"minValue":0,"maxValue":63},
+   {"name":"Display black Line","value":64,"minValue":64,"maxValue":127},
+   {"name":"Display black All","value":128,"minValue":128,"maxValue":159},
+   {"name":"Array1","value":160,"minValue":160,"maxValue":191},
+   {"name":"Array2","value":192,"minValue":192,"maxValue":255}
+   ],"channelName":"Gloss & Array","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Extend value","value":0,"minValue":0,"maxValue":255}
+   ],"channelName":"Extend value","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Positive","value":0,"minValue":0,"maxValue":31},
+   {"name":"Negative","value":32,"minValue":32,"maxValue":63},
+   {"name":"Extend1","value":64,"minValue":64,"maxValue":95},
+   {"name":"Extend2","value":96,"minValue":96,"maxValue":127},
+   {"name":"Extend3","value":128,"minValue":128,"maxValue":159},
+   {"name":"Extend","value":160,"minValue":160,"maxValue":191},
+   {"name":"Roll Color1","value":192,"minValue":192,"maxValue":223},
+   {"name":"Roll Color2","value":224,"minValue":224,"maxValue":255}
+   ],"channelName":"Extend effect","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Curve value","value":0,"minValue":0,"maxValue":255}
+   ],"channelName":"Curve value","channelValue":0},
+
+ {"channelItemList":[
+   {"name":"Reserved","value":0,"minValue":0,"maxValue":19},
+   {"name":"Reserved","value":20,"minValue":20,"maxValue":39},
+   {"name":"Reserved","value":40,"minValue":40,"maxValue":59},
+   {"name":"Reserved","value":60,"minValue":60,"maxValue":79},
+   {"name":"Reserved","value":80,"minValue":80,"maxValue":99},
+   {"name":"Reserved","value":100,"minValue":100,"maxValue":119},
+   {"name":"Reserved","value":120,"minValue":120,"maxValue":139},
+   {"name":"Reserved","value":140,"minValue":140,"maxValue":159},
+   {"name":"Reserved","value":160,"minValue":160,"maxValue":179},
+   {"name":"Reserved","value":180,"minValue":180,"maxValue":199},
+   {"name":"Reserved","value":200,"minValue":200,"maxValue":219},
+   {"name":"Reserved","value":220,"minValue":220,"maxValue":239},
+   {"name":"Screen size","value":240,"minValue":240,"maxValue":255}
+   ],"channelName":"Screen size","channelValue":0}
+]}

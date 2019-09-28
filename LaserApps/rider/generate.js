@@ -1,5 +1,5 @@
-var writer = require("./tf1writer");
-var archive = require("./archive");
+var writer = require("../tools/tf1writer");
+var archive = require("./frames/archive");
 
 function calcPattern(color, geometry, bx, by, scale)
 {

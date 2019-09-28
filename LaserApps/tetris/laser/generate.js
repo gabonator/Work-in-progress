@@ -1,4 +1,4 @@
-var writer = require("./tf1writer");
+var writer = require("../../tools/tf1writer");
 var gameplay = require("../log/gameplay");
 
 var map = {w:8, h:14};

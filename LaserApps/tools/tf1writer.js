@@ -115,7 +115,22 @@ function cartesian(c, x, y)
     throw "wrong angle";
   if (c < 0 || c > 7)
     throw "wrong color";
-  return {c:color, r:Math.floor(radius), a:Math.floor(angle), b:0}; //[(color << 13) + Math.floor(radius), Math.floor(angle)];
+  return {c:color, r:Math.floor(radius), a:Math.floor(angle), b:0};
 }
 
-module.exports = {TF1Writer:TF1Writer, Cartesian:cartesian};
+function polar(c, radius, angle)
+{
+  var color = c;
+  if (angle < 0)
+    angle += 360;
+  angle = angle/360*1024;
+  if (radius < 0 || radius > 4095) 
+    throw "wrong radius";
+  if (angle < 0 || angle >= 1024)
+    throw "wrong angle";
+  if (c < 0 || c > 7)
+    throw "wrong color";
+  return {c:color, r:Math.floor(radius), a:Math.floor(angle), b:0};
+}
+
+module.exports = {TF1Writer:TF1Writer, Cartesian:cartesian, Polar:polar};

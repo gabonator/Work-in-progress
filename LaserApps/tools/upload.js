@@ -16,6 +16,9 @@ serial.on('data', function(data) {
 });
 
 serial.on('closed', function() { 
+  if (done)
+    return;
+
   connected= false;
   if (reconnect)
     clearTimeout(reconnect);
@@ -52,8 +55,12 @@ var logLastData = null;
 var logBufferAccess = [];
 var logLastLine = null;
 
+var received = 0;
+var lastReceive = 0;
 function logData(msg)
 {
+  lastReceive = (new Date()).getTime();
+  received += msg.length;
   console.log(msg);
 }
 
@@ -79,11 +86,11 @@ function getFileBuffer()
     return [];
   if (!f) 
   {
-    f = require("fs").readFileSync("tetris.tf1");
+    f = require("fs").readFileSync(process.argv[2]);
     var len = f.length;
     var getReadyFileBytes = [256-86, 17, 0, 90, 16, 0, 0, 0, "t".charCodeAt(0), "f".charCodeAt(0), "1".charCodeAt(0), 0, len & 255, (len >> 8) & 255, (len >> 16)&255, (len >> 24)&255];
     block = 0;
-     console.log(new Buffer(getReadyFileBytes));
+//     console.log(new Buffer(getReadyFileBytes));
     return new Buffer(getReadyFileBytes);
   }
 
@@ -97,7 +104,7 @@ function getFileBuffer()
   var prefix = [256-86, 18, 0, 90, (block_len+12) & 255, ((block_len+12) >> 8) & 255, block_id & 255, (block_id >> 8) & 255, "t".charCodeAt(0), "f".charCodeAt(0), "1".charCodeAt(0), 0];
   for (var i = block_ofs; i<block_ofs + block_len; i++)
      prefix.push(f[i]); 
-  console.log(new Buffer(prefix));
+//  console.log(new Buffer(prefix));
 
   if (block_len < block_len_max)
   {
@@ -109,15 +116,26 @@ function getFileBuffer()
   return new Buffer(prefix);
 }
 
-setInterval(() =>
+received = 12;
+var interval = setInterval(() =>
 {
+//  if (received < 12 && (new Date()).getTime() - lastReceive < 2000)
+//    return;
+
   if (connected)
   {
     var buf = getFileBuffer();
     if (buf.length > 0)
     {
       console.log("Sending: " + buf.length);
+      received = 0;
       serial.write(buf, () => 0); 
+    } else
+    {
+      serial.on('closed', () => 0);
+      serial.close();
+      clearInterval(interval);
+      //process.exit();
     }
   }
-}, 500);
+}, 600);

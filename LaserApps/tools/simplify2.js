@@ -262,7 +262,7 @@ var expandPath = function(xyPaths, r)
 //return 1;
   var all = svg.getLinesFromGeometryXY(offsetted_paths);
 
-  var filter = 30;
+  var filter = 10;
    var result = "";
   for (var j in all)
   {
@@ -374,7 +374,7 @@ prefer = false;
     }
   } else
   {
-    if (k1.d < 50 && k2.d < 50)
+    if (k1.d < 5 && k2.d < 5)
     {
       return true; //Math.abs(k1.d-k2.d) < 15;//k1.j < k2.j;
     }

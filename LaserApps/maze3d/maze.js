@@ -1,44 +1,14 @@
-class Renderer
-{
-  constructor(w, h)
-  {
-    this.elem = document.createElement("canvas");
-    this.elem.style = "border:1px gray solid;";
-    this.elem.width = w;
-    this.elem.height = h;
-    document.documentElement.style.background = "#000000";
-    document.documentElement.appendChild(this.elem);
-    this.ctx = this.elem.getContext("2d");
-  }
-  Clear()
-  {
-    this.elem.width = this.elem.width;
-  }
-  Poly(p)
-  {
-        this.ctx.strokeStyle = ["#ff00ff", "#ff0000", "#00ff00", "#0000b0"][p[0].c];
-        this.ctx.lineJoin="round";
-        this.ctx.lineWidth = 5;
-        this.ctx.beginPath();
-
-        this.ctx.moveTo(p[0].x, p[0].y);
-        for (var i=0; i<p.length; i++)
-          this.ctx.lineTo(p[i].x, p[i].y);
-        this.ctx.lineTo(p[0].x, p[0].y);
-        this.ctx.stroke();
-        this.ctx.fill();
-  }
-}
-
 var mapx = 
- ["#####   ",
-  "# H #   ",
-  "#   #   ",
-  "#   #   ",
-  "### #   ", 
-  "        ",
-  "        ",
-  "        "];
+ [
+  "         ",
+  " ##### # ",
+  " # H # # ",
+  " #   # # ",
+  " #   #H# ",
+  " ### ### ", 
+  "         ",
+  "         ",
+  "         "];
 
 var map = [];
 for (var y=0; y<mapx.length; y++)
@@ -48,9 +18,6 @@ for (var y=0; y<mapx.length; y++)
     line.push(mapx[y].charAt(x));
   map.push(line);
 }
-
-var px = 3.5, py = 6, pa = 0;
-var renderer = new Renderer(600, 600);
 
 function Mul4(a, b)
 {
@@ -150,8 +117,7 @@ function ProjectPoly(projection, q)
 
 function Floor(x, y)
 {
-  return [
-  [
+  return [[
     {c:3, zIndex:+100, x:x, y:y, z:1},
     {x:x+1, y:y, z:1},
     {x:x+1, y:y+1, z:1},
@@ -209,6 +175,9 @@ function Wall(x, y)
   ]];
 }
 
+var px = 4.5, py = 7, pa = 0;
+var renderer = new Renderer(600, 600);
+
 function main()
 {
   var sorted = [];
@@ -249,7 +218,11 @@ function main()
 
   renderer.Clear();
   for (var i=0; i<sorted.length; i++)
-      renderer.Poly(ProjectPoly(projection, sorted[i]));
+  {
+     var poly = ProjectPoly(projection, sorted[i]);
+     if (poly)
+       renderer.Poly(poly);
+  }
 }  
 
 var keys = {};
@@ -294,7 +267,7 @@ document.onkeyup = (e) =>
     keys.right = false;
 };
 
-function check(x, y)
+function checkPt(x, y)
 {                 
   x = Math.floor(x+1000)-1000;
   y = Math.floor(y+1000)-1000;
@@ -305,6 +278,15 @@ function check(x, y)
     return true;
 
   return map[y][x] != "#";
+}
+
+function check(x, y)
+{
+  if (!checkPt(x+0.3, y+0.3)) return false;
+  if (!checkPt(x+0.3, y-0.3)) return false;
+  if (!checkPt(x-0.3, y-0.3)) return false;
+  if (!checkPt(x-0.3, y+0.3)) return false;
+  return true;
 }
 
 setInterval(()=>

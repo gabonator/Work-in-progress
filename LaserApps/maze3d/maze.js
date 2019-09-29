@@ -14,43 +14,43 @@ class Renderer
   {
     this.elem.width = this.elem.width;
   }
-  Quad(p)
+  Poly(p)
   {
-if (!p[0] || !p[1] || !p[2] || !p[3]) 
-  return;
-        this.ctx.strokeStyle = "#ff0000";
+        this.ctx.strokeStyle = ["#ff00ff", "#ff0000", "#00ff00", "#0000b0"][p[0].c];
+        this.ctx.lineJoin="round";
         this.ctx.lineWidth = 5;
-        this.ctx.fillStyle = "#0000b0";
         this.ctx.beginPath();
+
         this.ctx.moveTo(p[0].x, p[0].y);
-        this.ctx.lineTo(p[1].x, p[1].y);
-        this.ctx.lineTo(p[2].x, p[2].y);
-        this.ctx.lineTo(p[3].x, p[3].y);
+        for (var i=0; i<p.length; i++)
+          this.ctx.lineTo(p[i].x, p[i].y);
         this.ctx.lineTo(p[0].x, p[0].y);
         this.ctx.stroke();
         this.ctx.fill();
   }
-
 }
+
 var mapx = 
-  "#####" + 
-  "#   #" +
-  "#   #" +
-  "#   #" +
-  "#   #";
+ ["#####   ",
+  "# H #   ",
+  "#   #   ",
+  "#   #   ",
+  "### #   ", 
+  "        ",
+  "        ",
+  "        "];
 
 var map = [];
-for (var y=0; y<5; y++)
+for (var y=0; y<mapx.length; y++)
 {
   var line = [];
-  for (var x =0; x<5; x++)
-    line.push(mapx.charAt(y*5+x) == "#" ? 1 : 0);
+  for (var x =0; x<mapx[0].length; x++)
+    line.push(mapx[y].charAt(x));
   map.push(line);
 }
 
-var px =0, py = 0, pa = 0;
+var px = 3.5, py = 6, pa = 0;
 var renderer = new Renderer(600, 600);
-
 
 function Mul4(a, b)
 {
@@ -66,7 +66,7 @@ function Mul4(a, b)
     return resultingArray;
 }
 
-function Mul(p, space)
+function Project(p, space)
 {
   var p = { 
     x: p.o * space[3*4+0] + p.x * space[0*4+0] + p.y * space[1*4+0] + p.z * space[2*4+0],
@@ -74,16 +74,15 @@ function Mul(p, space)
     z: p.o * space[3*4+2] + p.x * space[0*4+2] + p.y * space[1*4+2] + p.z * space[2*4+2],
   };
 
-if (p.z <= 0) return;
+  foc = 20;
+  scale = foc / (foc + p.z)*30;
+  if (scale < 0) return;
 
-    foc = 20;
-    scale = foc / (foc + p.z)*30; // * 600*0.4;
-    return { 
-      x : 300 + p.x * scale,
-      y : 300 + p.y * scale,
-      z : p.z//-p.z
-    };
- 
+  return { 
+    x : 300 + p.x * scale,
+    y : 300 + p.y * scale,
+    z : p.z
+  };
 }
 
 function Rotation(angle, x, y, z)
@@ -125,84 +124,85 @@ function Identity()
 function GetProjection()
 {
   var space = Identity();
-  space = Mul4(space, Translation(-3+px, -3+py, -0.5));
+  space = Mul4(space, Translation(-px, -py, -0.2));
+  space = Mul4(space, Translation(-Math.sin(pa*Math.PI/180)*1, Math.cos(pa*Math.PI/180)*1, 0.05));
   space = Mul4(space, Scale(15, 15, 15));
   space = Mul4(space, Rotation(pa, 0, 0, 1));
   space = Mul4(space, Rotation(90, 1, 0, 0));
   return space;
 }
 
-function Quad(q)
+function ProjectPoly(projection, q)
 {
-  var space = GetProjection()
-  q[0].o = 1;
-  q[1].o = 1;
-  q[2].o = 1;
-  q[3].o = 1;
-  renderer.Quad([Mul(q[0], space), Mul(q[1], space), Mul(q[2], space), Mul(q[3], space)]);
+  var screenPoly = [];
+  for (var i in q)
+  {
+    var pt = q[i];
+    pt.o = 1;
+    var screenPt = Project(pt, projection);
+    if (!screenPt)
+      return;
+    screenPoly.push(screenPt);
+  }
+  screenPoly[0].c = q[0].c;
+  return screenPoly;
 }
-/*
-  function rotate(p, x, y, z)
-  {
-    x *= 3.141592/180;
-    y *= 3.141592/180;
-    z *= 3.141592/180;
 
-    var sx = x==0 ? 0 : Math.sin(x);
-    var cx = x==0 ? 1 : Math.cos(x);
-    var sy = y==0 ? 0 : Math.sin(y);
-    var cy = y==0 ? 1 : Math.cos(y);
-    var sz = z==0 ? 0 : Math.sin(z);
-    var cz = z==0 ? 1 : Math.cos(z);
+function Floor(x, y)
+{
+  return [
+  [
+    {c:3, zIndex:+100, x:x, y:y, z:1},
+    {x:x+1, y:y, z:1},
+    {x:x+1, y:y+1, z:1},
+    {x:x, y:y+1, z:1},
+  ]];
+}
 
-    // rotation around x
-    xy = cx*p.y - sx*p.z;
-    xz = sx*p.y + cx*p.z;
-    // rotation around y
-    yz = cy*xz - sy*p.x;
-    yx = sy*xz + cy*p.x;
-    // rotation around z
-    zx = cz*yx - sz*xy;
-    zy = sz*yx + cz*xy;
+function Heart(x, y)
+{
+  x += 0.5;
+  y += 0.5;
+  z = 0.8;
+  var a = new Date().getTime()/1000*1.5;
+  var vx = 0.3*Math.cos(a);
+  var vy = 0.3*Math.sin(a);
+  var vz = 0.3;
+  var heart = 
+    [[0, 0], [3, 3], [4, 6], [2.5, 7], [1, 6.5], [0, 5],
+     [-1, 6.5], [-2.5, 7], [-4, 6], [-3, 3]];
 
-    return {x:zx, y:zy, z:yz};
-  }
+  var k = 1/4;
+  var heart3d = [];
+  for (var i in heart)
+    heart3d.push({c:2, x:x+vx*heart[i][0]*k, y:y+vy*heart[i][0]*k, z:z-vz*heart[i][1]*k});
 
-  function project(p)
-  {
-    foc = 10;
-    scale = foc / (foc + p.z) * can.width*0.4; //
-    return { 
-      x : can.width/2 + p.x * scale,
-      y : can.height/2 + p.y * scale,
-      z : -p.z
-    };
-  }
+  return [heart3d];
+}
 
-*/
 function Wall(x, y)
 {
   return [
   [
-    {x:x, y:y, z:0},
+    {c:1, x:x, y:y, z:0},
     {x:x+1, y:y, z:0},
     {x:x+1, y:y, z:1},
     {x:x, y:y, z:1},
   ],
   [
-    {x:x, y:y, z:0},
+    {c:1, x:x, y:y, z:0},
     {x:x, y:y+1, z:0},
     {x:x, y:y+1, z:1},
     {x:x, y:y, z:1},
   ],
   [
-    {x:x+1, y:y, z:0},
+    {c:1, x:x+1, y:y, z:0},
     {x:x+1, y:y+1, z:0},
     {x:x+1, y:y+1, z:1},
     {x:x+1, y:y, z:1},
   ],
   [
-    {x:x, y:y+1, z:0},
+    {c:1, x:x, y:y+1, z:0},
     {x:x+1, y:y+1, z:0},
     {x:x+1, y:y+1, z:1},
     {x:x, y:y+1, z:1},
@@ -211,56 +211,45 @@ function Wall(x, y)
 
 function main()
 {
-  renderer.Clear();
   var sorted = [];
   var projection = GetProjection();
+  var faces = [];
 
-  for (var y=0; y<5; y++)
-    for (var x =0; x<5; x++)
+  for (var y=0; y<map.length; y++)
+    for (var x =0; x<map[y].length; x++)
     {
-      if (!map[y][x])
-        continue;
-
-      var faces = Wall(x, y);
-      for (var i in faces)
-      {
-        var face = faces[i];
-        var center = {
-          x:(face[0].x + face[1].x + face[2].x + face[3].x)/4,
-          y:(face[0].y + face[1].y + face[2].y + face[3].y)/4,
-          z:(face[0].z + face[1].z + face[2].z + face[3].z)/4,
-          o:1}
-
-        var projected = Mul(center, projection);
-        if (projected)
-        {
-          face[0].d = projected.z;
-          sorted.push(face);
-        }
-      }
+      if (map[y][x] == " ")
+        faces = faces.concat(Floor(x, y));
+      if (map[y][x] == "#")
+        faces = faces.concat(Wall(x, y));
+      if (map[y][x] == "H")
+        faces = faces.concat(Heart(x, y));
     }
 
-  sorted.sort((a, b) => 
-    {var d = b[0].d - a[0].d;
-      if (d<0) return -1;
-      if (d>0) return +1;
-      return 0;
-    });
-
-var filter = ((new Date()).getTime()/100)%50;
-
-  for (var i=0; i<sorted.length; i++)
-    Quad(sorted[i]);
-/*
-  for (var y=0; y<5; y++)
+  for (var i in faces)
   {
-    for (var x =0; x<5; x++)
-      if (map[y][x])
-  {
-        Wall(x, y);
-//  return;
+    var face = faces[i];
+    var center = {
+      x:(face[0].x + face[1].x + face[2].x + face[3].x)/4,
+      y:(face[0].y + face[1].y + face[2].y + face[3].y)/4,
+      z:(face[0].z + face[1].z + face[2].z + face[3].z)/4,
+      o:1}
+
+    var projected = Project(center, projection);
+    if (projected)
+    {
+      face[0].d = projected.z;
+      if (typeof(face[0].zIndex) != "undefined")
+        face[0].d += face[0].zIndex;
+      sorted.push(face);
+    }
   }
-  }*/
+
+  sorted.sort((a, b) => Math.sign(b[0].d - a[0].d));
+
+  renderer.Clear();
+  for (var i=0; i<sorted.length; i++)
+      renderer.Poly(ProjectPoly(projection, sorted[i]));
 }  
 
 var keys = {};
@@ -284,6 +273,7 @@ document.onkeydown = (e) =>
   if (e.keyCode == 39)
     keys.right = true;
 };
+
 document.onkeyup = (e) =>
 {
   e = e || window.event;
@@ -304,6 +294,18 @@ document.onkeyup = (e) =>
     keys.right = false;
 };
 
+function check(x, y)
+{                 
+  x = Math.floor(x+1000)-1000;
+  y = Math.floor(y+1000)-1000;
+
+  if (x < 0 || x >= map[0].length)
+    return true;
+  if (y < 0 || y >= map.length)
+    return true;
+
+  return map[y][x] != "#";
+}
 
 setInterval(()=>
 {
@@ -312,15 +314,21 @@ setInterval(()=>
     pa -= 5;
   if (keys.right)
     pa += 5;
-  if (keys.up)
-  {
-    py += Math.cos(pa*Math.PI/180)*0.3;
-    px -= Math.sin(pa*Math.PI/180)*0.3;
-  }
+
+  var dx = 0, dy = 0;
   if (keys.down)
   {
-    py -= Math.cos(pa*Math.PI/180)*0.3;
-    px += Math.sin(pa*Math.PI/180)*0.3;
+    dy = Math.cos(pa*Math.PI/180)*0.1;
+    dx =-Math.sin(pa*Math.PI/180)*0.1;
   }
-}, 100);
-//renderer.Quad([{x:100, y:100}, {x:200, y:100}, {x:200, y:200}, {x:100, y:200}]);
+  if (keys.up)
+  {
+    dy =-Math.cos(pa*Math.PI/180)*0.1;
+    dx = Math.sin(pa*Math.PI/180)*0.1;
+  }
+  if (dx != 0 && check(px+dx, py))
+    px += dx;
+  if (dy != 0 && check(px, py+dy))
+    py += dy;
+}, 30);
+

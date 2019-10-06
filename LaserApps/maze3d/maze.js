@@ -1,14 +1,14 @@
 var mapx = 
  [
-  "         ",
-  " ##### # ",
-  " # H # # ",
-  " #   # # ",
-  " #   #H# ",
-  " ### ### ", 
-  "         ",
-  "         ",
-  "         "];
+  "           ",
+  "  ###### # ",
+  "     H # # ",
+  "   #   # # ",
+  "   #   #H# ",
+  "    ## # # ", 
+  "  #     ## ",
+  "  ####     ",
+  "     ##### "];
 
 var map = [];
 for (var y=0; y<mapx.length; y++)
@@ -175,7 +175,7 @@ function Wall(x, y)
   ]];
 }
 
-var px = 4.5, py = 7, pa = 0;
+var px = 12.5, py = 7.5, pa = -90;
 var renderer = new Renderer(600, 600);
 
 function main()
@@ -214,7 +214,8 @@ function main()
     }
   }
 
-  sorted.sort((a, b) => Math.sign(b[0].d - a[0].d));
+  var order = renderer.sortOrder();
+  sorted.sort((a, b) => Math.sign(b[0].d - a[0].d) * order);
 
   renderer.Clear();
   for (var i=0; i<sorted.length; i++)
@@ -223,6 +224,7 @@ function main()
      if (poly)
        renderer.Poly(poly);
   }
+  renderer.Finish();
 }  
 
 var keys = {};
@@ -292,6 +294,9 @@ function check(x, y)
 setInterval(()=>
 {
   main();
+  if (player)
+    player.play(keys);
+
   if (keys.left)
     pa -= 5;
   if (keys.right)

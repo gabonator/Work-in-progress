@@ -294,7 +294,13 @@ function check(x, y)
 setInterval(()=>
 {
   main();
-  if (player)
+  if (typeof(recorder) != "undefined" && typeof(player) != "undefined")
+  {
+    recorder.record(renderer.GetRenderData());
+    if (player.isFinished())
+      recorder.finish();
+  }
+  if (typeof(player) != "undefined")
     player.play(keys);
 
   if (keys.left)

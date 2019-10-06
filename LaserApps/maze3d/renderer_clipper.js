@@ -72,7 +72,7 @@ class Renderer
 
   Finish()
   {
-    console.log(this.lines.length);
+//    console.log(this.lines.length);
     this.ctx.lineWidth = 3;
     this.anim ++;
     for (var i in this.lines)
@@ -127,5 +127,10 @@ class Renderer
     }
 
     this.memory = this.addPath(this.memory, newPath);
+  }
+
+  GetRenderData()
+  {
+    return this.lines;
   }
 }

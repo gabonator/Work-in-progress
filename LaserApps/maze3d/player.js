@@ -7,7 +7,7 @@ class Player
 
   play(keys)
   {
-    if (this.frame < 170)
+    if (this.isPlaying())
     {
       keys.up = false;
       keys.down = false;
@@ -27,6 +27,16 @@ class Player
     }
     
     this.frame ++;
+  }
+
+  isPlaying()
+  {
+    return this.frame < 170;
+  }
+
+  isFinished()
+  {
+    return this.frame == 170;
   }
 }
 

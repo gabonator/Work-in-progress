@@ -1,0 +1,190 @@
+<a href="http://nokia.nigelcoldwell.co.uk/tunes.html">Free nokia composer tunes</a><br>
+<pre>
+<b>pink panter:bpm=100</b> 8#g1 2a1 8b1 2c2 8#g1 8a1 8b1 8c2 8f2 8e2 8a1 8c2 8e2 2#d2 16d2 16c2 16a1 8g1 1a1 8#g1 2a1 8b1 2c2 8#g1 8a1 8b1 8c2 8f2 8e2 8c2 8e2 8a2 1#g2 8#g1 2a1 8b1 2c2 16#g1 8a1 8b1 8c2 8f2 8e2 8a1 8c2 8e2 2#d2 8d2 16c2 16a1
+<b>bitter sweet:bpm=225</b> 8#g1 8b1 8#g1 4a1 4- 4#f1 4- 8a1 2- 4d2 4- 4a1 4- 8d2 2- 4#c2 4- 4a1 4- 8#c2
+<b>sweet dreams:bpm=225</b> 4c2 4c2 4g2 4c2 4#g2 4c2 4g2 4c2 4#g1 4#g1 4#d2 4f2 4g1 4g1 4d2 4#d2 4- 4c2 4c2 4g2 4c2 4#g2 4c2 4g2 4c2 4#g1 4#g1 4#d2 4f2 4g1 4g1 4d2 4#d2
+<b>mission impossible:bpm=100</b> 16g2 8- 16g2 8- 16f2 16- 16#f2 16- 16g2 8- 16g2 8- 16#a2 16- 16c3 16- 16g2 8- 16g2 8- 16f2 16- 16#f2 16- 16g2 8- 16g2 8- 16#a2 16- 16c3 16- 16#a2 16g2 2d2 32- 16#a2 16g2 2#c2 32- 16#a2 16g2 2c2 16- 16#a1 16c2
+<b>muppet show:bpm=225</b> 4c3 4c3 4a2 4b2 8a2 4b2 4g2 4- 4c3 4c3 4a2 8b2 8a2 8- 4g2 4- 4e2 4e2 4g2 4f2 8e2 4f2 8c3 8c2 8d2 4e2 8e2 8e2 8- 8e2 4g2
+<b>entertainer:bpm=140</b> 8d2 8#d2 8e2 4c3 8e2 4c3 8e2 2c3 8c3 8d3 8#d3 8e3 8c3 8d3 4e3 8b2 4d3 2c3 4- 8d2 8#d2 8e2 4c3 8e2 4c3 8e2 2c3 8- 8a2 8g2 8#f2 8a2 8c3 4e3 8d3 8c3 8a2 2d3
+<b>eiffel 65 blue:</b> 4a1 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8a1 8f1 8f1 2g1
+<b>what is love:bpm=225</b>  4c2 4b1 4c2 4a1 4c2 4b1 4c2 4a1 4c2 4b1 4c2 4g1 4c2 4b1 4c2 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1
+<b>fur elise:bpm=125</b> 8e2 8#d2 8e2 8#d2 8e2 8b1 8d2 8c2 4a1 8- 8c1 8e1 8a1 4b1 8- 8e1 8#g1 8b1 4c2 8- 8e1 8e2 8#d2 8e2 8#d2 8e2 8b1 8d2 8c2 4a1 8- 8c1 8e1 8a1 4b1 8- 8e1 8c2 8b1 4a1
+</pre>
+
+Melody:<br>
+<textarea id="inputMelody" cols=40 rows=4>4g2 8.#a2 16g2 16- 16g2 8c3 8g2 8f2 4g2 8.d3 16g2 16- 16g2 8#d3 8d3 8#a2 8g2 8d3 8g3 16g2 16f2 16- 16f2 8d2 8a2 2g2</textarea><br>
+<input type="button" value="Convert" onClick="Convert()">
+<input type="button" value="Play" onClick="PlayStart()">
+BPM:<input type="text" id="bpm" value="120" size="4">
+Flavour:<input type="text" id="flavour" value="square" size="6">
+<br>
+<textarea id="outputMelody" cols=40 rows=40></textarea>
+
+<script>
+//var mel = "4g2 8.#a2 16g2 16- 16g2 8c3 8g2 8f2 4g2 8.d3 16g2 16- 16g2 8#d3 8d3 8#a2 8g2 8d3 8g3 16g2 16f2 16- 16f2 8d2 8a2 2g2"; //axelf
+//var mel = "8c2 4f2 8a2 4f2 8c2 4b1 2g2 8f2 4e2 8g2 4e2 8e1 4a1 2f2 8c2 4f2 8a2 4f2 8c2 4b1 2g2 8f2 4e2 8c2 4d2 8e2 1f2 8c2 8d2 8e2 8f2 1- 8d2 8e2 8#f2 8g2 1- 8d2 8e2 8#f2 8g2 4- 8d2 8e2 8#f2 8g2 4- 4c2 8e2 1f2"; //adams
+// pink panter:100 8#g1 2a1 8b1 2c2 8#g1 8a1 8b1 8c2 8f2 8e2 8a1 8c2 8e2 2#d2 16d2 16c2 16a1 8g1 1a1 8#g1 2a1 8b1 2c2 8#g1 8a1 8b1 8c2 8f2 8e2 8c2 8e2 8a2 1#g2 8#g1 2a1 8b1 2c2 16#g1 8a1 8b1 8c2 8f2 8e2 8a1 8c2 8e2 2#d2 8d2 16c2 16a1
+// bitter sweet:225  8#g1 8b1 8#g1 4a1 4- 4#f1 4- 8a1 2- 4d2 4- 4a1 4- 8d2 2- 4#c2 4- 4a1 4- 8#c2
+// sweet dreams:225 4c2 4c2 4g2 4c2 4#g2 4c2 4g2 4c2 4#g1 4#g1 4#d2 4f2 4g1 4g1 4d2 4#d2 4- 4c2 4c2 4g2 4c2 4#g2 4c2 4g2 4c2 4#g1 4#g1 4#d2 4f2 4g1 4g1 4d2 4#d2
+// mission impossible:100 16g2 8- 16g2 8- 16f2 16- 16#f2 16- 16g2 8- 16g2 8- 16#a2 16- 16c3 16- 16g2 8- 16g2 8- 16f2 16- 16#f2 16- 16g2 8- 16g2 8- 16#a2 16- 16c3 16- 16#a2 16g2 2d2 32- 16#a2 16g2 2#c2 32- 16#a2 16g2 2c2 16- 16#a1 16c2
+// muppet show:225 4c3 4c3 4a2 4b2 8a2 4b2 4g2 4- 4c3 4c3 4a2 8b2 8a2 8- 4g2 4- 4e2 4e2 4g2 4f2 8e2 4f2 8c3 8c2 8d2 4e2 8e2 8e2 8- 8e2 4g2
+// entertainer: 140 8d2 8#d2 8e2 4c3 8e2 4c3 8e2 2c3 8c3 8d3 8#d3 8e3 8c3 8d3 4e3 8b2 4d3 2c3 4- 8d2 8#d2 8e2 4c3 8e2 4c3 8e2 2c3 8- 8a2 8g2 8#f2 8a2 8c3 4e3 8d3 8c3 8a2 2d3
+// eiffel 65 blue: 4a1 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8c2 8f1 8a1 4#a1 8g1 8#a1 8d2 4#d2 8d2 8c2 4#a1 8g1 8#a1 8a1 8f1 8f1 2g1
+// what is love:225  4c2 4b1 4c2 4a1 4c2 4b1 4c2 4a1 4c2 4b1 4c2 4g1 4c2 4b1 4c2 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1 4b1 4a1 4b1 4g1
+// fur elise: 125 8e2 8#d2 8e2 8#d2 8e2 8b1 8d2 8c2 4a1 8- 8c1 8e1 8a1 4b1 8- 8e1 8#g1 8b1 4c2 8- 8e1 8e2 8#d2 8e2 8#d2 8e2 8b1 8d2 8c2 4a1 8- 8c1 8e1 8a1 4b1 8- 8e1 8c2 8b1 4a1
+
+function Convert()
+{
+  clear();
+  var mel = document.getElementById("inputMelody").value;
+  var tones = mel.split(" ");
+  var regex = "(\\d+\\.?)(#?[a-g]|-)(\\d)?";
+
+  for (var i in tones)
+  {
+    var tone = tones[i];
+    if (tone == "")
+      continue;
+
+    var m = tone.match(regex);
+    if (m && m.length >= 3)
+    {
+      addNote({duration:m[1], tone:m[2], octave:m[3]});
+    } else
+      throw "Incorrect tone: " + tone;
+  }
+}
+
+function clear()
+{
+  document.getElementById("outputMelody").value = "";
+}
+
+function log(text)
+{
+  document.getElementById("outputMelody").value += text + "\n";
+}
+
+function addNote(note)
+{
+  if (note.duration.substr(-1) == ".")
+  {
+    note.duration = note.duration.substr(0, note.duration.length-1);
+    note.dot = true;
+  }
+
+  switch (parseInt(note.duration))
+  {
+    case 1: note.outDuration = "Whole"; break;
+    case 2: note.outDuration = "Half"; break;
+    case 4: note.outDuration = "Quarter"; break;
+    case 8: note.outDuration = "Eigth"; break;
+    case 16: note.outDuration = "Sixteenth"; break;
+    case 32: note.outDuration = "ThirtySecond"; break;
+    default:
+      throw "Wrong duration: " + note.duration;
+  }
+
+  if (note.dot)
+    note.outDuration += "Dot";
+
+  switch (note.tone)
+  {
+    case "-": note.outTone = "None"; break;
+    case "c": note.outTone = "C"; break;
+    case "#c": note.outTone = "Cis"; break;
+    case "d": note.outTone = "D"; break;
+    case "#d": note.outTone = "Dis"; break;
+    case "e": note.outTone = "E"; break;
+    case "f": note.outTone = "F"; break;
+    case "#f": note.outTone = "Fis"; break;
+    case "g": note.outTone = "G"; break;
+    case "#g": note.outTone = "Gis"; break;
+    case "a": note.outTone = "A"; break;
+    case "#a": note.outTone = "Ais"; break;
+    case "b": note.outTone = "B"; break;
+  }
+
+  if (note.octave)
+    note.outOctave = parseInt(note.octave);
+  else
+    note.outOctave = 0;
+ 
+  var code = "Play("+note.outTone+", " + note.outOctave + ", " + note.outDuration + ");";
+  log(code);
+  PlayPush(note.outTone, note.outOctave, note.duration, !!note.dot, code);
+}
+
+
+function PlayPush(tone, octave, duration, dot, code)
+{
+  var bpm = parseInt(document.getElementById("bpm").value);
+  var tones = ["C", "Cis", "D", "Dis", "E", "F", "Fis", "G", "Gis", "A", "Ais", "B"];
+
+  var intervalMs = 60*1000/(bpm/4)/duration;
+  if (tones.indexOf(tone) == -1)
+  {
+    melody.push({frequency:0, duration:intervalMs, code:code});
+    return;
+  }
+
+  var index = tones.indexOf(tone) + octave*12 - tones.indexOf("A") - 1*3;
+  var frequency = 440 * Math.pow(2, index/12);
+
+  if (dot)
+    intervalMs *= 1.5;
+  melody.push({frequency:frequency, duration:intervalMs, code:code});
+}
+
+function PlayFinish()
+{
+  melody.push({frequency:0, duration:1000});
+  playMelody();
+}
+
+var melody = [];
+var audioCtx;
+var oscillator;
+var playing = false;
+function PlayStart()
+{
+  melody = [];
+  audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+  Convert();
+  clear();
+  if (!playing)
+    playMelody();
+}
+
+    function playNote(frequency) {
+      // create Oscillator node
+      oscillator = audioCtx.createOscillator();
+
+      oscillator.type = document.getElementById("flavour").value;
+      oscillator.frequency.value = frequency; // value in hertz
+      oscillator.connect(audioCtx.destination);
+      oscillator.start();
+
+    }
+
+    function playMelody() 
+    {
+      if (melody.length > 0) 
+      {
+        playing = true;
+        note = melody.shift();
+        log(note.code);
+        if (note.frequency > 0)
+          playNote(note.frequency);
+
+        setTimeout( () => {
+            oscillator.stop();
+            setTimeout(() => playMelody(), 10);
+//            playMelody();
+          }, note.duration+10);
+      } else
+      {
+        playing = false;
+      }
+    }
+</script>

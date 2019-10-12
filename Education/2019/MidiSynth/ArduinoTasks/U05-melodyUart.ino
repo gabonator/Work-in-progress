@@ -1,0 +1,97 @@
+void setup()
+{
+  Serial1.begin(31250);  
+}
+
+void NoteOn(int note)
+{
+  int channel = 0;
+  int velocity = 127;
+  
+  Serial1.write(0x90 + channel);
+  Serial1.write(note);
+  Serial1.write(velocity);  
+}
+
+void NoteOff(int note)
+{
+  int channel = 0;
+  int velocity = 127;
+
+  Serial1.write(0x80 + channel);
+  Serial1.write(note);
+  Serial1.write(velocity);  
+}
+
+int C=0, Cis=1, D=2, Dis=3, E=4, F=5, Fis=6, G=7, Gis=8, A=9, Ais=10, B=11, None=12;
+int BPM = 120;
+
+// 120 beatov za minutu, kolko milisekund trva jeden beat?
+int Beat = 60000L / BPM;
+int Whole = Beat*4;
+int Half = Whole/2;
+int Quarter = Whole/4;
+int Eigth = Whole/8;
+int Sixteenth = Whole/16;
+int Thirtysecond = Whole/32;
+int WholeDot = Whole*1.5;
+int HalfDot = Half*1.5;
+int QuarterDot = Quarter*1.5;
+int EigthDot = Eigth*1.5;
+int SixteenthDot = Sixteenth*1.5;
+int ThirtysecondDot = Thirtysecond*1.5;
+
+int Frequency(int note)
+{
+  // A3 - 440 Hz (69)
+  float semitonesDelta = note-69.0+12;
+  float octavesDelta = semitonesDelta/12.0;
+  float freq = 440.0*pow(2, octavesDelta);
+  Serial.println(freq);
+  return freq;
+}
+
+void Play(int note, int octave, int length)
+{
+  int noteIndex = 24 + octave*12 + note;
+  if (note != None) 
+  {
+    NoteOn(noteIndex);
+    delay(length);
+    NoteOff(noteIndex);
+  } else
+  {
+    delay(length);
+  }
+}
+
+void loop() 
+{  
+  Play(G, 2, Quarter);
+  Play(Ais, 2, EigthDot);
+  Play(G, 2, Sixteenth);
+  Play(None, 0, Sixteenth);
+  Play(G, 2, Sixteenth);
+  Play(C, 3, Eigth);
+  Play(G, 2, Eigth);
+  Play(F, 2, Eigth);
+  Play(G, 2, Quarter);
+  Play(D, 3, EigthDot);
+  Play(G, 2, Sixteenth);
+  Play(None, 0, Sixteenth);
+  Play(G, 2, Sixteenth);
+  Play(Dis, 3, Eigth);
+  Play(D, 3, Eigth);
+  Play(Ais, 2, Eigth);
+  Play(G, 2, Eigth);
+  Play(D, 3, Eigth);
+  Play(G, 3, Eigth);
+  Play(G, 2, Sixteenth);
+  Play(F, 2, Sixteenth);
+  Play(None, 0, Sixteenth);
+  Play(F, 2, Sixteenth);
+  Play(D, 2, Eigth);
+  Play(A, 2, Eigth);
+  Play(G, 2, Half);
+  delay(5000);
+}

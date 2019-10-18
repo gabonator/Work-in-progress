@@ -8,9 +8,6 @@ V druhej časti workshopu si vysvetlíme ako fungujú kapacitné dotykové senzo
 
 Treba si priniesť počítač s nainštalovaným prostredím Arduino IDE a USB kábel s koncovkou usb micro, sluchadla.
 
-- [Navod pre studentov](student.md)
-- [Prezentacia](diyklavir.pdf)
-
 ## BOM
 Pre 8 ucastnikov
 

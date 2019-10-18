@@ -1,5 +1,7 @@
 # DIY klavir
 
+![Generator melodie](keyboard.jpg)
+
 ## U0: Prvy ton
 
  ![Pinout](ArduinoMicro.png)
@@ -18,7 +20,7 @@
   - pouzit delayMicroseconds(n) namiesto (n)
   - 1 s = 1000 ms = 1000000 us
 
-    ```arduino
+    ```c
     void setup() 
     {
       pinMode(12, OUTPUT);
@@ -50,7 +52,7 @@
 
   - zahrat akord
 
-    ```arduino
+    ```c
     void setup()
     {
     }
@@ -80,13 +82,17 @@
 
   ![Tabulka tonov](PitchTable.png)
 
+  ![Stupnica](Scale.png)
+
+  ![Generator melodie](klavirgen.png)
+
   - http://L.valky.eu/klavirgen
 
 ## U5: Midi melodia
 
   - upravit predosly program aby namiesto pieza pouzival MIDI
 
-    ```arduino
+    ```c
     void setup()
     {
       Serial1.begin(31250);
@@ -107,13 +113,27 @@
     }
     ```
 
+  - NoteOn: kanal 0x80..0x8F, pitch 0..127, velocity 0..127
+  - NoteOff: kanal 0x90..0x9F, Pitch 0..127, Velocity 0..127
+  - Program change: Kanal 0xC0..0xCF, Cislo nastroja (0=Grand piano)
   ![Tabulka nastrojov](MidiInstruments.png)
   
   - riesenie [predoslej ulohy](ArduinoTasks/U04-melodyPiezo.ino)
+  - Middle-A note over MIDI channel 3 with a velocity of 79: 93-45-4F (hex)
+  - Middle-C note over MIDI channel 10 with a velocity of 127: 9A-48-7F (hex)
+  - Bass Drum 1 with a velocity of 79: 99-24-4F (hex)
+  - High Bongo with a velocity of 127: 99-3C-7F (hex)
+  - 0x90 - 0x40 - 0x40 (Start of E3 note, pitch=64)
+  - 0x90 - 0x43 - 0x40 (Start of G3 note, pitch=67)
+  - 0x80 - 0x43 - 0x00 (End of G3 note, pitch=67)
+  - 0x80 - 0x45 - 0x00 (End of A3 note, pitch=69)
+  - 0xC0 - 0x41 (channel 0, Alto Sax = 66 ==> coded 65 = 0x41)
+  - 0xC1 - 0x00 (channel 1, Piano = 1 ==> coded 0)
+  - 0xC9 - 0x00 (channel 9, Standard Drums Kit = 1 ==> coded 0)
 
 ## U6: USB Midi melodia
 
-    ```arduino
+    ```c
     #include "MIDIUSB.h"
 
     void setup()
@@ -145,7 +165,7 @@
 
 ## U7: Knizinca CapacitiveSensor
 
-    ```arduino
+    ```c
     #include <CapacitiveSensor.h>
 
     // 4 - send pin, 2 - sensor pin
@@ -172,6 +192,7 @@
 
 ## U8: Trigger
 
+  - capacitiveSensorRaw namiesto capacitiveSensor
   - globalna premenna
 
     ```c
@@ -197,7 +218,9 @@
 ## U09: Styri klavesy C, D, E, F
 
   - rozsirit program na styri nezavisle senzory
+  - hrat tony s piezom
   - zahrat kohutik jarabi
+  - bezpecne piny: 3, 5, 7, 8, 10, 11, 12, A0, A1, A2, A3, A5
 
 ## U10: Cela oktava
 
@@ -212,12 +235,43 @@
 
   - midi usb
 
-## U13: Piano	
+## U13: Piano network
  
     ```c
     void Preposli()
     {
       while (Serial.available())
         Serial.write(Serial.read());
+    }
+    ```
+
+## Extra
+  - chord: hrat cely durovy akord podla root noty
+  - layer: nastavit kanal 0 na piano a kanal 1 na strings (instrument c. 49), hrat na oboch naraz
+  - zahrat na SAM2695 syntezatore
+  - hrat bicie (treba kazdej klavese priradit spravny pitch: bass drum, snare, closed hi-hat, open hi-hat, crash)
+
+    ```c
+    // DREAM SAM2695 synthesizer
+
+    DreamControl(0x3707, 127);
+
+    void DreamControl(word command, byte value)
+    {
+      Serial1.write(0xb0);
+      Serial1.write(0x63); 
+      Serial1.write(command >> 8); // NRPN high = 0x37
+      Serial1.write(0xb0);
+      Serial1.write(0x62); 
+      Serial1.write(command & 0xff); // NRPN low = 0x07
+      Serial1.write(0xb0);
+      Serial1.write(0x06); 
+      Serial1.write(value); // NRPN value = 127  
+    }
+
+    void SetInstrument(byte channel, byte i) 
+    {
+      Serial1.write(0xC0 | channel);
+      Serial1.write(i);
     }
     ```

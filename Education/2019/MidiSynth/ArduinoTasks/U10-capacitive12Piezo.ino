@@ -22,56 +22,8 @@ int freq[12] = {524, 554, 587, 622, 659, 698, 739, 783, 830, 880, 932, 987};
 //int base[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int base[12] = {187, 165, 154, 126, 187, 187, 97, 145, 102, 144, 93, 167};
 
-void NoteOn(int i)
-{
-  int note = 60+i;
-  int channel = 0;
-  int velocity = 127;
-  
-  Serial1.write(0x90 + channel);
-  Serial1.write(note);
-  Serial1.write(velocity);  
-
-}
-
-void NoteOff(int i)
-{
-  int note = 60+i;
-  int channel = 0;
-  int velocity = 127;
-
-  Serial1.write(0x80 + channel);
-  Serial1.write(note);
-  Serial1.write(velocity);  
-
-}
-
-void DreamControl(word command, byte value)
-{
-  Serial1.write(0xb0);
-  Serial1.write(0x63); 
-  Serial1.write(command >> 8); // NRPN high = 0x37
-  Serial1.write(0xb0);
-  Serial1.write(0x62); 
-  Serial1.write(command & 0xff); // NRPN low = 0x07
-  Serial1.write(0xb0);
-  Serial1.write(0x06); 
-  Serial1.write(value); // NRPN value = 127  
-}
-
-
-void SetInstrument(byte channel, byte i) 
-{
-  Serial1.write(0xC0 | channel);
-  Serial1.write(i-1);
-}
-
 void setup()                    
 {
-  Serial1.begin(31250);  
-  DreamControl(0x3707, 127);
-  SetInstrument(0, 0);
-
   for (int i=0; i<12; i++)
     cs[i].set_CS_AutocaL_Millis(0xFFFFFFFF);
     
@@ -111,13 +63,13 @@ void loop()
     {
       if (is[i]==1 && was[i]==0)
       {
-        NoteOn(i);
+        tone(4, freq[i]);
         was[i] = 1;
       }
   
       if (is[i]==0 && was[i]==1)
       {
-        NoteOff(i);
+        noTone(4);
         was[i] = 0;
       }
     }

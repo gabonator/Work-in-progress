@@ -113,8 +113,8 @@
     }
     ```
 
-  - NoteOn: kanal 0x80..0x8F, pitch 0..127, velocity 0..127
-  - NoteOff: kanal 0x90..0x9F, Pitch 0..127, Velocity 0..127
+  - NoteOn: kanal 0x90..0x9F, pitch 0..127, velocity 0..127
+  - NoteOff: kanal 0x80..0x8F, Pitch 0..127, Velocity 0..127
   - Program change: Kanal 0xC0..0xCF, Cislo nastroja (0=Grand piano)
   ![Tabulka nastrojov](MidiInstruments.png)
   
@@ -133,7 +133,7 @@
 
 ## U6: USB Midi melodia
 
-    ```c
+    ```c++
     #include "MIDIUSB.h"
 
     void setup()

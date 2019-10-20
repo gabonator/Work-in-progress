@@ -84,7 +84,7 @@
 
   ![Stupnica](Scale.png)
 
-  ![Generator melodie](klavirgen.png)
+  ![Generator melodie](klavirgen.png | width=300)
 
   - http://L.valky.eu/klavirgen
 
@@ -133,7 +133,9 @@
 
 ## U6: USB Midi melodia
 
-    ```c++
+  - pridat include MIDIUSB.h
+
+    ```c
     #include "MIDIUSB.h"
 
     void setup()
@@ -160,10 +162,14 @@
       MidiUSB.flush();
     }
     ```
-
+  - [virtual piano](https://recursivearts.com/virtual-piano/)
   - [online multiplayer piano](http://www.multiplayerpiano.com)
+  - [piano trainer](https://pianu.com/intro/ode-to-joy)
 
 ## U7: Knizinca CapacitiveSensor
+
+  - nainstalovat kniznicu CapacitiveSensor
+  - otvorit ukazku
 
     ```c
     #include <CapacitiveSensor.h>
@@ -237,6 +243,9 @@
 
 ## U13: Piano network
  
+  - TX pin prepojeny na RX pin susedneho klavira
+  - kazdy si zvoli svoju oktavu
+
     ```c
     void Preposli()
     {

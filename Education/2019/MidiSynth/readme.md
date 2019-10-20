@@ -54,3 +54,83 @@ Extra: prepojovaci kabel na midi socket
     f(x)/440 = 2^((x-69)/12)
 
     f(x) = 440*2^((x-69)/12)
+
+
+## Midi uart eventy
+
+  ```c
+  Serial1.begin(31250);
+  DreamControl(0x3707, 127);
+
+  void NoteOn(int i)
+  {
+    int note = 60+i; // C4
+    int channel = 0;
+    int velocity = 127;
+    
+    Serial1.write(0x90 + channel);
+    Serial1.write(note);
+    Serial1.write(velocity);
+  }
+
+  void NoteOff(int i)
+  {
+    int note = 60+i; // C4
+    int channel = 0;
+    int velocity = 127;
+
+    Serial1.write(0x80 + channel);
+    Serial1.write(note);
+    Serial1.write(velocity);
+  }
+
+  void SetInstrument(byte channel, byte i) 
+  {
+    Serial1.write(0xC0 | channel);
+    Serial1.write(i);
+  }
+
+  void DreamControl(word command, byte value)
+  {
+    Serial1.write(0xb0);
+    Serial1.write(0x63); 
+    Serial1.write(command >> 8); // NRPN high = 0x37
+    Serial1.write(0xb0);
+    Serial1.write(0x62); 
+    Serial1.write(command & 0xff); // NRPN low = 0x07
+    Serial1.write(0xb0);
+    Serial1.write(0x06); 
+    Serial1.write(value); // NRPN value = 127
+  }
+
+  ```
+
+## Midi usb eventy
+
+  ```c
+  #include "MIDIUSB.h"
+
+  void NoteOn(int note)
+  {
+    int channel = 0;
+    int velocity = 127;
+
+    midiEventPacket_t noteOn = {0x09, 0x90 | channel, note, velocity};
+    MidiUSB.sendMIDI(noteOn);
+    MidiUSB.flush();
+  }
+
+  void NoteOff(int note)
+  {
+    int channel = 0;
+    int velocity = 127;
+
+    midiEventPacket_t noteOff = {0x08, 0x80 | channel, note, velocity};
+    MidiUSB.sendMIDI(noteOff);
+    MidiUSB.flush();
+  }
+  ```
+
+### TODO
+
+- vymenit piano url za https://recursivearts.com/virtual-piano/

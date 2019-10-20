@@ -59,7 +59,6 @@ void DreamControl(word command, byte value)
   Serial1.write(value); // NRPN value = 127  
 }
 
-
 void SetInstrument(byte channel, byte i) 
 {
   Serial1.write(0xC0 | channel);
@@ -68,7 +67,7 @@ void SetInstrument(byte channel, byte i)
 
 void setup()                    
 {
-  Serial1.begin(31250);  
+  Serial1.begin(31250);
   DreamControl(0x3707, 127);
   SetInstrument(0, 0);
 

@@ -7,7 +7,7 @@
  ![Pinout](ArduinoMicro.png)
 
  - pouzit vstavanu ukazku blink (Arduino -> File -> Examples -> 01. Basics -> Blink)
- - pouzit pin 12 alebo 13 (interna LED)
+ - pouzit pin 12 (alebo 13 - interna LED) a pin GND
  - perioda obdlznikoveho signalu T = Ton + Toff
  - perioda T [s, sekundy], frekvencia f [Hz, hertz, kmity za sekundu], f = 1/T, T = 1/f
 
@@ -106,7 +106,7 @@
     }
 
     void NoteOff(int note)
-    {
+    {                                                                                                                                                               \\\\\\\\\\\\\\\\\\
       Serial.write(?);
       Serial.write(?);
       Serial.write(?);
@@ -226,7 +226,7 @@
   - rozsirit program na styri nezavisle senzory
   - hrat tony s piezom
   - zahrat kohutik jarabi
-  - bezpecne piny: 3, 5, 7, 8, 10, 11, 12, A0, A1, A2, A3, A5
+  - bezpecne piny: 2, 3, 5, 7, 8, 10, 11, 12, A0, A1, A2, A3, A5
 
 ## U10: Cela oktava
 
@@ -249,8 +249,8 @@
     ```c
     void Preposli()
     {
-      while (Serial.available())
-        Serial.write(Serial.read());
+      while (Serial1.available())
+        Serial1.write(Serial1.read());
     }
     ```
 

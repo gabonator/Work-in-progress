@@ -134,3 +134,10 @@ Extra: prepojovaci kabel na midi socket
 ### TODO
 
 - vymenit piano url za https://recursivearts.com/virtual-piano/
+
+## Zaver
+
+Z planovanych 3-4 hodiny je workshop na 7 hodin. Idealne rozdelit na dve casti - prehravanie melodie na piezo/midi/usb a kapacitny klavir.
+Pre pouzitie MIDIUSB treba doinstalovat MIDIUSB kniznicu cez Libraru manager
+Pouzivame Arduino micro v zaujme usetrenia nakladov, ten programujeme rovnako ako Arduino Leonardo.
+[G code pre CNC (Peter Hybal)](klavir.txt)

@@ -1,5 +1,16 @@
 # Servomotory a pan-tilt podstavec
 
+## Annotation 
+
+arduino workshop: potenciometer a servo motor
+
+Na tomto workshope si vysvetlime vnutornu konstrukciu potenciometra a modelarskeho servo motora 9g s riadenim so spatnou vazbou. Naucime sa, ako vyuzivat vstupne analogove piny na meranie napatia, a ako naskalovat vysledok analogovo digitalnej konverzie na lubovolny ciselny interval s pomocou linearnej interpolacie.
+
+S pomocou pripravku vytlaceneho na 3d tlaciarni osadeneho dvomi servo motormi sa naucime vychylovat laserovy luc v priestore a premietnuty bod budeme pohybovat takym sposobom, aby na tienidle opisoval tvar niektorych pismen. 
+
+Treba priniest: pocitac s Arduino Uno, USB-B kabel, harok papiera A4, pero
+
+Na co sa mozete pripravit: programovanie Arduino Uno, linearna interpolacia y=y0+(x-x0)*(y1-y0)/(x1-x0), parametricke vyjadrenie usecky, pohyb po kruznici s harmonickymi funkciami sinus a kosinus, casovaci diagram ovladania servo motora
 ![Servo pan tilt stand with laser](preview.jpg)
 
 ## BOM
@@ -17,15 +28,44 @@ Pre 8 ucastnikov
 
 Rozpocet: 8 * 8.80 + 16 * 4.59 + 8 * 2.56 + 8 * 1.22 + 2 * 3.9 + 4 * 0.24 + 3 * 0.31 = 183.77 eur
 
-Extra: obosjtranna paska
+Extra: obosjtranna paska, noznice
 
 Extra: papier A4, fixka, USB-A kabel
 
 ### Poznamky
+S0: potenciometer konstrukcia
+S1: potenciometer nahradna schema
+S2: meranie cez analog read, aky je rozsah?
+S3: aritmetika $PRIDAT typy a rozsahy
+S8: linearna interpolacia vzorec
+S11: servo timing diagram
+S20/U11: funkcia na kreslenie usecky
+S22/U13: funkcie sinus kosinus, kruh, jednotkova kruznica
+
+arduino uno pwm asi nepojde na A0..A5 pinoch
+
+void ciara(int x1, int y1, int x2, int y2)
+{
+  int dlzka = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+  for (int i=0; i<dlzka; i++)
+  {
+     int x = x1 + (x2-x1)*i/dlzka;
+     int y = y1 + (y2-y1)*i/dlzka;
+     servoX.write(x);
+     servoY.write(y);
+     delay(20);
+  }
+}
+
+
+
+
 
 potenciometer - konstrukcia, princip
 servo motor - konstrukcia, princip, ovladanie
 servo signaly - casovaci diagram
+
+Ux: urobit 555 s potenciometrom, linear, 555 riadi servo, manualne delay microseconds, intervaly pre delay, tabulka ms us s
 
 U0: blink, natocit na 0%, 50%, 100%
 U1: loopy, for 0..100, 100..0

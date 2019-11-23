@@ -123,6 +123,8 @@ function polar(c, radius, angle)
   var color = c;
   if (angle < 0)
     angle += 360;
+  if (angle >= 360)
+    angle -= 360;
   angle = angle/360*1024;
   if (radius < 0 || radius > 4095) 
     throw "wrong radius";

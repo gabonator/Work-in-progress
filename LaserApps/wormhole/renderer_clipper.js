@@ -75,9 +75,10 @@ class Renderer
 //    console.log(this.lines.length);
     this.ctx.lineWidth = 3;
     this.anim ++;
-//    this.lines.sort( (a, b) => Math.sign((a[0][1]*600+a[0][0])-(b[0][1]*600+b[0][0]) ));
+//console.log(this.lines[0]);
+//    this.lines.sort( (a, b) => ((a.id > b.id) - (a.id < b.id))*1000 + (a) );
 
-    for (var i in this.lines)
+    for (var i=0; i < Math.min(this.lines.length, 1000); i++)
     {
       var l = this.lines[i];
       var c = l[4];
@@ -87,6 +88,27 @@ class Renderer
       this.ctx.lineTo(l[2], l[3]);
       this.ctx.stroke();
     }
+  }
+
+  clipLine(l, extView)
+  {
+    var viewport = {left:0, right:600, top:0, bottom:600};
+//    if (extView)
+//      viewport = {left:-600, right:600+600, top:-600, bottom:600+600};
+
+    var r = lineclip(
+      [[l[0], l[1]], [l[2], l[3]]], // line
+      [viewport.left, viewport.top, viewport.right, viewport.bottom]); // bbox
+
+    if (!r || r.length == 0)
+      return false;
+
+    l[0] = Math.floor(r[0][0][0]);
+    l[1] = Math.floor(r[0][0][1]);
+    l[2] = Math.floor(r[0][1][0]);
+    l[3] = Math.floor(r[0][1][1]);
+    l[4] = l[4];
+    return l;   
   }
 
   checkLine(l)
@@ -103,22 +125,28 @@ class Renderer
     if (this.cacheLines[hash])
       return;
 
-    if (Math.abs(l[0]-l[2]) < 4)
-    {
-      if (this.test[l[0]])
-        return;
-      this.test[l[0]] = 1;
-    }
-
     this.cacheLines[hash] = 1;
 
-    this.lines.push(l);
+    l = this.clipLine(l);
+    if (l)
+      this.lines.push(l);
   }
 
   Poly(poly)
   {  
+/*
+    var ppoly = []
+    for (var i =0; i<4; i++)
+    {
+      var l = this.clipLine([poly[i].x, poly[i].y, poly[(i+1)%poly.length].x, poly[(i+1)%poly.length].y], true);
+      if (!l)
+        return;
+      ppoly.push({x:l[0], y:l[1], id:poly[0].id});
+    }
+*/
     var clipPath = this.toClipPoly(poly);
     var newPath = this.subtractPath(clipPath, this.memory);
+
     if (newPath.length == 0)
       return;
 
@@ -136,14 +164,28 @@ class Renderer
       var p = newPath[j];
       for (var i=0; i<p.length-1; i++)
 {
+
+var clr = 0;
+
+if (typeof(p[i].id) != "undefined")
+{
+  if (p[i].id.substr(0,4) == "ring")
+    clr = 1;
+  if (p[i].id.substr(0,4) == "line")
+    clr = 3;
+  if (p[i].id.substr(0,5) == "line0")
+    clr = 2;
+}
 /*
-var id = p[i].id; if (typeof(id) == "undefined") id = "";
-var clr = 3;
-if (id.substr(0,4) == "ring")
-  clr = 1;
-if (id.substr(0,4) == "line")
-  clr = 2;
-*/
+else if (typeof(p[i+1].id) != "undefined")
+{
+  if (p[i+1].id.substr(0,4) == "ring")
+    clr = 2;
+  if (p[i+1].id.substr(0,4) == "line")
+    clr = 1;
+} */
+//if (clr != 0) clr = 3;
+//clr = clr == 1 ? 3 : 1
 var clr = 1;
         this.checkLine([p[i].X, p[i].Y, p[i+1].X, p[i+1].Y, clr]);
 }
@@ -155,6 +197,7 @@ var clr = 1;
   GetRenderData()
   {
     //this.lines.sort((a, b) => a.id - b.id)??
+    this.lines.sort((a, b) => a[1] - b[1]);
     return this.lines;
   }
 }

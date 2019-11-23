@@ -52,8 +52,8 @@ class Engine
       c: p.c
     };
 
-    var foc = 20;
-    var scale = foc / (foc + p.z)*30;
+    var foc = 35;
+    var scale = foc / (foc + p.z)*20;
     if (scale < 0) return;
 
     return { 

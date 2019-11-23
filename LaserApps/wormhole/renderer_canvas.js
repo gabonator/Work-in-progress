@@ -20,7 +20,8 @@ class Renderer
     this.data.push(p.map(t => [t.x, t.y, t.c]) ); //[p[0].x, p[0].y, p[1].x, p[1].y, p[0].c]);
 
     this.ctx.strokeStyle = ["#ff00ff", "#ff0000", "#00ff00", "#0000b0"][p[1].c];
-    this.ctx.lineJoin="round";
+    this.ctx.fillStyle = "#ff0000"; //"rgba(0, 0, 200, 0.3)";
+    this.ctx.lineJoin = "round";
     this.ctx.lineWidth = 5;
     this.ctx.beginPath();
 
@@ -31,7 +32,8 @@ class Renderer
       else
         this.ctx.lineTo(p[i].x, p[i].y);
     }
-    this.ctx.stroke();
+    this.ctx.closePath();
+//    this.ctx.stroke();
     this.ctx.fill();
   }
   Finish()

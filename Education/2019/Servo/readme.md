@@ -26,66 +26,45 @@ Pre 8 ucastnikov
 | lista rovna (8 * 19, 8 * 19 / 40) | 4x | 0.24 | https://www.gme.sk/oboustranny-kolik-s1g40-2-54mm
 | lista lomena (8 * 15, 8 * 15 / 40) | 3x | 0.31 | https://www.gme.sk/oboustranny-kolik-s1g40w-2-54mm |
 
-Rozpocet: 8 * 8.80 + 16 * 4.59 + 8 * 2.56 + 8 * 1.22 + 2 * 3.9 + 4 * 0.24 + 3 * 0.31 = 183.77 eur
+  - Rozpocet: 8 * 8.80 + 16 * 4.59 + 8 * 2.56 + 8 * 1.22 + 2 * 3.9 + 4 * 0.24 + 3 * 0.31 = 183.77 eur
+  - Extra: obosjtranna paska, noznice, podlozky aspon 5cm
+  - Extra: papier A4, fixka, USB-A kabel
 
-Extra: obosjtranna paska, noznice
+## Prezentacia
 
-Extra: papier A4, fixka, USB-A kabel
+- [Prezentacia PDF](prezentacia.pdf)
+- [Navod pre studentov](student.md)
+- [Riesenia uloh](tasks/)
 
-### Poznamky
-S0: potenciometer konstrukcia
-S1: potenciometer nahradna schema
-S2: meranie cez analog read, aky je rozsah?
-S3: aritmetika $PRIDAT typy a rozsahy
-S8: linearna interpolacia vzorec
-S11: servo timing diagram
-S20/U11: funkcia na kreslenie usecky
-S22/U13: funkcie sinus kosinus, kruh, jednotkova kruznica
+### Potenciometer
+  - S2: konstrukcia potenciomatra
+  - S3: nahradna schema potenciometra, delic napatia
+  - S4/U0: Nakonfigurovanie prostredia arduino, zletovane potenciometra s pin headerom, vyskusat analogRead, pricom potenciometer je zasunuty priamo do arduina. Treba nastavit susedne piny na 0V a 5V
+  - S5/U1: Celociselna aritmetika, ako predist overflovu, kedy pouzivat desatinne cisla
+  - S6/U1: Celociselne typy v arduine, nativny typ INT, stdint
+  - S7/U1: Ako fixnut pretecenia, ako pretypovat numericke typy
+  - S8/U1.5: prepocet hodnoty z ADC na napatie vo voltoch
+  - S9/U2: linearna interpolacia, upravit rozsah adc na iny interval a interval s offsetom
+  - S10/U3: podmienky if/else, globalna premenna, porovnanie cisel, negacia podmienky
+  - S11: linearna interpolacia, hadame vyznam koeficientov
+  - S12: linearna interpolacia
 
-arduino uno pwm asi nepojde na A0..A5 pinoch
+### Servo & potenciometer
+  - S13: konstrukcia serva
+  - S14: riadenie serva, casovaci diagram
+  - S15: spajkovanie spojok, aby sme nemuseli pouzit kontaktne pole
+  - S16/U4: manualne generovanie riadiaceho signalu, nastavit strednu polohu serva
+  - S17/U5: potenciometrom ovladat servo v plnom rozsahu 1000us..2000us, ADC vracia hodnotu 0..1024, mozeme pripocitat 1000 a mame sirku pulzu
 
-void ciara(int x1, int y1, int x2, int y2)
-{
-  int dlzka = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
-  for (int i=0; i<dlzka; i++)
-  {
-     int x = x1 + (x2-x1)*i/dlzka;
-     int y = y1 + (y2-y1)*i/dlzka;
-     servoX.write(x);
-     servoY.write(y);
-     delay(20);
-  }
-}
+### Servo
+  - S18/U6: kniznica servo
+  - S19: schema zapojenia dvoch serv + laser
+  - S20/U7: karteziansky suradnicovy syystem, hladanie rohov papiera
+  - S21/U8: axis-aligned pismena: I, L, T, F, E, H
+  - S22/U9: problem s diagonalnym pohybom a riadenim rychlosti
+  - S23/U10: kontrolovany diagonalny pohyb na 100 krokov, pouzit kod z materialov, doplnit iba interpolaciu
+  - S24/U11: funkcia ciara, nakreslit pismena M, A, X, Y, pouzit kod z materialov
+  - S25/U12: struktury a polia, upravit predosly kod s pouzitim struktury, pole bez specifikacie dlzky, volanie funkcie ciara
+  - S26/U13: kruh, vysvetlit funkcie sin/cos podla https://www.geogebra.org/m/cNEtsbvC
+  - S27/U13: kruh, funkcie sin cos, argument v radianoch, preco
 
-
-
-
-
-potenciometer - konstrukcia, princip
-servo motor - konstrukcia, princip, ovladanie
-servo signaly - casovaci diagram
-
-Ux: urobit 555 s potenciometrom, linear, 555 riadi servo, manualne delay microseconds, intervaly pre delay, tabulka ms us s
-
-U0: blink, natocit na 0%, 50%, 100%
-U1: loopy, for 0..100, 100..0
-U2: Servo, attach, write
-    prepisat for 0..100, 100..0
-U3: programovat linearnu funkciu, percenta 0..100
-U4: zapojit 2 serva, skusit zistit orientaciu
-
-V1: potenciometer - vypisovat hodnoty, zistit rozsah
-V2: roztiahnut na celociselny rozsah 0..100
-V3: roztiahnut na celociselny rozsah 100..200
-
-W1: zistit polohu krajnych bodov harku A4, kreslit stvorec po obvode
-    suradnicovy system
-W0: nakrelslit pismeno L
-W1: usecka z bodu X1-Y1 do bodu X2-Y2, kombinovany vypis Serial.print
-W2: nakreslit pismeno N
-W3: nakreslit pismeno Y
-W4: kruznica sin/cos
-W5: kruznica s blikanim (zvysok po deleni), vyskusat serial print
-
-pytagorova veta v C
-rovnica usecky parametricka t

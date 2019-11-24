@@ -17,6 +17,9 @@ function convert(json)
 //  for (var i in OrderJour)
 //    if (i.substr(0,5)=="Deliv")
 //       console.log(i+"="+OrderJour[i]);
+  var partnerName = OrderJour.DeliveryName;
+  if (partnerName.indexOf("Spolek pro chemickou") == 0)
+    partnerName = "Spolchemie";
 
   var result = {
     id: "spolchemie xml",
@@ -25,7 +28,7 @@ function convert(json)
       purchaseTimestamp: purchaseTimestamp,
       partnerIdSold: "26000135",
       partnerIdShip: "26000135",
-      partnerName: OrderJour.DeliveryName,
+      partnerName: partnerName,
       address: [OrderJour.DeliveryName, OrderJour.DeliveryStreet, OrderJour.DeliveryCity, 
                 OrderJour.DeliveryZipCode, OrderJour.DeliveryCountryRegionId],
       contact: ["korinkova@spolchemie.cz", "477 164 632"]
@@ -34,7 +37,7 @@ function convert(json)
     messages: []
   };
 
-  if (OrderJour.DeliveryName.substr(0, 6) != "Spolek")
+  if (partnerName != "Spolchemie")
   {
     result.messages.push("Warning: customer name differs from Spolek... ("+formHeader.buyer_name+")");
   }

@@ -11,7 +11,7 @@ setInterval( ()=>
   var n = 60;
   var line = [];
   var first = Math.max(0, ((frame%frames)-frames)*2+n);
-  var last = Math.min(frame*2, n);
+  var last = Math.min((frame%frames)*2, n);
   for (var i=first; i<=last; i++)
   {
 /*

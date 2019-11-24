@@ -13,14 +13,14 @@ Datove typy v arduine:
 
 Ako predist overflowu:
 
-    ```
-    Serial.print((long)1000*1000);
-    Serial.print(1000L*1000);
-    Serial.print(1000UL*1000);
+  ```
+  Serial.print((long)1000*1000);
+  Serial.print(1000L*1000);
+  Serial.print(1000UL*1000);
 
-    Serial.print((float)500*5/1000);
-    Serial.print(500.0f*5/1000);
-    ```
+  Serial.print((float)500*5/1000);
+  Serial.print(500.0f*5/1000);
+  ```
 
 ## U3:
 

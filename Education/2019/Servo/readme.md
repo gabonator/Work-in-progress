@@ -27,7 +27,7 @@ Pre 8 ucastnikov
 | lista lomena (8 * 15, 8 * 15 / 40) | 3x | 0.31 | https://www.gme.sk/oboustranny-kolik-s1g40w-2-54mm |
 
   - Rozpocet: 8 * 8.80 + 16 * 4.59 + 8 * 2.56 + 8 * 1.22 + 2 * 3.9 + 4 * 0.24 + 3 * 0.31 = 183.77 eur
-  - Extra: obosjtranna paska, noznice, podlozky aspon 5cm
+  - Extra: obosjtranna paska, noznice, podlozky aspon 5cm, 8x pan tilt podstavce
   - Extra: papier A4, fixka, USB-A kabel
 
 ## Prezentacia
@@ -67,4 +67,7 @@ Pre 8 ucastnikov
   - S25/U12: struktury a polia, upravit predosly kod s pouzitim struktury, pole bez specifikacie dlzky, volanie funkcie ciara
   - S26/U13: kruh, vysvetlit funkcie sin/cos podla https://www.geogebra.org/m/cNEtsbvC
   - S27/U13: kruh, funkcie sin cos, argument v radianoch, preco
+
+## Zaver
+  - pridat 3d modely ku pan-tilt podstavcom
 

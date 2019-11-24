@@ -1,8 +1,6 @@
 # Servomotory a pan-tilt podstavec
 
-[Popis projektu](readme.md)
-
-![Servo pan tilt stand with laser](preview.jpg)
+[Popis workshopu a riesenia uloh](readme.md)
 
 ## U0:
 
@@ -73,8 +71,8 @@ Ovladanie serva - casovaci diagram
     delayMicroseconds(us);
     delay(ms);
 
-    // 1 s (sekunda) = 1000 ms (milisekúnd)
-    // 1 ms (milisekunda) = 1000 us (mikrosekúnd)
+    // 1 s (sekunda) = 1000 ms (milisekund)
+    // 1 ms (milisekunda) = 1000 us (mikrosekund)
     ```
 
 

@@ -1,0 +1,48 @@
+<script language="javascript">
+
+function calcPattern(ofs)
+{
+  var pattern = [];
+
+  var N = 300; // 750 max
+  var color = 1; // 1..7
+  for (var i=0; i<N+1; i++)
+  {
+    var radius = 1000 + Math.cos(i*5/N*2*Math.PI)*500;
+    var angle = ofs + 360*i/N;
+    pattern.push(writer.Polar(color, radius, angle));
+  }
+
+  return pattern;
+}
+
+
+var socket = new WebSocket("ws://localhost:6699/index.html");
+
+class Writer
+{
+  Polar(color, radius, angle)
+  {
+    var a = angle*Math.PI/180;
+    return this.Cartesian(color, Math.cos(a)*radius, Math.sin(a)*radius);
+  }
+  Cartesian(color, x, y)
+  {
+    x *= 65536/4096;
+    y *= 65536/4096;
+    if (x < -32000 || x > 32000 || y < -32000 || y > 32000)
+      throw "Out of range " + x + ", " + y;
+    return [Math.floor(x), Math.floor(y), color];
+  }
+}
+
+writer = new Writer; 
+
+ofs = 0;
+setInterval(()=>
+{
+var x = calcPattern(new Date().getTime() / 10*2);
+var buf = JSON.stringify(x);
+  socket.send(buf);
+}, 20);
+</script>

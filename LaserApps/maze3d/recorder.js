@@ -10,7 +10,7 @@ class Recorder
   }
   finish()
   {
-    console.log("log="+JSON.stringify(this.log));
+    console.log("module.exports="+JSON.stringify(this.log));
   }
 }
 

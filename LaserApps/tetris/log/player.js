@@ -64,4 +64,4 @@ setInterval(() =>
   if (frame++ < gameplay[i].f)
     return;
   renderer.Render({w:8, h:14, data:gameplay[i++].d});
-}, 80);
+}, 50);

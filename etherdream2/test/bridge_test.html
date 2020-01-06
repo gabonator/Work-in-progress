@@ -1,0 +1,27 @@
+<script language="javascript">
+var buffer = "";
+var socket = new WebSocket("ws://localhost:6699/index.html");
+
+socket.onmessage = function(msg)
+{
+  buffer += new String(msg.data);
+  var lines = buffer.split("\n");
+  while ( lines.length > 1 )
+    Receive( lines.shift() );
+  buffer = lines.join("\n");
+}
+
+function Receive(line)
+{
+  console.log(line);
+}
+  var x = [];
+for (var i=0; i<1000; i++)
+  x.push([i, 1000-i, 0]);
+var buf = JSON.stringify(x);
+
+setInterval(()=>
+{
+  socket.send(buf);
+}, 100);
+</script>

@@ -1,0 +1,41 @@
+<canvas id="canvas" width="1280" height="960" style="border:1px #808080 dashed;"></canvas><br>
+<script language="javascript">
+var buffer = "";
+var socket = new WebSocket("ws://localhost:6699/index.html");
+
+var kr = 1;
+var kg = 1;
+var kb = 1;
+
+socket.onmessage = function(msg)
+{
+  msg.data.arrayBuffer().then(
+    (blob) => 
+    {
+      var buf = new Uint8ClampedArray(blob);
+      var j = 0, k = 1;
+      for (var y=0; y<960; y++)
+        for (var x=0; x<1280; x++)
+        {
+          var base = (x&~1)+(y&~1)*1280;
+          imdata.data[j++] = buf[base+1]*kr;
+          imdata.data[j++] = (buf[base] + buf[base+1280+1])/2*kg;
+          imdata.data[j++] = buf[base+1280]*kb; 
+          imdata.data[j++] = 255; 
+        }
+      ctx.putImageData(imdata, 0, 0);
+    }
+  )
+}
+
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var imdata = ctx.createImageData(canvas.width, canvas.height);
+var imview = new ArrayBuffer(imdata.data.length);
+
+function setExposure(v)
+{
+  // 0..6000
+  socket.send("10162,"+Math.floor(v));
+}
+</script>

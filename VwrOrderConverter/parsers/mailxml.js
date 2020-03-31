@@ -28,4 +28,4 @@ function processXml(xmlData)
   return json;
 }
 
-module.exports = {parse:processXml};
+module.exports = {parse:processXml, id:"mailxml"};

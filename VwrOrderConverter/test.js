@@ -16,7 +16,7 @@ fs.readdirSync(normalizedPath).forEach(function(file)
   if (file.charAt(0) == "." || file.indexOf(".out") != -1)
     return;
 
-//  if (file.indexOf("spol") == -1)
+//  if (file.indexOf("spol_") == -1)
 //    return;
 
   var fileIn = path.join(normalizedPath, file);
@@ -27,16 +27,19 @@ fs.readdirSync(normalizedPath).forEach(function(file)
   var dataOut = converter.convert(dataIn);
   var report = {
     file:file, 
-    parser:(dataOut ? dataOut.parser : null), 
+    parser:(dataOut ? dataOut.parser + " / " + dataOut.format : null), 
     test:"not available",
     messages:dataOut ? dataOut.messages : null,
     items:dataOut ? dataOut.input.items.length : 0};
 
   if (dataVerify && dataOut)
   {
-//    fs.writeFileSync(fileOut+"_err", dataOut.result);
-//process.exit();
     report.test = (dataVerify == dataOut.result) ? "OK" : "failed!"
+    if (dataVerify != dataOut.result)
+    {
+      fs.writeFileSync(fileOut+"_err", dataOut.result);
+//      process.exit();
+    }
   }
   if (!dataVerify && dataOut)
   {

@@ -61,4 +61,4 @@ function process(xmlData)
     return tab;
 }
 
-module.exports = {parse:process};
+module.exports = {parse:process, id:"csv"};

@@ -1,0 +1,38 @@
+
+<?xml version="1.0" encoding="windows-1250"?>
+<biztalk_1><header><delivery><message><messageID></messageID><sent></sent>
+<subject></subject></message><to><address/><state><referenceID></reference
+ID><handle></handle><process></process><ediid>63073242</ediid></state></to
+><from><address/><state><referenceID></referenceID><handle></handle><proce
+ss></process><ediid>25963961</ediid></state></from></delivery><manifest><d
+ocument><userdocid>801180075</userdocid><name>xml_document</name></documen
+t></manifest></header><body><xml_document
+xmlns="http://editel.cz/schemas/2002/orders.xdr"><form_header><userdocid>8
+01180075</userdocid><document_date>2018-02-15</document_date><delivery_dat
+e>1900-01-01</delivery_date><buyer_ean>25963961</buyer_ean><buyer_name>HEL
+AGO-CZ,
+s.r.o.</buyer_name><delivery_ean>63073242</delivery_ean><delivery_name>VWR
+International
+s.r.o.</delivery_name><supplier_ean>63073242</supplier_ean><supplier_name>
+VWR International
+s.r.o.</supplier_name></form_header><line_items><item><item_number>1</item
+_number><article_ean>331355060500</article_ean><article_name>St
+bezpe
+500</article_name><quantity>10</quantity><unit>ks</unit><specification>St
+i
+500</specification></item><item><item_number>2</item_number><article_ean>3
+31355030250</article_ean><article_name>St
+LDPE, s potiskem, Isopropanol, 250
+m</article_name><quantity>10</quantity><unit>ks</unit><specification>St
+ka bezpe
+m</specification></item><item><item_number>3</item_number><article_ean>331
+707132605</article_ean><article_name>St
+�zkohrdl�, zelen�,
+250ml</article_name><quantity>10</quantity><unit>ks</unit><specification>S
+t�i�ka celobarevn�, PE-LD, �zkohrdl�, zelen�,
+250ml</specification></item><item><item_number>4</item_number><article_ean
+>331707132603</article_ean><article_name>St�i�ka celobarevn�, PE-LD,
+�zkohrdl�, �erven�,250
+ml</article_name><quantity>10</quantity><unit>ks</unit><specification>St
+�ka celobarevn�, PE-LD, �zkohrdl�, �erven�,250
+ml</specification></item></line_items></xml_document></body></biztalk_1>

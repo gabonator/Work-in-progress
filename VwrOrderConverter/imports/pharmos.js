@@ -6,7 +6,7 @@ function convert(json)
   }
 
   var result = {
-    id: "pharmos xml",
+    id: "pharmos",
     header: {
       documentId: json.order.order_id,  
       purchaseTimestamp: json.order.date_cre.split("-").join(""),

@@ -50,7 +50,7 @@ function convert(data)
   }
 
   var result = {
-    id: "perfect csv",
+    id: "perfect",
     header: {
       documentId: partner[3],      
       purchaseTimestamp: partner[4],

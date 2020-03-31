@@ -12,7 +12,7 @@ function convert(json)
   var documentId = formHeader.userdocid;
 
   var result = {
-    id: "helago xml",
+    id: "helago",
     header: {
       documentId: documentId,  
       purchaseTimestamp: purchaseTimestamp,

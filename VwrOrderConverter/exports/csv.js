@@ -4,7 +4,12 @@ function toCsv(data)
   var print = (arr) => out.push(arr.join(";"));
 
   print(["BEGIN", data.header.documentId, data.header.partnerName, "VWR", "ORDERS", data.header.purchaseTimestamp, "102511", ""]);
-  print(["HEAD", data.header.documentId, data.header.purchaseTimestamp, "", "CZK", ""]);
+
+  if (data.header.orderDimension)
+    print(["HEAD", data.header.documentId, data.header.purchaseTimestamp, "", "CZK", data.header.orderDimension]);
+  else
+    print(["HEAD", data.header.documentId, data.header.purchaseTimestamp, "", "CZK", ""]);
+
   print(["SOLDTO", data.header.partnerIdSold, /*data.header.partnerName*/data.header.address[0]]); // parner name musi byt iba ID v begin riadku, tu uz moze byt aj s medzerami
   print(["SHIPTO", data.header.partnerIdShip, 
          data.header.address[0], "", "", "", //"", 

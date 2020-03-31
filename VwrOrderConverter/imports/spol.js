@@ -14,20 +14,21 @@ function convert(json)
   var documentId = OrderJour.PurchOrderDocNum;
   var items = OrderJour.VendPurchOrderTrans;
 
-//  for (var i in OrderJour)
-//    if (i.substr(0,5)=="Deliv")
-//       console.log(i+"="+OrderJour[i]);
+  // kvoli divnemu parsovaniu XML je bud items pole, alebo ak iba jeden objekt
+  if (!Array.isArray(items))
+    items = [items];
+
   var partnerName = OrderJour.DeliveryName;
   if (partnerName.indexOf("Spolek pro chemickou") == 0)
     partnerName = "Spolchemie";
 
   var result = {
-    id: "spolchemie xml",
+    id: "spolchemie",
     header: {
       documentId: documentId,  
       purchaseTimestamp: purchaseTimestamp,
       partnerIdSold: "26000135",
-      partnerIdShip: "26000135",
+      partnerIdShip: "26005971",
       partnerName: partnerName,
       address: [OrderJour.DeliveryName, OrderJour.DeliveryStreet, OrderJour.DeliveryCity, 
                 OrderJour.DeliveryZipCode, OrderJour.DeliveryCountryRegionId],
@@ -37,6 +38,15 @@ function convert(json)
     messages: []
   };
 
+  if (OrderJour.Dimension && 
+      OrderJour.Dimension.element && 
+      OrderJour.Dimension.element.length == 4 && 
+      OrderJour.Dimension.element[1] && 
+      OrderJour.Dimension.element[1] != "")
+  {
+    result.header.orderDimension = OrderJour.Dimension.element[1];
+  }
+
   if (partnerName != "Spolchemie")
   {
     result.messages.push("Warning: customer name differs from Spolek... ("+formHeader.buyer_name+")");
@@ -45,14 +55,18 @@ function convert(json)
   for (i in items)
   {
     var item = items[i];
+    var ean = item.ExternalItemId;
+
+    if (ean.length == 12 && (ean[0] < '0' || ean[0] > '9'))
+      ean += ".";
+
     result.items.push({
-      ean:item.ExternalItemId + ".", 
+      ean:ean, 
       name:item.Name.split("\n").join(" "),
       quantity:parseFloat(item.Qty),
       price:parseFloat(item.PurchPrice)
     });
   }
-// console.log(result.items);
   return result;
 }
 

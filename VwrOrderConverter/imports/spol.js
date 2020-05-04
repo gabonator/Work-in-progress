@@ -35,7 +35,8 @@ function convert(json)
       contact: ["korinkova@spolchemie.cz", "477 164 632"]
     },
     items: [],
-    messages: []
+    messages: [],
+    errors: []
   };
 
   if (OrderJour.Dimension && 
@@ -56,6 +57,14 @@ function convert(json)
   {
     var item = items[i];
     var ean = item.ExternalItemId;
+
+    if (!ean)
+    {
+      result.errors.push("ExternalItemId not specified!");
+      result.errors.push("- Item " + i + " / " + items.length);
+      result.errors.push("- " + JSON.stringify(item, null, 2));
+      return result;
+    }
 
     if (ean.length == 12 && (ean[0] < '0' || ean[0] > '9'))
       ean += ".";

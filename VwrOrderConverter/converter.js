@@ -22,6 +22,17 @@ function convert(data)
   if (!exp.find(e => output = e.export(input)))
     return null;
 
+  if (input.errors && input.errors.length)
+  {       
+    console.log("========= error report begin ========");
+    console.log("Input format: " + par_id + " Parser: " + input.id);
+    console.log("");
+    for (var i in input.errors)
+      console.log(input.errors[i]);
+    console.log("========= error report end ========");
+    throw "parsing error";
+  }
+
   return {
     input:input, 
     json:json, 

@@ -18,6 +18,7 @@ function processXml(xmlData)
   // TODO: autoiso
   xmlData = encoding.convert(xmlData, "UTF-8", "1250").toString();
 
+  var json;
   try 
   {
     json = JSON.parse(xml2json.toJson(xmlData));

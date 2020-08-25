@@ -11,6 +11,8 @@ const app = express();
 
 var converter = require("../converter.js");
 
+var version = "ver200504b";
+
 app.use(fileUpload());
 
 function _toString(buffer)
@@ -26,12 +28,16 @@ app.post('/', function(req, res)
   if (!req.files)
     return res.status(400).send('No files were uploaded.');
 
-  let sampleFile = req.files.sampleFile;
+//console.log(req.files);
+
+  let sampleFile = req.files.file;
   var fileName = sampleFile.name.replace(".xml", ".txt");
   if (fileName.indexOf(".txt") == -1)
     fileName += ".txt";
   var buffer = sampleFile.data;
   var textIn = _toString(buffer);
+//console.log(textIn);
+
   var out = converter.convert(textIn);
   var textXml = JSON.stringify(out.json);
   var textOut = out.result;
@@ -61,7 +67,8 @@ app.post('/', function(req, res)
     res.writeHead(200, {
         'Content-Type': "text/plain",
         'Content-disposition': 'attachment;filename*=UTF-8\'\''+encodeURIComponent(fileName),
-        'Content-Length': newBuffer.length
+        'Content-Length': newBuffer.length,
+        'gabo-service': "parser=" + out.parser + ";format=" + out.format + ";ver=" + version
     });
     res.end(newBuffer);
   }
@@ -70,12 +77,12 @@ app.post('/', function(req, res)
 app.get("/", function(req, res) {
   res.end(`<html>
     <body>
-      <h1>ver200504</h1><br>Skonvertuj xml to csv
+      <h1>`+version+`</h1><br>Skonvertuj xml to csv
       <form ref='uploadForm' 
         id='uploadForm' 
         method='post' 
         encType="multipart/form-data">
-          <input type="file" name="sampleFile" />
+          <input type="file" name="file" />
           <input type='submit' value='Upload!' />
           <input type='checkbox' name="debug"/>debug
       </form>     

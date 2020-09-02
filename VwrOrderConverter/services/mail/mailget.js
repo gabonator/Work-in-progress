@@ -76,7 +76,7 @@ function recursiveScan(obj, attachments)
     return joined;
 }
 
-function findTextAttachment(m)
+function findTextAttachments(m)
 {
     var attachments = recursiveScan(m.bodystructure);    
 
@@ -87,6 +87,7 @@ function findTextAttachment(m)
       console.log(attachments[i]);
       console.log("}}}}}}}");
     }
+
 /*
     {
       part: '1',
@@ -106,7 +107,7 @@ function findTextAttachment(m)
       disposition: [ { type: 'attachment', filename: 'samplemessage.txt' } ]
     }
 */
-    return attachments.find(att => att.disposition && 
+    return attachments.filter(att => att.disposition && 
       att.disposition.length > 0 && 
       att.disposition[0].type == "attachment");
 }
@@ -122,7 +123,11 @@ function decodeMessageData(buf, encoding)
 
     if (encoding == "base64")
     {
-      return new Buffer(buf, 'base64');
+        var aux = new Buffer(buf.toString().split("\n").join(""), 'base64');
+//var fs = require("fs");
+//fs.writeFileSync("s0", buf);
+//fs.writeFileSync("s1", aux);
+      return aux;
     }
 
     if (encoding == "quoted-printable")
@@ -137,6 +142,7 @@ function decodeMessageData(buf, encoding)
 
 function proConnect(config)
 {
+    var running = false;
     return new Promise(function(resolve, reject) {
         var client = inbox.createConnection(false, config.server, {
             secureConnection: true,
@@ -149,19 +155,44 @@ function proConnect(config)
         
         client.connect();
         client.on("connect", function(){
+            running = true;
             client.email = config.user;
             console.log('client connected: '+this.email);
             resolve(client);
         });
         
         client.on('error', function (err){
-            console.log('Error');
-            console.log(err);
-            reject(err);
+            console.log('client error: '+this.email);
+/*
+            if (!running)
+            {
+              console.log('Error');
+              console.log(err);
+              reject(err);
+            } else
+            {
+              running = false;
+              console.log("Trying to reconnect");
+              setTimeout( () => client.connect(), 1000);
+            }
+*/
         });
 
         client.on('close', function (err){
             console.log('client closed: '+this.email);
+/*
+            if (!running)
+            {
+              console.log('Error');
+              console.log(err);
+              reject(err);
+            } else
+            {
+              running = false;
+              console.log("Trying to reconnect");
+              setTimeout( () => client.connect(), 5000);
+            }
+*/
         });
     });
 }
@@ -267,24 +298,57 @@ function startSession(credentials, handler)
     console.log(client.email + ": Waiting for email...");
     sessions.push(client);    
     handler(true);
+    setInterval( () => client.listMailboxes(), 120*1000); // keep alive
 
     client.on("new", function(message) {
-      var textAttachment = findTextAttachment(message);
-      if (!textAttachment) {
+      var textAttachments = findTextAttachments(message);
+      if (!textAttachments || textAttachments.length == 0) {
         mylog({error:"No text attachment"});
       	console.log("Cant find text attachment!");
       	return;
       }
 
-      var readStream = client.createMessageStream(message.UID, textAttachment.part);
-      readStream.pipe(concat(function(data) {
-      	var body = decodeMessageData(data, textAttachment.encoding);
-      	var filename = textAttachment.disposition[0].filename
-        HandleMessage(client, message, body, filename);
+      var attachmentPromises = [];
 
-      }), {
-      	end: true
-      });
+      for (var i in textAttachments)
+      {
+        var _i = i;
+        attachmentPromises.push( new Promise( (resolve, reject) =>  
+        {
+          var textAttachment = {... textAttachments[_i]};
+          var readStream = client.createMessageStream(message.UID, textAttachment.part);
+          readStream.pipe(concat(function(data) {
+             var body = decodeMessageData(data, textAttachment.encoding);
+             var filename = textAttachment.disposition[0].filename;
+             if (!filename)
+               filename = textAttachment.parameters.name;
+
+             resolve({name:filename, body:body});          
+//             HandleMessage(client, message, body, filename);
+          }), {
+          	end: true
+          }); 
+        })); 
+      }
+
+     Promise.all(attachmentPromises).then( attachments => 
+     {
+       HandleMessage(client, message, attachments);
+     });
+/*
+        var readStream = client.createMessageStream(message.UID, textAttachment.part);
+        readStream.pipe(concat(function(data) {
+        	var body = decodeMessageData(data, textAttachment.encoding);
+        	var filename = textAttachment.disposition[0].filename;
+          if (!filename)
+            filename = textAttachment.parameters.name;
+
+          HandleMessage(client, message, body, filename);
+
+        }), {
+        	end: true
+        }); 
+*/
     });
   })
   .catch(function(error){
@@ -294,7 +358,7 @@ function startSession(credentials, handler)
   });
 }
 
-function HandleMessage(client, message, body, filename)
+function HandleMessage(client, message, attachments)
 {
   if (!messageHandler)
   {
@@ -312,8 +376,10 @@ function HandleMessage(client, message, body, filename)
       fromEmail: message.from.address,
       toEmail: client.email,
       subject: message.title,
-      attachmentName: filename,
-      attachmentBody: body});
+      attachments: attachments
+//      attachmentName: filename,
+//      attachmentBody: body
+      });
   }
 }
 

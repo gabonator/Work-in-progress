@@ -109,7 +109,7 @@ function findTextAttachments(m)
 */
     return attachments.filter(att => att.disposition && 
       att.disposition.length > 0 && 
-      att.disposition[0].type == "attachment");
+      ((att.disposition[0].type == "attachment") || (att.disposition[0].type == "inline")));
 }
 
 function decodeMessageData(buf, encoding)

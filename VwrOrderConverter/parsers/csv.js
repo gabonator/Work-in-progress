@@ -52,13 +52,21 @@ function processTab(xmlData)
 
 function process(xmlData)
 {
-  var csv = processCsv(xmlData);
-  if (csv)
-    return csv;
+  if (xmlData.substr(0, 4) == "%PDF")
+    return Promise.reject();
 
-  var tab = processTab(xmlData);
-  if (tab)
-    return tab;
+  return new Promise((resolve, reject) =>
+  {
+    var csv = processCsv(xmlData);
+    if (csv)
+      return resolve(csv);
+
+    var tab = processTab(xmlData);
+    if (tab)
+      return resolve(tab);
+
+    return reject();
+  });
 }
 
 module.exports = {parse:process, id:"csv"};

@@ -11,7 +11,7 @@ const app = express();
 
 var converter = require("../converter.js");
 
-var version = "ver200504b";
+var version = "ver201019pdf";
 
 app.use(fileUpload());
 
@@ -38,40 +38,48 @@ app.post('/', function(req, res)
   var textIn = _toString(buffer);
 //console.log(textIn);
 
-  var out = converter.convert(textIn);
-  var textXml = JSON.stringify(out.json);
-  var textOut = out.result;
-  var newBuffer = new Buffer(textOut, "UTF-8");
-                       
-  console.log(textOut);
-
-  if(req.body && typeof(req.body.debug) != "undefined" && req.body.debug == "on")
+  converter.convert(textIn, buffer)
+  .then( (out) =>
   {
-    res.end(`<html>
-<head>
-  <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="http://warfares.github.io/pretty-json/css/pretty-json.css"/>
-    <script src="http://warfares.github.io/pretty-json/libs/jquery-1.11.1.min.js"></script>
-    <script src="http://warfares.github.io/pretty-json/libs/underscore-min.js"></script>
-    <script src="http://warfares.github.io/pretty-json/libs/backbone-min.js"></script>
-    <script src="http://warfares.github.io/pretty-json/pretty-json-min.js"></script>
-</head>
+    var textXml = JSON.stringify(out.json);
+    var textOut = out.result;
+    var newBuffer = new Buffer(textOut, "UTF-8");
+                         
+    console.log(textOut);
 
-<pre id="out">${textOut}</pre>
-<span id="json">${textXml}</span>
-<script>new PrettyJSON.view.Node({ el:document.getElementById("json"), 
-  data:JSON.parse(document.getElementById("json").innerHTML)}).expandAll()</script>
-</html>`);
-  } else
+    if(req.body && typeof(req.body.debug) != "undefined" && req.body.debug == "on")
+    {
+      res.end(`<html>
+  <head>
+    <meta charset="UTF-8">
+      <link rel="stylesheet" type="text/css" href="http://warfares.github.io/pretty-json/css/pretty-json.css"/>
+      <script src="http://warfares.github.io/pretty-json/libs/jquery-1.11.1.min.js"></script>
+      <script src="http://warfares.github.io/pretty-json/libs/underscore-min.js"></script>
+      <script src="http://warfares.github.io/pretty-json/libs/backbone-min.js"></script>
+      <script src="http://warfares.github.io/pretty-json/pretty-json-min.js"></script>
+  </head>
+
+  <pre id="out">${textOut}</pre>
+  <span id="json">${textXml}</span>
+  <script>new PrettyJSON.view.Node({ el:document.getElementById("json"), 
+    data:JSON.parse(document.getElementById("json").innerHTML)}).expandAll()</script>
+  </html>`);
+    } else
+    {
+      res.writeHead(200, {
+          'Content-Type': "text/plain",
+          'Content-disposition': 'attachment;filename*=UTF-8\'\''+encodeURIComponent(fileName),
+          'Content-Length': newBuffer.length,
+          'gabo-service': "parser=" + out.parser + ";format=" + out.format + ";ver=" + version
+      });
+      res.end(newBuffer);
+    }
+  })
+  .catch( () =>
   {
-    res.writeHead(200, {
-        'Content-Type': "text/plain",
-        'Content-disposition': 'attachment;filename*=UTF-8\'\''+encodeURIComponent(fileName),
-        'Content-Length': newBuffer.length,
-        'gabo-service': "parser=" + out.parser + ";format=" + out.format + ";ver=" + version
-    });
-    res.end(newBuffer);
-  }
+    res.end("<html>Unable to process request</html>")
+    res.writeHead(500, );
+  });
 });
 
 app.get("/", function(req, res) {

@@ -3,30 +3,32 @@ var xml2json = require('xml2json');
 
 function processXml(xmlData)
 {
-  // TODO auto iso?
-//  xmlData = encoding.convert(xmlData, "UTF-8", "ISO-8859-2").toString();
-  if (xmlData.charCodeAt(0) == 0xef && xmlData.charCodeAt(1) == 0xbb && xmlData.charCodeAt(2) == 0xbf)
-  {
-    xmlData = xmlData.substr(3);
-    var buf = Buffer.alloc(xmlData.length);
-    for (var i=0; i<xmlData.length; i++)
-      buf[i] = xmlData.charCodeAt(i);
-    xmlData = buf.toString();
-  }
+  if (xmlData.substr(0, 4) == "%PDF")
+    return Promise.reject();
 
-  var json;
-  try 
+  return new Promise((resolve, reject) =>
   {
-    json = JSON.parse(xml2json.toJson(xmlData));
-  }
-  catch (e)
-  {
-  }
-//console.log(json);
-//require("fs").writeFileSync("out", JSON.stringify(json), "utf-8")
-//console.log(JSON.stringify(json));
+    if (xmlData.charCodeAt(0) == 0xef && xmlData.charCodeAt(1) == 0xbb && xmlData.charCodeAt(2) == 0xbf)
+    {
+      xmlData = xmlData.substr(3);
+      var buf = Buffer.alloc(xmlData.length);
+      for (var i=0; i<xmlData.length; i++)
+        buf[i] = xmlData.charCodeAt(i);
+      xmlData = buf.toString();
+    }
 
-  return json;
+    var json;
+    try 
+    {
+      json = JSON.parse(xml2json.toJson(xmlData));
+    }
+    catch (e)
+    {
+      return reject();
+    }
+
+    return resolve(json);
+  });
 }
 
 module.exports = {parse:processXml, id:"rawxml"};

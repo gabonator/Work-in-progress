@@ -85,6 +85,9 @@ function convert(data)
       return false;
 
     var id = item[13];
+    if (!id || id == "")
+      return false;
+
     var vwrId = conversionTable[id];
     if (!vwrId)
     {

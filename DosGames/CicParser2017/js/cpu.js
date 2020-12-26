@@ -113,6 +113,16 @@ function _rep_movsb_MemB800_MemData_DirForward()
   _ASSERT(_si <= 0xffff);
 }
 
+function _rep_movsb_MemData_MemData_DirForward()
+{
+  for ( ; r16[cx] > 0; r16[cx]-- ) 
+  {
+    memory[_di++] = memory[_si++];
+  }
+  _ASSERT(_di <= 0xffff);
+  _ASSERT(_si <= 0xffff);
+}
+
 function _rep_movsb_MemB800_MemB800_DirAuto()
 {
   if (flags.direction==0)
